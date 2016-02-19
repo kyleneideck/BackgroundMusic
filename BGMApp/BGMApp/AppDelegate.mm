@@ -1,0 +1,144 @@
+// This file is part of Background Music.
+//
+// Background Music is free software: you can redistribute it and/or
+// modify it under the terms of the GNU General Public License as
+// published by the Free Software Foundation, either version 2 of the
+// License, or (at your option) any later version.
+//
+// Background Music is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Background Music. If not, see <http://www.gnu.org/licenses/>.
+
+//
+//  AppDelegate.mm
+//  BGMApp
+//
+//  Copyright © 2016 Kyle Neideck
+//
+
+// Self Includes
+#import "AppDelegate.h"
+
+// Local Includes
+#include "BGM_Types.h"
+#import "BGMAudioDeviceManager.h"
+#import "BGMAutoPauseMusic.h"
+#import "BGMAppVolumes.h"
+#import "BGMPreferencesMenu.h"
+
+
+static float const kStatusBarIconPadding = 0.25;
+
+@implementation AppDelegate {
+    // The button in the system status bar (the bar with volume, battery, clock, etc.) to show the main menu
+    // for the app. These are called "menu bar extras" in the Human Interface Guidelines.
+    NSStatusItem* statusBarItem;
+    
+    BGMAutoPauseMusic* autoPauseMusic;
+    BGMAppVolumes* appVolumes;
+    BGMAudioDeviceManager* audioDevices;
+    BGMPreferencesMenu* prefsMenu;
+}
+
+- (void) awakeFromNib {
+    // Set up the status bar item
+    statusBarItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSSquareStatusItemLength];
+    
+    // Set the icon
+    NSImage* icon = [NSImage imageNamed:@"FermataIcon"];
+    if (icon != nil) {
+        CGFloat lengthMinusPadding = [[statusBarItem button] frame].size.height * (1 - kStatusBarIconPadding);
+        [icon setSize:NSMakeSize(lengthMinusPadding, lengthMinusPadding)];
+        // Make the icon a "template image" so it gets drawn colour-inverted when it's highlighted or the status
+        // bar's in dark mode
+        [icon setTemplate:YES];
+        statusBarItem.button.image = icon;
+    } else {
+        // If our icon is missing for some reason, fallback to a fermata character (1D110)
+        statusBarItem.button.title = @"𝄐";
+    }
+    
+    // Set the main menu
+    statusBarItem.menu = self.bgmMenu;
+}
+
+- (void) applicationDidFinishLaunching:(NSNotification*)aNotification {
+    #pragma unused (aNotification)
+    
+    // Coordinates the audio devices (BGMDevice and the output device): manages playthrough, volume/mute controls, etc.
+    NSError* err;
+    audioDevices = [[BGMAudioDeviceManager alloc] initWithError:&err];
+    if (audioDevices == nil) {
+        [self showDeviceNotFoundErrorMessageAndExit:err.code];
+    }
+    [audioDevices setBGMDeviceAsOSDefault];
+    
+    // Register the preference defaults. These are the preferences/state that only apply to BGMApp. The others are
+    // persisted on BGMDriver.
+    NSDictionary* appDefaults = [NSDictionary dictionaryWithObject:[NSNumber numberWithBool:YES]
+                                                            forKey:@"AutoPauseMusicEnabled"];
+    [[NSUserDefaults standardUserDefaults] registerDefaults:appDefaults];
+    
+    autoPauseMusic = [[BGMAutoPauseMusic alloc] initWithAudioDevices:audioDevices];
+
+    // Enable auto-pausing music if it's enabled in the user's preferences (which it is by default)
+    if ([[NSUserDefaults standardUserDefaults] boolForKey:@"AutoPauseMusicEnabled"]) {
+        [self toggleAutoPauseMusic:self];
+    }
+    
+    appVolumes = [[BGMAppVolumes alloc] initWithMenu:[self bgmMenu]
+                                       appVolumeView:[self appVolumeView]
+                                        audioDevices:audioDevices];
+    
+    prefsMenu = [[BGMPreferencesMenu alloc] initWithbgmMenu:[self bgmMenu]
+                                               audioDevices:audioDevices
+                                                 aboutPanel:[self aboutPanel]
+                                      aboutPanelLicenseView:[self aboutPanelLicenseView]];
+}
+
+- (void) showDeviceNotFoundErrorMessageAndExit:(NSInteger)code {
+    // Show an error dialog and exit if either BGMDevice wasn't found on the system or we couldn't find any output devices
+    
+    NSAlert* alert = [NSAlert new];
+    
+    if (code == kBGMErrorCode_BGMDeviceNotFound) {
+        // TODO: Check whether the driver files are in /Library/Audio/Plug-Ins/HAL and offer to install them if not. Also,
+        //       it would be nice if we could restart coreaudiod automatically (using launchd).
+        [alert setMessageText:@"Could not find the Background Music virtual audio device."];
+        [alert setInformativeText:@"Make sure you've installed Background Music.driver to /Library/Audio/Plug-Ins/HAL and restarted coreaudiod (e.g. \"sudo killall coreaudiod\")."];
+    } else if(code == kBGMErrorCode_OutputDeviceNotFound) {
+        [alert setMessageText:@"Could not find an audio output device."];
+        [alert setInformativeText:@"If you do have one installed, this is probably a bug. Sorry about that. Feel free to file an issue on GitHub."];
+    }
+    
+    [alert runModal];
+    [NSApp terminate:self];
+}
+
+- (void) applicationWillTerminate:(NSNotification*)aNotification {
+    #pragma unused (aNotification)
+    [audioDevices unsetBGMDeviceAsOSDefault];
+}
+
+- (IBAction) toggleAutoPauseMusic:(id)sender {
+    #pragma unused (sender)
+    
+    if (self.autoPauseMenuItem.state == NSOnState) {
+        self.autoPauseMenuItem.state = NSOffState;
+        [autoPauseMusic disable];
+    } else {
+        self.autoPauseMenuItem.state = NSOnState;
+        [autoPauseMusic enable];
+    }
+    
+    // Persist the change in the user's preferences
+    [[NSUserDefaults standardUserDefaults] setBool:(self.autoPauseMenuItem.state == NSOnState)
+                                            forKey:@"AutoPauseMusicEnabled"];
+}
+
+@end
+

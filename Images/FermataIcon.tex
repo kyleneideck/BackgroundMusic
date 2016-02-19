@@ -1,0 +1,63 @@
+% This file is part of Background Music.
+%
+% Background Music is free software: you can redistribute it and/or
+% modify it under the terms of the GNU General Public License as
+% published by the Free Software Foundation, either version 2 of the
+% License, or (at your option) any later version.
+%
+% Background Music is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+% GNU General Public License for more details.
+%
+% You should have received a copy of the GNU General Public License
+% along with Background Music. If not, see <http://www.gnu.org/licenses/>.
+
+%
+% FermataIcon.tex
+% Copyright © 2016 Kyle Neideck
+%
+% The app/device/status bar icon for BGMApp
+%
+% Build with XeTeX:
+%   xelatex FermataIcon.tex
+%
+% Then run generate_icon_pngs.sh
+%
+% Not sure why it doesn't build properly with regular LaTeX.
+%
+
+\documentclass{article}
+\thispagestyle{empty}
+
+\usepackage{tikz}
+\usepackage[paperwidth=100mm, paperheight=100mm, margin=0mm]{geometry}
+
+\begin{document}
+\begin{center}
+\begin{tikzpicture}[remember picture,overlay]
+
+% A path that follows the edges of the current page
+\tikzstyle{reverseclip}=[insert path={(current page.north east) --
+  (current page.south east) --
+  (current page.south west) --
+  (current page.north west) --
+  (current page.north east)}
+]
+
+\begin{scope}
+\begin{pgfinterruptboundingbox}
+\path [clip] (0,-62.6mm) circle (33mm) [reverseclip];
+\end{pgfinterruptboundingbox}
+
+\fill[black] (0,-50mm) circle (44mm);
+\end{scope}
+
+\begin{scope}
+\fill[black] (0,-68.5mm) circle (26mm);
+\end{scope}
+
+\end{tikzpicture}
+\end{center}
+\end{document}
+

@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="9531" systemVersion="14F1509" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+    <dependencies>
+        <deployment identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="9531"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner" customClass="NSApplication">
+            <connections>
+                <outlet property="delegate" destination="Voe-Tx-rLC" id="GzC-gU-4Uq"/>
+            </connections>
+        </customObject>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
+        <customObject id="Voe-Tx-rLC" customClass="AppDelegate">
+            <connections>
+                <outlet property="aboutPanel" destination="Cf4-3V-gl1" id="cgo-Hw-rE2"/>
+                <outlet property="aboutPanelLicenseView" destination="LSG-PF-cl8" id="mbu-kv-Jfc"/>
+                <outlet property="appVolumeView" destination="MWB-XH-kFI" id="eFA-RN-VMC"/>
+                <outlet property="autoPauseMenuItem" destination="nHv-T8-1nb" id="skN-ap-dre"/>
+                <outlet property="bgmMenu" destination="8AN-nh-rEe" id="UWn-BX-eLy"/>
+            </connections>
+        </customObject>
+        <customObject id="YLy-65-1bz" customClass="NSFontManager"/>
+        <menu id="8AN-nh-rEe" userLabel="BGM Menu">
+            <items>
+                <menuItem title="Auto-pause Music" tag="2" id="nHv-T8-1nb">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="toggleAutoPauseMusic:" target="Voe-Tx-rLC" id="fL3-wA-voV"/>
+                    </connections>
+                </menuItem>
+                <menuItem isSeparatorItem="YES" id="ZGd-Pq-YeA"/>
+                <menuItem title="App Volumes" tag="3" enabled="NO" id="8PP-wA-Pae">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                </menuItem>
+                <menuItem isSeparatorItem="YES" tag="4" id="rkf-nx-H2J"/>
+                <menuItem title="Preferences" tag="1" id="BHb-uh-9Zm">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <menu key="submenu" title="Preferences" id="Img-Dh-cpU">
+                        <items>
+                            <menuItem title="Auto-pause" tag="1" enabled="NO" id="2aT-t7-HGW">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="nb1-jq-97L"/>
+                            <menuItem title="Output Device" tag="2" enabled="NO" id="chk-9C-pab">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="D3z-zv-JrJ"/>
+                            <menuItem title="About Background Music" tag="3" id="R45-Vo-Eto">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                            </menuItem>
+                        </items>
+                    </menu>
+                </menuItem>
+                <menuItem title="Quit Background Music" id="Nj2-gJ-DhW">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="terminate:" target="-1" id="seH-Fc-tXb"/>
+                    </connections>
+                </menuItem>
+            </items>
+            <point key="canvasLocation" x="-184" y="-69.5"/>
+        </menu>
+        <customView id="MWB-XH-kFI">
+            <rect key="frame" x="0.0" y="0.0" width="264" height="20"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+            <subviews>
+                <textField identifier="AppName" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Xmd-bg-huG" customClass="BGMAVM_AppNameLabel">
+                    <rect key="frame" x="58" y="4" width="115" height="14"/>
+                    <textFieldCell key="cell" controlSize="small" lineBreakMode="truncatingTail" allowsUndo="NO" sendsActionOnEndEditing="YES" alignment="left" title="App name here" usesSingleLineMode="YES" id="ZHF-ZW-Oqg">
+                        <font key="font" metaFont="smallSystem"/>
+                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+                <imageView identifier="AppIcon" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="W04-iT-IUw" customClass="BGMAVM_AppIcon">
+                    <rect key="frame" x="36" y="3" width="16" height="16"/>
+                    <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" id="6QQ-oO-HxF"/>
+                </imageView>
+                <slider verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="I1l-Ci-4md" customClass="BGMAVM_VolumeSlider">
+                    <rect key="frame" x="179" y="2" width="74" height="17"/>
+                    <sliderCell key="cell" controlSize="small" continuous="YES" state="on" alignment="left" maxValue="100" doubleValue="50" tickMarkPosition="above" sliderType="linear" id="Jmg-df-9Xl"/>
+                </slider>
+            </subviews>
+            <point key="canvasLocation" x="81" y="-111"/>
+        </customView>
+        <window allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" restorable="NO" hidesOnDeactivate="YES" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" animationBehavior="default" id="Cf4-3V-gl1" customClass="NSPanel">
+            <windowStyleMask key="styleMask" titled="YES" closable="YES" utility="YES"/>
+            <windowPositionMask key="initialPositionMask" topStrut="YES"/>
+            <rect key="contentRect" x="248" y="350" width="748" height="293"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="1280" height="777"/>
+            <view key="contentView" id="HlB-hX-Y0Y">
+                <rect key="frame" x="0.0" y="0.0" width="748" height="293"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="r51-dd-LGP">
+                        <rect key="frame" x="18" y="78" width="240" height="22"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Background Music" id="Dw2-nu-eBQ">
+                            <font key="font" size="18" name=".HelveticaNeueDeskInterface-Regular"/>
+                            <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" tag="1" translatesAutoresizingMaskIntoConstraints="NO" id="ekc-h0-I43">
+                        <rect key="frame" x="18" y="53" width="240" height="17"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Version 0.1.0" id="FDH-7l-wFf">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="L5P-Lw-aCd">
+                        <rect key="frame" x="299" y="256" width="270" height="17"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="left" title="Licensed under GPLv2 or any later version." id="ETh-En-bzX">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <box horizontalHuggingPriority="750" fixedFrame="YES" title="Box" boxType="separator" titlePosition="noTitle" translatesAutoresizingMaskIntoConstraints="NO" id="Zc9-gs-X8C">
+                        <rect key="frame" x="264" y="71" width="5" height="150"/>
+                        <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
+                        <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                        <font key="titleFont" metaFont="system"/>
+                    </box>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" tag="2" translatesAutoresizingMaskIntoConstraints="NO" id="Vy4-dv-jQB">
+                        <rect key="frame" x="18" y="28" width="240" height="17"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Copyright © 2016 Kyle Neideck" placeholderString="" id="ctF-95-uVu">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <imageView wantsLayer="YES" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Tui-Hf-FLv">
+                        <rect key="frame" x="63" y="108" width="150" height="150"/>
+                        <shadow key="shadow">
+                            <color key="color" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
+                        </shadow>
+                        <imageCell key="cell" refusesFirstResponder="YES" alignment="left" animates="YES" imageScaling="proportionallyUpOrDown" image="FermataIcon" id="dBU-ZS-ZzA"/>
+                    </imageView>
+                    <imageView wantsLayer="YES" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="R1R-Rd-xPC">
+                        <rect key="frame" x="63" y="108" width="150" height="150"/>
+                        <shadow key="shadow">
+                            <color key="color" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
+                        </shadow>
+                        <imageCell key="cell" refusesFirstResponder="YES" alignment="left" animates="YES" imageScaling="proportionallyUpOrDown" image="FermataIcon" id="1VP-dU-RCe"/>
+                    </imageView>
+                    <scrollView fixedFrame="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="eqz-ap-PAC">
+                        <rect key="frame" x="301" y="28" width="427" height="220"/>
+                        <clipView key="contentView" ambiguous="YES" id="Cdb-RA-YK0">
+                            <rect key="frame" x="1" y="1" width="425" height="218"/>
+                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                            <subviews>
+                                <textView ambiguous="YES" editable="NO" importsGraphics="NO" findStyle="panel" continuousSpellChecking="YES" allowsUndo="YES" usesRuler="YES" usesFontPanel="YES" verticallyResizable="YES" allowsNonContiguousLayout="YES" quoteSubstitution="YES" dashSubstitution="YES" smartInsertDelete="YES" id="LSG-PF-cl8">
+                                    <rect key="frame" x="0.0" y="0.0" width="425" height="218"/>
+                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                    <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                    <size key="minSize" width="425" height="218"/>
+                                    <size key="maxSize" width="477" height="10000000"/>
+                                    <color key="insertionPointColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                    <size key="minSize" width="425" height="218"/>
+                                    <size key="maxSize" width="477" height="10000000"/>
+                                </textView>
+                            </subviews>
+                            <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        </clipView>
+                        <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="YES" id="3jV-aP-AB7">
+                            <rect key="frame" x="-100" y="-100" width="87" height="18"/>
+                            <autoresizingMask key="autoresizingMask"/>
+                        </scroller>
+                        <scroller key="verticalScroller" verticalHuggingPriority="750" horizontal="NO" id="qCC-lY-zQ6">
+                            <rect key="frame" x="410" y="1" width="16" height="218"/>
+                            <autoresizingMask key="autoresizingMask"/>
+                        </scroller>
+                    </scrollView>
+                </subviews>
+            </view>
+            <point key="canvasLocation" x="101" y="211.5"/>
+        </window>
+        <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" setsMaxLayoutWidthAtFirstLayout="YES" id="IoN-sN-cCx">
+            <rect key="frame" x="0.0" y="0.0" width="471" height="180"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+            <textFieldCell key="cell" controlSize="mini" sendsActionOnEndEditing="YES" drawsBackground="YES" id="Ay8-8n-FHi">
+                <font key="font" size="14" name="Courier"/>
+                <string key="title">// The version and copyright strings are replaced with // the values from Info.plist in the setup code. These // values are just placeholders/fallbacks. // // The icon image was being drawn with about 50%
+// opacity and I couldn't figure out why. The only  // solution I found was to layer two copies of the icon // on top of each other and add a black shadow (with no // offset) to both. </string>
+                <color key="textColor" red="0.11543657067200695" green="0.4338699494949495" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                <color key="backgroundColor" red="0.99215692281723022" green="0.9960784912109375" blue="0.9960784912109375" alpha="1" colorSpace="deviceRGB"/>
+            </textFieldCell>
+            <point key="canvasLocation" x="101.5" y="496"/>
+        </textField>
+    </objects>
+    <resources>
+        <image name="FermataIcon" width="284" height="284"/>
+    </resources>
+</document>
