@@ -145,4 +145,8 @@ xcodebuild -project BGMApp/BGMApp.xcodeproj -configuration Debug
 open "BGMApp/build/Debug/Background Music.app"
 ```
 
+To test with Address Sanitizer, you might have to set the environment var `ASAN_OPTIONS=detect_odr_violation=0` to work
+around [Issue #647](https://github.com/google/sanitizers/issues/647). (In Xcode, go `Product` > `Scheme` > `Edit
+Scheme...`, select the Background Music scheme, and add the environment var in Run > Arguments.)
+
 
