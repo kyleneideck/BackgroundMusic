@@ -23,8 +23,8 @@
 //  copies the new values to the output device.
 //
 
-#ifndef BGMDeviceControlSync_h
-#define BGMDeviceControlSync_h
+#ifndef __BGMApp__BGMDeviceControlSync__
+#define __BGMApp__BGMDeviceControlSync__
 
 // PublicUtility Includes
 #include "CAHALAudioDevice.h"
@@ -70,12 +70,12 @@ private:
     
 private:
     bool                mActive = false;
-    CAHALAudioDevice    mBGMDevice = CAHALAudioDevice(kAudioDeviceUnknown);
-    CAHALAudioDevice    mOutputDevice = CAHALAudioDevice(kAudioDeviceUnknown);
+    CAHALAudioDevice    mBGMDevice { kAudioDeviceUnknown };
+    CAHALAudioDevice    mOutputDevice { kAudioDeviceUnknown };
     
 };
 
 #pragma clang assume_nonnull end
 
-#endif /* BGMDeviceControlSync_h */
+#endif /* __BGMApp__BGMDeviceControlSync__ */
 

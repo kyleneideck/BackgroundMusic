@@ -109,10 +109,10 @@ private:
     AudioDeviceIOProcID mInputDeviceIOProcID;
     AudioDeviceIOProcID mOutputDeviceIOProcID;
     
-    CAHALAudioDevice    mInputDevice = CAHALAudioDevice(kAudioDeviceUnknown);
-    CAHALAudioDevice    mOutputDevice = CAHALAudioDevice(kAudioDeviceUnknown);
+    CAHALAudioDevice    mInputDevice { kAudioDeviceUnknown };
+    CAHALAudioDevice    mOutputDevice { kAudioDeviceUnknown };
     
-    CAMutex             mStateMutex = CAMutex("State mutex");
+    CAMutex             mStateMutex { "Playthrough state" };
     
     bool                mActive = false;
     bool                mPlayingThrough = false;
@@ -136,5 +136,5 @@ private:
 
 #pragma clang assume_nonnull end
 
-#endif /* defined(__BGMApp__BGMPlayThrough__) */
+#endif /* __BGMApp__BGMPlayThrough__ */
 

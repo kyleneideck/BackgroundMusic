@@ -114,7 +114,7 @@ private:
     UInt64                              mStartCount = 0;
     UInt64                              mStartCountExcludingBGMApp = 0;
     
-    CAMutex                             mMutex = CAMutex("Clients mutex");
+    CAMutex                             mMutex { "Clients" };
     
     SInt64                              mBGMAppClientID = -1;
     
@@ -129,7 +129,7 @@ private:
     // As with mMusicPlayerProcessID, we keep a copy of the bundle ID the user sets for the music player
     // because there might be no client with that bundle ID. In that case we need to be able to give the
     // property's value if the HAL asks for it, and to recognise the music player if it's added a client.
-    CACFString                          mMusicPlayerBundleIDProperty = "";
+    CACFString                          mMusicPlayerBundleIDProperty { "" };
     
     // The volume curve we apply to raw client volumes before they're used
     CAVolumeCurve                       mRelativeVolumeCurve;
