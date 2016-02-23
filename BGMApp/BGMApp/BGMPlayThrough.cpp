@@ -414,8 +414,10 @@ OSStatus    BGMPlayThrough::BGMDeviceListenerProc(AudioObjectID inObjectID,
         switch(inAddresses[i].mSelector)
         {
             case kAudioDeviceProcessorOverload:
+                // These warnings are common when you use the UI if you're running a debug build or have "Debug executable"
+                // checked. You shouldn't be seeing them otherwise.
                 DebugMsg("BGMPlayThrough::BGMDeviceListenerProc: WARNING! Got kAudioDeviceProcessorOverload notification");
-                LogWarning("Background Music: CPU overload on Background Music Device");
+                LogWarning("Background Music: CPU overload reported");
                 break;
                 
             // Start playthrough when a client starts IO on BGMDevice and pause when BGMApp (i.e. playthrough itself) is
@@ -454,6 +456,8 @@ OSStatus    BGMPlayThrough::BGMDeviceListenerProc(AudioObjectID inObjectID,
                     }
                     else
                     {
+                        // TODO: This should be rare, but we still shouldn't dispatch on the IO thread because it isn't
+                        //       real-time safe.
                         dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^{
                             if(refCon->mActive)
                             {

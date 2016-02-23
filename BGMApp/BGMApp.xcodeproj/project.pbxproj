@@ -40,6 +40,7 @@
 		1CED61691C3081C2002CAFCF /* LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = 1CED61681C3081C2002CAFCF /* LICENSE */; };
 		1CED616C1C316E1A002CAFCF /* BGMAudioDeviceManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1CED616B1C316E1A002CAFCF /* BGMAudioDeviceManager.mm */; };
 		271677BA1C6CBDFA0080B0A2 /* CACFNumber.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 271677B81C6CBDFA0080B0A2 /* CACFNumber.cpp */; };
+		27379B8A1C7C562D0084A24C /* BGMVLC.m in Sources */ = {isa = PBXBuildFile; fileRef = 27379B891C7C562D0084A24C /* BGMVLC.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -96,10 +97,8 @@
 		1C3DB48A1BE0888500EC8160 /* BGMAppVolumes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BGMAppVolumes.h; sourceTree = "<group>"; };
 		1C4699411BD5BA9E00F78043 /* BGM_Types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGM_Types.h; path = ../BGMDriver/BGMDriver/BGM_Types.h; sourceTree = "<group>"; };
 		1C4699461BD5C0E400F78043 /* BGMiTunes.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BGMiTunes.m; path = "Music Players/BGMiTunes.m"; sourceTree = "<group>"; };
-		1C46994B1BD5E70D00F78043 /* iTunes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = iTunes.h; sourceTree = "<group>"; };
 		1C46994C1BD7694C00F78043 /* BGMDeviceControlSync.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BGMDeviceControlSync.cpp; sourceTree = "<group>"; };
 		1C46994D1BD7694C00F78043 /* BGMDeviceControlSync.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BGMDeviceControlSync.h; sourceTree = "<group>"; };
-		1C6F8E1D1BEB1406000D8108 /* Spotify.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Spotify.h; sourceTree = "<group>"; };
 		1C8034C21BDAFD5700668E00 /* CAPThread.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CAPThread.cpp; path = PublicUtility/CAPThread.cpp; sourceTree = "<group>"; };
 		1C8034C31BDAFD5700668E00 /* CAPThread.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CAPThread.h; path = PublicUtility/CAPThread.h; sourceTree = "<group>"; };
 		1CB8B3361BBA75EF000E2DD1 /* Background Music.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Background Music.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -127,6 +126,11 @@
 		1CF69BA41BCFF59C009B5D1F /* BGMApp.profdata */ = {isa = PBXFileReference; lastKnownFileType = file; path = BGMApp.profdata; sourceTree = "<group>"; };
 		271677B81C6CBDFA0080B0A2 /* CACFNumber.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CACFNumber.cpp; path = PublicUtility/CACFNumber.cpp; sourceTree = "<group>"; };
 		271677B91C6CBDFA0080B0A2 /* CACFNumber.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CACFNumber.h; path = PublicUtility/CACFNumber.h; sourceTree = "<group>"; };
+		27379B851C7C54870084A24C /* iTunes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = iTunes.h; path = "Music Players/iTunes.h"; sourceTree = "<group>"; };
+		27379B861C7C54870084A24C /* Spotify.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Spotify.h; path = "Music Players/Spotify.h"; sourceTree = "<group>"; };
+		27379B871C7C552A0084A24C /* VLC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VLC.h; path = "Music Players/VLC.h"; sourceTree = "<group>"; };
+		27379B881C7C562D0084A24C /* BGMVLC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGMVLC.h; path = "Music Players/BGMVLC.h"; sourceTree = "<group>"; };
+		27379B891C7C562D0084A24C /* BGMVLC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BGMVLC.m; path = "Music Players/BGMVLC.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -221,6 +225,9 @@
 				1C4699461BD5C0E400F78043 /* BGMiTunes.m */,
 				1C2336DD1BEAE10C004C1C4E /* BGMSpotify.h */,
 				1C2336DE1BEAE10C004C1C4E /* BGMSpotify.m */,
+				27379B881C7C562D0084A24C /* BGMVLC.h */,
+				27379B891C7C562D0084A24C /* BGMVLC.m */,
+				27379B841C7C53BE0084A24C /* Supporting Files */,
 			);
 			name = "Music Players";
 			sourceTree = "<group>";
@@ -277,8 +284,6 @@
 				1CED61681C3081C2002CAFCF /* LICENSE */,
 				1CC1DF951BE8607700FB8FE4 /* Images.xcassets */,
 				1CB8B33A1BBA75EF000E2DD1 /* Info.plist */,
-				1C46994B1BD5E70D00F78043 /* iTunes.h */,
-				1C6F8E1D1BEB1406000D8108 /* Spotify.h */,
 				1CB8B33E1BBA75EF000E2DD1 /* main.m */,
 			);
 			name = "Supporting Files";
@@ -307,6 +312,16 @@
 				1CF69BA41BCFF59C009B5D1F /* BGMApp.profdata */,
 			);
 			path = OptimizationProfiles;
+			sourceTree = "<group>";
+		};
+		27379B841C7C53BE0084A24C /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				27379B851C7C54870084A24C /* iTunes.h */,
+				27379B861C7C54870084A24C /* Spotify.h */,
+				27379B871C7C552A0084A24C /* VLC.h */,
+			);
+			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -428,6 +443,7 @@
 				1CB8B33F1BBA75EF000E2DD1 /* main.m in Sources */,
 				1CB8B33D1BBA75EF000E2DD1 /* AppDelegate.mm in Sources */,
 				271677BA1C6CBDFA0080B0A2 /* CACFNumber.cpp in Sources */,
+				27379B8A1C7C562D0084A24C /* BGMVLC.m in Sources */,
 				1C2336DF1BEAE10C004C1C4E /* BGMSpotify.m in Sources */,
 				1CED616C1C316E1A002CAFCF /* BGMAudioDeviceManager.mm in Sources */,
 				1C1962FD1BCAC0C3008A4DF7 /* CADebugPrintf.cpp in Sources */,
