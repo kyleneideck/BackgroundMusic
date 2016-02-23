@@ -60,6 +60,10 @@ void    BGMDeviceControlSync::Activate()
             BGM_DeviceNotSetException(),
             "BGMDeviceControlSync::Activate: Both the output device and BGMDevice must be set to start synchronizing their controls");
     
+    // Init BGMDevice controls to match output device
+    CopyVolume(mOutputDevice, mBGMDevice, kAudioObjectPropertyScopeOutput);
+    CopyMute(mOutputDevice, mBGMDevice, kAudioObjectPropertyScopeOutput);
+    
     if(!mActive)
     {
         // Register listeners for volume and mute values
@@ -74,10 +78,6 @@ void    BGMDeviceControlSync::Activate()
             mBGMDevice.RemovePropertyListener(kVolumePropertyAddress, &BGMDeviceControlSync::BGMDeviceListenerProc, this);
             throw;
         }
-        
-        // Init BGMDevice controls to match output device
-        CopyVolume(mOutputDevice, mBGMDevice, kAudioObjectPropertyScopeOutput);
-        CopyMute(mOutputDevice, mBGMDevice, kAudioObjectPropertyScopeOutput);
         
         mActive = true;
     }
@@ -325,28 +325,31 @@ OSStatus    BGMDeviceControlSync::BGMDeviceListenerProc(AudioObjectID inObjectID
     // refCon (reference context) is the instance that registered this listener proc
     BGMDeviceControlSync* refCon = static_cast<BGMDeviceControlSync*>(inClientData);
     
-    ThrowIf(inObjectID != refCon->mBGMDevice.GetObjectID(),
-            CAException(kAudioHardwareBadObjectError),
-            "BGMDeviceControlSync::BGMDeviceListenerProc: notified about audio object other than BGMDevice");
-    
-    for(int i = 0; i < inNumberAddresses; i++)
+    if(refCon->mActive)
     {
-        AudioObjectPropertyScope scope = inAddresses[i].mScope;
+        ThrowIf(inObjectID != refCon->mBGMDevice.GetObjectID(),
+                CAException(kAudioHardwareBadObjectError),
+                "BGMDeviceControlSync::BGMDeviceListenerProc: notified about audio object other than BGMDevice");
         
-        switch(inAddresses[i].mSelector)
+        for(int i = 0; i < inNumberAddresses; i++)
         {
-            case kAudioDevicePropertyVolumeScalar:
-                // Update the output device
-                CopyVolume(refCon->mBGMDevice, refCon->mOutputDevice, scope);
-                break;
-                
-            case kAudioDevicePropertyMute:
-                // Update the output device. Note that this also runs when you change the volume (on BGMDevice)
-                CopyMute(refCon->mBGMDevice, refCon->mOutputDevice, scope);
-                break;
-                
-            default:
-                break;
+            AudioObjectPropertyScope scope = inAddresses[i].mScope;
+            
+            switch(inAddresses[i].mSelector)
+            {
+                case kAudioDevicePropertyVolumeScalar:
+                    // Update the output device
+                    CopyVolume(refCon->mBGMDevice, refCon->mOutputDevice, scope);
+                    break;
+                    
+                case kAudioDevicePropertyMute:
+                    // Update the output device. Note that this also runs when you change the volume (on BGMDevice)
+                    CopyMute(refCon->mBGMDevice, refCon->mOutputDevice, scope);
+                    break;
+                    
+                default:
+                    break;
+            }
         }
     }
     
