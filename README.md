@@ -39,6 +39,11 @@ their normal maximum volume.
 With Background Music running, open QuickTime Player and go `File > New Audio Recording...` (or movie/screen). Then
 click the arrow next to the record button that looks like `⌄` and select `Background Music Device` as the input device.
 
+You should be able to record system audio and a microphone together by creating an [aggregate
+device](https://support.apple.com/en-us/HT202000) that combines your input device (usually Built-in Input) with
+Background Music Device. You can create the aggregate device using the Audio MIDI Setup utility from
+`/Applications/Utilities`.
+
 ## Install
 
 No binaries yet, but building only takes a few seconds.

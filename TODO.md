@@ -45,6 +45,8 @@ There are also lots of other TODOs commented around the code.
 - Support for custom music players. Probably easiest to ask the user for AppleScript snippets. It could also have an
   option to simulate pressing the play/pause key on the keyboard, which would be less hassle for users.
 
+- Allow the user to select multiple music players.
+
 - Start at login option/setting
 
 - App volumes are only stored with the app's bundle ID and pid, so volumes for apps without bundle IDs are forgotten
@@ -77,18 +79,6 @@ There are also lots of other TODOs commented around the code.
     - BGMApp should catch any uncaught `CAException` from `BGMPlayThrough` and try to restart
       playthrough. (In release builds only.)
     - ...
-
-- You should be able to record system audio and a microphone together by creating an [aggregate
-  device](https://support.apple.com/en-us/HT202000). But if you do the HAL adds every client twice and `BGM_Clients`
-  wasn't designed to handle that.
-  
-  The clients are added with different client IDs, but `BGM_Clients` indexes the client list by pid.  I forget why it
-  does, but I'm pretty sure it should be changed to index by client ID, and have methods to search by pid/bundle ID that
-  return a list of clients.
-  
-  `BGM_Clients` also assumes that there is only one music player client, so
-  `kAudioDeviceCustomPropertyDeviceAudibleState` won't be updated properly. When that's fixed we should also be able to
-  allow the user to select multiple music players.
 
 - Only allow one instance of BGMApp to be running. Show a warning if the user tries to start another one. It would be
   nice if the warning offered to kill the other instances and start a new one.
