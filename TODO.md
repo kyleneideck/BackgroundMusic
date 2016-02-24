@@ -86,6 +86,6 @@ There are also lots of other TODOs commented around the code.
 - When BGMApp changes the default device to BGMDevice, some apps seem to keep using the previous default device if they
   were running IO at the time. Not sure if we can do anything about this.
 
-- Figure out how to test BGMDriver with Address Sanitizer enabled. It isn't working because coreaudio will try to read
+- Figure out how to test BGMDriver with Address Sanitizer enabled. It isn't working because coreaudiod will try to read
   files outside of its sandbox.
 

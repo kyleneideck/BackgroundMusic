@@ -11,7 +11,7 @@ Audio, for that matter.
 No dependencies so far, though you're welcome to add some.
 
 The best place to start is probably `DEVELOPING.md`, which has an overview of the project and instructions for building,
-debugging, etc. Though it's kind of long and not very interesting, so you might prefer to go straight into the code.
+debugging, etc. It's kind of long, though, and not very interesting, so you might prefer to go straight into the code.
 
 If you've got questions related to Core Audio, the [Core Audio mailing
 list](https://lists.apple.com/archives/coreaudio-api) is very useful. There's also the [Core Audio

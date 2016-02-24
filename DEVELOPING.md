@@ -77,7 +77,9 @@ Music Device.driver` to `/Library/Audio/Plug-Ins/HAL` and restart coreaudiod.
 Before you build, Xcode might show incorrect warnings on the `#pragma clang assume_nonnull` lines for some reason. They
 go away after you build and don't seem to cause any problems.
 
-**The following debug instructions stopped working in El Capitan.** System Integrity Protection stops LLDB from attaching to coreaudiod. I don't know of a workaround except to disable SIP.
+**The following debug instructions stopped working in OS X 10.11 (El Capitan).** [System Integrity
+Protection](https://support.apple.com/en-us/HT204899) stops LLDB from attaching to coreaudiod. I don't know of a
+workaround except to disable SIP.
 
 To debug in Xcode,
  - edit the BGMDevice scheme and
@@ -89,11 +91,13 @@ To debug in Xcode,
  - set BGMDevice as the active scheme,
  - build and install,
  - stop coreaudiod
+
    ```shell
    sudo launchctl unload /System/Library/LaunchDaemons/com.apple.audio.coreaudiod.plist
    ```
  - run in Xcode,
  - start coreaudiod
+
    ```shell
    sudo launchctl load /System/Library/LaunchDaemons/com.apple.audio.coreaudiod.plist
    ```

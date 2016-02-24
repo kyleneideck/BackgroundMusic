@@ -5,17 +5,17 @@
 # Background Music
 ##### OS X audio utility
 
-![](Images/README/screenshot.png)
+![](Images/README/Screenshot.png)
 
 - Automatically pauses your music player when other audio starts playing and unpauses it afterwards
 - Per-application volume, boost quiet apps
-- Record system audio
-
+- Record system audio <br>
+<br>
 - No restart required to install
 - Runs entirely in userspace
 
 **Version 0.1.0**, first release. Probably very buggy. Pretty much only tested on one system (a MacBook running OS X
-10.11.3 using the built-in audio device).
+10.11 using the built-in audio device).
 
 **Requires OS X 10.10+**. Might work on 10.9, but I haven't tried it.
 
@@ -25,9 +25,9 @@ Background Music can pause your music player app when other audio starts playing
 that when I'm listening to music and pause it to watch a video or something I always forget to unpause it afterwards. So
 this keeps me from wearing headphones for hours listening to nothing.
 
-So far only iTunes and Spotify are supported, but adding support for a music player should only take a few minutes (see
-BGMMusicPlayer.h). If you don't know how to program, or just don't feel like it, create an issue and I'll try to add it
-for you.
+So far only iTunes, Spotify and VLC are supported, but adding support for a music player should only take a few minutes
+(see `BGMMusicPlayer.h`). If you don't know how to program, or just don't feel like it, create an issue and I'll try to
+add it for you.
 
 ## App volumes
 
@@ -58,7 +58,8 @@ No binaries yet, but building only takes a few seconds.
   ```shell
   xcodebuild -project BGMApp/BGMApp.xcodeproj -target "Background Music" DSTROOT="/" install RUN_CLANG_STATIC_ANALYZER=0
   ```
-- Restart `coreaudiod`: (audio will stop working until the next step, so you might want to pause any running audio apps)
+- Restart `coreaudiod`: <br>
+  (Audio will stop working until the next step, so you might want to pause any running audio apps.)
 
   ```shell
   sudo launchctl unload /System/Library/LaunchDaemons/com.apple.audio.coreaudiod.plist
@@ -71,8 +72,8 @@ No binaries yet, but building only takes a few seconds.
 - Delete `Background Music.app` from `/Applications`.
 - Delete `Background Music Device.driver` from `/Library/Audio/Plug-Ins/HAL`.
 - Pause apps that are playing audio, if you can.
-- Restart `coreaudiod`:<!-- <br>
-  <sup>(Open `/Applications/Utilities/Terminal.app` and paste the following at the prompt.)</sup> -->
+- Restart `coreaudiod`:
+  [//]: # ( <sup>(Open `/Applications/Utilities/Terminal.app` and paste the following at the prompt.)</sup> )
 
   ```shell
   sudo launchctl unload /System/Library/LaunchDaemons/com.apple.audio.coreaudiod.plist
