@@ -30,16 +30,18 @@
 // SuperClass Includes
 #include "BGM_Object.h"
 
-//  Local Includes
+// Local Includes
 #include "BGM_Types.h"
 #include "BGM_WrappedAudioEngine.h"
 #include "BGM_Clients.h"
 #include "BGM_TaskQueue.h"
 
 // PublicUtility Includes
-#include "CACFString.h"
 #include "CAMutex.h"
 #include "CAVolumeCurve.h"
+
+// System Includes
+#include <CoreFoundation/CoreFoundation.h>
 
 
 class BGM_Device

@@ -141,8 +141,6 @@ private:
     bool                                ProcessRealTimeThreadTask(BGM_Task* inTask);
     bool                                ProcessNonRealTimeThreadTask(BGM_Task* inTask);
     
-    static void                         ThrowIfMachError(const char* inCallingMethod, const char* inErrorReturnedBy, kern_return_t inError);
-    
 private:
     // The worker threads that perform the queued tasks
     CAPThread                           mRealTimeThread;
@@ -172,7 +170,8 @@ private:
     // TAtomicStack lets us safely add and remove tasks on real-time threads.
     //
     // We use TAtomicStack rather than TAtomicStack2 because we need pop_all_reversed() to make sure we process the
-    // tasks in order.
+    // tasks in order. (It might have been better to use OSAtomicFifoEnqueue/OSAtomicFifoDequeue, but I only
+    // recently found out about them.)
     TAtomicStack<BGM_Task>              mRealTimeThreadTasks;
     TAtomicStack<BGM_Task>              mNonRealTimeThreadTasks;
     

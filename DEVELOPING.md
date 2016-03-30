@@ -4,8 +4,8 @@
 
 The codebase is split into two projects: BGMDriver, a userspace Core Audio plugin that publishes the virtual audio
 device, and BGMApp, which handles the UI, passing audio from the virtual device to the real output device and a few
-other things. The virtual device is usually referred to as "BGMDevice" in the code. Currently the only code shared
-between the two projects is `BGM_Types.h`.
+other things. The virtual device is usually referred to as "BGMDevice" in the code. Any code shared between the two
+projects is kept in the `SharedSource` dir.
 
 ## Real-time Constraints
 

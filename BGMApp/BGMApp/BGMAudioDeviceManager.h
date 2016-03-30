@@ -23,12 +23,12 @@
 //  starts playthrough and mirroring the devices' controls. The output device can be changed but the BGMDevice is fixed.
 //
 
+// PublicUtility Includes
+#include "CAHALAudioDevice.h"
+
 // System Includes
 #import <Foundation/Foundation.h>
 #include <CoreAudio/AudioHardwareBase.h>
-
-// PublicUtility Includes
-#include "CAHALAudioDevice.h"
 
 
 extern int const kBGMErrorCode_BGMDeviceNotFound;
@@ -48,6 +48,9 @@ extern int const kBGMErrorCode_OutputDeviceNotFound;
 - (BOOL) isOutputDevice:(AudioObjectID)deviceID;
 // Returns NO if the output device couldn't be changed and has been reverted
 - (BOOL) setOutputDeviceWithID:(AudioObjectID)deviceID revertOnFailure:(BOOL)revertOnFailure;
+
+// Returns when IO has started running on the output device (for playthrough).
+- (OSStatus) waitForOutputDeviceToStart;
 
 @end
 

@@ -22,7 +22,8 @@ There are also lots of other TODOs commented around the code.
 - User-friendly installation process and binaries. A .dmg with `Background Music.app` and `Background Music
   Device.driver` should be fine. Include links to `/Applications` and `/Library/Audio/Plug-Ins/HAL` with instructions to
   drag-and-drop. BGMApp will need to restart coreaudiod on the first run so it can use BGMDevice. (See `launchctl`
-  commands in README.)
+  commands in README.) I'm not sure how much work it is to make builds reproducible with Xcode, but it would be worth
+  looking into.
 
 ## Less quick
 

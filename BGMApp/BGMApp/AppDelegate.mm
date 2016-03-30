@@ -29,6 +29,7 @@
 #import "BGMAutoPauseMusic.h"
 #import "BGMAppVolumes.h"
 #import "BGMPreferencesMenu.h"
+#import "BGMXPCListener.h"
 
 
 static float const kStatusBarIconPadding = 0.25;
@@ -42,6 +43,7 @@ static float const kStatusBarIconPadding = 0.25;
     BGMAppVolumes* appVolumes;
     BGMAudioDeviceManager* audioDevices;
     BGMPreferencesMenu* prefsMenu;
+    BGMXPCListener* xpcListener;
 }
 
 - (void) awakeFromNib {
@@ -69,6 +71,8 @@ static float const kStatusBarIconPadding = 0.25;
 - (void) applicationDidFinishLaunching:(NSNotification*)aNotification {
     #pragma unused (aNotification)
     
+    // Set up the GUI and other external interfaces.
+
     // Coordinates the audio devices (BGMDevice and the output device): manages playthrough, volume/mute controls, etc.
     NSError* err;
     audioDevices = [[BGMAudioDeviceManager alloc] initWithError:&err];
@@ -77,18 +81,12 @@ static float const kStatusBarIconPadding = 0.25;
     }
     [audioDevices setBGMDeviceAsOSDefault];
     
-    // Register the preference defaults. These are the preferences/state that only apply to BGMApp. The others are
-    // persisted on BGMDriver.
-    NSDictionary* appDefaults = [NSDictionary dictionaryWithObject:[NSNumber numberWithBool:YES]
-                                                            forKey:@"AutoPauseMusicEnabled"];
-    [[NSUserDefaults standardUserDefaults] registerDefaults:appDefaults];
-    
     autoPauseMusic = [[BGMAutoPauseMusic alloc] initWithAudioDevices:audioDevices];
-
-    // Enable auto-pausing music if it's enabled in the user's preferences (which it is by default)
-    if ([[NSUserDefaults standardUserDefaults] boolForKey:@"AutoPauseMusicEnabled"]) {
-        [self toggleAutoPauseMusic:self];
-    }
+    
+    xpcListener = [[BGMXPCListener alloc] initWithAudioDevices:audioDevices
+                                  helperConnectionErrorHandler:^(NSError* error) {
+                                      [self showXPCHelperErrorMessageAndExit:error];
+                                  }];
     
     appVolumes = [[BGMAppVolumes alloc] initWithMenu:[self bgmMenu]
                                        appVolumeView:[self appVolumeView]
@@ -98,25 +96,61 @@ static float const kStatusBarIconPadding = 0.25;
                                                audioDevices:audioDevices
                                                  aboutPanel:[self aboutPanel]
                                       aboutPanelLicenseView:[self aboutPanelLicenseView]];
+    
+    [self loadUserDefaults];
+}
+
+- (void) loadUserDefaults {
+    // Register the preference defaults. These are the preferences/state that only apply to BGMApp. The others are
+    // persisted on BGMDriver.
+    NSDictionary* appDefaults = [NSDictionary dictionaryWithObject:[NSNumber numberWithBool:YES]
+                                                            forKey:@"AutoPauseMusicEnabled"];
+    [[NSUserDefaults standardUserDefaults] registerDefaults:appDefaults];
+    
+    // Enable auto-pausing music if it's enabled in the user's preferences (which it is by default).
+    if ([[NSUserDefaults standardUserDefaults] boolForKey:@"AutoPauseMusicEnabled"]) {
+        [self toggleAutoPauseMusic:self];
+    }
 }
 
 - (void) showDeviceNotFoundErrorMessageAndExit:(NSInteger)code {
     // Show an error dialog and exit if either BGMDevice wasn't found on the system or we couldn't find any output devices
     
-    NSAlert* alert = [NSAlert new];
-    
-    if (code == kBGMErrorCode_BGMDeviceNotFound) {
-        // TODO: Check whether the driver files are in /Library/Audio/Plug-Ins/HAL and offer to install them if not. Also,
-        //       it would be nice if we could restart coreaudiod automatically (using launchd).
-        [alert setMessageText:@"Could not find the Background Music virtual audio device."];
-        [alert setInformativeText:@"Make sure you've installed Background Music.driver to /Library/Audio/Plug-Ins/HAL and restarted coreaudiod (e.g. \"sudo killall coreaudiod\")."];
-    } else if(code == kBGMErrorCode_OutputDeviceNotFound) {
-        [alert setMessageText:@"Could not find an audio output device."];
-        [alert setInformativeText:@"If you do have one installed, this is probably a bug. Sorry about that. Feel free to file an issue on GitHub."];
-    }
-    
-    [alert runModal];
-    [NSApp terminate:self];
+    // NSAlert should only be used on the main thread.
+    dispatch_async(dispatch_get_main_queue(), ^{
+        NSAlert* alert = [NSAlert new];
+        
+        if (code == kBGMErrorCode_BGMDeviceNotFound) {
+            // TODO: Check whether the driver files are in /Library/Audio/Plug-Ins/HAL and offer to install them if not. Also,
+            //       it would be nice if we could restart coreaudiod automatically (using launchd).
+            [alert setMessageText:@"Could not find the Background Music virtual audio device."];
+            [alert setInformativeText:@"Make sure you've installed Background Music.driver to /Library/Audio/Plug-Ins/HAL and restarted coreaudiod (e.g. \"sudo killall coreaudiod\")."];
+        } else if (code == kBGMErrorCode_OutputDeviceNotFound) {
+            [alert setMessageText:@"Could not find an audio output device."];
+            [alert setInformativeText:@"If you do have one installed, this is probably a bug. Sorry about that. Feel free to file an issue on GitHub."];
+        }
+        
+        [alert runModal];
+        [NSApp terminate:self];
+    });
+}
+
+- (void) showXPCHelperErrorMessageAndExit:(NSError*)error {
+    // NSAlert should only be used on the main thread.
+    dispatch_async(dispatch_get_main_queue(), ^{
+        NSAlert* alert = [NSAlert new];
+        
+        // TODO: Offer to install BGMXPCHelper if it's missing.
+        [alert setMessageText:@"Error connecting to BGMXPCHelper."];
+        [alert setInformativeText:[NSString stringWithFormat:@"%s%s%@ (%lu)",
+                                   "Make sure you have BGMXPCHelper installed. There are instructions in the README.md file.",
+                                   "\n\nDetails:\n",
+                                   [error localizedDescription],
+                                   [error code]]];
+        
+        [alert runModal];
+        [NSApp terminate:self];
+    });
 }
 
 - (void) applicationWillTerminate:(NSNotification*)aNotification {

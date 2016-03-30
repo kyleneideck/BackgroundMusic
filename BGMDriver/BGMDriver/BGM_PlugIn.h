@@ -27,8 +27,11 @@
 #ifndef __BGMDriver__BGM_PlugIn__
 #define __BGMDriver__BGM_PlugIn__
 
-//	SuperClass Includes
+// SuperClass Includes
 #include "BGM_Object.h"
+
+// Local Includes
+#include "BGM_Types.h"
 
 // PublicUtility Includes
 #include "CAMutex.h"
@@ -72,7 +75,7 @@ public:
 #pragma mark Implementation
     
 public:
-    const CFStringRef               GetBundleID() const { return CFSTR("com.bearisdriving.BGMDriver"); }
+    const CFStringRef               GetBundleID() const { return CFSTR(kBGMDriverBundleID); }
     
 private:
     CAMutex							mMutex;

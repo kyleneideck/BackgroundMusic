@@ -25,6 +25,7 @@
 
 // Local Includes
 #include "BGM_Types.h"
+#include "BGM_Utils.h"
 #include "BGM_PlugIn.h"
 #include "BGM_Clients.h"
 #include "BGM_ClientMap.h"
@@ -36,8 +37,6 @@
 
 // System Includes
 #include <mach/mach_init.h>
-#include <mach/mach_error.h>
-#include <mach/semaphore.h>
 #include <mach/mach_time.h>
 #include <mach/task.h>
 
@@ -65,8 +64,7 @@ BGM_TaskQueue::BGM_TaskQueue()
         semaphore_t theSemaphore;
         kern_return_t theError = semaphore_create(mach_task_self(), &theSemaphore, SYNC_POLICY_FIFO, 0);
         
-        // Check errors
-        ThrowIfMachError("BGM_TaskQueue", "semaphore_create", theError);
+        BGM_Utils::ThrowIfMachError("BGM_TaskQueue::BGM_TaskQueue", "semaphore_create", theError);
         
         ThrowIf(theSemaphore == SEMAPHORE_NULL,
                 CAException(kAudioHardwareUnspecifiedError),
@@ -103,8 +101,7 @@ BGM_TaskQueue::~BGM_TaskQueue()
     auto destroySemaphore = [] (semaphore_t inSemaphore) {
         kern_return_t theError = semaphore_destroy(mach_task_self(), inSemaphore);
         
-        // Check errors
-        ThrowIfMachError("~BGM_TaskQueue", "semaphore_destroy", theError);
+        BGM_Utils::ThrowIfMachError("BGM_TaskQueue::~BGM_TaskQueue", "semaphore_destroy", theError);
     };
     
     destroySemaphore(mRealTimeThreadWorkQueuedSemaphore);
@@ -204,7 +201,7 @@ UInt64    BGM_TaskQueue::QueueSync(BGM_TaskID inTaskID, bool inRunOnRealtimeThre
     
     // Wake the worker thread so it'll process the task. (Note that semaphore_signal has an implicit barrier.)
     kern_return_t theError = semaphore_signal(inRunOnRealtimeThread ? mRealTimeThreadWorkQueuedSemaphore : mNonRealTimeThreadWorkQueuedSemaphore);
-    ThrowIfMachError("QueueSync", "semaphore_signal", theError);
+    BGM_Utils::ThrowIfMachError("BGM_TaskQueue::QueueSync", "semaphore_signal", theError);
     
     // Wait until the task has been processed.
     //
@@ -221,7 +218,7 @@ UInt64    BGM_TaskQueue::QueueSync(BGM_TaskID inTaskID, bool inRunOnRealtimeThre
         
         if(theError != KERN_OPERATION_TIMED_OUT)
         {
-            ThrowIfMachError("QueueSync", "semaphore_timedwait", theError);
+            BGM_Utils::ThrowIfMachError("BGM_TaskQueue::QueueSync", "semaphore_timedwait", theError);
         }
     }
     
@@ -250,7 +247,7 @@ void   BGM_TaskQueue::QueueOnNonRealtimeThread(BGM_Task inTask)
     
     // Signal the worker thread to process the task. (Note that semaphore_signal has an implicit barrier.)
     kern_return_t theError = semaphore_signal(mNonRealTimeThreadWorkQueuedSemaphore);
-    ThrowIfMachError("QueueOnNonRealtimeThread", "semaphore_signal", theError);
+    BGM_Utils::ThrowIfMachError("BGM_TaskQueue::QueueOnNonRealtimeThread", "semaphore_signal", theError);
 }
 
 #pragma mark Worker threads
@@ -311,7 +308,7 @@ void    BGM_TaskQueue::WorkerThreadProc(semaphore_t inWorkQueuedSemaphore, semap
         // Note that we don't have to hold any lock before waiting. If the semaphore is signalled before we begin waiting we'll
         // still get the signal after we do.
         kern_return_t theError = semaphore_wait(inWorkQueuedSemaphore);
-        ThrowIfMachError("WorkerThreadProc", "semaphore_wait", theError);
+        BGM_Utils::ThrowIfMachError("BGM_TaskQueue::WorkerThreadProc", "semaphore_wait", theError);
         
         // Fetch the tasks from the queue.
         //
@@ -340,7 +337,7 @@ void    BGM_TaskQueue::WorkerThreadProc(semaphore_t inWorkQueuedSemaphore, semap
                 //
                 // Note that semaphore_signal_all has an implicit barrier.
                 kern_return_t theError = semaphore_signal_all(inSyncTaskCompletedSemaphore);
-                ThrowIfMachError("WorkerThreadProc", "semaphore_signal_all", theError);
+                BGM_Utils::ThrowIfMachError("BGM_TaskQueue::WorkerThreadProc", "semaphore_signal_all", theError);
             }
             else if(inFreeList != NULL)
             {
@@ -439,22 +436,6 @@ bool    BGM_TaskQueue::ProcessNonRealTimeThreadTask(BGM_Task* inTask)
     }
     
     return false;
-}
-
-// static
-void    BGM_TaskQueue::ThrowIfMachError(const char* inCallingMethod, const char* inErrorReturnedBy, kern_return_t inError)
-{
-    // We use this instead of ThrowIfKernErr when the error corresponds to a Mach error string we'd like to log
-    
-#if !DEBUG
-    #pragma unused (inCallingMethod, inErrorReturnedBy)
-#endif
-    
-    if(inError != KERN_SUCCESS)
-    {
-        DebugMsg("BGM_TaskQueue::%s: %s returned an error (%d): %s", inCallingMethod, inErrorReturnedBy, inError, mach_error_string(inError));
-        Throw(CAException(inError));
-    }
 }
 
 #pragma clang assume_nonnull end

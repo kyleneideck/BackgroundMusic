@@ -99,10 +99,6 @@ bool    BGM_Clients::StartIONonRT(UInt32 inClientID)
     bool didFindClient = mClientMap.GetClientNonRT(inClientID, &theClient);
     
     ThrowIf(!didFindClient, BGM_InvalidClientException(), "BGM_Clients::StartIO: Cannot start IO for client that was never added");
-
-    DebugMsg("BGM_Clients::StartIO: Client %u (%s) starting IO",
-             inClientID,
-             CFStringGetCStringPtr(theClient.mBundleID.GetCFString(), kCFStringEncodingUTF8));
     
     bool sendIsRunningNotification = false;
     bool sendIsRunningSomewhereOtherThanBGMAppNotification = false;
@@ -111,6 +107,10 @@ bool    BGM_Clients::StartIONonRT(UInt32 inClientID)
     {
         // Make sure we can start
         ThrowIf(mStartCount == UINT64_MAX, CAException(kAudioHardwareIllegalOperationError), "BGM_Clients::StartIO: failed to start because the ref count was maxxed out already");
+        
+        DebugMsg("BGM_Clients::StartIO: Client %u (%s) starting IO",
+                 inClientID,
+                 CFStringGetCStringPtr(theClient.mBundleID.GetCFString(), kCFStringEncodingUTF8));
         
         mClientMap.StartIONonRT(inClientID);
         
@@ -153,15 +153,15 @@ bool    BGM_Clients::StopIONonRT(UInt32 inClientID)
     
     ThrowIf(!didFindClient, BGM_InvalidClientException(), "BGM_Clients::StopIO: Cannot stop IO for client that was never added");
     
-    DebugMsg("BGM_Clients::StopIO: Client %u (%s) stopping IO",
-             inClientID,
-             CFStringGetCStringPtr(theClient.mBundleID.GetCFString(), kCFStringEncodingUTF8));
-    
     bool sendIsRunningNotification = false;
     bool sendIsRunningSomewhereOtherThanBGMAppNotification = false;
     
     if(theClient.mDoingIO)
     {
+        DebugMsg("BGM_Clients::StopIO: Client %u (%s) stopping IO",
+                 inClientID,
+                 CFStringGetCStringPtr(theClient.mBundleID.GetCFString(), kCFStringEncodingUTF8));
+        
         mClientMap.StopIONonRT(inClientID);
         
         ThrowIf(mStartCount <= 0, CAException(kAudioHardwareIllegalOperationError), "BGM_Clients::StopIO: Underflowed mStartCount");
@@ -280,7 +280,7 @@ bool    BGM_Clients::SetMusicPlayer(const CACFString inBundleID)
     return true;
 }
 
-bool    BGM_Clients::IsMusicPlayerRT(const UInt32 inClientID)
+bool    BGM_Clients::IsMusicPlayerRT(const UInt32 inClientID) const
 {
     BGM_Client theClient;
     bool didGetClient = mClientMap.GetClientRT(inClientID, &theClient);

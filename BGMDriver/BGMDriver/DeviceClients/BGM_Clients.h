@@ -80,9 +80,10 @@ public:
     
 private:
     void                                SendIORunningNotifications(bool sendIsRunningNotification, bool sendIsRunningSomewhereOtherThanBGMAppNotification) const;
-    bool                                IsBGMApp(UInt32 inClientID) { return inClientID == mBGMAppClientID; }
-    
 public:
+    bool                                IsBGMApp(UInt32 inClientID) const { return inClientID == mBGMAppClientID; }
+    bool                                BGMAppHasClientRegistered() const { return mBGMAppClientID != -1; }
+    
     inline pid_t                        GetMusicPlayerProcessIDProperty() const { return mMusicPlayerProcessIDProperty; }
     inline CFStringRef                  CopyMusicPlayerBundleIDProperty() const { return mMusicPlayerBundleIDProperty.CopyCFString(); }
     
@@ -91,7 +92,7 @@ public:
     // Returns true if the bundle ID was changed
     bool                                SetMusicPlayer(const CACFString inBundleID);
     
-    bool                                IsMusicPlayerRT(const UInt32 inClientID);
+    bool                                IsMusicPlayerRT(const UInt32 inClientID) const;
     
     Float32                             GetClientRelativeVolumeRT(UInt32 inClientID) const;
     
@@ -110,7 +111,12 @@ public:
 private:
     BGM_ClientMap                       mClientMap;
     
-    // Counters for the number of clients that are doing IO
+    // Counters for the number of clients that are doing IO. These are used to tell whether any clients
+    // are currently doing IO without having to check every client's mDoingIO.
+    //
+    // We need to reference count this rather than just using a bool because the HAL might (but usually
+    // doesn't) call our StartIO/StopIO functions for clients other than the first to start and last to
+    // stop.
     UInt64                              mStartCount = 0;
     UInt64                              mStartCountExcludingBGMApp = 0;
     

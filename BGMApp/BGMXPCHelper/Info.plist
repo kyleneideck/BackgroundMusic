@@ -4,6 +4,8 @@
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
+	<key>CFBundleDisplayName</key>
+	<string>BGMXPCHelper</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -13,30 +15,19 @@
 	<key>CFBundleName</key>
 	<string>$(PRODUCT_NAME)</string>
 	<key>CFBundlePackageType</key>
-	<string>BNDL</string>
+	<string>XPC!</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0</string>
+	<string>0.1.0</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
-	<key>CFPlugInFactories</key>
+	<key>NSHumanReadableCopyright</key>
+	<string>Copyright © 2016 Kyle Neideck</string>
+	<key>XPCService</key>
 	<dict>
-		<key>C957AD43-DACA-4A40-8850-3BA8CE28FAF9</key>
-		<string>BGM_Create</string>
+		<key>ServiceType</key>
+		<string>User</string>
 	</dict>
-	<key>CFPlugInTypes</key>
-	<dict>
-		<key>443ABAB8-E7B3-491A-B985-BEB9187030DB</key>
-		<array>
-			<string>C957AD43-DACA-4A40-8850-3BA8CE28FAF9</string>
-		</array>
-	</dict>
-	<key>NSPrincipalClass</key>
-	<string></string>
-	<key>AudioServerPlugIn_MachServices</key>
-	<array>
-		<string>com.bearisdriving.BGM.XPCHelper</string>
-	</array>
 </dict>
 </plist>

@@ -113,7 +113,7 @@ static BGM_Object& BGM_LookUpOwnerObject(AudioObjectID inObjectID)
     }
     
     DebugMsg("BGM_LookUpOwnerObject: unknown object");
-    throw (CAException(kAudioHardwareBadObjectError));
+    Throw(CAException(kAudioHardwareBadObjectError));
 }
 
 #pragma mark Factory

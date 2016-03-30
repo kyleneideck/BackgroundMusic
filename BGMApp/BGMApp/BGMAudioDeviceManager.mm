@@ -32,9 +32,6 @@
 #include "CAHALAudioSystemObject.h"
 #include "CAAutoDisposer.h"
 
-// System Includes
-#import <Cocoa/Cocoa.h>
-
 
 int const kBGMErrorCode_BGMDeviceNotFound = 0;
 int const kBGMErrorCode_OutputDeviceNotFound = 1;
@@ -62,7 +59,7 @@ public:
         if (bgmDevice.GetObjectID() == kAudioObjectUnknown) {
             DebugMsg("BGMAudioDeviceManager::initWithError: BGMDevice not found");
             if (error) {
-                *error = [NSError errorWithDomain:@"com.bearisdriving.BGMApp" code:kBGMErrorCode_BGMDeviceNotFound userInfo:nil];
+                *error = [NSError errorWithDomain:@kBGMAppBundleID code:kBGMErrorCode_BGMDeviceNotFound userInfo:nil];
             }
             self = nil;
             return self;
@@ -74,7 +71,7 @@ public:
         if (outputDevice.GetObjectID() == kAudioDeviceUnknown) {
             DebugMsg("BGMAudioDeviceManager::initWithError: output device not found");
             if (error) {
-                *error = [NSError errorWithDomain:@"com.bearisdriving.BGMApp" code:kBGMErrorCode_OutputDeviceNotFound userInfo:nil];
+                *error = [NSError errorWithDomain:@kBGMAppBundleID code:kBGMErrorCode_OutputDeviceNotFound userInfo:nil];
             }
             self = nil;
             return self;
@@ -140,25 +137,29 @@ public:
 - (void) setBGMDeviceAsOSDefault {
     CAHALAudioSystemObject audioSystem;
     
-    if (audioSystem.GetDefaultAudioDevice(false, true) == outputDevice.GetObjectID()) {
-        // The default system device was the same as the default device, so change that as well
-        audioSystem.SetDefaultAudioDevice(false, true, bgmDevice.GetObjectID());
+    @synchronized (self) {
+        if (audioSystem.GetDefaultAudioDevice(false, true) == outputDevice.GetObjectID()) {
+            // The default system device was the same as the default device, so change that as well
+            audioSystem.SetDefaultAudioDevice(false, true, bgmDevice.GetObjectID());
+        }
+        
+        audioSystem.SetDefaultAudioDevice(false, false, bgmDevice.GetObjectID());
     }
-    
-    audioSystem.SetDefaultAudioDevice(false, false, bgmDevice.GetObjectID());
 }
 
 - (void) unsetBGMDeviceAsOSDefault {
     CAHALAudioSystemObject audioSystem;
     
-    if (audioSystem.GetDefaultAudioDevice(false, true) == bgmDevice.GetObjectID()) {
-        // We changed the system output device to BGMDevice, which we only do if it initially matches the
-        // default output device, so change it back
-        audioSystem.SetDefaultAudioDevice(false, true, outputDevice.GetObjectID());
-    }
-    
-    if (audioSystem.GetDefaultAudioDevice(false, false) == bgmDevice.GetObjectID()) {
-        audioSystem.SetDefaultAudioDevice(false, false, outputDevice.GetObjectID());
+    @synchronized (self) {
+        if (audioSystem.GetDefaultAudioDevice(false, true) == bgmDevice.GetObjectID()) {
+            // We changed the system output device to BGMDevice, which we only do if it initially matches the
+            // default output device, so change it back
+            audioSystem.SetDefaultAudioDevice(false, true, outputDevice.GetObjectID());
+        }
+        
+        if (audioSystem.GetDefaultAudioDevice(false, false) == bgmDevice.GetObjectID()) {
+            audioSystem.SetDefaultAudioDevice(false, false, outputDevice.GetObjectID());
+        }
     }
 }
 
@@ -177,39 +178,48 @@ public:
     
     // Set up playthrough and control sync
     BGMAudioDevice newOutputDevice(deviceID);
-    try {
-        // Mirror changes in BGMDevice's controls to the new output device's
-        deviceControlSync = BGMDeviceControlSync(bgmDevice, newOutputDevice);
-        
-        // Stream audio from BGMDevice to the output device
-        //
-        // TODO: Should this be done async? Some output devices take a long time to start IO (e.g. AirPlay) and I
-        //       assume this blocks the main thread. Haven't tried it to check, though.
-        playThrough = BGMPlayThrough(bgmDevice, newOutputDevice);
-        
-        // Start playthrough because audio might be playing
-        playThrough.Start();
-    } catch (CAException e) {
-        // Using LogWarning from PublicUtility instead of NSLog here crashes from a bad access. Not sure why.
-        NSLog(@"BGMAudioDeviceManager::setOutputDeviceWithID: Couldn't set device with ID %u as output device. %s %s%d.",
-              newOutputDevice.GetObjectID(),
-              (revertOnFailure ? "Will attempt to revert to the previous device." : ""),
-              "Error: ", e.GetError());
-        
-        if (revertOnFailure) {
-            // Try to reactivate the original device listener and playthrough
-            [self setOutputDeviceWithID:outputDevice.GetObjectID() revertOnFailure:NO];
-            return NO;
-        } else {
-            // TODO: Handle in callers. (Maybe show an error dialog and try to set the original default device as the output device.)
-            Throw(e);
+    
+    @synchronized (self) {
+        try {
+            // Mirror changes in BGMDevice's controls to the new output device's
+            deviceControlSync = BGMDeviceControlSync(bgmDevice, newOutputDevice);
+            
+            // Stream audio from BGMDevice to the output device
+            //
+            // TODO: Should this be done async? Some output devices take a long time to start IO (e.g. AirPlay) and I
+            //       assume this blocks the main thread. Haven't tried it to check, though.
+            playThrough = BGMPlayThrough(bgmDevice, newOutputDevice);
+            
+            // Start playthrough because audio might be playing
+            playThrough.Start();
+        } catch (CAException e) {
+            // Using LogWarning from PublicUtility instead of NSLog here crashes from a bad access. Not sure why.
+            NSLog(@"BGMAudioDeviceManager::setOutputDeviceWithID: Couldn't set device with ID %u as output device. %s %s%d.",
+                  newOutputDevice.GetObjectID(),
+                  (revertOnFailure ? "Will attempt to revert to the previous device." : ""),
+                  "Error: ", e.GetError());
+            
+            if (revertOnFailure) {
+                // Try to reactivate the original device listener and playthrough
+                [self setOutputDeviceWithID:outputDevice.GetObjectID() revertOnFailure:NO];
+                return NO;
+            } else {
+                // TODO: Handle in callers. (Maybe show an error dialog and try to set the original default device as the output device.)
+                Throw(e);
+            }
         }
-    }
 
-    outputDevice = BGMAudioDevice(deviceID);
+        outputDevice = BGMAudioDevice(deviceID);
+    }
     
     return YES;
 }
-    
+
+- (OSStatus) waitForOutputDeviceToStart {
+    @synchronized (self) {
+        return playThrough.WaitForOutputDeviceToStart();
+    }
+}
+
 @end
 

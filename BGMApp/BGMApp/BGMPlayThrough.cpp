@@ -25,15 +25,19 @@
 
 // Local Includes
 #include "BGM_Types.h"
+#include "BGM_Utils.h"
 
 // PublicUtility Includes
 #include "CAAtomic.h"
+#include "CAHALAudioSystemObject.h"
 
 // STL Includes
 #include <algorithm>  // For std::max
 
 // System Includes
+#include <mach/mach_init.h>
 #include <mach/mach_time.h>
+#include <mach/task.h>
 
 
 #pragma mark Construction/Destruction
@@ -56,11 +60,25 @@ BGMPlayThrough::BGMPlayThrough(CAHALAudioDevice inInputDevice, CAHALAudioDevice 
     mOutputDevice(inOutputDevice)
 {
     AllocateBuffer();
+    
+    // Init the semaphore for the output IO Proc.
+    kern_return_t theError = semaphore_create(mach_task_self(), &mOutputDeviceIOProcSemaphore, SYNC_POLICY_FIFO, 0);
+    BGM_Utils::ThrowIfMachError("BGMPlayThrough::BGMPlayThrough", "semaphore_create", theError);
+    
+    ThrowIf(mOutputDeviceIOProcSemaphore == SEMAPHORE_NULL,
+            CAException(kAudioHardwareUnspecifiedError),
+            "BGMPlayThrough::BGMPlayThrough: Could not create semaphore");
 }
 
 BGMPlayThrough::~BGMPlayThrough()
 {
     Deactivate();
+    
+    if(mOutputDeviceIOProcSemaphore != SEMAPHORE_NULL)
+    {
+        kern_return_t theError = semaphore_destroy(mach_task_self(), mOutputDeviceIOProcSemaphore);
+        BGM_Utils::ThrowIfMachError("BGMPlayThrough::~BGMPlayThrough", "semaphore_destroy", theError);
+    }
 }
 
 void    BGMPlayThrough::Swap(BGMPlayThrough &inPlayThrough)
@@ -73,6 +91,9 @@ void    BGMPlayThrough::Swap(BGMPlayThrough &inPlayThrough)
     
     mInputDevice = inPlayThrough.mInputDevice;
     mOutputDevice = inPlayThrough.mOutputDevice;
+    
+    mOutputDeviceIOProcSemaphore = inPlayThrough.mOutputDeviceIOProcSemaphore;
+    inPlayThrough.mOutputDeviceIOProcSemaphore = SEMAPHORE_NULL;
     
     AllocateBuffer();
     
@@ -91,9 +112,6 @@ void    BGMPlayThrough::Activate()
     if(!mActive)
     {
         CreateIOProcs();
-        
-        // Start the output device. (See the comments in PauseIfIdle for an explanation.)
-        mOutputDevice.StartIOProc(NULL);
         
         if(IsBGMDevice(mInputDevice))
         {
@@ -132,13 +150,6 @@ void    BGMPlayThrough::Deactivate()
             mInputDevice.RemovePropertyListener(kBGMRunningSomewhereOtherThanBGMAppAddress,
                                                 &BGMPlayThrough::BGMDeviceListenerProc,
                                                 this);
-        }
-        
-        if(!mPlayingThrough)
-        {
-            // Balance the StartIOProc(NULL) call in Activate() to stop the output device. (See the docs for
-            // AudioDeviceStart in AudioHardware.h)
-            mOutputDevice.StopIOProc(NULL);
         }
         
         DestroyIOProcs();
@@ -200,7 +211,7 @@ void    BGMPlayThrough::CreateIOProcs()
 
 void    BGMPlayThrough::DestroyIOProcs()
 {
-    Pause();
+    Stop();
     
     if(mInputDeviceIOProcID != NULL)
     {
@@ -228,7 +239,7 @@ OSStatus    BGMPlayThrough::Start()
         // Set up IOProcs and listeners if they aren't already
         Activate();
         
-        // Just in case Pause() didn't reset these for some reason
+        // Just in case Stop() didn't reset these for some reason
         mInputDeviceIOProcShouldStop = false;
         mOutputDeviceIOProcShouldStop = false;
         CAMemoryBarrier();
@@ -244,13 +255,51 @@ OSStatus    BGMPlayThrough::Start()
     return noErr;
 }
 
-OSStatus    BGMPlayThrough::Pause()
+OSStatus    BGMPlayThrough::WaitForOutputDeviceToStart()
+{
+    // Check for errors.
+    if(!mActive)
+    {
+        return kAudioHardwareNotRunningError;
+    }
+    if(!mOutputDevice.IsAlive())
+    {
+        return kAudioHardwareBadDeviceError;
+    }
+    
+#if DEBUG
+    UInt64 startedAt = mach_absolute_time();
+#endif
+    // Wait for our IO proc to start. mOutputDeviceIOProcSemaphore is reset to 0 (semaphore_signal_all) when our IO proc is
+    // running on the output device.
+    //
+    // This does mean that we won't have any data the first time our IO proc is called, but I don't know any way to wait until
+    // just before that point. (The device's IsRunning property changes immediately after we call StartIOProc.)
+    kern_return_t theError = semaphore_wait(mOutputDeviceIOProcSemaphore);
+    BGM_Utils::ThrowIfMachError("BGMPlayThrough::WaitForOutputDeviceToStart", "semaphore_wait", theError);
+
+#if DEBUG
+    UInt64 startedBy = mach_absolute_time();
+    
+    struct mach_timebase_info baseInfo = { 0, 0 };
+    mach_timebase_info(&baseInfo);
+    UInt64 base = baseInfo.numer / baseInfo.denom;
+    
+    DebugMsg("BGMPlayThrough::WaitForOutputDeviceToStart: Started %f ms after notification, %f ms after entering WaitForOutputDeviceToStart.",
+             static_cast<Float64>(startedBy - mToldOutputDeviceToStartAt) * base / NSEC_PER_MSEC,
+             static_cast<Float64>(startedBy - startedAt) * base / NSEC_PER_MSEC);
+#endif
+    
+    return noErr;
+}
+
+OSStatus    BGMPlayThrough::Stop()
 {
     CAMutex::Locker stateLocker(mStateMutex);
     
     if(mActive && mPlayingThrough)
     {
-        DebugMsg("BGMPlayThrough::Pause: Pausing playthrough");
+        DebugMsg("BGMPlayThrough::Stop: Stopping playthrough");
         
         if(mInputDevice.IsAlive())
         {
@@ -276,7 +325,7 @@ OSStatus    BGMPlayThrough::Pause()
         {
             // TODO: If playthrough is started again while we're waiting in this loop we could drop frames. Wait on a semaphore
             //       instead of sleeping? That way Start() could also signal it, before waiting on the state mutex, as a way of
-            //       cancelling the pause operation.
+            //       cancelling the stop operation.
             struct timespec rmtp;
             int err = nanosleep((const struct timespec[]){{0, NSEC_PER_MSEC}}, &rmtp);
             totalWaitNs += NSEC_PER_MSEC - (err == -1 ? rmtp.tv_nsec : 0);
@@ -286,24 +335,16 @@ OSStatus    BGMPlayThrough::Pause()
         // Clean up if the IOProcs didn't stop themselves
         if(mInputDeviceIOProcShouldStop && mInputDeviceIOProcID != NULL)
         {
-            DebugMsg("BGMPlayThrough::Pause: The input IOProc didn't stop itself in time. Stopping it from outside of the IO thread.");
+            DebugMsg("BGMPlayThrough::Stop: The input IOProc didn't stop itself in time. Stopping it from outside of the IO thread.");
             mInputDevice.StopIOProc(mInputDeviceIOProcID);
             mInputDeviceIOProcShouldStop = false;
         }
         if(mOutputDeviceIOProcShouldStop && mOutputDeviceIOProcID != NULL)
         {
-            DebugMsg("BGMPlayThrough::Pause: The output IOProc didn't stop itself in time. Stopping it from outside of the IO thread.");
+            DebugMsg("BGMPlayThrough::Stop: The output IOProc didn't stop itself in time. Stopping it from outside of the IO thread.");
             mOutputDevice.StopIOProc(mOutputDeviceIOProcID);
             mOutputDeviceIOProcShouldStop = false;
         }
-        
-        /*
-        // Increase the size of the IO buffers while idle to save CPU
-        UInt32 unusedMin, max;
-        mOutputDevice->GetIOBufferSizeRange(unusedMin, max);
-        DebugMsg("BGMPlayThrough::Pause: Set output device to its max IO buffer size: %u", max);
-        mOutputDevice->SetIOBufferSize(max);
-        */
         
         mPlayingThrough = false;
     }
@@ -315,46 +356,24 @@ OSStatus    BGMPlayThrough::Pause()
     return noErr;
 }
 
-void    BGMPlayThrough::PauseIfIdle()
+void    BGMPlayThrough::StopIfIdle()
 {
-    // To save CPU time, we pause playthrough when no clients are doing IO. On my system, this reduces coreaudiod's CPU
-    // use from around 5% to 2.5% and BGMApp's from around 0.6% to 0.3%. If this isn't working for you, a client might be
-    // running IO without being audible. VLC does that when you have a file paused, for example.
-    //
-    // The driver for Apple's built-in audio uses a fair bit of CPU doing some DSP on all audio playing through the
-    // built-in speakers. So this might not have much effect if you're using headphones or different audio hardware.
-    //
-    // To minimize latency, rather than stopping IO on the hardware completely, we just stop our IOProcs. (See Pause().)
-    // We can start them again quickly enough that this doesn't add latency, though I'm not sure the HAL guarantees that.
-    // This function should at least be called with real-time priority because we call it when we get the
-    // kAudioDevicePropertyDeviceIsRunning notification. From Jeff Moore on the Core Audio mailing list:
-    //     "Only kAudioDevicePropertyDeviceIsRunning comes from the IO thread, but it happens at a relatively safe time
-    //      - either before the HAL starts tracking time or after it is finished.
-    //
-    // Another option is to increase the size of the IO buffers on the output device (with SetIOBufferSize()), which uses
-    // less CPU at the cost of higher latency. I also tried increasing the size of the IO buffers while playthrough is
-    // paused but changing them back before starting playthrough. It was around 4-5 times faster than restarting IO for
-    // me, but it still roughly doubled latency compared to the current solution. And of course that's all completely
-    // hardware-dependent.
-    //
-    // TODO: I think the correct way to handle this is for BGMDriver's StartIO function to tell BGMApp to start IO on the
-    //       output device, and not return until BGMApp replies that IO has started. We should probably use XPC to send
-    //       those messages rather than HAL notifications. With this solution we'd add no more latency than with the
-    //       current solution (which is no more than if we run the hardware constantly -- the latency comes from needing
-    //       an extra output buffer) and we wouldn't have to waste any CPU time when audio is idle.
+    // To save CPU time, we stop playthrough when no clients are doing IO. This should reduce the coreaudiod and BGMApp
+    // processes' idle CPU use to virtually none. If this isn't working for you, a client might be running IO without
+    // being audible. VLC does that when you have a file paused, for example.
     
     CAMutex::Locker stateLocker(mStateMutex);
     
     Assert(IsBGMDevice(mInputDevice),
-           "BGMDevice not set as input device. PauseIfIdle can't tell if other devices are idle");
+           "BGMDevice not set as input device. StopIfIdle can't tell if other devices are idle.");
     
     if(!RunningSomewhereOtherThanBGMApp(mInputDevice))
     {
         mLastNotifiedIOStoppedOnBGMDevice = mach_absolute_time();
         
-        // Wait a bit before pausing playthrough
+        // Wait a bit before stopping playthrough.
         //
-        // This stops us from starting and stopping IO too rapidly, which wastes CPU, and gives BGMDriver time to update
+        // This keeps us from starting and stopping IO too rapidly, which wastes CPU, and gives BGMDriver time to update
         // kAudioDeviceCustomPropertyDeviceAudibleState, which it can only do while IO is running. (The wait duration is
         // more or less arbitrary, except that it has to be longer than kDeviceAudibleStateMinChangedFramesForUpdate.)
 
@@ -363,7 +382,7 @@ void    BGMPlayThrough::PauseIfIdle()
         UInt64 waitNsec = static_cast<UInt64>(20 * kDeviceAudibleStateMinChangedFramesForUpdate * nsecPerFrame);
         UInt64 queuedAt = mLastNotifiedIOStoppedOnBGMDevice;
         
-        DebugMsg("BGMPlayThrough::PauseIfIdle: Will dispatch pause-if-idle block in %llu ns. %s%llu",
+        DebugMsg("BGMPlayThrough::StopIfIdle: Will dispatch stop-if-idle block in %llu ns. %s%llu",
                  waitNsec,
                  "queuedAt=", queuedAt);
         
@@ -376,15 +395,15 @@ void    BGMPlayThrough::PauseIfIdle()
                                // The "2" is just to avoid shadowing the other locker
                                CAMutex::Locker stateLocker2(mStateMutex);
                                
-                               // Don't Pause playthrough if IO has started running again or if
+                               // Don't stop playthrough if IO has started running again or if
                                // kAudioDeviceCustomPropertyDeviceIsRunningSomewhereOtherThanBGMApp has changed since
                                // this block was queued
                                if(mPlayingThrough && !RunningSomewhereOtherThanBGMApp(mInputDevice)
                                   && queuedAt == mLastNotifiedIOStoppedOnBGMDevice)
                                {
-                                   DebugMsg("BGMPlayThrough::PauseIfIdle: BGMDevice is only running IO for BGMApp. %s",
-                                            "Pausing playthrough.");
-                                   Pause();
+                                   DebugMsg("BGMPlayThrough::StopIfIdle: BGMDevice is only running IO for BGMApp. %s",
+                                            "Stopping playthrough.");
+                                   Stop();
                                }
                            }
                        });
@@ -420,17 +439,17 @@ OSStatus    BGMPlayThrough::BGMDeviceListenerProc(AudioObjectID inObjectID,
                 LogWarning("Background Music: CPU overload reported");
                 break;
                 
-            // Start playthrough when a client starts IO on BGMDevice and pause when BGMApp (i.e. playthrough itself) is
+            // Start playthrough when a client starts IO on BGMDevice and stop when BGMApp (i.e. playthrough itself) is
             // the only client left doing IO.
             //
             // These cases are dispatched to avoid causing deadlocks by triggering one of the following notifications in
             // the process of handling one. Deadlocks could happen if these were handled synchronously when:
-            //     - the first ListenerProc call takes the state mutex, then requests some data from the HAL and waits
-            //       for it to return,
+            //     - the first BGMDeviceListenerProc call takes the state mutex, then requests some data from the HAL and
+            //       waits for it to return,
             //     - the request triggers the HAL to send notifications, which it sends on a different thread,
-            //     - the HAL waits for the second ListenerProc call to return before it returns the data requested by the
-            //       first ListenerProc call, and
-            //     - the second ListenerProc call waits for the first to unlock the state mutex.
+            //     - the HAL waits for the second BGMDeviceListenerProc call to return before it returns the data
+            //       requested by the first BGMDeviceListenerProc call, and
+            //     - the second BGMDeviceListenerProc call waits for the first to unlock the state mutex.
                 
             case kAudioDevicePropertyDeviceIsRunning:  // Received on the IO thread before our IOProc is called
                 {
@@ -443,6 +462,9 @@ OSStatus    BGMPlayThrough::BGMDeviceListenerProc(AudioObjectID inObjectID,
                         //if(refCon->mInputDevice->IsRunning())
                         if(RunningSomewhereOtherThanBGMApp(refCon->mInputDevice))
                         {
+#if DEBUG
+                            refCon->mToldOutputDeviceToStartAt = mach_absolute_time();
+#endif
                             refCon->Start();
                         }
                     };
@@ -461,7 +483,7 @@ OSStatus    BGMPlayThrough::BGMDeviceListenerProc(AudioObjectID inObjectID,
                         dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^{
                             if(refCon->mActive)
                             {
-                                DebugMsg("BGMPlayThrough::BGMDeviceListenerProc: Handling %s",
+                                DebugMsg("BGMPlayThrough::BGMDeviceListenerProc: Handling "
                                          "kAudioDevicePropertyDeviceIsRunning notification in dispatched block");
                                 CAMutex::Locker stateLocker(refCon->mStateMutex);
                                 deviceIsRunningHandler();
@@ -472,14 +494,14 @@ OSStatus    BGMPlayThrough::BGMDeviceListenerProc(AudioObjectID inObjectID,
                 break;
                 
             case kAudioDeviceCustomPropertyDeviceIsRunningSomewhereOtherThanBGMApp:
-                DebugMsg("BGMPlayThrough::BGMDeviceListenerProc: Got %s",
+                DebugMsg("BGMPlayThrough::BGMDeviceListenerProc: Got "
                          "kAudioDeviceCustomPropertyDeviceIsRunningSomewhereOtherThanBGMApp notification");
                 
-                // These notifications don't need to be handled very quickly, so we can always dispatch
+                // These notifications don't need to be handled quickly, so we can always dispatch.
                 dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^{
                     if(refCon->mActive)
                     {
-                        refCon->PauseIfIdle();
+                        refCon->StopIfIdle();
                     }
                 });
                 break;
@@ -568,6 +590,10 @@ OSStatus    BGMPlayThrough::OutputDeviceIOProc(AudioObjectID           inDevice,
         refCon->mOutputDeviceIOProcShouldStop = false;
         return noErr;
     }
+    
+    // Wake any threads waiting in WaitForOutputDeviceToStart, since the output device has finished starting up.
+    kern_return_t theError = semaphore_signal_all(refCon->mOutputDeviceIOProcSemaphore);
+    BGM_Utils::ThrowIfMachError("BGMPlayThrough::OutputDeviceIOProc", "semaphore_signal_all", theError);
     
     // Return early if we don't have any data to output yet
     if(refCon->mLastInputSampleTime == -1)

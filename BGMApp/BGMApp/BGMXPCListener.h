@@ -14,33 +14,32 @@
 // along with Background Music. If not, see <http://www.gnu.org/licenses/>.
 
 //
-//  BGM_TestUtils.h
-//  BGMDriver
+//  BGMXPCListener.h
+//  BGMApp
 //
 //  Copyright © 2016 Kyle Neideck
 //
+//  Connects to BGMXPCHelper via XPC. When BGMDriver wants BGMApp to do something it can call one of BGMHelper's
+//  XPC methods, which passes the request along to this class.
+//
 
-#ifndef __BGMDriverTests__BGM_TestUtils__
-#define __BGMDriverTests__BGM_TestUtils__
+// Local Includes
+#import "BGMAudioDeviceManager.h"
+#import "BGMXPCProtocols.h"
 
-// Test Framework
-#import <XCTest/XCTest.h>
-
-// STL Includes
-#include <functional>
+// System Includes
+#import <Foundation/Foundation.h>
 
 
-template<typename ExpectedException>
-void BGMShouldThrow(id self, const std::function<void()> &f)
-{
-    try
-    {
-        f();
-        XCTFail();
-    }
-    catch (ExpectedException)
-    { }
-}
+#pragma clang assume_nonnull begin
 
-#endif /* __BGMDriverTests__BGM_TestUtils__ */
+@interface BGMXPCListener : NSObject <BGMAppXPCProtocol, NSXPCListenerDelegate>
+
+- (id) initWithAudioDevices:(BGMAudioDeviceManager*)devices helperConnectionErrorHandler:(void (^)(NSError* error))errorHandler;
+
+- (void) initHelperConnection;
+
+@end
+
+#pragma clang assume_nonnull end
 

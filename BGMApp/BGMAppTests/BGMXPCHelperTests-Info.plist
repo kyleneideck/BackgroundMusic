@@ -20,23 +20,5 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
-	<key>CFPlugInFactories</key>
-	<dict>
-		<key>C957AD43-DACA-4A40-8850-3BA8CE28FAF9</key>
-		<string>BGM_Create</string>
-	</dict>
-	<key>CFPlugInTypes</key>
-	<dict>
-		<key>443ABAB8-E7B3-491A-B985-BEB9187030DB</key>
-		<array>
-			<string>C957AD43-DACA-4A40-8850-3BA8CE28FAF9</string>
-		</array>
-	</dict>
-	<key>NSPrincipalClass</key>
-	<string></string>
-	<key>AudioServerPlugIn_MachServices</key>
-	<array>
-		<string>com.bearisdriving.BGM.XPCHelper</string>
-	</array>
 </dict>
 </plist>

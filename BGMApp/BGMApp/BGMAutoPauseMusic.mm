@@ -64,8 +64,8 @@ static int const kUnpauseDelayMSecs = 3000;
         wePaused = NO;
         
         dispatch_queue_attr_t attr = dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_DEFAULT, 0);
-        listenerQueue = dispatch_queue_create("com.bearisdriving.BGMAutoPauseMusic.Listener", attr);
-        pauseUnpauseMusicQueue = dispatch_queue_create("com.bearisdriving.BGMAutoPauseMusic.PauseUnpauseMusic", attr);
+        listenerQueue = dispatch_queue_create("com.bearisdriving.BGM.AutoPauseMusic.Listener", attr);
+        pauseUnpauseMusicQueue = dispatch_queue_create("com.bearisdriving.BGM.AutoPauseMusic.PauseUnpauseMusic", attr);
         
         [self initListenerBlock];
     }

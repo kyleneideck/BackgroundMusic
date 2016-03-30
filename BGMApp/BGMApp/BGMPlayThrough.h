@@ -27,6 +27,11 @@
 //  (https://github.com/mattingalls/Soundflower/blob/master/SoundflowerBed/AudioThruEngine.h) that seems to be based on Apple
 //  sample code from 2004. This class's main addition is pausing playthrough when idle to save CPU.
 //
+//  Playing audio with this class uses more CPU, mostly in the coreaudiod process, than playing audio normally because we need
+//  an input IO proc as well as an output one, and BGMDriver is running in addition to the output device's driver. For me, it
+//  usually adds around 1-2% (as a percentage of total usage -- it doesn't seem to be relative to the CPU used when playing
+//  audio normally).
+//
 //  This class will hopefully not be needed after CoreAudio's aggregate devices get support for controls, which is planned for
 //  a future release.
 //
@@ -38,6 +43,9 @@
 #include "CARingBuffer.h"
 #include "CAHALAudioDevice.h"
 #include "CAMutex.h"
+
+// System Includes
+#include <mach/semaphore.h>
 
 
 #pragma clang assume_nonnull begin
@@ -75,10 +83,12 @@ private:
 	
 public:
     OSStatus            Start();
+    OSStatus            WaitForOutputDeviceToStart();
     
 private:
-    OSStatus            Pause();
-    void                PauseIfIdle();
+    OSStatus            Stop();
+    void                StopIfIdle();
+    
     static OSStatus     BGMDeviceListenerProc(AudioObjectID inObjectID,
                                               UInt32 inNumberAddresses,
                                               const AudioObjectPropertyAddress* inAddresses,
@@ -114,6 +124,9 @@ private:
     
     CAMutex             mStateMutex { "Playthrough state" };
     
+    // Signalled when the output IO proc runs. We use it to tell BGMDriver when the output device is ready to receive audio data.
+    semaphore_t         mOutputDeviceIOProcSemaphore;
+    
     bool                mActive = false;
     bool                mPlayingThrough = false;
     
@@ -121,15 +134,18 @@ private:
     
     bool                mInputDeviceIOProcShouldStop = false;
     bool                mOutputDeviceIOProcShouldStop = false;
-
-    // IOProc vars. (Should only be used inside IOProcs.)
     
-    // The earliest/latest sample times seen by the IOProcs since starting playthrough. -1 for unset.
+    // For debug logging.
+    UInt64              mToldOutputDeviceToStartAt;
+
+    // IO proc vars. (Should only be used inside IO procs.)
+    
+    // The earliest/latest sample times seen by the IO procs since starting playthrough. -1 for unset.
     Float64             mFirstInputSampleTime = -1;
     Float64             mLastInputSampleTime = -1;
     Float64             mLastOutputSampleTime = -1;
     
-    // Subtract this from the output time to get the input time
+    // Subtract this from the output time to get the input time.
     Float64             mInToOutSampleOffset;
     
 };

@@ -15,15 +15,13 @@
 
 //
 //  BGM_Types.h
-//  BGMDriver
+//  SharedSource
 //
 //  Copyright © 2016 Kyle Neideck
 //
-//  Shared with the BGMApp project.
-//
 
-#ifndef BGMDriver_BGM_Types_h
-#define BGMDriver_BGM_Types_h
+#ifndef __SharedSource__BGM_Types__
+#define __SharedSource__BGM_Types__
 
 #include <CoreAudio/AudioServerPlugin.h>
 
@@ -31,11 +29,12 @@
 #pragma mark IDs
 
 // TODO: Change these and the other defines to const strings?
-#define kBGMDeviceBundleID  "com.bearisdriving.BGMDevice"
-#define kBGMAppBundleID     "com.bearisdriving.BGMApp"
+#define kBGMDriverBundleID           "com.bearisdriving.BGM.Driver"
+#define kBGMAppBundleID              "com.bearisdriving.BGM.App"
+#define kBGMXPCHelperBundleID        "com.bearisdriving.BGM.XPCHelper"
 
-#define kBGMDeviceUID       "BGMDevice"
-#define kBGMDeviceModelUID	"BGMDeviceModelUID"
+#define kBGMDeviceUID                "BGMDevice"
+#define kBGMDeviceModelUID           "BGMDeviceModelUID"
 
 // The object IDs for the audio objects this driver implements
 //
@@ -117,12 +116,27 @@ enum
 #define kAppRelativeVolumeMinDbValue    -96.0f
 #define kAppRelativeVolumeMaxDbValue	0.0f
 
+#pragma mark XPC Return Codes
+
+enum {
+    kBGMXPC_Success,
+    kBGMXPC_MessageFailure,
+    kBGMXPC_Timeout,
+    kBGMXPC_BGMAppStateError,
+    kBGMXPC_HardwareError,
+    kBGMXPC_InternalError
+};
+
 #pragma mark Exceptions
+
+#if defined(__cplusplus)
 
 class BGM_InvalidClientException { };
 class BGM_InvalidClientPIDException { };
 class BGM_InvalidClientRelativeVolumeException { };
 class BGM_DeviceNotSetException { };
+
+#endif
 
 #pragma mark Property Addresses
 
@@ -158,5 +172,5 @@ static const AudioObjectPropertyAddress kBGMAppVolumesAddress = {
     kAudioObjectPropertyElementMaster
 };
 
-#endif
+#endif /* __SharedSource__BGM_Types__ */
 
