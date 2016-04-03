@@ -46,24 +46,28 @@ Background Music Device. You can create the aggregate device using the Audio MID
 
 ## Install
 
-No binaries yet, but building only takes a few seconds.
+No binaries yet, but building only takes a few seconds (as long as you already have Xcode installed).
 
 - Install the virtual audio device `Background Music Device.driver` to `/Library/Audio/Plug-Ins/HAL`.
 
   ```shell
-  sudo xcodebuild -project BGMDriver/BGMDriver.xcodeproj -target "Background Music Device" DSTROOT="/" install RUN_CLANG_STATIC_ANALYZER=0
+  sudo xcodebuild -project BGMDriver/BGMDriver.xcodeproj -target "Background Music Device" RUN_CLANG_STATIC_ANALYZER=0 DSTROOT="/" install
+  ```
+- Install the XPC helper.
+
+  ```shell
+  sudo xcodebuild -project BGMApp/BGMApp.xcodeproj -target BGMXPCHelper RUN_CLANG_STATIC_ANALYZER=0 DSTROOT="/" INSTALL_PATH="$(BGMApp/BGMXPCHelper/safe_install_dir.sh)" install
   ```
 - Install `Background Music.app` to `/Applications` (or wherever).
 
   ```shell
-  xcodebuild -project BGMApp/BGMApp.xcodeproj -target "Background Music" DSTROOT="/" install RUN_CLANG_STATIC_ANALYZER=0
+  xcodebuild -project BGMApp/BGMApp.xcodeproj -target "Background Music" RUN_CLANG_STATIC_ANALYZER=0 DSTROOT="/" install
   ```
 - Restart `coreaudiod`: <br>
   (Audio will stop working until the next step, so you might want to pause any running audio apps.)
 
   ```shell
-  sudo launchctl unload /System/Library/LaunchDaemons/com.apple.audio.coreaudiod.plist
-  sudo launchctl load /System/Library/LaunchDaemons/com.apple.audio.coreaudiod.plist
+  sudo launchctl kill SIGTERM system/com.apple.audio.coreaudiod
   ```
 - Run `Background Music.app`.
 
@@ -71,13 +75,13 @@ No binaries yet, but building only takes a few seconds.
 
 - Delete `Background Music.app` from `/Applications`.
 - Delete `Background Music Device.driver` from `/Library/Audio/Plug-Ins/HAL`.
+- Delete `BGMXPCHelper.xpc` from `/usr/local/libexec` or possibly `/Library/Application Support/Background Music`.
 - Pause apps that are playing audio, if you can.
 - Restart `coreaudiod`:
   [//]: # ( <sup>(Open `/Applications/Utilities/Terminal.app` and paste the following at the prompt.)</sup> )
 
   ```shell
-  sudo launchctl unload /System/Library/LaunchDaemons/com.apple.audio.coreaudiod.plist
-  sudo launchctl load /System/Library/LaunchDaemons/com.apple.audio.coreaudiod.plist
+  sudo launchctl kill SIGTERM system/com.apple.audio.coreaudiod
   ```
 - Go to the Sound section in System Preferences and change your default output device at least once. (If you only have
   one device now, either use `Audio MIDI Setup.app` to create a temporary aggregate device, restart any audio apps that

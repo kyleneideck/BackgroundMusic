@@ -41,6 +41,11 @@
 		1CED616C1C316E1A002CAFCF /* BGMAudioDeviceManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1CED616B1C316E1A002CAFCF /* BGMAudioDeviceManager.mm */; };
 		271677BA1C6CBDFA0080B0A2 /* CACFNumber.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 271677B81C6CBDFA0080B0A2 /* CACFNumber.cpp */; };
 		27379B8A1C7C562D0084A24C /* BGMVLC.m in Sources */ = {isa = PBXBuildFile; fileRef = 27379B891C7C562D0084A24C /* BGMVLC.m */; };
+		2769728C1CAFCEE8007A2F7C /* post_install.sh in Resources */ = {isa = PBXBuildFile; fileRef = 2769728B1CAFCEE8007A2F7C /* post_install.sh */; };
+		2769728E1CAFCEFD007A2F7C /* com.bearisdriving.BGM.XPCHelper.plist.template in Resources */ = {isa = PBXBuildFile; fileRef = 2769728D1CAFCEFD007A2F7C /* com.bearisdriving.BGM.XPCHelper.plist.template */; };
+		2769728F1CAFF22C007A2F7C /* com.bearisdriving.BGM.XPCHelper.plist.template in Resources */ = {isa = PBXBuildFile; fileRef = 2769728D1CAFCEFD007A2F7C /* com.bearisdriving.BGM.XPCHelper.plist.template */; };
+		276972911CB16008007A2F7C /* safe_install_dir.sh in Resources */ = {isa = PBXBuildFile; fileRef = 276972901CB16008007A2F7C /* safe_install_dir.sh */; };
+		276972921CB1603E007A2F7C /* safe_install_dir.sh in Resources */ = {isa = PBXBuildFile; fileRef = 276972901CB16008007A2F7C /* safe_install_dir.sh */; };
 		277170161CA24D7C00AB34B4 /* BGMXPCListenerDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 277170151CA24D7C00AB34B4 /* BGMXPCListenerDelegate.m */; };
 		278D71E91CABB6FF00899CF9 /* BGMXPCHelperTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 279597401C996E2000A002FB /* BGMXPCHelperTests.m */; };
 		278D71F61CABBC3B00899CF9 /* BGMXPCHelperTests-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 278D71F51CABBC3B00899CF9 /* BGMXPCHelperTests-Info.plist */; };
@@ -145,6 +150,9 @@
 		27379B881C7C562D0084A24C /* BGMVLC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGMVLC.h; path = "Music Players/BGMVLC.h"; sourceTree = "<group>"; };
 		27379B891C7C562D0084A24C /* BGMVLC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BGMVLC.m; path = "Music Players/BGMVLC.m"; sourceTree = "<group>"; };
 		27379B8F1C7F57DA0084A24C /* BGMXPCHelper.xpc */ = {isa = PBXFileReference; explicitFileType = "wrapper.xpc-service"; includeInIndex = 0; path = BGMXPCHelper.xpc; sourceTree = BUILT_PRODUCTS_DIR; };
+		2769728B1CAFCEE8007A2F7C /* post_install.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = post_install.sh; path = BGMXPCHelper/post_install.sh; sourceTree = SOURCE_ROOT; };
+		2769728D1CAFCEFD007A2F7C /* com.bearisdriving.BGM.XPCHelper.plist.template */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; name = com.bearisdriving.BGM.XPCHelper.plist.template; path = BGMXPCHelper/com.bearisdriving.BGM.XPCHelper.plist.template; sourceTree = SOURCE_ROOT; };
+		276972901CB16008007A2F7C /* safe_install_dir.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = safe_install_dir.sh; path = BGMXPCHelper/safe_install_dir.sh; sourceTree = SOURCE_ROOT; };
 		2771700F1CA0C83B00AB34B4 /* BGM_Utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGM_Utils.h; path = ../SharedSource/BGM_Utils.h; sourceTree = "<group>"; };
 		277170141CA24D7C00AB34B4 /* BGMXPCListenerDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGMXPCListenerDelegate.h; path = BGMXPCHelper/BGMXPCListenerDelegate.h; sourceTree = SOURCE_ROOT; };
 		277170151CA24D7C00AB34B4 /* BGMXPCListenerDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BGMXPCListenerDelegate.m; path = BGMXPCHelper/BGMXPCListenerDelegate.m; sourceTree = SOURCE_ROOT; };
@@ -388,10 +396,21 @@
 				277170141CA24D7C00AB34B4 /* BGMXPCListenerDelegate.h */,
 				277170151CA24D7C00AB34B4 /* BGMXPCListenerDelegate.m */,
 				27D643BC1C9FB84C00737F6E /* main.m */,
-				27D643BB1C9FB84C00737F6E /* Info.plist */,
+				2769728A1CAFCEA9007A2F7C /* Supporting Files */,
 			);
 			name = BGMXPCHelper;
 			path = BGMService;
+			sourceTree = "<group>";
+		};
+		2769728A1CAFCEA9007A2F7C /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				2769728D1CAFCEFD007A2F7C /* com.bearisdriving.BGM.XPCHelper.plist.template */,
+				2769728B1CAFCEE8007A2F7C /* post_install.sh */,
+				276972901CB16008007A2F7C /* safe_install_dir.sh */,
+				27D643BB1C9FB84C00737F6E /* Info.plist */,
+			);
+			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -439,6 +458,7 @@
 				27379B8B1C7F57DA0084A24C /* Sources */,
 				27379B8C1C7F57DA0084A24C /* Frameworks */,
 				27379B8D1C7F57DA0084A24C /* Resources */,
+				276972891CAFCE91007A2F7C /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -516,11 +536,14 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2769728C1CAFCEE8007A2F7C /* post_install.sh in Resources */,
+				2769728E1CAFCEFD007A2F7C /* com.bearisdriving.BGM.XPCHelper.plist.template in Resources */,
 				27D643BE1C9FB84C00737F6E /* Info.plist in Resources */,
 				1CED61691C3081C2002CAFCF /* LICENSE in Resources */,
 				278D71F61CABBC3B00899CF9 /* BGMXPCHelperTests-Info.plist in Resources */,
 				1CC1DF961BE8607700FB8FE4 /* Images.xcassets in Resources */,
 				1C1108AE1C444F01003F625E /* MainMenu.xib in Resources */,
+				276972911CB16008007A2F7C /* safe_install_dir.sh in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -535,6 +558,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				276972921CB1603E007A2F7C /* safe_install_dir.sh in Resources */,
+				2769728F1CAFF22C007A2F7C /* com.bearisdriving.BGM.XPCHelper.plist.template in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -546,6 +571,22 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		276972891CAFCE91007A2F7C /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 8;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+			shellPath = /bin/bash;
+			shellScript = "/bin/bash $SRCROOT/BGMXPCHelper/post_install.sh";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		1CB8B3321BBA75EF000E2DD1 /* Sources */ = {
@@ -673,7 +714,6 @@
 					"CoreAudio_Debug=1",
 					"CoreAudio_UseSysLog=0",
 					"CoreAudio_StopOnAssert=1",
-					"CoreAudio_ThreadStampMessages=1",
 				);
 				GCC_TREAT_IMPLICIT_FUNCTION_DECLARATIONS_AS_ERRORS = YES;
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
@@ -768,7 +808,6 @@
 					"DEBUG=1",
 					"CoreAudio_Debug=1",
 					"CoreAudio_UseSysLog=0",
-					"CoreAudio_ThreadStampMessages=1",
 					"CoreAudio_StopOnAssert=1",
 				);
 				GCC_TREAT_IMPLICIT_FUNCTION_DECLARATIONS_AS_ERRORS = YES;
@@ -925,7 +964,16 @@
 		27379B991C7F57DB0084A24C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"CoreAudio_Debug=1",
+					"CoreAudio_UseSysLog=1",
+					"CoreAudio_StopOnAssert=1",
+				);
 				INFOPLIST_FILE = BGMXPCHelper/Info.plist;
+				INSTALL_GROUP = wheel;
+				INSTALL_OWNER = root;
+				INSTALL_PATH = /usr/local/libexec;
 				PRODUCT_BUNDLE_IDENTIFIER = com.bearisdriving.BGM.XPCHelper;
 				PRODUCT_NAME = BGMXPCHelper;
 			};
@@ -935,6 +983,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				INFOPLIST_FILE = BGMXPCHelper/Info.plist;
+				INSTALL_GROUP = wheel;
+				INSTALL_OWNER = root;
+				INSTALL_PATH = /usr/local/libexec;
 				PRODUCT_BUNDLE_IDENTIFIER = com.bearisdriving.BGM.XPCHelper;
 				PRODUCT_NAME = BGMXPCHelper;
 			};
@@ -943,7 +994,16 @@
 		27379B9B1C7F57DB0084A24C /* DebugOpt */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"CoreAudio_Debug=1",
+					"CoreAudio_UseSysLog=1",
+					"CoreAudio_StopOnAssert=1",
+				);
 				INFOPLIST_FILE = BGMXPCHelper/Info.plist;
+				INSTALL_GROUP = wheel;
+				INSTALL_OWNER = root;
+				INSTALL_PATH = /usr/local/libexec;
 				PRODUCT_BUNDLE_IDENTIFIER = com.bearisdriving.BGM.XPCHelper;
 				PRODUCT_NAME = BGMXPCHelper;
 			};

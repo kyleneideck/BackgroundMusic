@@ -18,6 +18,8 @@
 
 #
 # quick_install.sh
+# BGMDriver
+#
 # Copyright © 2016 Kyle Neideck
 #
 # Installs the HAL plugin to /Library/Audio/Plug-Ins/HAL and restarts coreaudiod to enable it.
@@ -46,7 +48,7 @@ if [[ ! -f "${SCRIPT_DIR}/${SCRIPT_FILENAME}" ]]; then
     exit 1
 fi
 
-function bold_face {
+bold_face() {
     echo $(tput bold)$*$(tput sgr0)
 }
 
@@ -203,9 +205,8 @@ fi
 if [[ ${DONT_RESTART_COREAUDIOD} == false ]]; then
     echo "$(bold_face Restarting coreaudiod). If a running app stops playing audio, change your default audio device (and change it back if you want) or open BGMApp."
 
-    # Could use launchctl instead, but I don't see a good reason to
     # ("set -x" so the command is echoed)
-    (set -x; sudo killall coreaudiod)
+    (set -x; sudo launchctl kill SIGTERM system/com.apple.audio.coreaudiod || sudo killall coreaudiod)
 fi
 
 

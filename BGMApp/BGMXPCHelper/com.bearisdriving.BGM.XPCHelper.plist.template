@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+    {{# post_install.sh replaces the variables formatted like {{TEMPLATE_VARIABLE}} and comments like this one. #}}
+
+    Installing/upgrading overwrites this file (/Library/LaunchDaemons/com.bearisdriving.BGM.XPCHelper.plist), so
+    you might not want to edit it directly.
+ -->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.bearisdriving.BGM.XPCHelper</string>
+
+    <key>ProgramArguments</key>
+    <array>
+            <!-- <string>/usr/local/libexec/BGMXPCHelper.xpc/Contents/MacOS/BGMXPCHelper</string> -->
+            <string>{{PATH_TO_BGMXPCHELPER}}/{{BGMXPCHELPER_EXECUTABLE_PATH}}</string>
+    </array>
+
+    <key>MachServices</key>
+    <dict>
+        <key>com.bearisdriving.BGM.XPCHelper</key>
+        <true/>
+    </dict>
+
+    <key>ProcessType</key>
+    <string>Adaptive</string>
+
+    <!--
+    {{# TODO: Have post_install.sh create this user and group. Then uncomment this so BGMXPCHelper doesn't run  #}}
+    {{#       as root.                                                                                          #}}
+    {{#                                                                                                         #}}
+    {{# <key>UserName</key>                                                                                     #}}
+    {{# <string>_BGMXPCHelper</string>                                                                          #}}
+    {{# <key>GroupName</key>                                                                                    #}}
+    {{# <string>_BGMXPCHelper</string>                                                                          #}}
+    -->
+
+    <!-- 
+    {{# Uncomment this to log output from BGMXPCHelper. (It logs to syslog by default, so you'd have to change  #}}
+    {{# that if you want logs to go to these files.)                                                            #}}
+    {{#                                                                                                         #}}
+    {{# <key>StandardInPath</key>                                                                               #}}
+    {{# <string>/tmp/BGMXPCHelper.stdin.log</string>                                                            #}}
+    {{# <key>StandardOutPath</key>                                                                              #}}
+    {{# <string>/tmp/BGMXPCHelper.stdout.log</string>                                                           #}}
+    {{# <key>StandardErrorPath</key>                                                                            #}}
+    {{# <string>/tmp/BGMXPCHelper.stderr.log</string>                                                           #}}
+    -->
+</dict>
+</plist>
+
