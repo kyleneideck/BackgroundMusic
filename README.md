@@ -46,30 +46,12 @@ Background Music Device. You can create the aggregate device using the Audio MID
 
 ## Install
 
-No binaries yet, but building only takes a few seconds (as long as you already have Xcode installed).
+No binaries yet, but building should take less than a minute. To build and install everything, clone/download the
+project and run the `build_and_install.sh` script. Unfortunately, **it won't build if you don't have Xcode installed**
+because xcodebuild doesn't work on its own anymore.
 
-- Install the virtual audio device `Background Music Device.driver` to `/Library/Audio/Plug-Ins/HAL`.
-
-  ```shell
-  sudo xcodebuild -project BGMDriver/BGMDriver.xcodeproj -target "Background Music Device" RUN_CLANG_STATIC_ANALYZER=0 DSTROOT="/" install
-  ```
-- Install the XPC helper.
-
-  ```shell
-  sudo xcodebuild -project BGMApp/BGMApp.xcodeproj -target BGMXPCHelper RUN_CLANG_STATIC_ANALYZER=0 DSTROOT="/" INSTALL_PATH="$(BGMApp/BGMXPCHelper/safe_install_dir.sh)" install
-  ```
-- Install `Background Music.app` to `/Applications` (or wherever).
-
-  ```shell
-  xcodebuild -project BGMApp/BGMApp.xcodeproj -target "Background Music" RUN_CLANG_STATIC_ANALYZER=0 DSTROOT="/" install
-  ```
-- Restart `coreaudiod`: <br>
-  (Audio will stop working until the next step, so you might want to pause any running audio apps.)
-
-  ```shell
-  sudo launchctl kill SIGTERM system/com.apple.audio.coreaudiod
-  ```
-- Run `Background Music.app`.
+The script restarts the system audio process (coreaudiod) at the end of the installation, so you might want to pause any
+apps playing audio.
 
 ## Uninstall
 

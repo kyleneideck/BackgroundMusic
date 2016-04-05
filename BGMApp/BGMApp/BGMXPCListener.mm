@@ -59,6 +59,10 @@
 - (void) initHelperConnection {
     // Note that this is called when the helper connection's interruption handler is retrying the connection after a timeout.
     [self initHelperConnectionWithErrorHandler:^(NSError* error) {
+#if !DEBUG
+    #pragma unused (error)
+#endif
+        
         DebugMsg("BGMXPCListener::initHelperConnection: Connection error: %s", [[error description] UTF8String]);
     }];
 }

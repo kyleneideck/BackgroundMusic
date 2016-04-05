@@ -87,6 +87,9 @@ UInt64 WaitForBGMAppToStartOutputDevice()
     // This remote call to BGMXPCHelper will send a reply when the output device is ready to receive IO. Note that we shouldn't trust
     // the reply string.
     [[theConnection remoteObjectProxyWithErrorHandler:^(NSError* error) {
+#if !DEBUG
+    #pragma unused (error)
+#endif
         DebugMsg("BGM_XPCHelper::WaitForBGMAppToStartOutputDevice: Remote call error: %s",
                  [[error debugDescription] UTF8String]);
         

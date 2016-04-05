@@ -1,6 +1,7 @@
 .DS_Store
 .*.swp
 /BGMDriver/BGMDriver/quick_install.conf
+/build_and_install.log
 
 # Everything below is from https://github.com/github/gitignore/blob/master/Objective-C.gitignore
 
