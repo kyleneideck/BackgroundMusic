@@ -155,9 +155,9 @@ show_spinner
 
 # BGMXPCHelper
 
-INSTALL_DIR=$(BGMApp/BGMXPCHelper/safe_install_dir.sh)
+XPC_HELPER_INSTALL_DIR=$(BGMApp/BGMXPCHelper/safe_install_dir.sh)
 
-echo "Installing $(bold_face BGMXPCHelper.xpc) to $(bold_face ${INSTALL_DIR})." \
+echo "Installing $(bold_face BGMXPCHelper.xpc) to $(bold_face ${XPC_HELPER_INSTALL_DIR})." \
      | tee -a ${LOG_FILE}
 
 (set +e;
@@ -166,7 +166,7 @@ sudo xcodebuild -project BGMApp/BGMApp.xcodeproj \
                 -configuration ${CONFIGURATION} \
                 RUN_CLANG_STATIC_ANALYZER=0 \
                 DSTROOT="/" \
-                INSTALL_PATH="${INSTALL_DIR}" \
+                INSTALL_PATH="${XPC_HELPER_INSTALL_DIR}" \
                 install >> ${LOG_FILE} 2>&1) &
 
 show_spinner

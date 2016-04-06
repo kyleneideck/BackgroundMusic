@@ -27,14 +27,13 @@
     <string>Adaptive</string>
 
     <!--
-    {{# TODO: Have post_install.sh create this user and group. Then uncomment this so BGMXPCHelper doesn't run  #}}
-    {{#       as root.                                                                                          #}}
-    {{#                                                                                                         #}}
-    {{# <key>UserName</key>                                                                                     #}}
-    {{# <string>_BGMXPCHelper</string>                                                                          #}}
-    {{# <key>GroupName</key>                                                                                    #}}
-    {{# <string>_BGMXPCHelper</string>                                                                          #}}
+    {{# post_install.sh creates this user and group. #}}
     -->
+
+    <key>UserName</key>
+    <string>{{BGMXPCHELPER_USER_NAME}}</string>
+    <key>GroupName</key>
+    <string>{{BGMXPCHELPER_GROUP_NAME}}</string>
 
     <!-- 
     {{# Uncomment this to log output from BGMXPCHelper. (It logs to syslog by default, so you'd have to change  #}}

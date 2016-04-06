@@ -57,7 +57,18 @@ apps playing audio.
 
 - Delete `Background Music.app` from `/Applications`.
 - Delete `Background Music Device.driver` from `/Library/Audio/Plug-Ins/HAL`.
+
+#### Optional
+
 - Delete `BGMXPCHelper.xpc` from `/usr/local/libexec` or possibly `/Library/Application Support/Background Music`.
+- Unregister BGMXPCHelper, delete its user and group, and delete its launchd.plist:
+
+  ```shell
+  sudo launchctl bootout system /Library/LaunchDaemons/com.bearisdriving.BGM.XPCHelper.plist
+  sudo rm /Library/LaunchDaemons/com.bearisdriving.BGM.XPCHelper.plist
+  sudo dscl . -delete /Users/_BGMXPCHelper
+  sudo dscl . -delete /Groups/_BGMXPCHelper
+  ```
 - Pause apps that are playing audio, if you can.
 - Restart `coreaudiod`:
   [//]: # ( <sup>(Open `/Applications/Utilities/Terminal.app` and paste the following at the prompt.)</sup> )

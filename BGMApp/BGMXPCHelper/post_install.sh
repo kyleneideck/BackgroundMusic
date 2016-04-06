@@ -24,8 +24,8 @@
 #
 # Installs BGMXPCHelper's launchd plist file and "bootstraps" (registers/enables) it with launchd.
 #
-# When you install BGMXPCHelper with xcodebuild (Or Xcode itself. I can't figure out if that's
-# possible) this script runs as the final build phase.
+# When you install BGMXPCHelper with xcodebuild (or Xcode itself, if that's possible) this script
+# runs as the final build phase.
 #
 
 # Check the environment variables we need from Xcode.
@@ -58,9 +58,59 @@ if [[ $(bash "${RESOURCES_PATH}/safe_install_dir.sh" "${INSTALL_DIR}") != 1 ]]; 
          "insecure. See safe_install_dir.sh for details." >&2
 fi
 
+HELPER_USER=_BGMXPCHelper
+
 LAUNCHD_PLIST_INSTALL_PATH=/Library/LaunchDaemons
 LAUNCHD_PLIST_FILENAME=com.bearisdriving.BGM.XPCHelper.plist
 LAUNCHD_PLIST=${LAUNCHD_PLIST_INSTALL_PATH}/${LAUNCHD_PLIST_FILENAME}
+
+# Create an unprivileged user for BGMXPCHelper to run as.
+
+if [[ "$(dscl . -search /Users RecordName ${HELPER_USER})" == "" ]]; then
+    # Find an unused UID and GID. UIDs from 0 to 500 are reserved by OSX.
+    HELPER_UID=$(dscl . -list /Users UniqueID | \
+        awk '{ a[$2] } END { for (i=501; i in a; i++); print i }')
+    HELPER_GID=$(dscl . -list /Groups PrimaryGroupID | \
+        awk '{ a[$2] } END { for (i='${HELPER_UID}'; i in a; i++); print i }')
+
+    # Check the UID and GID.
+    NUMERIC_ID_REGEX='^[1-9][0-9]*$'
+
+    ([[ "${HELPER_UID}" =~ ${NUMERIC_ID_REGEX} ]] && \
+        [[ ${HELPER_UID} -gt 500 ]] && \
+        [[ "$(dscl . -search /Users UniqueID ${HELPER_UID})" == "" ]]) || \
+        (echo "Internal error. Failed to generate a user ID. HELPER_UID=${HELPER_UID}" >&2; exit 1)
+
+    ([[ "${HELPER_GID}" =~ ${NUMERIC_ID_REGEX} ]] && \
+        [[ ${HELPER_GID} -gt 500 ]] && \
+        [[ "$(dscl . -search /Groups PrimaryGroupID ${HELPER_GID})" == "" ]]) || \
+        (echo "Internal error. Failed to generate a group ID. HELPER_GID=${HELPER_GID}" >&2; exit 1)
+
+    # Create the group.
+    sudo dscl . -create /Groups/${HELPER_USER} PrimaryGroupID ${HELPER_GID}
+    sudo dscl . -create /Groups/${HELPER_USER} RealName "Background Music XPC Helper Group"
+    sudo dscl . -create /Groups/${HELPER_USER} Password '*'
+
+    # Create the user.
+    sudo dscl . -create /Users/${HELPER_USER} UniqueID ${HELPER_UID}
+    sudo dscl . -create /Users/${HELPER_USER} PrimaryGroupID ${HELPER_GID}
+    sudo dscl . -create /Users/${HELPER_USER} RealName "Background Music XPC Helper"
+    sudo dscl . -create /Users/${HELPER_USER} Password '*'
+    sudo dscl . -create /Users/${HELPER_USER} UserShell /usr/bin/false
+    sudo dscl . -create /Users/${HELPER_USER} NFSHomeDirectory /var/empty
+    sudo dscl . -delete /Users/${HELPER_USER} AuthenticationAuthority
+
+    # Add the user to the group
+    sudo dscl . -append /Groups/${HELPER_USER} GroupMembership ${HELPER_USER}
+
+    # Check the user and group were created.
+    [[ "$(dscl . -search /Users RecordName ${HELPER_USER})" != "" ]] || \
+        (echo "Internal error. Failed to ${HELPER_USER} user." >&2; exit 1)
+    [[ "$(dscl . -search /Groups RecordName ${HELPER_USER})" != "" ]] || \
+        (echo "Internal error. Failed to ${HELPER_USER} group." >&2; exit 1)
+
+    echo "Created ${HELPER_USER} user."
+fi
 
 # Copy the plist template into place.
 sudo cp "${RESOURCES_PATH}/${LAUNCHD_PLIST_FILENAME}.template" "${LAUNCHD_PLIST}"
@@ -81,6 +131,9 @@ EXECUTABLE_PATH_ESCAPED="${EXECUTABLE_PATH//\//\\/}"
 sudo sed -i.tmp "s/{{PATH_TO_BGMXPCHELPER}}/${INSTALL_DIR_ESCAPED}/g" "${LAUNCHD_PLIST}"
 # EXECUTABLE_PATH is set by Xcode, currently to "BGMXPCHelper.xpc/Contents/MacOS/BGMXPCHelper".
 sudo sed -i.tmp "s/{{BGMXPCHELPER_EXECUTABLE_PATH}}/${EXECUTABLE_PATH_ESCAPED}/g" "${LAUNCHD_PLIST}"
+sudo sed -i.tmp "s/{{BGMXPCHELPER_USER_NAME}}/${HELPER_USER}/g" "${LAUNCHD_PLIST}"
+sudo sed -i.tmp "s/{{BGMXPCHELPER_GROUP_NAME}}/${HELPER_USER}/g" "${LAUNCHD_PLIST}"
+
 # Remove template-only comments.
 sudo sed -i.tmp 's/{{#.*#}}//g' "${LAUNCHD_PLIST}"
 
