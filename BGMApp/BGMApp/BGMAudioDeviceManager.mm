@@ -170,7 +170,9 @@ public:
 }
 
 - (BOOL) isOutputDevice:(AudioObjectID)deviceID {
-    return deviceID == outputDevice.GetObjectID();
+    @synchronized (self) {
+        return deviceID == outputDevice.GetObjectID();
+    }
 }
 
 - (BOOL) setOutputDeviceWithID:(AudioObjectID)deviceID revertOnFailure:(BOOL)revertOnFailure {
@@ -179,37 +181,41 @@ public:
     // Set up playthrough and control sync
     BGMAudioDevice newOutputDevice(deviceID);
     
-    @synchronized (self) {
-        try {
-            // Mirror changes in BGMDevice's controls to the new output device's
+    try {
+        @synchronized (self) {
+            // Mirror changes in BGMDevice's controls to the new output device's.
             deviceControlSync = BGMDeviceControlSync(bgmDevice, newOutputDevice);
             
-            // Stream audio from BGMDevice to the output device
+            // Stream audio from BGMDevice to the output device.
             //
             // TODO: Should this be done async? Some output devices take a long time to start IO (e.g. AirPlay) and I
             //       assume this blocks the main thread. Haven't tried it to check, though.
             playThrough = BGMPlayThrough(bgmDevice, newOutputDevice);
-            
-            // Start playthrough because audio might be playing
-            playThrough.Start();
-        } catch (CAException e) {
-            // Using LogWarning from PublicUtility instead of NSLog here crashes from a bad access. Not sure why.
-            NSLog(@"BGMAudioDeviceManager::setOutputDeviceWithID: Couldn't set device with ID %u as output device. %s %s%d.",
-                  newOutputDevice.GetObjectID(),
-                  (revertOnFailure ? "Will attempt to revert to the previous device." : ""),
-                  "Error: ", e.GetError());
-            
-            if (revertOnFailure) {
-                // Try to reactivate the original device listener and playthrough
-                [self setOutputDeviceWithID:outputDevice.GetObjectID() revertOnFailure:NO];
-                return NO;
-            } else {
-                // TODO: Handle in callers. (Maybe show an error dialog and try to set the original default device as the output device.)
-                Throw(e);
-            }
-        }
 
-        outputDevice = BGMAudioDevice(deviceID);
+            outputDevice = BGMAudioDevice(deviceID);
+        }
+        
+        // Start playthrough because audio might be playing.
+        //
+        // TODO: If audio isn't playing, this makes playthrough run until the user plays audio and then stops it again,
+        //       which wastes CPU. I think we could just have Start() call StopIfIdle(), but I haven't tried it yet.
+        playThrough.Start();
+    } catch (CAException e) {
+        // Using LogWarning from PublicUtility instead of NSLog here crashes from a bad access. Not sure why.
+        NSLog(@"BGMAudioDeviceManager::setOutputDeviceWithID: Couldn't set device with ID %u as output device. %s %s%d.",
+              newOutputDevice.GetObjectID(),
+              (revertOnFailure ? "Will attempt to revert to the previous device." : ""),
+              "Error: ", e.GetError());
+        
+        if (revertOnFailure) {
+            // Try to reactivate the original device listener and playthrough
+            [self setOutputDeviceWithID:outputDevice.GetObjectID() revertOnFailure:NO];
+            return NO;
+        } else {
+            // TODO: Handle in callers. (Maybe show an error dialog and try to set the original default device as the
+            //       output device.)
+            Throw(e);
+        }
     }
     
     return YES;

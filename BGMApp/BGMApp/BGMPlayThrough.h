@@ -125,7 +125,7 @@ private:
     CAMutex             mStateMutex { "Playthrough state" };
     
     // Signalled when the output IO proc runs. We use it to tell BGMDriver when the output device is ready to receive audio data.
-    semaphore_t         mOutputDeviceIOProcSemaphore;
+    semaphore_t         mOutputDeviceIOProcSemaphore { SEMAPHORE_NULL };
     
     bool                mActive = false;
     bool                mPlayingThrough = false;

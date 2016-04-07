@@ -92,8 +92,12 @@ void    BGMPlayThrough::Swap(BGMPlayThrough &inPlayThrough)
     mInputDevice = inPlayThrough.mInputDevice;
     mOutputDevice = inPlayThrough.mOutputDevice;
     
-    mOutputDeviceIOProcSemaphore = inPlayThrough.mOutputDeviceIOProcSemaphore;
-    inPlayThrough.mOutputDeviceIOProcSemaphore = SEMAPHORE_NULL;
+    // Steal inPlayThrough's semaphore if this object needs one.
+    if(mOutputDeviceIOProcSemaphore == SEMAPHORE_NULL)
+    {
+        mOutputDeviceIOProcSemaphore = inPlayThrough.mOutputDeviceIOProcSemaphore;
+        inPlayThrough.mOutputDeviceIOProcSemaphore = SEMAPHORE_NULL;
+    }
     
     AllocateBuffer();
     
@@ -401,7 +405,7 @@ void    BGMPlayThrough::StopIfIdle()
                                if(mPlayingThrough && !RunningSomewhereOtherThanBGMApp(mInputDevice)
                                   && queuedAt == mLastNotifiedIOStoppedOnBGMDevice)
                                {
-                                   DebugMsg("BGMPlayThrough::StopIfIdle: BGMDevice is only running IO for BGMApp. %s",
+                                   DebugMsg("BGMPlayThrough::StopIfIdle: BGMDevice is only running IO for BGMApp. "
                                             "Stopping playthrough.");
                                    Stop();
                                }
