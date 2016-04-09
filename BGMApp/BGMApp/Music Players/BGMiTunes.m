@@ -32,9 +32,7 @@
 #include "CADebugMacros.h"
 
 
-@implementation BGMiTunes {
-    iTunesApplication* iTunes;
-}
+@implementation BGMiTunes
 
 + (void) load {
     BGM_MUSIC_PLAYER_ADD_SELF_TO_CLASSES_LIST
@@ -47,14 +45,6 @@
     return @"iTunes";
 }
 
-- (id) init {
-    if ((self = [super init])) {
-        iTunes = [SBApplication applicationWithBundleIdentifier:(__bridge NSString*)[[self class] bundleID]];
-    }
-    
-    return self;
-}
-
 - (CFNumberRef) pid {
     return NULL;
 }
@@ -63,8 +53,12 @@
     return CFSTR("com.apple.iTunes");
 }
 
+- (iTunesApplication* __nullable) iTunes {
+    return (iTunesApplication*) self.sbApplication;
+}
+
 - (BOOL) isRunning {
-    return [iTunes isRunning];
+    return self.iTunes && [self.iTunes isRunning];
 }
 
 - (BOOL) pause {
@@ -73,7 +67,7 @@
     
     if (wasPlaying) {
         DebugMsg("BGMiTunes::pause: Pausing iTunes");
-        [iTunes pause];
+        [self.iTunes pause];
     }
     
     return wasPlaying;
@@ -85,18 +79,18 @@
     
     if (wasPaused) {
         DebugMsg("BGMiTunes::unpause: Unpausing iTunes");
-        [iTunes playpause];
+        [self.iTunes playpause];
     }
     
     return wasPaused;
 }
 
 - (BOOL) isPlaying {
-    return [self isRunning] && [iTunes playerState] == iTunesEPlSPlaying;
+    return [self isRunning] && [self.iTunes playerState] == iTunesEPlSPlaying;
 }
 
 - (BOOL) isPaused {
-    return [self isRunning] && [iTunes playerState] == iTunesEPlSPaused;
+    return [self isRunning] && [self.iTunes playerState] == iTunesEPlSPaused;
 }
 
 @end

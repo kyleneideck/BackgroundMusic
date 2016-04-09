@@ -35,22 +35,12 @@
 #include "CADebugMacros.h"
 
 
-@implementation BGMSpotify {
-    SpotifyApplication* spotify;
-}
+@implementation BGMSpotify
 
 BGM_MUSIC_PLAYER_DEFAULT_LOAD_METHOD
 
 + (NSString*) name {
     return @"Spotify";
-}
-
-- (id) init {
-    if ((self = [super init])) {
-        spotify = [SBApplication applicationWithBundleIdentifier:(__bridge NSString*)[[self class] bundleID]];
-    }
-    
-    return self;
 }
 
 - (CFNumberRef) pid {
@@ -61,8 +51,12 @@ BGM_MUSIC_PLAYER_DEFAULT_LOAD_METHOD
     return CFSTR("com.spotify.client");
 }
 
+- (SpotifyApplication* __nullable) spotify {
+    return (SpotifyApplication*) self.sbApplication;
+}
+
 - (BOOL) isRunning {
-    return [spotify isRunning];
+    return self.spotify && [self.spotify isRunning];
 }
 
 - (BOOL) pause {
@@ -71,7 +65,7 @@ BGM_MUSIC_PLAYER_DEFAULT_LOAD_METHOD
     
     if (wasPlaying) {
         DebugMsg("BGMSpotify::pause: Pausing Spotify");
-        [spotify pause];
+        [self.spotify pause];
     }
     
     return wasPlaying;
@@ -83,18 +77,18 @@ BGM_MUSIC_PLAYER_DEFAULT_LOAD_METHOD
     
     if (wasPaused) {
         DebugMsg("BGMSpotify::unpause: Unpausing Spotify");
-        [spotify playpause];
+        [self.spotify playpause];
     }
     
     return wasPaused;
 }
 
 - (BOOL) isPlaying {
-    return [self isRunning] && [spotify playerState] == SpotifyEPlSPlaying;
+    return [self isRunning] && [self.spotify playerState] == SpotifyEPlSPlaying;
 }
 
 - (BOOL) isPaused {
-    return [self isRunning] && [spotify playerState] == SpotifyEPlSPaused;
+    return [self isRunning] && [self.spotify playerState] == SpotifyEPlSPaused;
 }
 
 @end

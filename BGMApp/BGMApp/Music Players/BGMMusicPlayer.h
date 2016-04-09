@@ -33,10 +33,12 @@
 //  player apps (see iTunes.h/Spotify.h) but any other way is fine too.
 //
 
+// System Includes
 #import <Foundation/Foundation.h>
+#import <ScriptingBridge/ScriptingBridge.h>
 
 
-NS_ASSUME_NONNULL_BEGIN
+#pragma clang assume_nonnull begin
 
 #define BGM_MUSIC_PLAYER_ADD_SELF_TO_CLASSES_LIST \
     [BGMMusicPlayerBase addToMusicPlayerClasses:[self class]];
@@ -88,7 +90,7 @@ typedef BGMMusicPlayerBase<BGMMusicPlayerProtocol> BGMMusicPlayer;
 
 @end
 
-@interface BGMMusicPlayerBase : NSObject
+@interface BGMMusicPlayerBase : NSObject <SBApplicationDelegate>
 
 + (NSArray*) musicPlayerClasses;
 + (void) addToMusicPlayerClasses:(Class)musicPlayerClass;
@@ -100,7 +102,11 @@ typedef BGMMusicPlayerBase<BGMMusicPlayerProtocol> BGMMusicPlayer;
 
 + (NSImage* __nullable) icon;
 
+// If the music player application is running, the scripting bridge object representing it. Otherwise
+// nil.
+@property (readonly) __kindof SBApplication* __nullable sbApplication;
+
 @end
 
-NS_ASSUME_NONNULL_END
+#pragma clang assume_nonnull end
 

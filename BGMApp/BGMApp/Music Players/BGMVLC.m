@@ -33,22 +33,12 @@
 #include "CADebugMacros.h"
 
 
-@implementation BGMVLC {
-    VLCApplication* vlc;
-}
+@implementation BGMVLC
 
 BGM_MUSIC_PLAYER_DEFAULT_LOAD_METHOD
 
 + (NSString*) name {
     return @"VLC";
-}
-
-- (id) init {
-    if ((self = [super init])) {
-        vlc = [SBApplication applicationWithBundleIdentifier:(__bridge NSString*)[[self class] bundleID]];
-    }
-    
-    return self;
 }
 
 - (CFNumberRef) pid {
@@ -59,8 +49,12 @@ BGM_MUSIC_PLAYER_DEFAULT_LOAD_METHOD
     return CFSTR("org.videolan.vlc");
 }
 
+- (VLCApplication* __nullable) vlc {
+    return (VLCApplication*) self.sbApplication;
+}
+
 - (BOOL) isRunning {
-    return [vlc isRunning];
+    return self.vlc && [self.vlc isRunning];
 }
 
 - (BOOL) pause {
@@ -88,12 +82,12 @@ BGM_MUSIC_PLAYER_DEFAULT_LOAD_METHOD
 }
 
 - (BOOL) isPlaying {
-    return [self isRunning] && [vlc playing];
+    return [self isRunning] && [self.vlc playing];
 }
 
 - (BOOL) isPaused {
     // VLC is paused if it has a file open but isn't playing it
-    return [self isRunning] && [vlc nameOfCurrentItem] != nil && ![vlc playing];
+    return [self isRunning] && [self.vlc nameOfCurrentItem] != nil && ![self.vlc playing];
 }
 
 // This is from SubTTS's STVLCPlayer class:
