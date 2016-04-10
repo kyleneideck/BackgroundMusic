@@ -76,7 +76,9 @@ static BGMMusicPlayer* sSelectedMusicPlayer;
         //     "For applications that declare themselves to have a dynamic scripting interface, this method will
         //     launch the application if it is not already running."
         NSNotificationCenter* center = [[NSWorkspace sharedWorkspace] notificationCenter];
+#if DEBUG
         const char* mpName = [[[self class] name] UTF8String];
+#endif
         didLaunchToken = [center addObserverForName:NSWorkspaceDidLaunchApplicationNotification
                                              object:nil
                                               queue:nil
@@ -113,6 +115,8 @@ static BGMMusicPlayer* sSelectedMusicPlayer;
     DebugMsg("BGMMusicPlayer::eventDidFail: Apple event sent to %s failed. %s",
              [[[self class] name] UTF8String],
              [vars UTF8String]);
+#else
+    #pragma unused (event, error)
 #endif
     
     return nil;
