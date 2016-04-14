@@ -207,7 +207,7 @@ echo "Launching Background Music."
 open "/Applications/Background Music.app"
 
 # Wait up to 5 seconds for Background Music to start.
-(while [[ "$(ps -u $(whoami) -o ucomm= | grep 'Background Music')" == "" ]]; do
+(while ! (ps -Ao ucomm= | grep 'Background Music' > /dev/null); do
     sleep 1;
 done) &
 show_spinner 5
