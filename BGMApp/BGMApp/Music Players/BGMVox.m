@@ -37,7 +37,7 @@
 BGM_MUSIC_PLAYER_DEFAULT_LOAD_METHOD
 
 + (NSString*) name {
-    return @"Vox";
+    return @"VOX";
 }
 
 - (CFNumberRef) pid {
@@ -61,7 +61,7 @@ BGM_MUSIC_PLAYER_DEFAULT_LOAD_METHOD
     BOOL wasPlaying = [self isPlaying];
     
     if (wasPlaying) {
-        DebugMsg("BGMVox::pause: Pausing Vox");
+        DebugMsg("BGMVox::pause: Pausing VOX");
         [self.vox pause];
     }
     
@@ -73,7 +73,7 @@ BGM_MUSIC_PLAYER_DEFAULT_LOAD_METHOD
     BOOL wasPaused = [self isPaused];
     
     if (wasPaused) {
-        DebugMsg("BGMVox::unpause: Unpausing Vox");
+        DebugMsg("BGMVox::unpause: Unpausing VOX");
         [self.vox playpause];
     }
     
