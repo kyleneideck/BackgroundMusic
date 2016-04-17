@@ -41,6 +41,7 @@
 		1CED616C1C316E1A002CAFCF /* BGMAudioDeviceManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1CED616B1C316E1A002CAFCF /* BGMAudioDeviceManager.mm */; };
 		271677BA1C6CBDFA0080B0A2 /* CACFNumber.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 271677B81C6CBDFA0080B0A2 /* CACFNumber.cpp */; };
 		27379B8A1C7C562D0084A24C /* BGMVLC.m in Sources */ = {isa = PBXBuildFile; fileRef = 27379B891C7C562D0084A24C /* BGMVLC.m */; };
+		273F10DF1CC3D0B900C1C6DA /* BGMVox.m in Sources */ = {isa = PBXBuildFile; fileRef = 273F10DE1CC3D0B900C1C6DA /* BGMVox.m */; };
 		2769728C1CAFCEE8007A2F7C /* post_install.sh in Resources */ = {isa = PBXBuildFile; fileRef = 2769728B1CAFCEE8007A2F7C /* post_install.sh */; };
 		2769728E1CAFCEFD007A2F7C /* com.bearisdriving.BGM.XPCHelper.plist.template in Resources */ = {isa = PBXBuildFile; fileRef = 2769728D1CAFCEFD007A2F7C /* com.bearisdriving.BGM.XPCHelper.plist.template */; };
 		2769728F1CAFF22C007A2F7C /* com.bearisdriving.BGM.XPCHelper.plist.template in Resources */ = {isa = PBXBuildFile; fileRef = 2769728D1CAFCEFD007A2F7C /* com.bearisdriving.BGM.XPCHelper.plist.template */; };
@@ -150,6 +151,9 @@
 		27379B881C7C562D0084A24C /* BGMVLC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGMVLC.h; path = "Music Players/BGMVLC.h"; sourceTree = "<group>"; };
 		27379B891C7C562D0084A24C /* BGMVLC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BGMVLC.m; path = "Music Players/BGMVLC.m"; sourceTree = "<group>"; };
 		27379B8F1C7F57DA0084A24C /* BGMXPCHelper.xpc */ = {isa = PBXFileReference; explicitFileType = "wrapper.xpc-service"; includeInIndex = 0; path = BGMXPCHelper.xpc; sourceTree = BUILT_PRODUCTS_DIR; };
+		273F10DC1CC3CF9C00C1C6DA /* Vox.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Vox.h; path = "Music Players/Vox.h"; sourceTree = "<group>"; };
+		273F10DD1CC3D0B900C1C6DA /* BGMVox.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGMVox.h; path = "Music Players/BGMVox.h"; sourceTree = "<group>"; };
+		273F10DE1CC3D0B900C1C6DA /* BGMVox.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BGMVox.m; path = "Music Players/BGMVox.m"; sourceTree = "<group>"; };
 		2769728B1CAFCEE8007A2F7C /* post_install.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = post_install.sh; path = BGMXPCHelper/post_install.sh; sourceTree = SOURCE_ROOT; };
 		2769728D1CAFCEFD007A2F7C /* com.bearisdriving.BGM.XPCHelper.plist.template */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; name = com.bearisdriving.BGM.XPCHelper.plist.template; path = BGMXPCHelper/com.bearisdriving.BGM.XPCHelper.plist.template; sourceTree = SOURCE_ROOT; };
 		276972901CB16008007A2F7C /* safe_install_dir.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = safe_install_dir.sh; path = BGMXPCHelper/safe_install_dir.sh; sourceTree = SOURCE_ROOT; };
@@ -282,6 +286,8 @@
 				1C2336DE1BEAE10C004C1C4E /* BGMSpotify.m */,
 				27379B881C7C562D0084A24C /* BGMVLC.h */,
 				27379B891C7C562D0084A24C /* BGMVLC.m */,
+				273F10DD1CC3D0B900C1C6DA /* BGMVox.h */,
+				273F10DE1CC3D0B900C1C6DA /* BGMVox.m */,
 				27379B841C7C53BE0084A24C /* Supporting Files */,
 			);
 			name = "Music Players";
@@ -384,6 +390,7 @@
 				27379B851C7C54870084A24C /* iTunes.h */,
 				27379B861C7C54870084A24C /* Spotify.h */,
 				27379B871C7C552A0084A24C /* VLC.h */,
+				273F10DC1CC3CF9C00C1C6DA /* Vox.h */,
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";
@@ -595,6 +602,7 @@
 			files = (
 				1C4699471BD5C0E400F78043 /* BGMiTunes.m in Sources */,
 				1C1962E41BC94E15008A4DF7 /* CARingBuffer.cpp in Sources */,
+				273F10DF1CC3D0B900C1C6DA /* BGMVox.m in Sources */,
 				1CC1DF811BE5068A00FB8FE4 /* CACFArray.cpp in Sources */,
 				1C0BD0A81BF1B029004F4CF5 /* BGMPreferencesMenu.mm in Sources */,
 				1C1962F41BCABFC5008A4DF7 /* CAHALAudioObject.cpp in Sources */,
