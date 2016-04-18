@@ -102,7 +102,7 @@ change the default device and then change it back again. Failing that, you might
 
   This happens when OS X remembers that Background Music Device was your default audio device the last time you last
   used (or didn't use) headphones.
-- [A recent Chrome bug](https://code.google.com/p/chromium/issues/detail?id=557620) can stop Chrome from switching to
+- [A recent Chrome bug](https://bugs.chromium.org/p/chromium/issues/detail?id=557620) can stop Chrome from switching to
   Background Music Device after you open Background Music. Chrome's audio will still play, but Background Music won't be
   aware of it.
 - Plenty more. Some are in listed in TODO.md.
@@ -122,8 +122,8 @@ change the default device and then change it back again. Failing that, you might
 - [Sound Siphon](http://staticz.com) (non-free) - System/app audio recording, per-app volumes, system audio equaliser
 - [Jack OS X](http://www.jackosx.com) - "A Jack audio connection kit implementation for Mac OS X"
 - [PulseAudio OS X](https://github.com/zonque/PulseAudioOSX) - "PulseAudio for Mac OS X"
-- [eqMac](http://www.bitgapp.com/eqmac) - "System-wide Audio Equalizer for Mac OSX"
-- [Zirkonium](https://code.google.com/p/zirkonium/) - "An infrastructure and application for multi-channel sound
+- [eqMac](http://www.bitgapp.com/eqmac/) - "System-wide Audio Equalizer for Mac OSX"
+- [Zirkonium](https://code.google.com/archive/p/zirkonium) - "An infrastructure and application for multi-channel sound
   spatialization on MacOS X."
 
 ## License
