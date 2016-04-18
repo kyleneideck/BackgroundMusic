@@ -110,6 +110,8 @@
 //	purely static or invariant data can be handled without any locking at all.
 //==================================================================================================
 
+#pragma clang assume_nonnull begin
+
 class BGM_Object
 {
 
@@ -158,5 +160,10 @@ protected:
 
 };
 
+#pragma clang assume_nonnull end
+
+
 #endif /* __BGMDriver__BGM_Object__ */
+
+
 

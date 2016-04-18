@@ -36,6 +36,8 @@
 // PublicUtility Includes
 #include "CAMutex.h"
 
+#pragma clang assume_nonnull begin
+
 
 class BGM_PlugIn
 :
@@ -85,6 +87,8 @@ private:
 	static AudioServerPlugInHostRef	sHost;
 
 };
+
+#pragma clang assume_nonnull end
 
 #endif /* __BGMDriver__BGM_PlugIn__ */
 

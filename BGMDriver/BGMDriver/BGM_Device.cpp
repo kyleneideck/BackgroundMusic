@@ -46,6 +46,7 @@
 // STL Includes
 #include <algorithm>
 
+#pragma clang assume_nonnull begin
 
 #pragma mark Construction/Destruction
 
@@ -2377,4 +2378,7 @@ void	BGM_Device::AbortConfigChange(UInt64 inChangeAction, void* inChangeInfo)
 	
 	//	this device doesn't need to do anything special if a change request gets aborted
 }
+
+#pragma clang assume_nonnull end
+
 

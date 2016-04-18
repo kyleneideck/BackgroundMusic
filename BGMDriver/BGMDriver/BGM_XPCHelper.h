@@ -26,6 +26,8 @@
 // System Includes
 #include <MacTypes.h>
 
+#pragma clang assume_nonnull begin
+
 #if defined(__cplusplus)
 extern "C" {
 #endif
@@ -36,6 +38,8 @@ UInt64 WaitForBGMAppToStartOutputDevice(void);
 #if defined(__cplusplus)
 }
 #endif
+
+#pragma clang assume_nonnull end
 
 #endif /* __BGMDriver__BGM_XPCHelper__ */
 

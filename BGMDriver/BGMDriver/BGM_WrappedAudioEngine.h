@@ -33,6 +33,8 @@
 #include <CoreAudio/CoreAudioTypes.h>
 #include <mach/kern_return.h>
 
+#pragma clang assume_nonnull begin
+
 
 class BGM_WrappedAudioEngine
 {
@@ -43,6 +45,8 @@ public:
     UInt32          GetSampleBufferFrameSize() const;
     
 };
+
+#pragma clang assume_nonnull end
 
 #endif /* __BGMDriver__BGM_WrappedAudioEngine__ */
 

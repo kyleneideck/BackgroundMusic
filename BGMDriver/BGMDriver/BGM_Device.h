@@ -43,6 +43,8 @@
 // System Includes
 #include <CoreFoundation/CoreFoundation.h>
 
+#pragma clang assume_nonnull begin
+
 
 class BGM_Device
 :
@@ -222,5 +224,8 @@ private:
 
 };
 
+#pragma clang assume_nonnull end
+
 #endif /* __BGMDriver__BGM_Device__ */
+
 
