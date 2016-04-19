@@ -57,6 +57,9 @@ if [ "$user_prompt" == "y" ]; then
 
   echo "Restarting CoreAudio"
   sudo launchctl kill SIGTERM system/com.apple.audio.coreaudiod && sleep 5
+  
+  # Invalidate sudo ticket
+  sudo -k
 
   echo -e "\n${bold}Done! Toggle your sound output device in the Sound control panel to complete the uninstall.${normal}"
   osascript -e 'tell application "System Preferences"
