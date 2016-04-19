@@ -61,6 +61,11 @@ apps playing audio.
   one device now, either use `Audio MIDI Setup.app` to create a temporary aggregate device, restart any audio apps that
   have stopped working or just restart your system.)
 
+### Manual Uninstall
+
+Try following the instructions in `MANUAL-UNINSTALL.md` if `uninstall.sh` fails. (You might consider submitting a bug
+report, too.)
+
 ## Troubleshooting
 
 If Background Music crashes and system audio stops working, open the Sound panel in System Preferences and change your
