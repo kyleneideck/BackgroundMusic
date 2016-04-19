@@ -29,6 +29,7 @@
 
 
 static NSString* const kToggleAutoPauseMusicMenuItemTitleFormat = @"Auto-pause %@";
+static int const kUpdateMenuWaitTime = 1; // Wait time to disable/enable music player auto-pause in seconds
 static float const kMenuItemIconScalingFactor = 1.15f;
 static NSInteger const kPrefsMenuAutoPauseHeaderTag = 1;
 
@@ -38,6 +39,8 @@ static NSInteger const kPrefsMenuAutoPauseHeaderTag = 1;
     NSMenu* prefsMenu;
     NSArray<NSMenuItem*>* musicPlayerMenuItems;
 }
+
+id didLaunchToken, didTerminateToken;
 
 - (id) initWithPreferencesMenu:(NSMenu*)inPrefsMenu
   toggleAutoPauseMusicMenuItem:(NSMenuItem*)inToggleAutoPauseMusicMenuItem
@@ -64,6 +67,41 @@ static NSInteger const kPrefsMenuAutoPauseHeaderTag = 1;
     // Get the currently selected music player from the driver and update the global in BGMMusicPlayerBase
     
     // The bundle ID and PID set on the driver
+    
+    BOOL (^isAboutThisMusicPlayer)(NSNotification*) = ^(NSNotification* note){
+        return [[note.userInfo[NSWorkspaceApplicationKey] bundleIdentifier] isEqualToString:(__bridge NSString*)[[[BGMMusicPlayer selectedMusicPlayer] class] bundleID]];
+    };
+    
+    // Add observers that create/destroy the SBApplication when the music player is launched/terminated. We
+    // only create the SBApplication when the music player is open because, if it isn't, creating the
+    // SBApplication, or sending it events, could launch the music player. Whether it does or not depends on
+    // the music player, and possibly the version of the music player, so to be safe we assume they all do.
+    //
+    // From the docs for SBApplication's applicationWithBundleIdentifier method:
+    //     "For applications that declare themselves to have a dynamic scripting interface, this method will
+    //     launch the application if it is not already running."
+    NSNotificationCenter* center = [[NSWorkspace sharedWorkspace] notificationCenter];
+    didLaunchToken = [center addObserverForName:NSWorkspaceDidLaunchApplicationNotification
+                                         object:nil
+                                          queue:nil
+                                     usingBlock:^(NSNotification* note) {
+                                         if (isAboutThisMusicPlayer(note)) {
+                                             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kUpdateMenuWaitTime * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                                                 [self updateMenuItemTitle];
+                                             });
+                                         }
+                                     }];
+    didTerminateToken = [center addObserverForName:NSWorkspaceDidTerminateApplicationNotification
+                                            object:nil
+                                             queue:nil
+                                        usingBlock:^(NSNotification* note) {
+                                            if (isAboutThisMusicPlayer(note)) {
+                                                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kUpdateMenuWaitTime * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                                                    [self updateMenuItemTitle];
+                                                });
+                                            }
+                                        }];
+    
     CFNumberRef selectedPID = static_cast<CFNumberRef>([audioDevices bgmDevice].GetPropertyData_CFType(kBGMMusicPlayerProcessIDAddress));
     CFStringRef selectedBundleID = [audioDevices bgmDevice].GetPropertyData_CFString(kBGMMusicPlayerBundleIDAddress);
     
@@ -125,6 +163,7 @@ static NSInteger const kPrefsMenuAutoPauseHeaderTag = 1;
     
     // The index to start inserting music player menu items at
     NSInteger musicPlayerItemsIndex = [prefsMenu indexOfItemWithTag:kPrefsMenuAutoPauseHeaderTag] + 1;
+    [prefsMenu setAutoenablesItems:false];
     
     // Insert the options to change the music player app
     for (Class musicPlayerClass in [BGMMusicPlayerBase musicPlayerClasses]) {
@@ -199,6 +238,23 @@ static NSInteger const kPrefsMenuAutoPauseHeaderTag = 1;
     NSString* musicPlayerName = [[[BGMMusicPlayer selectedMusicPlayer] class] name];
     NSString* title = [NSString stringWithFormat:kToggleAutoPauseMusicMenuItemTitleFormat, musicPlayerName];
     [toggleAutoPauseMusicMenuItem setTitle:title];
+    
+    // Disable the Auto-pause option if the application is not runnning
+    [[toggleAutoPauseMusicMenuItem menu] setAutoenablesItems:false];
+    [toggleAutoPauseMusicMenuItem setEnabled:[[BGMMusicPlayer selectedMusicPlayer] isRunning]];
+}
+
+- (void) dealloc {
+    // Remove the application launch/termination observers.
+    NSNotificationCenter* center = [[NSWorkspace sharedWorkspace] notificationCenter];
+    
+    if (didLaunchToken) {
+        [center removeObserver:didLaunchToken];
+    }
+    
+    if (didTerminateToken) {
+        [center removeObserver:didTerminateToken];
+    }
 }
 
 @end
