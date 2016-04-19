@@ -54,6 +54,7 @@
 		27D643BE1C9FB84C00737F6E /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 27D643BB1C9FB84C00737F6E /* Info.plist */; };
 		27D643C01C9FB99200737F6E /* BGMXPCHelperService.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D643BA1C9FB84C00737F6E /* BGMXPCHelperService.m */; };
 		27D643C11C9FB99200737F6E /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D643BC1C9FB84C00737F6E /* main.m */; };
+		C3B2D08C1CC5D04300F27601 /* BGMDecibel.m in Sources */ = {isa = PBXBuildFile; fileRef = C3B2D08B1CC5D04300F27601 /* BGMDecibel.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -173,6 +174,9 @@
 		27D643BB1C9FB84C00737F6E /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = BGMXPCHelper/Info.plist; sourceTree = SOURCE_ROOT; };
 		27D643BC1C9FB84C00737F6E /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = BGMXPCHelper/main.m; sourceTree = SOURCE_ROOT; };
 		27D643C41C9FBE5600737F6E /* BGM_TestUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGM_TestUtils.h; path = ../SharedSource/BGM_TestUtils.h; sourceTree = "<group>"; };
+		C3B2D0891CC5D01C00F27601 /* Decibel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Decibel.h; sourceTree = "<group>"; };
+		C3B2D08A1CC5D03800F27601 /* BGMDecibel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BGMDecibel.h; sourceTree = "<group>"; };
+		C3B2D08B1CC5D04300F27601 /* BGMDecibel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BGMDecibel.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -284,6 +288,8 @@
 				1C4699461BD5C0E400F78043 /* BGMiTunes.m */,
 				1C2336DD1BEAE10C004C1C4E /* BGMSpotify.h */,
 				1C2336DE1BEAE10C004C1C4E /* BGMSpotify.m */,
+				C3B2D08A1CC5D03800F27601 /* BGMDecibel.h */,
+				C3B2D08B1CC5D04300F27601 /* BGMDecibel.m */,
 				27379B881C7C562D0084A24C /* BGMVLC.h */,
 				27379B891C7C562D0084A24C /* BGMVLC.m */,
 				273F10DD1CC3D0B900C1C6DA /* BGMVox.h */,
@@ -387,6 +393,7 @@
 		27379B841C7C53BE0084A24C /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				C3B2D0891CC5D01C00F27601 /* Decibel.h */,
 				27379B851C7C54870084A24C /* iTunes.h */,
 				27379B861C7C54870084A24C /* Spotify.h */,
 				27379B871C7C552A0084A24C /* VLC.h */,
@@ -606,6 +613,7 @@
 				1CC1DF811BE5068A00FB8FE4 /* CACFArray.cpp in Sources */,
 				1C0BD0A81BF1B029004F4CF5 /* BGMPreferencesMenu.mm in Sources */,
 				1C1962F41BCABFC5008A4DF7 /* CAHALAudioObject.cpp in Sources */,
+				C3B2D08C1CC5D04300F27601 /* BGMDecibel.m in Sources */,
 				1C2336DA1BEAB6E7004C1C4E /* BGMMusicPlayer.m in Sources */,
 				1C1962F61BCABFC5008A4DF7 /* CAHALAudioSystemObject.cpp in Sources */,
 				1CC1DF821BE5068A00FB8FE4 /* CACFDictionary.cpp in Sources */,
