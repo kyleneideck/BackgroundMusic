@@ -44,6 +44,8 @@ CONFIGURATION=Release
 # Update .gitignore if you change this.
 LOG_FILE=build_and_install.log
 
+COREAUDIOD_PLIST="/System/Library/LaunchDaemons/com.apple.audio.coreaudiod.plist"
+
 bold_face() {
     echo $(tput bold)$*$(tput sgr0)
 }
@@ -197,7 +199,20 @@ sudo chown -R $(whoami):admin "/Applications/Background Music.app"
 echo "Restarting coreaudiod to load BGMDriver." \
      | tee -a ${LOG_FILE}
 
-sudo launchctl kill SIGTERM system/com.apple.audio.coreaudiod
+# The extra or-clauses are fallback versions of the command that restarts coreaudiod. Apparently
+# some of these commands don't work with older versions of launchctl, so I figure there's no harm in
+# trying a bunch of different ways (which should all work).
+(sudo launchctl kill SIGTERM system/com.apple.audio.coreaudiod &>/dev/null || \
+    sudo launchctl kill TERM system/com.apple.audio.coreaudiod &>/dev/null || \
+    sudo launchctl kill 15 system/com.apple.audio.coreaudiod &>/dev/null || \
+    sudo launchctl kill -15 system/com.apple.audio.coreaudiod &>/dev/null || \
+    (sudo launchctl unload "${COREAUDIOD_PLIST}" &>/dev/null && \
+        sudo launchctl load "${COREAUDIOD_PLIST}" &>/dev/null) || \
+    sudo killall coreaudiod &>/dev/null) && \
+    sleep 1
+
+# Invalidate sudo ticket
+sudo -k
 
 # Open BGMApp.
 # I'd rather not open BGMApp here, or at least ask first, but you have to change your default audio

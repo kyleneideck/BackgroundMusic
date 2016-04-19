@@ -5,7 +5,7 @@
 - Delete `Background Music.app` from `/Applications`.
 - Delete `Background Music Device.driver` from `/Library/Audio/Plug-Ins/HAL`.
 - Pause apps that are playing audio, if you can.
-- Restart `coreaudiod`:
+- Restart `coreaudiod`:<br>
   <sup>(Open `/Applications/Utilities/Terminal.app` and paste the following at the prompt.)</sup>
 
   ```shell
