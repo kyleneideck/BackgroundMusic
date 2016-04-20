@@ -62,7 +62,7 @@ HELPER_USER=_BGMXPCHelper
 
 LAUNCHD_PLIST_INSTALL_PATH=/Library/LaunchDaemons
 LAUNCHD_PLIST_FILENAME=com.bearisdriving.BGM.XPCHelper.plist
-LAUNCHD_PLIST=${LAUNCHD_PLIST_INSTALL_PATH}/${LAUNCHD_PLIST_FILENAME}
+LAUNCHD_PLIST="${LAUNCHD_PLIST_INSTALL_PATH}/${LAUNCHD_PLIST_FILENAME}"
 
 # Create an unprivileged user for BGMXPCHelper to run as.
 
@@ -115,6 +115,10 @@ fi
 # Copy the plist template into place.
 sudo cp "${RESOURCES_PATH}/${LAUNCHD_PLIST_FILENAME}.template" "${LAUNCHD_PLIST}"
 
+# Set the plist's owner and permissions. (Probably not necessary, but just in case.)
+sudo chown root:wheel "${LAUNCHD_PLIST}"
+sudo chmod 0644 "${LAUNCHD_PLIST}"
+
 # Replace the template variables in the plist.
 
 # First, escape the / characters in the values because we're using / in our sed pattern. The
@@ -140,15 +144,29 @@ sudo sed -i.tmp 's/{{#.*#}}//g' "${LAUNCHD_PLIST}"
 # Clean up sed's temporary file.
 sudo rm -f "${LAUNCHD_PLIST}.tmp"
 
-echo "Installed to ${LAUNCHD_PLIST_FILENAME} to ${LAUNCHD_PLIST_INSTALL_PATH}."
+echo "Installed ${LAUNCHD_PLIST_FILENAME} to ${LAUNCHD_PLIST_INSTALL_PATH}."
 
-# Unregister the plist. This disables the existing version of BGMXPCHelper. (We silence any output
-# because this command fails if the plist isn't already registered. The "|| true" part is so the
-# command can fail without our "safe mode" killing the script.)
-sudo launchctl bootout system "${LAUNCHD_PLIST}" &> /dev/null || true
+# Unregister the plist. This disables the existing version of BGMXPCHelper.
+
+echo "Unregistering ${LAUNCHD_PLIST}. This will print errors if you don't already have a version" \
+     "of it registered, or your system uses an older version of launchctl. They're safe to ignore."
+echo "----"
+
+# The fallback versions of this command are for OS X 10.10 and 10.9, respectively. The "|| true"
+# part is so the command can fail, which it does if the plist isn't already installed, without -e
+# killing the script.
+sudo launchctl bootout system "${LAUNCHD_PLIST}" || \
+    sudo launchctl unbootstrap system "${LAUNCHD_PLIST}" || \
+    sudo launchctl unload "${LAUNCHD_PLIST}" || \
+    true
+
+echo "----"
 
 # Register the plist with launchd. This enables BGMXPCHelper.
-sudo launchctl bootstrap system "${LAUNCHD_PLIST}"
+
+# The fallback version of this command is for OS X 10.9.
+sudo launchctl bootstrap system "${LAUNCHD_PLIST}" || \
+    sudo launchctl load "${LAUNCHD_PLIST}"
 
 echo "Started the BGMXPCHelper service."
 

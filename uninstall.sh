@@ -1,4 +1,5 @@
 #!/bin/bash -e
+# vim: tw=120:
 
 # This file is part of Background Music.
 #
@@ -23,6 +24,11 @@
 #
 # Removes BGMApp, BGMDriver and BGMXPCHelper from the system.
 #
+
+# TODO: Log commands and their output to uninstall.log, like build_and_install.sh does, rather than just sending
+#       everything to /dev/null.
+
+# TODO: Show a custom error message if the script fails, like build_and_install.sh.
 
 bold=$(tput bold)
 normal=$(tput sgr0)
@@ -97,7 +103,8 @@ if [ "$user_prompt" == "y" ] || [ "$user_prompt" == "Y" ]; then
   echo "Removing Background Music launchd service."
   sudo launchctl list | grep "${launchd_plist_label}" >/dev/null && \
     (sudo launchctl bootout system "${launchd_plist}" &>/dev/null || \
-      # Try an older version of the command in case the user has an old version of launchctl.
+      # Try older versions of the command in case the user has an old version of launchctl.
+      sudo launchctl unbootstrap system "${launchd_plist}" &>/dev/null || \
       sudo launchctl unload "${launchd_plist}" >/dev/null) || \
     echo "  Service does not exist."
 

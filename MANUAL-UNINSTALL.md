@@ -18,11 +18,25 @@
 ## Optional
 
 - Delete `BGMXPCHelper.xpc` from `/usr/local/libexec` or possibly `/Library/Application Support/Background Music`.
-- Unregister BGMXPCHelper, delete its user and group, and delete its launchd.plist:
+- Unregister BGMXPCHelper.
+  - If you're using OS X 10.11:
+
+    ```shell
+    sudo launchctl bootout system /Library/LaunchDaemons/com.bearisdriving.BGM.XPCHelper.plist
+    ```
+  - If you're using an earlier version of OS X:
+
+    ```shell
+    sudo launchctl unload /Library/LaunchDaemons/com.bearisdriving.BGM.XPCHelper.plist
+    ```
+- Delete BGMXPCHelper's launchd.plist.
 
   ```shell
-  sudo launchctl bootout system /Library/LaunchDaemons/com.bearisdriving.BGM.XPCHelper.plist
   sudo rm /Library/LaunchDaemons/com.bearisdriving.BGM.XPCHelper.plist
+  ```
+- Delete BGMXPCHelper's user and group.
+
+  ```shell
   sudo dscl . -delete /Users/_BGMXPCHelper
   sudo dscl . -delete /Groups/_BGMXPCHelper
   ```
