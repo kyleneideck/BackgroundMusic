@@ -9,7 +9,12 @@
   <sup>(Open `/Applications/Utilities/Terminal.app` and paste the following at the prompt.)</sup>
 
   ```shell
-  sudo launchctl kill SIGTERM system/com.apple.audio.coreaudiod || sudo killall coreaudiod
+  sudo launchctl kill -15 system/com.apple.audio.coreaudiod
+  ```
+  or, if that fails
+
+  ```shell
+  sudo killall coreaudiod
   ```
 - Go to the Sound section in System Preferences and change your default output device at least once. (If you only have
   one device now, either use `Audio MIDI Setup.app` to create a temporary aggregate device, restart any audio apps that

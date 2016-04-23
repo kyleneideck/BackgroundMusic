@@ -14,8 +14,8 @@
 - No restart required to install
 - Runs entirely in userspace
 
-**Version 0.1.0**, first release. Probably very buggy. Pretty much only tested on one system (a MacBook running OS X
-10.11 using the built-in audio device).
+**Version 0.1.0**, first release. Probably very buggy. Pretty much only tested on one system. (A MacBook running OS X
+10.11 using the built-in audio device.)
 
 **Requires OS X 10.10+**. Might work on 10.9, but I haven't tried it.
 
@@ -63,8 +63,8 @@ apps playing audio.
 
 ### Manual Uninstall
 
-Try following the instructions in `MANUAL-UNINSTALL.md` if `uninstall.sh` fails. (You might consider submitting a bug
-report, too.)
+Try following the instructions in [`MANUAL-UNINSTALL.md`](MANUAL-UNINSTALL.md) if `uninstall.sh` fails. (You might
+consider submitting a bug report, too.)
 
 ## Troubleshooting
 
@@ -90,13 +90,17 @@ change the default device and then change it back again. Failing that, you might
 - [A recent Chrome bug](https://bugs.chromium.org/p/chromium/issues/detail?id=557620) can stop Chrome from switching to
   Background Music Device after you open Background Music. Chrome's audio will still play, but Background Music won't be
   aware of it.
+- Some apps play notification sounds that are only just long enough to trigger an auto-pause. The only workaround right
+  now is to increase the `kPauseDelayMSecs` constant in `BGMApp/BGMAutoPauseMusic.mm`. That will make your music overlap
+  the other audio for longer, though, so you don't want to increase it too much. See
+  [#5](https://github.com/kyleneideck/BackgroundMusic/issues/5) for details.
 - Plenty more. Some are in listed in TODO.md.
 
 ## Related projects
 
 - [Core Audio User-Space Driver
   Examples](https://developer.apple.com/library/mac/samplecode/AudioDriverExamples/Introduction/Intro.html)
-  The sample code from Apple that BGMDriver's based on.
+  The sample code from Apple that BGMDriver is based on.
 - [Soundflower](https://github.com/mattingalls/Soundflower) - "MacOS system extension that allows applications to pass
   audio to other applications."
 - [WavTap](https://github.com/pje/WavTap) - "globally capture whatever your mac is playing—-as simply as a screenshot"
@@ -104,13 +108,24 @@ change the default device and then change it back again. Failing that, you might
   user/kernel audio interface. Shows how to read audio straight out of the kernel as you would on Darwin (where most the
   OSX goodness is missing)"
 - [mute.fm](http://www.mute.fm), [GitHub](https://github.com/jaredsohn/mutefm) (Windows) - Auto-pause music
-- [Sound Siphon](http://staticz.com) (non-free) - System/app audio recording, per-app volumes, system audio equaliser
 - [Jack OS X](http://www.jackosx.com) - "A Jack audio connection kit implementation for Mac OS X"
 - [PulseAudio OS X](https://github.com/zonque/PulseAudioOSX) - "PulseAudio for Mac OS X"
+- [Sound Pusher](https://github.com/q-p/SoundPusher) - "Virtual audio device, real-time encoder and SPDIF forwarder for
+  Mac OS X"
 - [eqMac](http://www.bitgapp.com/eqmac/) - "System-wide Audio Equalizer for Mac OSX"
 - [Zirkonium](https://code.google.com/archive/p/zirkonium) - "An infrastructure and application for multi-channel sound
   spatialization on MacOS X."
 
+### Non-free
+
+- [Volume Mixer For Mac](http://www.volumemixer-app.com/) - "Application specific volume control for Mac OS Yosemite and
+  El Capitan"
+- [Sound Siphon](http://staticz.com) - System/app audio recording, per-app volumes, system audio equaliser
+- [SoundBunny](https://www.prosofteng.com/soundbunny-mac-volume-control/) - "Control application volume independently."
+- [Boom 2](http://www.globaldelight.com/boom/index.php) - "The Best Volume Booster & Equalizer For Mac"
+
 ## License
 
 GPLv2 or later
+
+

@@ -90,3 +90,6 @@ There are also lots of other TODOs commented around the code.
 - Figure out how to test BGMDriver with Address Sanitizer enabled. It isn't working because coreaudiod will try to read
   files outside of its sandbox.
 
+- Crash reporting
+
+
