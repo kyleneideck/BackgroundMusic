@@ -20,6 +20,7 @@
 # build_and_install.sh
 #
 # Copyright © 2016 Kyle Neideck
+# Copyright © 2016 Nick Jacques
 #
 # Builds and installs BGMApp, BGMDriver and BGMXPCHelper. Requires xcodebuild.
 #
@@ -45,6 +46,15 @@ CONFIGURATION=Release
 LOG_FILE=build_and_install.log
 
 COREAUDIOD_PLIST="/System/Library/LaunchDaemons/com.apple.audio.coreaudiod.plist"
+
+# TODO: Should (can?) we use xcodebuild to get these from the Xcode project rather than duplicating
+#       them?
+APP_PATH="/Applications"
+APP_DIR="Background Music.app"
+DRIVER_PATH="/Library/Audio/Plug-Ins/HAL"
+DRIVER_DIR="Background Music Device.driver"
+XPC_HELPER_PATH="$(BGMApp/BGMXPCHelper/safe_install_dir.sh)"
+XPC_HELPER_DIR="BGMXPCHelper.xpc"
 
 bold_face() {
     echo $(tput bold)$*$(tput sgr0)
@@ -136,13 +146,32 @@ fi
 # Go to the project directory.
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
+echo "$(bold_face About to install Background Music). Please pause all audio, if you can."
+echo
+echo "This script will install:"
+echo " - ${APP_PATH}/${APP_DIR}"
+echo " - ${DRIVER_PATH}/${DRIVER_DIR}"
+echo " - ${XPC_HELPER_PATH}/${XPC_HELPER_DIR}"
+echo " - /Library/LaunchDaemons/com.bearisdriving.BGM.XPCHelper.plist"
+echo
+read -p "Continue (y/N)? " CONTINUE_INSTALLATION
+
+if [[ "${CONTINUE_INSTALLATION}" != "y" ]] && [[ "${CONTINUE_INSTALLATION}" != "Y" ]]; then
+    echo "Installation cancelled."
+    exit 0
+fi
+
+# Update the user's sudo timestamp. (Prompts the user for their password.)
+if ! sudo -v; then
+    echo "ERROR: This script must be run by a user with administrator (sudo) privileges." >&2
+    exit 1
+fi
+
 # BGMDriver
 
-echo "Installing the virtual audio device $(bold_face Background Music Device.driver) to" \
-     "$(bold_face /Library/Audio/Plug-Ins/HAL)." \
+echo "[1/3] Installing the virtual audio device $(bold_face ${DRIVER_DIR}) to" \
+     "$(bold_face ${DRIVER_PATH})." \
      | tee ${LOG_FILE}
-
-sudo -v
 
 # Disable the -e shell option here so we can handle the error differently.
 (set +e;
@@ -157,9 +186,7 @@ show_spinner
 
 # BGMXPCHelper
 
-XPC_HELPER_INSTALL_DIR=$(BGMApp/BGMXPCHelper/safe_install_dir.sh)
-
-echo "Installing $(bold_face BGMXPCHelper.xpc) to $(bold_face ${XPC_HELPER_INSTALL_DIR})." \
+echo "[2/3] Installing $(bold_face ${XPC_HELPER_DIR}) to $(bold_face ${XPC_HELPER_PATH})." \
      | tee -a ${LOG_FILE}
 
 (set +e;
@@ -168,14 +195,14 @@ sudo xcodebuild -project BGMApp/BGMApp.xcodeproj \
                 -configuration ${CONFIGURATION} \
                 RUN_CLANG_STATIC_ANALYZER=0 \
                 DSTROOT="/" \
-                INSTALL_PATH="${XPC_HELPER_INSTALL_DIR}" \
+                INSTALL_PATH="${XPC_HELPER_PATH}" \
                 install >> ${LOG_FILE} 2>&1) &
 
 show_spinner
 
 # BGMApp
 
-echo "Installing $(bold_face Background Music.app) to $(bold_face /Applications)." \
+echo "[3/3] Installing $(bold_face ${APP_DIR}) to $(bold_face ${APP_PATH})." \
      | tee -a ${LOG_FILE}
 
 (set +e;
@@ -192,11 +219,11 @@ show_spinner
 # (We have to run xcodebuild as root to install BGMXPCHelper because it installs to directories
 # owned by root. But that means the build directory gets created by root, and since BGMApp uses the
 # same build directory we have to run xcodebuild as root to install BGMApp as well.)
-sudo chown -R $(whoami):admin "/Applications/Background Music.app"
+sudo chown -R "$(whoami):admin" "${APP_PATH}/${APP_DIR}"
 
 # Restart coreaudiod.
 
-echo "Restarting coreaudiod to load BGMDriver." \
+echo "Restarting coreaudiod to load the virtual audio device." \
      | tee -a ${LOG_FILE}
 
 # The extra or-clauses are fallback versions of the command that restarts coreaudiod. Apparently
@@ -209,7 +236,7 @@ echo "Restarting coreaudiod to load BGMDriver." \
     (sudo launchctl unload "${COREAUDIOD_PLIST}" &>/dev/null && \
         sudo launchctl load "${COREAUDIOD_PLIST}" &>/dev/null) || \
     sudo killall coreaudiod &>/dev/null) && \
-    sleep 1
+    sleep 2
 
 # Invalidate sudo ticket
 sudo -k
@@ -219,7 +246,7 @@ sudo -k
 # device after restarting coreaudiod and this is the easiest way.
 echo "Launching Background Music."
 
-open "/Applications/Background Music.app"
+open "${APP_PATH}/${APP_DIR}"
 
 # Wait up to 5 seconds for Background Music to start.
 (while ! (ps -Ao ucomm= | grep 'Background Music' > /dev/null); do

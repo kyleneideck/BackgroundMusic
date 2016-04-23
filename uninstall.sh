@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash
 # vim: tw=120:
 
 # This file is part of Background Music.
@@ -29,6 +29,9 @@
 #       everything to /dev/null.
 
 # TODO: Show a custom error message if the script fails, like build_and_install.sh.
+
+# Halt on errors.
+set -e
 
 bold=$(tput bold)
 normal=$(tput sgr0)
@@ -73,10 +76,8 @@ read -p "Continue (y/N)? " user_prompt
 if [ "$user_prompt" == "y" ] || [ "$user_prompt" == "Y" ]; then
 
   # Ensure that the user can use sudo
-  sudo -v
-  is_sudo=$?
-  if [[ "$is_sudo" -ne 0 ]]; then
-    echo "ERROR: This script must be run by a user with administrator (sudo) privileges."
+  if ! sudo -v; then
+    echo "ERROR: This script must be run by a user with administrator (sudo) privileges." >&2
     exit 1
   fi
 
