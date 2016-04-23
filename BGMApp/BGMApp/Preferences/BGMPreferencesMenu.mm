@@ -28,7 +28,7 @@
 #import "BGMOutputDevicePrefs.h"
 
 
-NS_ASSUME_NONNULL_BEGIN
+#pragma clang assume_nonnull begin
 
 // Interface Builder tags
 static NSInteger const kToggleAutoPauseMusicMenuItemTag = 2;
@@ -127,5 +127,5 @@ static NSInteger const kAboutPanelCopyrightLabelTag = 2;
 
 @end
 
-NS_ASSUME_NONNULL_END
+#pragma clang assume_nonnull end
 

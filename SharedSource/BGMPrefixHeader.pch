@@ -14,32 +14,21 @@
 // along with Background Music. If not, see <http://www.gnu.org/licenses/>.
 
 //
-//  BGMPreferencesMenu.h
-//  BGMApp
+//  BGMPrefixHeader.pch
+//  SharedSource
 //
 //  Copyright © 2016 Kyle Neideck
 //
-//  Handles the preferences menu UI. The user's preference changes are often passed directly to the driver rather
-//  than to other BGMApp classes.
-//
 
-// Local Includes
-#import "BGMAudioDeviceManager.h"
+#ifndef __SharedSource__BGMPrefixHeader__
+#define __SharedSource__BGMPrefixHeader__
 
-// System Includes
-#import <Cocoa/Cocoa.h>
+#if !(__has_feature(nullability))
 
+#define __nullable
+#define __nonnull
 
-#pragma clang assume_nonnull begin
+#endif
 
-@interface BGMPreferencesMenu : NSObject <NSMenuDelegate>
-
-- (id) initWithbgmMenu:(NSMenu*)inBGMMenu
-          audioDevices:(BGMAudioDeviceManager*)inAudioDevices
-            aboutPanel:(NSPanel*)inAboutPanel
- aboutPanelLicenseView:(NSTextView*)inAboutPanelLicenseView;
-
-@end
-
-#pragma clang assume_nonnull end
+#endif /* __SharedSource__BGMPrefixHeader__ */
 
