@@ -848,8 +848,7 @@ void	BGM_Device::Device_GetPropertyData(AudioObjectID inObjectID, pid_t inClient
 			
 				//	The sample rate is protected by the state lock
 				CAMutex::Locker theStateLocker(mStateMutex);
-					
-				//	need to lock around fetching the sample rate
+
 				*reinterpret_cast<Float64*>(outData) = _HW_GetSampleRate();
 				outDataSize = sizeof(Float64);
 			}
@@ -877,8 +876,14 @@ void	BGM_Device::Device_GetPropertyData(AudioObjectID inObjectID, pid_t inClient
 			//	fill out the return array
 			if(theNumberItemsToFetch > 0)
 			{
-				((AudioValueRange*)outData)[0].mMinimum = 0.0;
-				((AudioValueRange*)outData)[0].mMaximum = DBL_MAX;
+                // 0 would cause divide-by-zero errors in other BGM_Device functions (and
+                // wouldn't make sense anyway).
+                ((AudioValueRange*)outData)[0].mMinimum = 1.0;
+                // Just in case DBL_MAX would cause problems in a client for some reason,
+                // use an arbitrary very large number instead. (It wouldn't make sense to
+                // actually set the sample rate this high, but I don't know what a
+                // reasonable maximum would be.)
+                ((AudioValueRange*)outData)[0].mMaximum = 1000000000.0;
 			}
 			
 			//	report how much we wrote
@@ -1410,8 +1415,9 @@ void	BGM_Device::Stream_GetPropertyData(AudioObjectID inObjectID, pid_t inClient
 				((AudioStreamRangedDescription*)outData)[0].mFormat.mBytesPerFrame = 8;
 				((AudioStreamRangedDescription*)outData)[0].mFormat.mChannelsPerFrame = 2;
 				((AudioStreamRangedDescription*)outData)[0].mFormat.mBitsPerChannel = 32;
-				((AudioStreamRangedDescription*)outData)[0].mSampleRateRange.mMinimum = 0.0;
-				((AudioStreamRangedDescription*)outData)[0].mSampleRateRange.mMaximum = DBL_MAX;
+                // These match kAudioDevicePropertyAvailableNominalSampleRates.
+				((AudioStreamRangedDescription*)outData)[0].mSampleRateRange.mMinimum = 1.0;
+				((AudioStreamRangedDescription*)outData)[0].mSampleRateRange.mMaximum = 1000000000.0;
 			}
 			
 			//	report how much we wrote
@@ -1474,7 +1480,7 @@ void	BGM_Device::Stream_SetPropertyData(AudioObjectID inObjectID, pid_t inClient
 				ThrowIf(theNewFormat->mBytesPerFrame != 8, CAException(kAudioDeviceUnsupportedFormatError), "BGM_Device::Stream_SetPropertyData: unsupported bytes per frame for kAudioStreamPropertyPhysicalFormat");
 				ThrowIf(theNewFormat->mChannelsPerFrame != 2, CAException(kAudioDeviceUnsupportedFormatError), "BGM_Device::Stream_SetPropertyData: unsupported channels per frame for kAudioStreamPropertyPhysicalFormat");
 				ThrowIf(theNewFormat->mBitsPerChannel != 32, CAException(kAudioDeviceUnsupportedFormatError), "BGM_Device::Stream_SetPropertyData: unsupported bits per channel for kAudioStreamPropertyPhysicalFormat");
-				ThrowIf(theNewFormat->mSampleRate < 0.0, //(theNewFormat->mSampleRate != 44100.0) && (theNewFormat->mSampleRate != 48000.0),
+				ThrowIf(theNewFormat->mSampleRate < 1.0, //(theNewFormat->mSampleRate != 44100.0) && (theNewFormat->mSampleRate != 48000.0),
                         CAException(kAudioDeviceUnsupportedFormatError),
                         "BGM_Device::Stream_SetPropertyData: unsupported sample rate for kAudioStreamPropertyPhysicalFormat");
                 
