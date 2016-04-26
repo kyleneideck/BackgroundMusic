@@ -17,7 +17,7 @@
 **Version 0.1.0**, first release. Probably very buggy. Not very polished. Pretty much only tested on one system. (A
 MacBook running OS X 10.11 using the built-in audio device.)
 
-**Requires OS X 10.10+**. Might work on 10.9, but I haven't tried it.
+**Requires OS X 10.10+**. Might work on 10.9, but I haven't tried it. Currently unable to build in Xcode 6.
 
 ## Auto-pause music
 

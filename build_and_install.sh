@@ -44,7 +44,7 @@ error_handler() {
 
     # Scrub username from log (and also real name just in case).
     sed -i'tmp' "s/$(whoami)/[username removed]/g" ${LOG_FILE}
-    sed -i'tmp' "s/$(id -F)/[name removed]/gi" ${LOG_FILE}
+    sed -i'tmp' "s/$(id -F)/[name removed]/g" ${LOG_FILE}
     rm "${LOG_FILE}tmp"
 
     # Print an error message.
@@ -107,7 +107,6 @@ If you only have one device, you can create a temporary one by opening \
 Multi-Output Device\"."
 ERROR_MSG="${GENERAL_ERROR_MSG}"
 
-RECOMMENDED_MIN_XCODE_VERSION=7
 XCODEBUILD="/usr/bin/xcodebuild"
 if ! [[ -x "${XCODEBUILD}" ]]; then
     XCODEBUILD=$(which xcodebuild || true)
@@ -116,6 +115,9 @@ fi
 if ! [[ -x "${XCODEBUILD}" ]]; then
     XCODEBUILD=$(/usr/bin/xcrun --find xcodebuild &2>>${LOG_FILE} || true)
 fi
+
+# TODO: Update this when/if Xcode 6 is supported.
+RECOMMENDED_MIN_XCODE_VERSION=7
 
 usage() {
     echo "Usage: $0 [options]" >&2
@@ -171,6 +173,7 @@ show_spinner() {
         else
             echo 0
         fi)
+    exec 3<&- # Close the file descriptor.
 
     wait ${PREV_COMMAND_PID}
     local EXIT_STATUS=$?
@@ -189,7 +192,9 @@ show_spinner() {
 
         error_handler ${LINENO}
 
-        exit ${EXIT_STATUS}
+        if [[ ${CONTINUE_ON_ERROR} -eq 0 ]]; then
+            exit ${EXIT_STATUS}
+        fi
     fi
 
     if [[ ${CONTINUE_ON_ERROR} -eq 0 ]]; then
@@ -224,28 +229,45 @@ parse_options() {
 }
 
 check_xcode() {
-    XCODEBUILD_FAILED=0
+    RETURN=0
 
     # First, check xcodebuild exists on the system an is an executable.
-    if ! [[ -x "${XCODEBUILD}" ]] || ! xcode-select --print-path &>/dev/null; then
-        set +e; trap - ERR  # Disable error handlers
-
-        echo "$(tput setaf 9)ERROR$(tput sgr0): Can't find xcodebuild on your system." >&2
-        echo >&2
-        echo "If you have Xcode installed, you should be able to install the command line" \
-             "developer tools, including xcodebuild, with" >&2
-        echo "    xcode-select --install" >&2
-        echo "If not, you'll need to install Xcode (~9GB), because xcodebuild no longer works" \
-             "without it." >&2
-        echo >&2
-
-        XCODEBUILD_FAILED=1
+    if ! [[ -x "${XCODEBUILD}" ]] || ! xcode-select --print-path &>/dev/null || \
+        ! pkgutil --pkg-info=com.apple.pkg.CLTools_Executables &>/dev/null; then
+        RETURN=1
     fi
 
     # Check that Xcode is installed, not just the command line tools.
     if ! "${XCODEBUILD}" -version &>/dev/null; then
-        set +e; trap - ERR  # Disable error handlers
+        ((RETURN+=2))
+    fi
 
+    # Exit with an error message if we couldn't find a working xcodebuild.
+    if [[ ${RETURN} -eq 0 ]] && \
+        # Version check.
+        [[ "$(echo ${XCODE_VERSION} | sed 's/\..*$//g')" -lt ${RECOMMENDED_MIN_XCODE_VERSION} ]]
+    then
+        RETURN=-1
+    fi
+
+    exit ${RETURN}
+}
+
+handle_check_xcode_failure() {
+    # No command line tools
+    if [[ $1 -eq 1 ]] || [[ $1 -eq 3 ]]; then
+        echo "$(tput setaf 9)ERROR$(tput sgr0): The Xcode Command Line Tools don't seem to be" \
+             "installed on your system." >&2
+        echo >&2
+        echo "If you have Xcode installed, you should be able to install them with" >&2
+        echo "    xcode-select --install" >&2
+        echo "If not, you'll need to install Xcode (~9GB), because xcodebuild no longer works" \
+             "without it." >&2
+        echo >&2
+    fi
+
+    # No Xcode
+    if [[ $1 -eq 2 ]] || [[ $1 -eq 3 ]]; then
         echo "$(tput setaf 9)ERROR$(tput sgr0): Unfortunately, Xcode (~9GB) is required to build" \
              "Background Music, but ${XCODEBUILD} doesn't appear to be usable. You may need to" \
              "tell the Xcode command line tools where your Xcode is installed to with" >&2
@@ -253,15 +275,19 @@ check_xcode() {
         echo >&2
         echo "Output from ${XCODEBUILD}:" >&2
 
-        "${XCODEBUILD}" -version >&2
+        "${XCODEBUILD}" -version >&2 || true
 
         echo >&2
-
-        XCODEBUILD_FAILED=1
     fi
 
-    # Exit with an error message if we couldn't find a working xcodebuild.
-    if [[ ${XCODEBUILD_FAILED} -eq 1 ]]; then
+    if [[ $1 -eq -1 ]]; then
+        # Xcode version is probably too old.
+        echo "$(tput setaf 11)WARNING$(tput sgr0): Your version of Xcode (${XCODE_VERSION}) may" \
+             "not be recent enough to build Background Music." >&2
+    else
+        # Disable error handlers
+        set +e; trap - ERR
+
         # Look for an Xcode install.
         echo "Looking for Xcode..." >&2
         XCODE_PATHS=$(mdfind "kMDItemCFBundleIdentifier == 'com.apple.dt.Xcode' || \
@@ -274,14 +300,9 @@ check_xcode() {
             echo "Not found." >&2
         fi
 
-        exit 1
-    fi
-
-    # Version check.
-    local XCODE_VER=$(${XCODEBUILD} -version | head -n 1 | awk '{ print $2 }')
-    if [[ "$(echo ${XCODE_VER} | sed 's/\..*$//g')" -lt ${RECOMMENDED_MIN_XCODE_VERSION} ]]; then
-        echo "$(tput setaf 11)WARNING$(tput sgr0): Your version of Xcode (${XCODE_VER}) may not" \
-             "be recent enough to build Background Music."
+        if [[ ${CONTINUE_ON_ERROR} -eq 0 ]]; then
+            exit 1
+        fi
     fi
 }
 
@@ -337,9 +358,6 @@ if [[ $(id -u) -eq 0 ]]; then
          "it normally and it'll sudo when it needs to." >&2
 fi
 
-# Make sure Xcode and the command line tools are installed and recent enough.
-check_xcode
-
 # Print initial message.
 echo "$(bold_face About to install Background Music). Please pause all audio, if you can."
 echo
@@ -349,17 +367,38 @@ echo " - ${DRIVER_PATH}/${DRIVER_DIR}"
 echo " - ${XPC_HELPER_PATH}/${XPC_HELPER_DIR}"
 echo " - /Library/LaunchDaemons/com.bearisdriving.BGM.XPCHelper.plist"
 echo
+
+# Make sure Xcode and the command line tools are installed and recent enough.
+XCODE_VERSION=$(${XCODEBUILD} -version | head -n 1 | awk '{ print $2 }' 2>/dev/null || echo 0)
+check_xcode &
+CHECK_XCODE_TASK_PID=$!
+
 read -p "Continue (y/N)? " CONTINUE_INSTALLATION
 
-if [[ "${CONTINUE_INSTALLATION}" != "y" ]] && [[ "${CONTINUE_INSTALLATION}" != "Y" ]]; then
-    echo "Installation cancelled."
-    exit 0
+if is_alive ${CHECK_XCODE_TASK_PID}; then
+    if [[ "${CONTINUE_INSTALLATION}" != "y" ]] && [[ "${CONTINUE_INSTALLATION}" != "Y" ]]; then
+        echo "Installation cancelled."
+        exit 0
+    fi
+
+    # Update the user's sudo timestamp. (Prompts the user for their password.)
+    if ! sudo -v; then
+        echo "ERROR: This script must be run by a user with administrator (sudo) privileges." >&2
+        exit 1
+    fi
 fi
 
-# Update the user's sudo timestamp. (Prompts the user for their password.)
-if ! sudo -v; then
-    echo "ERROR: This script must be run by a user with administrator (sudo) privileges." >&2
-    exit 1
+# Wait for the Xcode checks to finish.
+set +e
+trap - ERR
+wait ${CHECK_XCODE_TASK_PID}
+CHECK_XCODE_TASK_STATUS=$?
+trap 'error_handler ${LINENO}' ERR
+set -e
+
+# If there was a problem with Xcode/xcodebuild, print the error message and exit.
+if [[ ${CHECK_XCODE_TASK_STATUS} -ne 0 ]]; then
+    handle_check_xcode_failure ${CHECK_XCODE_TASK_STATUS}
 fi
 
 log_debug_info
@@ -437,7 +476,7 @@ echo "Restarting coreaudiod to load the virtual audio device." \
     (sudo launchctl unload "${COREAUDIOD_PLIST}" &>/dev/null && \
         sudo launchctl load "${COREAUDIOD_PLIST}" &>/dev/null) || \
     sudo killall coreaudiod &>/dev/null) && \
-    sleep 2
+    sleep 5
 
 # Invalidate sudo ticket
 sudo -k
