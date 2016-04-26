@@ -1,0 +1,17 @@
+language: objective-c
+os: osx
+osx_image: xcode7.3
+xcode_sdk: macosx10.11
+branches:
+  only:
+    - master
+install: true
+script:
+  - yes | ./build_and_install.sh
+  - cat build_and_install.log
+  - find */build/Release/*/ -type f -exec md5 {} \;
+  - xcodebuild -workspace BGM.xcworkspace -scheme 'Background Music Device' test
+  - xcodebuild -workspace BGM.xcworkspace -scheme 'Background Music' test
+  - xcodebuild -workspace BGM.xcworkspace -scheme 'BGMXPCHelper' test
+  - yes | ./uninstall.sh
+  - ls /Applications /Library/Audio/Plug-Ins/HAL /usr/local/libexec /Library/Application\ Support/Background\ Music
