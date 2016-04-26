@@ -14,8 +14,8 @@
 - No restart required to install
 - Runs entirely in userspace
 
-**Version 0.1.0**, first release. Probably very buggy. Pretty much only tested on one system. (A MacBook running OS X
-10.11 using the built-in audio device.)
+**Version 0.1.0**, first release. Probably very buggy. Not very polished. Pretty much only tested on one system. (A
+MacBook running OS X 10.11 using the built-in audio device.)
 
 **Requires OS X 10.10+**. Might work on 10.9, but I haven't tried it.
 
@@ -118,6 +118,7 @@ change the default device and then change it back again. Failing that, you might
 
 ### Non-free
 
+- [Audio Hijack](https://rogueamoeba.com/audiohijack/) - "Capture Audio From Anywhere on Your Mac"
 - [Volume Mixer For Mac](http://www.volumemixer-app.com/) - "Application specific volume control for Mac OS Yosemite and
   El Capitan"
 - [Sound Siphon](http://staticz.com) - System/app audio recording, per-app volumes, system audio equaliser

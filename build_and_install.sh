@@ -22,28 +22,65 @@
 # Copyright © 2016 Kyle Neideck
 # Copyright © 2016 Nick Jacques
 #
-# Builds and installs BGMApp, BGMDriver and BGMXPCHelper. Requires xcodebuild.
+# Builds and installs BGMApp, BGMDriver and BGMXPCHelper. Requires xcodebuild and Xcode.
 #
 
 # Safe mode
 set -euo pipefail
 IFS=$'\n\t'
 
-# General error message
+# Subshells and function inherit the ERR trap
 set -o errtrace
-general_error() {
-    echo "$(tput setaf 1)ERROR$(tput sgr0): Install script failed at line $1. This is probably a" \
-         "bug in the script. Feel free to report it." >&2
+
+error_handler() {
+    local LAST_COMMAND="${BASH_COMMAND}" LAST_COMMAND_EXIT_STATUS=$?
+
+    # Log the error.
+    echo "Failure in ${0} at line ${1}. The last command was (probably)" >> ${LOG_FILE}
+    echo "    ${LAST_COMMAND}" >> ${LOG_FILE}
+    echo "which exited with status ${LAST_COMMAND_EXIT_STATUS}." >> ${LOG_FILE}
+    echo "Error message: ${ERROR_MSG}" >> ${LOG_FILE}
+    echo >> ${LOG_FILE}
+
+    # Scrub username from log (and also real name just in case).
+    sed -i'tmp' "s/$(whoami)/[username removed]/g" ${LOG_FILE}
+    sed -i'tmp' "s/$(id -F)/[name removed]/gi" ${LOG_FILE}
+    rm "${LOG_FILE}tmp"
+
+    # Print an error message.
+    echo "$(tput setaf 9)ERROR$(tput sgr0): Install failed at line $1 with the message:"
+    echo
+    echo -e "${ERROR_MSG}" >&2
+    echo >&2
+    echo "Feel free to report this. If you do, you'll probably want to include the" \
+         "build_and_install.log file from this directory. But quickly skim through it first to" \
+         "check that it doesn't include any personal information. It shouldn't, but this is alpha" \
+         "software, so you never know." >&2
+    echo >&2
+    echo "To try building and installing without this build script, see MANUAL-INSTALL.md." >&2
+
+    # Finish logging debug info if the script fails early.
+    if ! [[ -z ${LOG_DEBUG_INFO_TASK_PID:-} ]]; then
+        wait ${LOG_DEBUG_INFO_TASK_PID}
+    fi
 }
-trap 'general_error ${LINENO}' ERR
 
 # Build for release by default.
 # TODO: Add an option to use the debug configuration?
 CONFIGURATION=Release
 #CONFIGURATION=Debug
 
+# The default is to clean before installing because we want the log file to have roughly the same
+# information after every build.
+CLEAN=clean
+
+CONTINUE_ON_ERROR=0
+
 # Update .gitignore if you change this.
 LOG_FILE=build_and_install.log
+
+# Empty the log file
+echo -n > ${LOG_FILE}
 
 COREAUDIOD_PLIST="/System/Library/LaunchDaemons/com.apple.audio.coreaudiod.plist"
 
@@ -56,6 +93,38 @@ DRIVER_DIR="Background Music Device.driver"
 XPC_HELPER_PATH="$(BGMApp/BGMXPCHelper/safe_install_dir.sh)"
 XPC_HELPER_DIR="BGMXPCHelper.xpc"
 
+GENERAL_ERROR_MSG="Internal script error. Probably a bug in this script."
+BUILD_FAILED_ERROR_MSG="A build command failed. Probably a compilation error."
+BGMAPP_FAILED_TO_START_ERROR_MSG="Background Music (${APP_PATH}/${APP_DIR}) didn't seem to start \
+up. It might just be taking a while.
+
+If it didn't install correctly, you'll need to open the Sound control panel in System Preferences \
+and change your output device at least once. Your sound probably won't work until you do. (Or you \
+restart your computer.)
+
+If you only have one device, you can create a temporary one by opening \
+\"/Applications/Utilities/Audio MIDI Setup.app\", clicking the plus button and choosing \"Create \
+Multi-Output Device\"."
+ERROR_MSG="${GENERAL_ERROR_MSG}"
+
+RECOMMENDED_MIN_XCODE_VERSION=7
+XCODEBUILD="/usr/bin/xcodebuild"
+if ! [[ -x "${XCODEBUILD}" ]]; then
+    XCODEBUILD=$(which xcodebuild || true)
+fi
+# This check is last because it takes 10 seconds or so if it fails.
+if ! [[ -x "${XCODEBUILD}" ]]; then
+    XCODEBUILD=$(/usr/bin/xcrun --find xcodebuild &2>>${LOG_FILE} || true)
+fi
+
+usage() {
+    echo "Usage: $0 [options]" >&2
+    echo -e "\t-d\tDon't clean before building/installing." >&2
+    echo -e "\t-c\tContinue on script errors. Might not be safe." >&2
+    echo -e "\t-h\tPrint this usage statement." >&2
+    exit 1
+}
+
 bold_face() {
     echo $(tput bold)$*$(tput sgr0)
 }
@@ -66,10 +135,15 @@ is_alive() {
 }
 
 # Shows a "..." animation until the previous command finishes. Shows an error message and exits the
-# script if the command fails.
+# script if the command fails. The return value will be the exit status of the command.
 #
-# Takes an optional timeout in seconds. The return value will be the exit status of the command.
+# Params:
+#  - The error message to show if the previous command fails.
+#  - An optional timeout in seconds.
 show_spinner() {
+    set +e
+    trap - ERR
+
     local PREV_COMMAND_PID=$!
 
     # Get the previous command as a string, with variables resolved. Assumes that if the command has
@@ -77,75 +151,196 @@ show_spinner() {
     # one child.)
     local CHILD_PID=$(pgrep -P ${PREV_COMMAND_PID} | head -n1 || echo ${PREV_COMMAND_PID})
     local PREV_COMMAND_STRING=$(ps -o command= ${CHILD_PID})
-    local TIMEOUT=${1:-0}
+    local TIMEOUT=${2:-0}
 
-    (I=1;
-    while (is_alive ${PREV_COMMAND_PID}) && ([[ ${TIMEOUT} -lt 1 ]] || [[ $I -lt ${TIMEOUT} ]]); do
-        printf '.';
-        sleep 1;
-        # Erase after we've printed three dots. (\b is backspace.)
-        [[ $(($I % 3)) -eq 0 ]] && printf '\b\b\b   \b\b\b';
-        I=$(($I + 1));
-    done) &
+    exec 3>&1 # Creates an alias so the following subshell can print to stdout.
+    DID_TIMEOUT=$(
+        I=1
+        while (is_alive ${PREV_COMMAND_PID}) && \
+            ([[ ${TIMEOUT} -lt 1 ]] || [[ $I -lt ${TIMEOUT} ]])
+        do
+            printf '.' >&3
+            sleep 1
+            # Erase after we've printed three dots. (\b is backspace.)
+            [[ $((I % 3)) -eq 0 ]] && printf '\b\b\b   \b\b\b' >&3
+            ((I++))
+        done
+        if [[ $I -eq ${TIMEOUT} ]]; then
+            kill ${PREV_COMMAND_PID} >> ${LOG_FILE} 2>&1
+            echo 1
+        else
+            echo 0
+        fi)
 
-    set +e
     wait ${PREV_COMMAND_PID}
     local EXIT_STATUS=$?
-    set -e
 
     # Clean up the dots.
-    printf '\b\b\b'
+    printf '\b\b\b   \b\b\b'
 
     # Print an error message if the command fails.
     # (wait returns 127 if the process has already exited.)
     if [[ ${EXIT_STATUS} -ne 0 ]] && [[ ${EXIT_STATUS} -ne 127 ]]; then
-        echo "$(tput setaf 1)ERROR$(tput sgr0): Build step failed. See ${LOG_FILE} for details." >&2
-        echo "Failed command:" >&2
-        echo "    ${PREV_COMMAND_STRING}" >&2
+        ERROR_MSG="$1"
+        if [[ ${DID_TIMEOUT} -eq 0 ]]; then
+            ERROR_MSG+="\n\nFailed command:
+                            ${PREV_COMMAND_STRING}"
+        fi
+
+        error_handler ${LINENO}
 
         exit ${EXIT_STATUS}
+    fi
+
+    if [[ ${CONTINUE_ON_ERROR} -eq 0 ]]; then
+        set -e
+        trap 'error_handler ${LINENO}' ERR
     fi
 
     return ${EXIT_STATUS}
 }
 
-# Check for xcodebuild.
-if [[ "$(which xcodebuild)" == "" ]]; then
-    echo "$(tput setaf 1)ERROR$(tput sgr0): Can't find xcodebuild in your \$PATH." >&2
-    echo >&2
-    echo "If you have Xcode installed, you should be able to install the command line developer" \
-         "tools, including xcodebuild, with" >&2
-    echo "    xcode-select --install" >&2
-    echo "If not, you'll need to install Xcode (~9GB), because xcodebuild no longer works without" \
-         "it." >&2
+parse_options() {
+    while getopts ":dch" opt; do
+        case $opt in
+            d)
+                CLEAN=""
+                ;;
+            c)
+                CONTINUE_ON_ERROR=1
+                echo "$(tput setaf 11)WARNING$(tput sgr0): Ignoring errors."
+                set +e
+                trap - ERR
+                ;;
+            h)
+                usage
+                ;;
+            \?)
+                echo "Invalid option: -$OPTARG" >&2
+                usage
+                ;;
+        esac
+    done
+}
 
-    # Disable error handlers.
-    trap - ERR
-    set +e 
+check_xcode() {
+    XCODEBUILD_FAILED=0
 
-    # Check for Xcode.
-    XCODE_PATH=$(which xcode-select > /dev/null && xcode-select --print-path)
-    XCODE_PATH=${XCODE_PATH%/Contents/Developer}
+    # First, check xcodebuild exists on the system an is an executable.
+    if ! [[ -x "${XCODEBUILD}" ]] || ! xcode-select --print-path &>/dev/null; then
+        set +e; trap - ERR  # Disable error handlers
 
-    if [[ "${XCODE_PATH}" == "" ]] && [[ -d /Applications/Xcode.app ]]; then
-        XCODE_PATH="/Applications/Xcode.app"
-    fi
-
-    if [[ "${XCODE_PATH}" == "" ]] && [[ -d ~/Applications/Xcode.app ]]; then
-        XCODE_PATH="~/Applications/Xcode.app"
-    fi
-
-    if [[ "${XCODE_PATH}" != "" ]]; then
+        echo "$(tput setaf 9)ERROR$(tput sgr0): Can't find xcodebuild on your system." >&2
         echo >&2
-        echo "It looks like you have Xcode installed to ${XCODE_PATH}" >&2
+        echo "If you have Xcode installed, you should be able to install the command line" \
+             "developer tools, including xcodebuild, with" >&2
+        echo "    xcode-select --install" >&2
+        echo "If not, you'll need to install Xcode (~9GB), because xcodebuild no longer works" \
+             "without it." >&2
+        echo >&2
+
+        XCODEBUILD_FAILED=1
     fi
 
-    exit 1
-fi
+    # Check that Xcode is installed, not just the command line tools.
+    if ! "${XCODEBUILD}" -version &>/dev/null; then
+        set +e; trap - ERR  # Disable error handlers
+
+        echo "$(tput setaf 9)ERROR$(tput sgr0): Unfortunately, Xcode (~9GB) is required to build" \
+             "Background Music, but ${XCODEBUILD} doesn't appear to be usable. You may need to" \
+             "tell the Xcode command line tools where your Xcode is installed to with" >&2
+        echo "    xcode-select --switch /The/path/to/your/Xcode.app" >&2
+        echo >&2
+        echo "Output from ${XCODEBUILD}:" >&2
+
+        "${XCODEBUILD}" -version >&2
+
+        echo >&2
+
+        XCODEBUILD_FAILED=1
+    fi
+
+    # Exit with an error message if we couldn't find a working xcodebuild.
+    if [[ ${XCODEBUILD_FAILED} -eq 1 ]]; then
+        # Look for an Xcode install.
+        echo "Looking for Xcode..." >&2
+        XCODE_PATHS=$(mdfind "kMDItemCFBundleIdentifier == 'com.apple.dt.Xcode' || \
+                              kMDItemCFBundleIdentifier == 'com.apple.Xcode'")
+
+        if [[ "${XCODE_PATHS}" != "" ]]; then
+            echo "It looks like you have Xcode installed to" >&2
+            echo "${XCODE_PATHS}" >&2
+        else
+            echo "Not found." >&2
+        fi
+
+        exit 1
+    fi
+
+    # Version check.
+    local XCODE_VER=$(${XCODEBUILD} -version | head -n 1 | awk '{ print $2 }')
+    if [[ "$(echo ${XCODE_VER} | sed 's/\..*$//g')" -lt ${RECOMMENDED_MIN_XCODE_VERSION} ]]; then
+        echo "$(tput setaf 11)WARNING$(tput sgr0): Your version of Xcode (${XCODE_VER}) may not" \
+             "be recent enough to build Background Music."
+    fi
+}
+
+log_debug_info() {
+    # Log some environment details, version numbers, etc. This takes a while, so we do it in the
+    # background.
+    (set +e; trap - ERR
+        echo "Background Music Build Log" >> ${LOG_FILE}
+        echo "----" >> ${LOG_FILE}
+        echo "System details:" >> ${LOG_FILE}
+
+        sw_vers >> ${LOG_FILE} 2>&1
+        # The same as uname -a, except without printing the nodename (for privacy).
+        uname -mrsv >> ${LOG_FILE} 2>&1
+
+        /bin/bash --version >> ${LOG_FILE} 2>&1
+        /usr/bin/env python --version >> ${LOG_FILE} 2>&1
+
+        echo "On git branch: $(git rev-parse --abbrev-ref HEAD 2>&1)" >> ${LOG_FILE}
+        echo "Most recent commit: $(git rev-parse HEAD 2>&1)" \
+             "(\"$(git show -s --format=%s HEAD)\")" >> ${LOG_FILE}
+
+        echo "Using xcodebuild: ${XCODEBUILD}" >> ${LOG_FILE}
+        echo "Using BGMXPCHelper path: ${XPC_HELPER_PATH}" >> ${LOG_FILE}
+
+        xcode-select --version >> ${LOG_FILE} 2>&1
+        echo "Xcode path: $(xcode-select --print-path 2>&1)" >> ${LOG_FILE}
+        echo "Xcode version:" >> ${LOG_FILE}
+        xcodebuild -version >> ${LOG_FILE} 2>&1
+        echo "Xcode SDKs:" >> ${LOG_FILE}
+        xcodebuild -showsdks >> ${LOG_FILE} 2>&1
+        xcrun --version >> ${LOG_FILE} 2>&1
+        echo "Clang version:" >> ${LOG_FILE}
+        $(/usr/bin/xcrun --find clang 2>&1) --version >> ${LOG_FILE} 2>&1
+
+        echo "launchctl version: $(launchctl version 2>&1)" >> ${LOG_FILE}
+        echo "----" >> ${LOG_FILE}) &
+
+    LOG_DEBUG_INFO_TASK_PID=$!
+}
+
+# Register our handler so we can print a message and clean up if there's an error.
+trap 'error_handler ${LINENO}' ERR
 
 # Go to the project directory.
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
+parse_options "$@"
+
+# Warn if running as root.
+if [[ $(id -u) -eq 0 ]]; then
+    echo "$(tput setaf 11)WARNING$(tput sgr0): This script is not intended to be run as root. Run" \
+         "it normally and it'll sudo when it needs to." >&2
+fi
+
+# Make sure Xcode and the command line tools are installed and recent enough.
+check_xcode
+
+# Print initial message.
 echo "$(bold_face About to install Background Music). Please pause all audio, if you can."
 echo
 echo "This script will install:"
@@ -167,59 +362,65 @@ if ! sudo -v; then
     exit 1
 fi
 
+log_debug_info
+
 # BGMDriver
 
 echo "[1/3] Installing the virtual audio device $(bold_face ${DRIVER_DIR}) to" \
      "$(bold_face ${DRIVER_PATH})." \
-     | tee ${LOG_FILE}
+     | tee -a ${LOG_FILE}
 
-# Disable the -e shell option here so we can handle the error differently.
-(set +e;
-sudo xcodebuild -project BGMDriver/BGMDriver.xcodeproj \
-                -target "Background Music Device" \
-                -configuration ${CONFIGURATION} \
-                RUN_CLANG_STATIC_ANALYZER=0 \
-                DSTROOT="/" \
-                install >> ${LOG_FILE} 2>&1) &
+# Disable the -e shell option and error trap for build commands so we can handle errors differently.
+(set +e; trap - ERR
+    sudo "${XCODEBUILD}" -project BGMDriver/BGMDriver.xcodeproj \
+                         -target "Background Music Device" \
+                         -configuration ${CONFIGURATION} \
+                         RUN_CLANG_STATIC_ANALYZER=0 \
+                         DSTROOT="/" \
+                         ${CLEAN} install >> ${LOG_FILE} 2>&1) &
 
-show_spinner
+show_spinner "${BUILD_FAILED_ERROR_MSG}"
 
 # BGMXPCHelper
 
 echo "[2/3] Installing $(bold_face ${XPC_HELPER_DIR}) to $(bold_face ${XPC_HELPER_PATH})." \
      | tee -a ${LOG_FILE}
 
-(set +e;
-sudo xcodebuild -project BGMApp/BGMApp.xcodeproj \
-                -target BGMXPCHelper \
-                -configuration ${CONFIGURATION} \
-                RUN_CLANG_STATIC_ANALYZER=0 \
-                DSTROOT="/" \
-                INSTALL_PATH="${XPC_HELPER_PATH}" \
-                install >> ${LOG_FILE} 2>&1) &
+(set +e; trap - ERR
+    sudo "${XCODEBUILD}" -project BGMApp/BGMApp.xcodeproj \
+                         -target BGMXPCHelper \
+                         -configuration ${CONFIGURATION} \
+                         RUN_CLANG_STATIC_ANALYZER=0 \
+                         DSTROOT="/" \
+                         INSTALL_PATH="${XPC_HELPER_PATH}" \
+                         ${CLEAN} install >> ${LOG_FILE} 2>&1) &
 
-show_spinner
+show_spinner "${BUILD_FAILED_ERROR_MSG}"
 
 # BGMApp
 
 echo "[3/3] Installing $(bold_face ${APP_DIR}) to $(bold_face ${APP_PATH})." \
      | tee -a ${LOG_FILE}
 
-(set +e;
-sudo xcodebuild -project BGMApp/BGMApp.xcodeproj \
-                -target "Background Music" \
-                -configuration ${CONFIGURATION} \
-                RUN_CLANG_STATIC_ANALYZER=0 \
-                DSTROOT="/" \
-                install >> ${LOG_FILE} 2>&1) &
+(set +e; trap - ERR
+    sudo "${XCODEBUILD}" -project BGMApp/BGMApp.xcodeproj \
+                         -target "Background Music" \
+                         -configuration ${CONFIGURATION} \
+                         RUN_CLANG_STATIC_ANALYZER=0 \
+                         DSTROOT="/" \
+                         ${CLEAN} install >> ${LOG_FILE} 2>&1) &
 
-show_spinner
+show_spinner "${BUILD_FAILED_ERROR_MSG}"
 
 # Fix Background Music.app owner/group.
 # (We have to run xcodebuild as root to install BGMXPCHelper because it installs to directories
 # owned by root. But that means the build directory gets created by root, and since BGMApp uses the
 # same build directory we have to run xcodebuild as root to install BGMApp as well.)
 sudo chown -R "$(whoami):admin" "${APP_PATH}/${APP_DIR}"
+
+# Fix the build directories' owner/group. This is mainly so the whole source directory can be
+# deleted easily after installing.
+sudo chown -R "$(whoami):admin" "BGMApp/build" "BGMDriver/build"
 
 # Restart coreaudiod.
 
@@ -246,13 +447,19 @@ sudo -k
 # device after restarting coreaudiod and this is the easiest way.
 echo "Launching Background Music."
 
+ERROR_MSG="${BGMAPP_FAILED_TO_START_ERROR_MSG}"
 open "${APP_PATH}/${APP_DIR}"
 
+# Ignore script errors from this point.
+set +e
+trap - ERR
+
 # Wait up to 5 seconds for Background Music to start.
-(while ! (ps -Ao ucomm= | grep 'Background Music' > /dev/null); do
-    sleep 1;
-done) &
-show_spinner 5
+(trap 'exit 1' TERM
+    while ! (ps -Ao ucomm= | grep 'Background Music' > /dev/null); do
+        sleep 1
+    done) &
+show_spinner "${BGMAPP_FAILED_TO_START_ERROR_MSG}" 5
 
 echo "Done."
 
