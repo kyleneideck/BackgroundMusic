@@ -2,6 +2,7 @@ language: objective-c
 os: osx
 osx_image: xcode7.3
 xcode_sdk: macosx10.11
+sudo: required
 branches:
   only:
     - master
