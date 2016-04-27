@@ -66,7 +66,7 @@ static float const kSlidersSnapWithin = 5;
     [[NSWorkspace sharedWorkspace] removeObserver:self forKeyPath:@"runningApplications" context:nil];
 }
 
-- (void) insertMenuItemsForApps:(NSArray<NSRunningApplication*>*)apps {
+- (void) insertMenuItemsForApps:(BGMGeneric(NSArray, NSRunningApplication*)*)apps {
     NSAssert([NSThread isMainThread], @"insertMenuItemsForApps is not thread safe");
     
 #ifndef NS_BLOCK_ASSERTIONS  // If assertions are enabled
@@ -127,7 +127,7 @@ static float const kSlidersSnapWithin = 5;
 #endif
 }
 
-- (void) removeMenuItemsForApps:(NSArray<NSRunningApplication*>*)apps {
+- (void) removeMenuItemsForApps:(BGMGeneric(NSArray, NSRunningApplication*)*)apps {
     NSAssert([NSThread isMainThread], @"removeMenuItemsForApps is not thread safe");
     
     NSInteger firstItemIndex = [bgmMenu indexOfItemWithTag:kAppVolumesMenuItemTag] + 1;
@@ -188,8 +188,8 @@ static float const kSlidersSnapWithin = 5;
     
     // KVO callback for the apps currently running on the system. Adds/removes the associated menu items.
     if ([keyPath isEqualToString:@"runningApplications"]) {
-        NSArray<NSRunningApplication*>* newApps = [change objectForKey:NSKeyValueChangeNewKey];
-        NSArray<NSRunningApplication*>* oldApps = [change objectForKey:NSKeyValueChangeOldKey];
+        BGMGeneric(NSArray, NSRunningApplication*)* newApps = [change objectForKey:NSKeyValueChangeNewKey];
+        BGMGeneric(NSArray, NSRunningApplication*)* oldApps = [change objectForKey:NSKeyValueChangeOldKey];
         
         int changeKind = [[change valueForKey:NSKeyValueChangeKindKey] intValue];
         switch (changeKind) {

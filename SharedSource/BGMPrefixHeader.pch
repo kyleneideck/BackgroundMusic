@@ -24,10 +24,20 @@
 #define __SharedSource__BGMPrefixHeader__
 
 #if !(__has_feature(nullability))
+    #define __nullable
+    #define __nonnull
+#endif
 
-#define __nullable
-#define __nonnull
+#if __has_feature(objc_generics)
+    #define BGMGeneric(typename, ...) typename<__VA_ARGS__>
+#else
+    #define BGMGeneric(typename, ...) typename
+#endif
 
+#if __has_feature(objc_kindof)
+    #define BGMKindOf(typename) __kindof typename
+#else
+    #define BGMKindOf(typename) id
 #endif
 
 #endif /* __SharedSource__BGMPrefixHeader__ */

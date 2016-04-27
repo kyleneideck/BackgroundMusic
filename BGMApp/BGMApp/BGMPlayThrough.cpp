@@ -391,8 +391,7 @@ void    BGMPlayThrough::StopIfIdle()
                  "queuedAt=", queuedAt);
         
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, waitNsec),
-                       dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0),
-                       ^{
+                       dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
                            // Check the BGMPlayThrough instance hasn't been destructed since it queued this block
                            if(mActive)
                            {
@@ -484,7 +483,16 @@ OSStatus    BGMPlayThrough::BGMDeviceListenerProc(AudioObjectID inObjectID,
                     {
                         // TODO: This should be rare, but we still shouldn't dispatch on the IO thread because it isn't
                         //       real-time safe.
-                        dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^{
+                        dispatch_async(dispatch_get_global_queue(
+#if MAC_OS_X_VERSION_MAX_ALLOWED > MAC_OS_X_VERSION_10_9
+                                                                 // Runtime fallback for older versions of OS X.
+                                                                 (dispatch_queue_attr_make_with_qos_class != NULL ?
+                                                                      QOS_CLASS_USER_INTERACTIVE :
+                                                                      DISPATCH_QUEUE_PRIORITY_HIGH),
+#else
+                                                                 DISPATCH_QUEUE_PRIORITY_HIGH,
+#endif
+                                                                 0), ^{
                             if(refCon->mActive)
                             {
                                 DebugMsg("BGMPlayThrough::BGMDeviceListenerProc: Handling "
@@ -502,7 +510,16 @@ OSStatus    BGMPlayThrough::BGMDeviceListenerProc(AudioObjectID inObjectID,
                          "kAudioDeviceCustomPropertyDeviceIsRunningSomewhereOtherThanBGMApp notification");
                 
                 // These notifications don't need to be handled quickly, so we can always dispatch.
-                dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^{
+                dispatch_async(dispatch_get_global_queue(
+#if MAC_OS_X_VERSION_MAX_ALLOWED > MAC_OS_X_VERSION_10_9
+                                                         // Runtime fallback for older versions of OS X.
+                                                         (dispatch_queue_attr_make_with_qos_class != NULL ?
+                                                              QOS_CLASS_USER_INTERACTIVE :
+                                                              DISPATCH_QUEUE_PRIORITY_HIGH),
+#else
+                                                         DISPATCH_QUEUE_PRIORITY_HIGH,
+#endif
+                                                         0), ^{
                     if(refCon->mActive)
                     {
                         refCon->StopIfIdle();

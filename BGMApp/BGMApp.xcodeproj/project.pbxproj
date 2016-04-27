@@ -166,6 +166,7 @@
 		2795973A1C982E4E00A002FB /* BGMXPCListener.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = BGMXPCListener.mm; sourceTree = "<group>"; };
 		2795973C1C982E8C00A002FB /* BGMXPCListener.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BGMXPCListener.h; sourceTree = "<group>"; };
 		279597401C996E2000A002FB /* BGMXPCHelperTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BGMXPCHelperTests.m; sourceTree = "<group>"; };
+		27A7DE9D1CCDBBC500ACE97D /* VLC_10.9.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VLC_10.9.h; path = "Music Players/VLC_10.9.h"; sourceTree = "<group>"; };
 		27B1777C1CCBB0D5000E7BD2 /* BGMPrefixHeader.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGMPrefixHeader.pch; path = ../SharedSource/BGMPrefixHeader.pch; sourceTree = "<group>"; };
 		27D643B41C9FABBD00737F6E /* BGM_Types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGM_Types.h; path = ../SharedSource/BGM_Types.h; sourceTree = "<group>"; };
 		27D643B51C9FABBD00737F6E /* BGMXPCProtocols.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGMXPCProtocols.h; path = ../SharedSource/BGMXPCProtocols.h; sourceTree = "<group>"; };
@@ -392,6 +393,7 @@
 				27379B851C7C54870084A24C /* iTunes.h */,
 				27379B861C7C54870084A24C /* Spotify.h */,
 				27379B871C7C552A0084A24C /* VLC.h */,
+				27A7DE9D1CCDBBC500ACE97D /* VLC_10.9.h */,
 				273F10DC1CC3CF9C00C1C6DA /* Vox.h */,
 			);
 			name = "Supporting Files";

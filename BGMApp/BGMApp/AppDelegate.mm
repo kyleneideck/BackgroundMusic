@@ -53,15 +53,36 @@ static float const kStatusBarIconPadding = 0.25;
     // Set the icon
     NSImage* icon = [NSImage imageNamed:@"FermataIcon"];
     if (icon != nil) {
-        CGFloat lengthMinusPadding = [[statusBarItem button] frame].size.height * (1 - kStatusBarIconPadding);
-        [icon setSize:NSMakeSize(lengthMinusPadding, lengthMinusPadding)];
         // Make the icon a "template image" so it gets drawn colour-inverted when it's highlighted or the status
         // bar's in dark mode
         [icon setTemplate:YES];
-        statusBarItem.button.image = icon;
+        
+#if MAC_OS_X_VERSION_MAX_ALLOWED > MAC_OS_X_VERSION_10_9
+        if ([statusBarItem respondsToSelector:@selector(button)]) {
+            CGFloat lengthMinusPadding = statusBarItem.button.frame.size.height * (1 - kStatusBarIconPadding);
+            [icon setSize:NSMakeSize(lengthMinusPadding, lengthMinusPadding)];
+            
+            statusBarItem.button.image = icon;
+        } else {
+            // OS X 10.9 fallback.
+            // TODO: It would be better to set this size dynamically, like we do for 10.10+.
+            icon.size = NSMakeSize(16, 16);
+            statusBarItem.image = icon;
+        }
+#else
+        icon.size = NSMakeSize(16, 16);
+        statusBarItem.image = icon;
+#endif
     } else {
         // If our icon is missing for some reason, fallback to a fermata character (1D110)
-        statusBarItem.button.title = @"𝄐";
+#if MAC_OS_X_VERSION_MAX_ALLOWED > MAC_OS_X_VERSION_10_9
+        if ([statusBarItem respondsToSelector:@selector(button)]) {
+            statusBarItem.button.title = @"𝄐";
+        } else
+#endif
+        {
+            statusBarItem.title = @"𝄐";
+        }
     }
     
     // Set the main menu

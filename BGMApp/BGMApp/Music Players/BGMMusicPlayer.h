@@ -62,7 +62,7 @@ typedef BGMMusicPlayerBase<BGMMusicPlayerProtocol> BGMMusicPlayer;
 + (id) initWithPIDFromNSNumber:(NSNumber*)pid;
 + (id) initWithPIDFromCFNumber:(CFNumberRef)pid;
 // The pid of each instance of the music player app currently running
-+ (NSArray<NSNumber*>*) pidsOfRunningInstances;
++ (BGMGeneric(NSArray, NSNumber*)*) pidsOfRunningInstances;
 
 @required
 // The name of the music player, to be used in the UI
@@ -104,7 +104,7 @@ typedef BGMMusicPlayerBase<BGMMusicPlayerProtocol> BGMMusicPlayer;
 
 // If the music player application is running, the scripting bridge object representing it. Otherwise
 // nil.
-@property (readonly) __kindof SBApplication* __nullable sbApplication;
+@property (readonly) BGMKindOf(SBApplication*) __nullable sbApplication;
 
 @end
 

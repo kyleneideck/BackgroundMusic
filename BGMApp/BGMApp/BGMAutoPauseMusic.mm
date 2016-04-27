@@ -63,7 +63,16 @@ static int const kUnpauseDelayMSecs = 3000;
         audioDevices = inAudioDevices;
         wePaused = NO;
         
-        dispatch_queue_attr_t attr = dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_DEFAULT, 0);
+        dispatch_queue_attr_t attr =
+#if MAC_OS_X_VERSION_MAX_ALLOWED > MAC_OS_X_VERSION_10_9
+            // Runtime fallback for older versions of OS X.
+            (dispatch_queue_attr_make_with_qos_class != NULL ?
+                 dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_DEFAULT, 0) :
+                 DISPATCH_QUEUE_SERIAL);
+#else
+            DISPATCH_QUEUE_SERIAL;
+#endif
+        
         listenerQueue = dispatch_queue_create("com.bearisdriving.BGM.AutoPauseMusic.Listener", attr);
         pauseUnpauseMusicQueue = dispatch_queue_create("com.bearisdriving.BGM.AutoPauseMusic.PauseUnpauseMusic", attr);
         
@@ -81,7 +90,7 @@ static int const kUnpauseDelayMSecs = 3000;
     // To avoid retain cycle
     __unsafe_unretained BGMAutoPauseMusic* weakSelf = self;
     
-    listenerBlock = ^(UInt32 inNumberAddresses, const AudioObjectPropertyAddress * _Nonnull inAddresses) {
+    listenerBlock = ^(UInt32 inNumberAddresses, const AudioObjectPropertyAddress * __nonnull inAddresses) {
         // inAddresses "may contain addresses for properties for which the listener is not signed up to receive notifications",
         // so we have to check them all
         for (int i = 0; i < inNumberAddresses; i++) {

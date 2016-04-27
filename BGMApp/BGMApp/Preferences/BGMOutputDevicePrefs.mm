@@ -33,7 +33,7 @@ static NSInteger const kOutputDeviceMenuItemTag = 2;
 
 @implementation BGMOutputDevicePrefs {
     BGMAudioDeviceManager* audioDevices;
-    NSMutableArray<NSMenuItem*>* outputDeviceMenuItems;
+    BGMGeneric(NSMutableArray, NSMenuItem*)* outputDeviceMenuItems;
 }
 
 - (id) initWithAudioDevices:(BGMAudioDeviceManager*)inAudioDevices {

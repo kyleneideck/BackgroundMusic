@@ -60,7 +60,7 @@ static BGMMusicPlayer* sSelectedMusicPlayer;
         
         void (^createSBApplication)(void) = ^{
             sbApplication = [SBApplication applicationWithBundleIdentifier:bundleID];
-            sbApplication.delegate = self;
+            ((SBApplication*)sbApplication).delegate = self;
         };
         
         BOOL (^isAboutThisMusicPlayer)(NSNotification*) = ^(NSNotification* note){

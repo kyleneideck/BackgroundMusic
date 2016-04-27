@@ -25,7 +25,12 @@
 #import "BGMVLC.h"
 
 // Auto-generated Scripting Bridge header
-#import "VLC.h"
+#if __has_feature(objc_generics)
+    // According to "man sdp", generics is required by headers generated for 10.11+ but not for headers generated for 10.10.
+    #import "VLC.h"
+#else
+    #import "VLC_10.9.h"
+#endif
 
 // PublicUtility Includes
 #undef CoreAudio_ThreadStampMessages

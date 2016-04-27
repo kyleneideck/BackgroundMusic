@@ -550,6 +550,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				ONLY_ACTIVE_ARCH = YES;
 				RUN_CLANG_STATIC_ANALYZER = YES;
+				SDKROOT = macosx;
 			};
 			name = Debug;
 		};
@@ -583,6 +584,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				RUN_CLANG_STATIC_ANALYZER = YES;
+				SDKROOT = macosx;
 			};
 			name = Release;
 		};

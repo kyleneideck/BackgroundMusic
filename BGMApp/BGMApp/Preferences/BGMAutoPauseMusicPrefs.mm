@@ -36,7 +36,7 @@ static NSInteger const kPrefsMenuAutoPauseHeaderTag = 1;
     BGMAudioDeviceManager* audioDevices;
     NSMenuItem* toggleAutoPauseMusicMenuItem;
     NSMenu* prefsMenu;
-    NSArray<NSMenuItem*>* musicPlayerMenuItems;
+    BGMGeneric(NSArray, NSMenuItem*)* musicPlayerMenuItems;
 }
 
 - (id) initWithPreferencesMenu:(NSMenu*)inPrefsMenu
@@ -94,7 +94,7 @@ static NSInteger const kPrefsMenuAutoPauseHeaderTag = 1;
         if (selectedPID != NULL &&
             [mpClass respondsToSelector:@selector(pidsOfRunningInstances)] &&
             [mpClass respondsToSelector:@selector(initWithPIDFromNSNumber:)]) {
-            NSArray<NSNumber*>* mpPIDs = [mpClass pidsOfRunningInstances];
+            BGMGeneric(NSArray, NSNumber*)* mpPIDs = [mpClass pidsOfRunningInstances];
             for (NSNumber* mpPID in mpPIDs) {
                 if (CFEqual((__bridge CFNumberRef)mpPID, selectedPID)) {
                     DebugMsg("BGMAutoPauseMusicPrefs::initSelectedMusicPlayer: Selected music player on driver was %s (found by pid)",
