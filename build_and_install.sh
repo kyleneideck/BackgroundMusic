@@ -56,6 +56,9 @@ DRIVER_DIR="Background Music Device.driver"
 XPC_HELPER_PATH="$(BGMApp/BGMXPCHelper/safe_install_dir.sh)"
 XPC_HELPER_DIR="BGMXPCHelper.xpc"
 
+NIB_PATH="Contents/Resources/Base.lproj"
+NIB_NAME="MainMenu.nib"
+
 bold_face() {
     echo $(tput bold)$*$(tput sgr0)
 }
@@ -187,7 +190,7 @@ show_spinner
 # BGMXPCHelper
 
 echo "[2/3] Installing $(bold_face ${XPC_HELPER_DIR}) to $(bold_face ${XPC_HELPER_PATH})." \
-     | tee -a ${LOG_FILE}
+     | tee -a "${LOG_FILE}"
 
 (set +e;
 sudo xcodebuild -project BGMApp/BGMApp.xcodeproj \
@@ -203,7 +206,7 @@ show_spinner
 # BGMApp
 
 echo "[3/3] Installing $(bold_face ${APP_DIR}) to $(bold_face ${APP_PATH})." \
-     | tee -a ${LOG_FILE}
+     | tee -a "${LOG_FILE}"
 
 (set +e;
 sudo xcodebuild -project BGMApp/BGMApp.xcodeproj \
@@ -221,10 +224,25 @@ show_spinner
 # same build directory we have to run xcodebuild as root to install BGMApp as well.)
 sudo chown -R "$(whoami):admin" "${APP_PATH}/${APP_DIR}"
 
+# For some reason, Xcode 6 doesn't always build the .xib. So we do it ourselves.
+if ! [[ -e "${APP_PATH}/${APP_DIR}/${NIB_PATH}/${NIB_NAME}" ]]; then
+    echo "${NIB_NAME} is missing from ${APP_PATH}/${APP_DIR}/${NIB_PATH}/${NIB_NAME}. Compiling" \
+         "it with ibtool." >> "${LOG_FILE}"
+    
+    IBTOOL=$(xcrun --find ibtool 2>/dev/null || which ibtool)
+    if [[ -x "${IBTOOL}" ]]; then
+        mkdir -p "${APP_PATH}/${APP_DIR}/${NIB_PATH}"
+        "${IBTOOL}" --compile "${APP_PATH}/${APP_DIR}/${NIB_PATH}/${NIB_NAME}" \
+                    BGMApp/BGMApp/Base.lproj/MainMenu.xib
+    else
+        echo "ERROR: ibtool not found (or not executable)." | tee -a "${LOG_FILE}"
+    fi
+fi
+
 # Restart coreaudiod.
 
 echo "Restarting coreaudiod to load the virtual audio device." \
-     | tee -a ${LOG_FILE}
+     | tee -a "${LOG_FILE}"
 
 # The extra or-clauses are fallback versions of the command that restarts coreaudiod. Apparently
 # some of these commands don't work with older versions of launchctl, so I figure there's no harm in

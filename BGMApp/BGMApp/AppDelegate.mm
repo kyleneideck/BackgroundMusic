@@ -63,16 +63,14 @@ static float const kStatusBarIconPadding = 0.25;
             [icon setSize:NSMakeSize(lengthMinusPadding, lengthMinusPadding)];
             
             statusBarItem.button.image = icon;
-        } else {
+        } else
+#endif
+        {
             // OS X 10.9 fallback.
             // TODO: It would be better to set this size dynamically, like we do for 10.10+.
             icon.size = NSMakeSize(16, 16);
             statusBarItem.image = icon;
         }
-#else
-        icon.size = NSMakeSize(16, 16);
-        statusBarItem.image = icon;
-#endif
     } else {
         // If our icon is missing for some reason, fallback to a fermata character (1D110)
 #if MAC_OS_X_VERSION_MAX_ALLOWED > MAC_OS_X_VERSION_10_9

@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		1C0BD0A51BF1A8E6004F4CF5 /* BGMAutoPauseMusicPrefs.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C0BD0A41BF1A8E6004F4CF5 /* BGMAutoPauseMusicPrefs.mm */; };
 		1C0BD0A81BF1B029004F4CF5 /* BGMPreferencesMenu.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C0BD0A71BF1B029004F4CF5 /* BGMPreferencesMenu.mm */; };
-		1C1108AE1C444F01003F625E /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1CB8B3421BBA75EF000E2DD1 /* MainMenu.xib */; };
 		1C1465B81BCC3A73003AEFE6 /* BGMAutoPauseMusic.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C1465B71BCC3A73003AEFE6 /* BGMAutoPauseMusic.mm */; };
 		1C1962E41BC94E15008A4DF7 /* CARingBuffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962E21BC94E15008A4DF7 /* CARingBuffer.cpp */; };
 		1C1962E71BC94E91008A4DF7 /* BGMPlayThrough.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962E51BC94E91008A4DF7 /* BGMPlayThrough.cpp */; };
@@ -51,6 +50,8 @@
 		278D71E91CABB6FF00899CF9 /* BGMXPCHelperTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 279597401C996E2000A002FB /* BGMXPCHelperTests.m */; };
 		278D71F61CABBC3B00899CF9 /* BGMXPCHelperTests-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 278D71F51CABBC3B00899CF9 /* BGMXPCHelperTests-Info.plist */; };
 		2795973B1C982E4E00A002FB /* BGMXPCListener.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2795973A1C982E4E00A002FB /* BGMXPCListener.mm */; };
+		27977A0C1CD12DBB00C46C96 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1CB8B3421BBA75EF000E2DD1 /* MainMenu.xib */; };
+		27977A0E1CD15F7500C46C96 /* FermataIcon.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 27977A0D1CD15F7500C46C96 /* FermataIcon.pdf */; };
 		27D643BE1C9FB84C00737F6E /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 27D643BB1C9FB84C00737F6E /* Info.plist */; };
 		27D643C01C9FB99200737F6E /* BGMXPCHelperService.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D643BA1C9FB84C00737F6E /* BGMXPCHelperService.m */; };
 		27D643C11C9FB99200737F6E /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D643BC1C9FB84C00737F6E /* main.m */; };
@@ -166,6 +167,7 @@
 		2795973A1C982E4E00A002FB /* BGMXPCListener.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = BGMXPCListener.mm; sourceTree = "<group>"; };
 		2795973C1C982E8C00A002FB /* BGMXPCListener.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BGMXPCListener.h; sourceTree = "<group>"; };
 		279597401C996E2000A002FB /* BGMXPCHelperTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BGMXPCHelperTests.m; sourceTree = "<group>"; };
+		27977A0D1CD15F7500C46C96 /* FermataIcon.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; name = FermataIcon.pdf; path = Images.xcassets/FermataIcon.imageset/FermataIcon.pdf; sourceTree = "<group>"; };
 		27A7DE9D1CCDBBC500ACE97D /* VLC_10.9.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VLC_10.9.h; path = "Music Players/VLC_10.9.h"; sourceTree = "<group>"; };
 		27B1777C1CCBB0D5000E7BD2 /* BGMPrefixHeader.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGMPrefixHeader.pch; path = ../SharedSource/BGMPrefixHeader.pch; sourceTree = "<group>"; };
 		27D643B41C9FABBD00737F6E /* BGM_Types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGM_Types.h; path = ../SharedSource/BGM_Types.h; sourceTree = "<group>"; };
@@ -351,6 +353,7 @@
 		1CB8B3391BBA75EF000E2DD1 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				27977A0D1CD15F7500C46C96 /* FermataIcon.pdf */,
 				1CED61681C3081C2002CAFCF /* LICENSE */,
 				1CC1DF951BE8607700FB8FE4 /* Images.xcassets */,
 				1CB8B33A1BBA75EF000E2DD1 /* Info.plist */,
@@ -547,13 +550,14 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27977A0C1CD12DBB00C46C96 /* MainMenu.xib in Resources */,
 				2769728C1CAFCEE8007A2F7C /* post_install.sh in Resources */,
 				2769728E1CAFCEFD007A2F7C /* com.bearisdriving.BGM.XPCHelper.plist.template in Resources */,
 				27D643BE1C9FB84C00737F6E /* Info.plist in Resources */,
 				1CED61691C3081C2002CAFCF /* LICENSE in Resources */,
 				278D71F61CABBC3B00899CF9 /* BGMXPCHelperTests-Info.plist in Resources */,
+				27977A0E1CD15F7500C46C96 /* FermataIcon.pdf in Resources */,
 				1CC1DF961BE8607700FB8FE4 /* Images.xcassets in Resources */,
-				1C1108AE1C444F01003F625E /* MainMenu.xib in Resources */,
 				276972911CB16008007A2F7C /* safe_install_dir.sh in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
