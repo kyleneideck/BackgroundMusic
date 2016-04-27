@@ -253,6 +253,22 @@ check_xcode() {
     exit ${RETURN}
 }
 
+# Expects CHECK_XCODE_TASK_PID to be set.
+handle_check_xcode_result() {
+    # Wait for the Xcode checks to finish.
+    set +e
+    trap - ERR
+    wait ${CHECK_XCODE_TASK_PID}
+    CHECK_XCODE_TASK_STATUS=$?
+    trap 'error_handler ${LINENO}' ERR
+    set -e
+
+    # If there was a problem with Xcode/xcodebuild, print the error message and exit.
+    if [[ ${CHECK_XCODE_TASK_STATUS} -ne 0 ]]; then
+        handle_check_xcode_failure ${CHECK_XCODE_TASK_STATUS}
+    fi
+}
+
 handle_check_xcode_failure() {
     # No command line tools
     if [[ $1 -eq 1 ]] || [[ $1 -eq 3 ]]; then
@@ -375,31 +391,24 @@ CHECK_XCODE_TASK_PID=$!
 
 read -p "Continue (y/N)? " CONTINUE_INSTALLATION
 
-if is_alive ${CHECK_XCODE_TASK_PID}; then
-    if [[ "${CONTINUE_INSTALLATION}" != "y" ]] && [[ "${CONTINUE_INSTALLATION}" != "Y" ]]; then
-        echo "Installation cancelled."
-        exit 0
-    fi
-
-    # Update the user's sudo timestamp. (Prompts the user for their password.)
-    if ! sudo -v; then
-        echo "ERROR: This script must be run by a user with administrator (sudo) privileges." >&2
-        exit 1
-    fi
+if [[ "${CONTINUE_INSTALLATION}" != "y" ]] && [[ "${CONTINUE_INSTALLATION}" != "Y" ]]; then
+    echo "Installation cancelled."
+    exit 0
 fi
 
-# Wait for the Xcode checks to finish.
-set +e
-trap - ERR
-wait ${CHECK_XCODE_TASK_PID}
-CHECK_XCODE_TASK_STATUS=$?
-trap 'error_handler ${LINENO}' ERR
-set -e
-
-# If there was a problem with Xcode/xcodebuild, print the error message and exit.
-if [[ ${CHECK_XCODE_TASK_STATUS} -ne 0 ]]; then
-    handle_check_xcode_failure ${CHECK_XCODE_TASK_STATUS}
+# If the check_xcode process has already finished, we can check the result early.
+if ! is_alive ${CHECK_XCODE_TASK_PID}; then
+    handle_check_xcode_result
 fi
+
+# Update the user's sudo timestamp. (Prompts the user for their password.)
+# Don't call sudo -v if this is a Travis CI build.
+if ([[ -z ${TRAVIS:-} ]] || [[ "${TRAVIS}" != true ]]) && ! sudo -v; then
+    echo "ERROR: This script must be run by a user with administrator (sudo) privileges." >&2
+    exit 1
+fi
+
+handle_check_xcode_result
 
 log_debug_info
 
