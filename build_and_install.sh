@@ -255,17 +255,20 @@ check_xcode() {
 
 # Expects CHECK_XCODE_TASK_PID to be set.
 handle_check_xcode_result() {
-    # Wait for the Xcode checks to finish.
-    set +e
-    trap - ERR
-    wait ${CHECK_XCODE_TASK_PID}
-    CHECK_XCODE_TASK_STATUS=$?
-    trap 'error_handler ${LINENO}' ERR
-    set -e
+    if [[ -z ${HANDLED_CHECK_XCODE_RESULT:-} ]]; then
+        HANDLED_CHECK_XCODE_RESULT=1
+        # Wait for the Xcode checks to finish.
+        set +e
+        trap - ERR
+        wait ${CHECK_XCODE_TASK_PID}
+        CHECK_XCODE_TASK_STATUS=$?
+        trap 'error_handler ${LINENO}' ERR
+        set -e
 
-    # If there was a problem with Xcode/xcodebuild, print the error message and exit.
-    if [[ ${CHECK_XCODE_TASK_STATUS} -ne 0 ]]; then
-        handle_check_xcode_failure ${CHECK_XCODE_TASK_STATUS}
+        # If there was a problem with Xcode/xcodebuild, print the error message and exit.
+        if [[ ${CHECK_XCODE_TASK_STATUS} -ne 0 ]]; then
+            handle_check_xcode_failure ${CHECK_XCODE_TASK_STATUS}
+        fi
     fi
 }
 
