@@ -75,8 +75,8 @@ read -p "Continue (y/N)? " user_prompt
 
 if [ "$user_prompt" == "y" ] || [ "$user_prompt" == "Y" ]; then
 
-  # Ensure that the user can use sudo
-  if ! sudo -v; then
+  # Ensure that the user can use sudo. (But not if this is a Travis CI build, because then it would fail.)
+  if ([[ -z ${TRAVIS:-} ]] || [[ "${TRAVIS}" != true ]]) && ! sudo -v; then
     echo "ERROR: This script must be run by a user with administrator (sudo) privileges." >&2
     exit 1
   fi
