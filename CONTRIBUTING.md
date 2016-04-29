@@ -5,6 +5,19 @@
 Firstly, thanks for reading this. Pull requests, bug reports, feature requests, etc. are all very welcome (including
 ones from non-developers).
 
+For bug reports about `build_and_install.sh`, please include your `build_and_install.log`. (It should be written to the
+same directory as `build_and_install.sh`.)
+
+For bug reports about Background Music itself, if you feel like being really helpful, you could reproduce your bug with
+a debug build and include the relevant logs. But don't feel obligated to. You can build and install a debug build with
+`./build_and_install.sh -d`.
+
+BGMDriver and BGMXPCHelper log messages to system.log by default. You can read them in Console.app. BGMApp's logs go to
+stdout, except errors or warnings that should be visible to users, which go to syslog. To get BGMApp's logs either run
+it in Xcode or from a terminal (e.g. `$ /Applications/Background\ Music.app/Contents/MacOS/Background\ Music`).
+
+I'm working on adding logging to release builds and generally making the process easier.
+
 The code is mostly C++ and Objective-C. But don't worry if you don't know those languages--I don't either. Or Core
 Audio, for that matter.
 

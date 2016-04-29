@@ -65,8 +65,7 @@ error_handler() {
     fi
 }
 
-# Build for release by default.
-# TODO: Add an option to use the debug configuration?
+# Build for release by default. Use -d for a debug build.
 CONFIGURATION=Release
 #CONFIGURATION=Debug
 
@@ -121,7 +120,8 @@ RECOMMENDED_MIN_XCODE_VERSION=7
 
 usage() {
     echo "Usage: $0 [options]" >&2
-    echo -e "\t-d\tDon't clean before building/installing." >&2
+    echo -e "\t-n\tDon't clean before building/installing." >&2
+    echo -e "\t-d\tDebug build. (Release is the default.)" >&2
     echo -e "\t-c\tContinue on script errors. Might not be safe." >&2
     echo -e "\t-h\tPrint this usage statement." >&2
     exit 1
@@ -206,10 +206,13 @@ show_spinner() {
 }
 
 parse_options() {
-    while getopts ":dch" opt; do
+    while getopts ":ndch" opt; do
         case $opt in
-            d)
+            n)
                 CLEAN=""
+                ;;
+            d)
+                CONFIGURATION="Debug"
                 ;;
             c)
                 CONTINUE_ON_ERROR=1
@@ -379,6 +382,7 @@ fi
 
 # Print initial message.
 echo "$(bold_face About to install Background Music). Please pause all audio, if you can."
+[[ "${CONFIGURATION}" == "Debug" ]] && echo "Debug build."
 echo
 echo "This script will install:"
 echo " - ${APP_PATH}/${APP_DIR}"
