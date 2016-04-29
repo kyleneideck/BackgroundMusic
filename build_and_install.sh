@@ -56,9 +56,9 @@ error_handler() {
     echo -e "${ERROR_MSG}" >&2
     echo >&2
     echo "Feel free to report this. If you do, you'll probably want to include the" \
-         "build_and_install.log file from this directory. But quickly skim through it first to" \
-         "check that it doesn't include any personal information. It shouldn't, but this is alpha" \
-         "software, so you never know." >&2
+         "build_and_install.log file from this directory ($(pwd)). But quickly skim through it" \
+         "first to check that it doesn't include any personal information. It shouldn't, but this" \
+         "is alpha software so you never know." >&2
     echo >&2
     echo "To try building and installing without this build script, see MANUAL-INSTALL.md." >&2
 
@@ -348,7 +348,7 @@ log_debug_info() {
 
         echo "On git branch: $(git rev-parse --abbrev-ref HEAD 2>&1)" >> ${LOG_FILE}
         echo "Most recent commit: $(git rev-parse HEAD 2>&1)" \
-             "(\"$(git show -s --format=%s HEAD)\")" >> ${LOG_FILE}
+             "(\"$(git show -s --format=%s HEAD 2>&1)\")" >> ${LOG_FILE}
 
         echo "Using xcodebuild: ${XCODEBUILD}" >> ${LOG_FILE}
         echo "Using BGMXPCHelper path: ${XPC_HELPER_PATH}" >> ${LOG_FILE}
