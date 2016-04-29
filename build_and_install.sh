@@ -32,6 +32,9 @@ IFS=$'\n\t'
 # Subshells and function inherit the ERR trap
 set -o errtrace
 
+# Go to the project directory.
+cd "$( dirname "${BASH_SOURCE[0]}" )"
+
 error_handler() {
     local LAST_COMMAND="${BASH_COMMAND}" LAST_COMMAND_EXIT_STATUS=$?
 
@@ -368,9 +371,6 @@ log_debug_info() {
 
 # Register our handler so we can print a message and clean up if there's an error.
 trap 'error_handler ${LINENO}' ERR
-
-# Go to the project directory.
-cd "$( dirname "${BASH_SOURCE[0]}" )"
 
 parse_options "$@"
 

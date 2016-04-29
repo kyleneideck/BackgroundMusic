@@ -47,18 +47,37 @@ Background Music Device. You can create the aggregate device using the Audio MID
 
 ## Install
 
-No binaries yet, but building should take less than a minute. To build and install everything do the following:
+No binaries yet (working on it) but building should take less than a minute.
+
+<table>
+<tr><td>⚠️</td>
+<td>Unfortunately, <strong>it won't build if you don't have Xcode installed</strong> because xcodebuild doesn't work on its own anymore. If you don't mind a 4GB download, you can <a href="https://developer.apple.com/xcode/download/">get Xcode here</a>.</td>
+</tr></table>
+
+If you're comfortable with it, you can just paste the following at a Terminal prompt.
+
+[//]: # (Uses /bin/bash instead of just bash on the off chance that someone has a non standard Bash in their $PATH, but)
+[//]: # (it doesn't do that for Tar or cURL because I'm fairly sure any versions of them should work here. That said,)
+[//]: # (build_and_install.sh doesn't call things by absolute paths (yet?) anyway.)
+[//]: # ( )
+[//]: # (Uses "gzcat - | tar x" instead of "tar xz" because gzcat will also check the file's integrity. (Gzip files)
+[//]: # (include a checksum.))
+```shell
+(set -eo pipefail; URL='https://github.com/kyleneideck/BackgroundMusic/archive/master.tar.gz'; \
+    cd $(mktemp -d); echo Downloading $URL to $(pwd); curl -qfL# $URL | gzcat - | tar x && \
+    /bin/bash BackgroundMusic-master/build_and_install.sh && rm -rf BackgroundMusic-master)
+```
+
+Otherwise, to build and install everything, do the following:
 
 - Clone or [download](https://github.com/kyleneideck/BackgroundMusic/archive/master.zip) the project
 - If the project is in a zip, unzip it
 - [Go to the folder of the project](https://github.com/0nn0/terminal-mac-cheatsheet/wiki/Terminal-Cheatsheet-for-Mac-(-basics-)#core-commands) on your terminal
-- Run the following the command: `./build_and_install.sh`.
-
-Unfortunately, **it won't build if you don't have Xcode installed** because xcodebuild doesn't work on its own anymore.
+- Run the following the command: `/bin/bash build_and_install.sh`.
 
 The script restarts the system audio process (coreaudiod) at the end of the installation, so you might want to pause any apps playing audio.
 
-Additional detailed installation instructions can be found in the Wiki: https://github.com/kyleneideck/BackgroundMusic/wiki
+Additional detailed installation instructions can be found on [the Wiki](https://github.com/kyleneideck/BackgroundMusic/wiki/Installation).
 
 ## Uninstall
 
