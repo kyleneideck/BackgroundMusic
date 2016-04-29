@@ -47,12 +47,16 @@ Background Music Device. You can create the aggregate device using the Audio MID
 
 ## Install
 
-No binaries yet, but building should take less than a minute. To build and install everything, clone/download the
-project and run the `build_and_install.sh` script. Unfortunately, **it won't build if you don't have Xcode installed**
-because xcodebuild doesn't work on its own anymore.
+No binaries yet, but building should take less than a minute. To build and install everything do the following:
 
-The script restarts the system audio process (coreaudiod) at the end of the installation, so you might want to pause any
-apps playing audio.
+- Clone or [download](https://github.com/kyleneideck/BackgroundMusic/archive/master.zip) the project
+- If the project is in a zip, unzip it
+- [Go to the folder of the project](https://github.com/0nn0/terminal-mac-cheatsheet/wiki/Terminal-Cheatsheet-for-Mac-(-basics-)#core-commands) on your terminal
+- Run the following the command: `./build_and_install.sh`.
+
+Unfortunately, **it won't build if you don't have Xcode installed** because xcodebuild doesn't work on its own anymore.
+
+The script restarts the system audio process (coreaudiod) at the end of the installation, so you might want to pause any apps playing audio.
 
 ## Uninstall
 
@@ -128,5 +132,3 @@ change the default device and then change it back again. Failing that, you might
 ## License
 
 GPLv2 or later
-
-
