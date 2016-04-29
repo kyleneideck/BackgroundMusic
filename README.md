@@ -58,6 +58,8 @@ Unfortunately, **it won't build if you don't have Xcode installed** because xcod
 
 The script restarts the system audio process (coreaudiod) at the end of the installation, so you might want to pause any apps playing audio.
 
+Additional detailed installation instructions can be found in the Wiki: https://github.com/kyleneideck/BackgroundMusic/wiki
+
 ## Uninstall
 
 - Run the `uninstall.sh` script to remove Background Music from your system.
