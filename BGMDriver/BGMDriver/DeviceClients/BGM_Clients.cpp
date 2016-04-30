@@ -302,7 +302,7 @@ bool    BGM_Clients::SetClientsRelativeVolumes(const CACFArray inAppVolumes)
     
     // Each element in appVolumes is a CFDictionary containing the process id and/or bundle id of an app, and its
     // new relative volume
-    for(int i = 0; i < inAppVolumes.GetNumberItems(); i++)
+    for(UInt32 i = 0; i < inAppVolumes.GetNumberItems(); i++)
     {
         CACFDictionary theAppVolume(false);
         inAppVolumes.GetCACFDictionary(i, theAppVolume);

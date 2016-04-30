@@ -34,6 +34,7 @@
 // PublicUtility Includes
 #include "CAException.h"
 #include "CADebugMacros.h"
+#include "CAAtomic.h"
 
 // System Includes
 #include <mach/mach_init.h>
@@ -80,7 +81,7 @@ BGM_TaskQueue::BGM_TaskQueue()
     
     // Pre-allocate enough tasks in mNonRealTimeThreadTasksFreeList that the real-time threads should never have to
     // allocate memory when adding a task to the non-realtime queue.
-    for(int i = 0; i < kNonRealTimeThreadTaskBufferSize; i++)
+    for(UInt32 i = 0; i < kNonRealTimeThreadTaskBufferSize; i++)
     {
         BGM_Task* theTask = new BGM_Task;
         mNonRealTimeThreadTasksFreeList.push_NA(theTask);
@@ -207,6 +208,7 @@ UInt64    BGM_TaskQueue::QueueSync(BGM_TaskID inTaskID, bool inRunOnRealtimeThre
     //
     // The worker thread signals all threads waiting on this semaphore when it finishes a task. The comments in WorkerThreadProc
     // explain why we have to check the condition in a loop here.
+    bool didLogTimeoutMessage = false;
     while(!theTask.IsComplete())
     {
         semaphore_t theTaskCompletedSemaphore =
@@ -216,10 +218,25 @@ UInt64    BGM_TaskQueue::QueueSync(BGM_TaskID inTaskID, bool inRunOnRealtimeThre
         theError = semaphore_timedwait(theTaskCompletedSemaphore,
                                        (mach_timespec_t){ 0, kRealTimeThreadMaximumComputationNs * 4 });
         
-        if(theError != KERN_OPERATION_TIMED_OUT)
+        if(theError == KERN_OPERATION_TIMED_OUT)
+        {
+            if(!didLogTimeoutMessage && inRunOnRealtimeThread)
+            {
+                DebugMsg("BGM_TaskQueue::QueueSync: Task %d taking longer than expected.", theTask.GetTaskID());
+                didLogTimeoutMessage = true;
+            }
+        }
+        else
         {
             BGM_Utils::ThrowIfMachError("BGM_TaskQueue::QueueSync", "semaphore_timedwait", theError);
         }
+        
+        CAMemoryBarrier();
+    }
+    
+    if(didLogTimeoutMessage)
+    {
+        DebugMsg("BGM_TaskQueue::QueueSync: Late task %d finished.", theTask.GetTaskID());
     }
     
     if(theTask.GetReturnValue() != INT64_MAX)
@@ -299,9 +316,9 @@ void* __nullable    BGM_TaskQueue::NonRealTimeThreadProc(void* inRefCon)
 
 void    BGM_TaskQueue::WorkerThreadProc(semaphore_t inWorkQueuedSemaphore, semaphore_t inSyncTaskCompletedSemaphore, TAtomicStack<BGM_Task>* inTasks, TAtomicStack2<BGM_Task>* __nullable inFreeList, std::function<bool(BGM_Task*)> inProcessTask)
 {
-    bool threadShouldStop = false;
+    bool theThreadShouldStop = false;
     
-    while(!threadShouldStop)
+    while(!theThreadShouldStop)
     {
         // Wait until a thread signals that it's added tasks to the queue.
         //
@@ -317,18 +334,33 @@ void    BGM_TaskQueue::WorkerThreadProc(semaphore_t inWorkQueuedSemaphore, semap
         BGM_Task* theTask = inTasks->pop_all_reversed();
         
         while(theTask != NULL &&
-              !threadShouldStop)  // Stop processing tasks if we're shutting down
+              !theThreadShouldStop)  // Stop processing tasks if we're shutting down
         {
+            BGM_Task* theNextTask = theTask->mNext;
+            
+            BGMAssert(!theTask->IsComplete(),
+                      "BGM_TaskQueue::WorkerThreadProc: Cannot process already completed task (ID %d)",
+                      theTask->GetTaskID());
+            
+            BGMAssert(theTask != theNextTask,
+                      "BGM_TaskQueue::WorkerThreadProc: BGM_Task %p (ID %d) was added to %s multiple times. arg1=%llu arg2=%llu",
+                      theTask,
+                      theTask->GetTaskID(),
+                      (inTasks == &mRealTimeThreadTasks ? "mRealTimeThreadTasks" : "mNonRealTimeThreadTasks"),
+                      theTask->GetArg1(),
+                      theTask->GetArg2());
+            
             // Process the task
-            threadShouldStop = inProcessTask(theTask);
-            
-            theTask->MarkCompleted();
-            
-            BGM_Task* theNextTask = theTask->next();
+            theThreadShouldStop = inProcessTask(theTask);
             
             // If the task was queued synchronously, let the thread that queued it know we're finished
             if(theTask->IsSync())
             {
+                // Marking the task as completed allows QueueSync to return, which means it's possible for theTask to point to
+                // invalid memory after this point.
+                CAMemoryBarrier();
+                theTask->MarkCompleted();
+                
                 // Signal any threads waiting for their task to be processed.
                 //
                 // We use semaphore_signal_all instead of semaphore_signal to avoid a race condition in QueueSync. It's possible
@@ -336,7 +368,7 @@ void    BGM_TaskQueue::WorkerThreadProc(semaphore_t inWorkQueuedSemaphore, semap
                 // added to the queue. So after each task is completed we have every waiting thread check if it was theirs.
                 //
                 // Note that semaphore_signal_all has an implicit barrier.
-                kern_return_t theError = semaphore_signal_all(inSyncTaskCompletedSemaphore);
+                theError = semaphore_signal_all(inSyncTaskCompletedSemaphore);
                 BGM_Utils::ThrowIfMachError("BGM_TaskQueue::WorkerThreadProc", "semaphore_signal_all", theError);
             }
             else if(inFreeList != NULL)
@@ -399,6 +431,13 @@ bool    BGM_TaskQueue::ProcessNonRealTimeThreadTask(BGM_Task* inTask)
                 bool didStartIO = BGM_ClientTasks::StartIONonRT(theClients, static_cast<UInt32>(inTask->GetArg2()));
                 inTask->SetReturnValue(didStartIO);
             }
+            // TODO: Catch the other types of exceptions BGM_ClientTasks::StartIONonRT can throw here as well. Set the task's return
+            //       value (rather than rethrowing) so the exceptions can be handled if the task was queued sync. Then
+            //       QueueSync_StartClientIO can throw some exception and BGM_StartIO can return an appropriate error code to the
+            //       HAL, instead of the driver just crashing.
+            //
+            //       Do the same for the kBGMTaskStopClientIO case below. And should we set a return value in the catch block for
+            //       BGM_InvalidClientException as well, so it can also be rethrown in QueueSync_StartClientIO and then handled?
             catch(BGM_InvalidClientException)
             {
                 DebugMsg("BGM_TaskQueue::ProcessNonRealTimeThreadTask: Ignoring BGM_InvalidClientException thrown by StartIONonRT. %s",

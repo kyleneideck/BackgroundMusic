@@ -30,6 +30,14 @@
 // System Includes
 #include <mach/mach_error.h>
 
+// The Assert macro from CADebugMacros with support for format strings added.
+#define BGMAssert(inCondition, inMessage, ...)                                  \
+    if(!(inCondition))                                                          \
+    {                                                                           \
+        DebugMsg(inMessage, ## __VA_ARGS__);                                    \
+        __ASSERT_STOP;                                                          \
+    }
+
 
 class BGM_Utils
 {

@@ -71,7 +71,7 @@ private:
     class BGM_Task
     {
     public:
-                                        BGM_Task(BGM_TaskID inTaskID = kBGMTaskUninitialized, bool inIsSync = false, UInt64 inArg1 = 0, UInt64 inArg2 = 0) : mTaskID(inTaskID), mIsSync(inIsSync), mArg1(inArg1), mArg2(inArg2) { };
+                                        BGM_Task(BGM_TaskID inTaskID = kBGMTaskUninitialized, bool inIsSync = false, UInt64 inArg1 = 0, UInt64 inArg2 = 0) : mNext(NULL), mTaskID(inTaskID), mIsSync(inIsSync), mArg1(inArg1), mArg2(inArg2) { };
         
         BGM_TaskID                      GetTaskID() { return mTaskID; }
         UInt64                          GetArg1() { return mArg1; }
@@ -84,7 +84,8 @@ private:
         bool                            IsSync() { return mIsSync; }
         
         // Used by TAtomicStack
-        BGM_Task* __nullable &          next() { return mNext; };
+        BGM_Task* __nullable &          next() { return mNext; }
+        BGM_Task* __nullable            mNext;
         
     private:
         BGM_TaskID                      mTaskID;
@@ -93,7 +94,6 @@ private:
         UInt64                          mReturnValue = INT64_MAX;
         bool                            mIsComplete = false;
         bool                            mIsSync;
-        BGM_Task* __nullable            mNext = NULL;
     };
     
 public:

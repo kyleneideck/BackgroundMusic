@@ -722,6 +722,7 @@
 					"CoreAudio_Debug=1",
 					"CoreAudio_UseSysLog=0",
 					"CoreAudio_StopOnAssert=1",
+					"CoreAudio_ThreadStampMessages=0",
 				);
 				GCC_TREAT_IMPLICIT_FUNCTION_DECLARATIONS_AS_ERRORS = YES;
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
@@ -817,6 +818,7 @@
 					"CoreAudio_Debug=1",
 					"CoreAudio_UseSysLog=0",
 					"CoreAudio_StopOnAssert=1",
+					"CoreAudio_ThreadStampMessages=0",
 				);
 				GCC_TREAT_IMPLICIT_FUNCTION_DECLARATIONS_AS_ERRORS = YES;
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
@@ -876,6 +878,7 @@
 					"CoreAudio_Debug=0",
 					"CoreAudio_UseSysLog=0",
 					"CoreAudio_StopOnAssert=0",
+					"CoreAudio_ThreadStampMessages=0",
 				);
 				GCC_TREAT_IMPLICIT_FUNCTION_DECLARATIONS_AS_ERRORS = YES;
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
