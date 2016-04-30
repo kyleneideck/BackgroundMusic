@@ -1821,51 +1821,58 @@ void	BGM_Device::Control_SetPropertyData(AudioObjectID inObjectID, pid_t inClien
 
 void	BGM_Device::StartIO(UInt32 inClientID)
 {
-	CAMutex::Locker theStateLocker(mStateMutex);
+    bool clientIsBGMApp, bgmAppHasClientRegistered;
     
-    // An overview of the process this function is part of:
-    //   - A client starts IO.
-    //   - The plugin host (the HAL) calls the StartIO function in BGM_PluginInterface, which calls this function.
-    //   - BGMDriver sends a message to BGMApp telling it to start the (real) audio hardware.
-    //   - BGMApp starts the hardware and, after the hardware is ready, replies to BGMDriver's message.
-    //   - BGMDriver lets the host know that it's ready to do IO by returning from StartIO.
-    
-    // Update our client data.
-    //
-    // We add the work to the task queue, rather than doing it here, because BeginIOOperation and EndIOOperation also
-    // add this task to the queue and the updates should be done in order.
-    bool didStartIO = mTaskQueue.QueueSync_StartClientIO(&mClients, inClientID);
-	
-	// We only tell the hardware to start if this is the first time IO has been started
-	if(didStartIO)
-	{
-		kern_return_t theError = _HW_StartIO();
-		ThrowIfKernelError(theError,
-                           CAException(theError),
-                           "BGM_Device::StartIO: Failed to start because of an error calling down to the driver.");
+    {
+        CAMutex::Locker theStateLocker(mStateMutex);
         
-        // We only return from StartIO after BGMApp is ready to pass the audio through to the output device. That way
-        // the HAL doesn't start sending us data before BGMApp can play it, which would mean we'd have to either drop
-        // frames or increase latency.
-        if(!mClients.IsBGMApp(inClientID) && mClients.BGMAppHasClientRegistered())
+        // An overview of the process this function is part of:
+        //   - A client starts IO.
+        //   - The plugin host (the HAL) calls the StartIO function in BGM_PluginInterface, which calls this function.
+        //   - BGMDriver sends a message to BGMApp telling it to start the (real) audio hardware.
+        //   - BGMApp starts the hardware and, after the hardware is ready, replies to BGMDriver's message.
+        //   - BGMDriver lets the host know that it's ready to do IO by returning from StartIO.
+        
+        // Update our client data.
+        //
+        // We add the work to the task queue, rather than doing it here, because BeginIOOperation and EndIOOperation
+        // also add this task to the queue and the updates should be done in order.
+        bool didStartIO = mTaskQueue.QueueSync_StartClientIO(&mClients, inClientID);
+        
+        // We only tell the hardware to start if this is the first time IO has been started.
+        if(didStartIO)
         {
-            UInt64 theXPCError = WaitForBGMAppToStartOutputDevice();
-            
-            if(theXPCError == kBGMXPC_Success)
-            {
-                DebugMsg("BGM_Device::StartIO: Ready for IO.");
-            }
-            else if(theXPCError == kBGMXPC_MessageFailure)
-            {
-                // This most likely means BGMXPCHelper isn't installed or has crashed. IO will probably still work,
-                // but we may drop frames while the audio hardware starts up.
-                DebugMsg("BGM_Device::StartIO: Couldn't reach BGMApp via XPC. Attempting to start IO anyway.");
-            }
-            else
-            {
-                DebugMsg("BGM_Device::StartIO: BGMApp failed to start the output device. theXPCError=%llu", theXPCError);
-                Throw(CAException(kAudioHardwareUnspecifiedError));
-            }
+            kern_return_t theError = _HW_StartIO();
+            ThrowIfKernelError(theError,
+                               CAException(theError),
+                               "BGM_Device::StartIO: Failed to start because of an error calling down to the driver.");
+        }
+        
+        clientIsBGMApp = mClients.IsBGMApp(inClientID);
+        bgmAppHasClientRegistered = mClients.BGMAppHasClientRegistered();
+    }
+    
+    // We only return from StartIO after BGMApp is ready to pass the audio through to the output device. That way
+    // the HAL doesn't start sending us data before BGMApp can play it, which would mean we'd have to either drop
+    // frames or increase latency.
+    if(!clientIsBGMApp && bgmAppHasClientRegistered)
+    {
+        UInt64 theXPCError = WaitForBGMAppToStartOutputDevice();
+        
+        if(theXPCError == kBGMXPC_Success)
+        {
+            DebugMsg("BGM_Device::StartIO: Ready for IO.");
+        }
+        else if(theXPCError == kBGMXPC_MessageFailure)
+        {
+            // This most likely means BGMXPCHelper isn't installed or has crashed. IO will probably still work,
+            // but we may drop frames while the audio hardware starts up.
+            DebugMsg("BGM_Device::StartIO: Couldn't reach BGMApp via XPC. Attempting to start IO anyway.");
+        }
+        else
+        {
+            DebugMsg("BGM_Device::StartIO: BGMApp failed to start the output device. theXPCError=%llu", theXPCError);
+            Throw(CAException(kAudioHardwareUnspecifiedError));
         }
     }
 }

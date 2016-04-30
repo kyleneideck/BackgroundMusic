@@ -175,8 +175,22 @@
 }
 
 - (void) waitForOutputDeviceToStartWithReply:(void (^)(NSError*))reply {
-    OSStatus err = [audioDevices waitForOutputDeviceToStart];
     NSString* description;
+    OSStatus err;
+    
+    try {
+        err = [audioDevices waitForOutputDeviceToStart];
+    } catch (CAException e) {
+        DebugMsg("BGMXPCListener::waitForOutputDeviceToStartWithReply: Caught CAException (%d). Replying kBGMXPC_HardwareError.",
+                 e.GetError());
+        err = kBGMXPC_HardwareError;
+    } catch (...) {
+        DebugMsg("BGMXPCListener::waitForOutputDeviceToStartWithReply: Caught unknown exception. Replying kBGMXPC_InternalError.");
+        err = kBGMXPC_InternalError;
+#if DEBUG
+        throw;
+#endif
+    }
     
     switch (err) {
         case noErr:

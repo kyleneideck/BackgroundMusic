@@ -84,8 +84,8 @@ UInt64 WaitForBGMAppToStartOutputDevice()
     theConnection.interruptionHandler = failureHandler;
     theConnection.invalidationHandler = failureHandler;
     
-    // This remote call to BGMXPCHelper will send a reply when the output device is ready to receive IO. Note that we shouldn't trust
-    // the reply string.
+    // This remote call to BGMXPCHelper will send a reply when the output device is ready to receive IO. Note that, for security
+    // reasons, we shouldn't trust the reply object.
     [[theConnection remoteObjectProxyWithErrorHandler:^(NSError* error) {
 #if !DEBUG
     #pragma unused (error)

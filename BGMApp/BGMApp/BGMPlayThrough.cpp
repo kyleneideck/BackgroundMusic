@@ -459,41 +459,32 @@ OSStatus    BGMPlayThrough::BGMDeviceListenerProc(AudioObjectID inObjectID,
                 {
                     DebugMsg("BGMPlayThrough::BGMDeviceListenerProc: Got kAudioDevicePropertyDeviceIsRunning notification");
                     
-                    auto deviceIsRunningHandler = [refCon] {
-                        // IsRunning doesn't always return true when IO is starting. Not sure why. But using
-                        // RunningSomewhereOtherThanBGMApp instead seems to be working so far.
-                        //
-                        //if(refCon->mInputDevice->IsRunning())
-                        if(RunningSomewhereOtherThanBGMApp(refCon->mInputDevice))
+                    // This is dispatched because it can block and
+                    //   - we might be on a real-time thread, or
+                    //   - BGMXPCListener::waitForOutputDeviceToStartWithReply might get called on the same thread just
+                    //     before this and timeout waiting for this to run.
+                    //
+                    // TODO: We should find a way to do this without dispatching because dispatching isn't real-time safe.
+                    dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^{
+                        if(refCon->mActive)
                         {
-#if DEBUG
-                            refCon->mToldOutputDeviceToStartAt = mach_absolute_time();
-#endif
-                            refCon->Start();
-                        }
-                    };
-                    
-                    CAMutex::Tryer stateTrier(refCon->mStateMutex);
-                    if(stateTrier.HasLock())
-                    {
-                        // In the vast majority of cases (when we actually start playthrough here) we get the state lock
-                        // and can invoke the handler directly
-                        deviceIsRunningHandler();
-                    }
-                    else
-                    {
-                        // TODO: This should be rare, but we still shouldn't dispatch on the IO thread because it isn't
-                        //       real-time safe.
-                        dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^{
-                            if(refCon->mActive)
+                            DebugMsg("BGMPlayThrough::BGMDeviceListenerProc: Handling "
+                                     "kAudioDevicePropertyDeviceIsRunning notification in dispatched block");
+                            CAMutex::Locker stateLocker(refCon->mStateMutex);
+                            
+                            // IsRunning doesn't always return true when IO is starting. Not sure why. But using
+                            // RunningSomewhereOtherThanBGMApp instead seems to be working so far.
+                            //
+                            //if(refCon->mInputDevice->IsRunning())
+                            if(RunningSomewhereOtherThanBGMApp(refCon->mInputDevice))
                             {
-                                DebugMsg("BGMPlayThrough::BGMDeviceListenerProc: Handling "
-                                         "kAudioDevicePropertyDeviceIsRunning notification in dispatched block");
-                                CAMutex::Locker stateLocker(refCon->mStateMutex);
-                                deviceIsRunningHandler();
+#if DEBUG
+                                refCon->mToldOutputDeviceToStartAt = mach_absolute_time();
+#endif
+                                refCon->Start();
                             }
-                        });
-                    }
+                        }
+                    });
                 }
                 break;
                 
