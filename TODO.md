@@ -13,8 +13,6 @@ There are also lots of other TODOs commented around the code.
 - Should we hide music players in the preferences menu if Launch Services says they aren't installed? (And they aren't
   running or otherwise obviously present on the system.) If so, should we have a "show all" menu item?
 
-- Disable the Auto-pause Music menu item if the selected music player isn't running
-
 - System-wide volume boost
 
 - Listen for notifications when the output device is removed/disabled and revert to the previous output device
