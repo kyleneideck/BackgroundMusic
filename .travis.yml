@@ -6,7 +6,9 @@ sudo: required
 branches:
   only:
     - master
-install: true
+install:
+  - sudo xcodebuild -project BGMApp/BGMAppTests/NullAudio/AudioDriverExamples.xcodeproj -target NullAudio DSTROOT="/" install
+  - sudo launchctl kickstart -kp system/com.apple.audio.coreaudiod || sudo killall coreaudiod
 script:
   - yes | ./build_and_install.sh
   - cat build_and_install.log
