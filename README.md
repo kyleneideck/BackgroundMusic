@@ -108,7 +108,7 @@ change the default device and then change it back again. Failing that, you might
   General tab of Skype's preferences.
 - Plugging in or unplugging headphones when Background Music isn't running can silence system audio. To fix it, go to
   the Sound section in System Preferences, click the Output tab and change your default output device to something other
-  than Background Music Device.
+  than Background Music Device. Alternatively, you may Option+Click on the Sound icon in the menu bar to select a different output device.
 
   This happens when OS X remembers that Background Music Device was your default audio device the last time you last
   used (or didn't use) headphones.
