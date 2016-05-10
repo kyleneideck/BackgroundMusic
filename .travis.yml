@@ -11,6 +11,9 @@ script:
   - yes | ./build_and_install.sh
   - cat build_and_install.log
   - find */build/Release/*/ -type f -exec md5 {} \;
+  - system_profiler SPAudioDataType
+  - say -a '?'
+  - osascript -e 'tell application "Background Music" to quit'
   - xcodebuild -workspace BGM.xcworkspace -scheme 'Background Music Device' test
   - xcodebuild -workspace BGM.xcworkspace -scheme 'Background Music' test
   - xcodebuild -workspace BGM.xcworkspace -scheme 'BGMXPCHelper' test
