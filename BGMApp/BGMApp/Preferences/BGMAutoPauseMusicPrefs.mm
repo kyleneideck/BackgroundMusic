@@ -18,6 +18,7 @@
 //  BGMApp
 //
 //  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016 Tanner Hoke
 //
 
 // Self Includes
@@ -29,7 +30,9 @@
 
 
 static NSString* const kToggleAutoPauseMusicMenuItemTitleFormat = @"Auto-pause %@";
-static int const kUpdateMenuWaitTime = 1; // Wait time to disable/enable music player auto-pause in seconds
+static NSString* const kToggleAutoPauseMusicMenuItemDisabledTooltipFormat = @"%@ doesn't appear to be running.";
+// Wait time to disable/enable the auto-pause menu item, in seconds
+static SInt64 const kToggleAutoPauseMusicMenuItemUpdateWaitTime = 1;
 static float const kMenuItemIconScalingFactor = 1.15f;
 static NSInteger const kPrefsMenuAutoPauseHeaderTag = 1;
 
@@ -40,7 +43,7 @@ static NSInteger const kPrefsMenuAutoPauseHeaderTag = 1;
     NSArray<NSMenuItem*>* musicPlayerMenuItems;
 }
 
-id didLaunchToken, didTerminateToken;
+id<NSObject> didLaunchToken, didTerminateToken;
 
 - (id) initWithPreferencesMenu:(NSMenu*)inPrefsMenu
   toggleAutoPauseMusicMenuItem:(NSMenuItem*)inToggleAutoPauseMusicMenuItem
@@ -51,12 +54,42 @@ id didLaunchToken, didTerminateToken;
         audioDevices = inAudioDevices;
         musicPlayerMenuItems = @[];
         
+        [self initMusicPlayerObservers];
         [self initSelectedMusicPlayer];
         [self initMenuSection];
         [self updateMenuItemTitle];
     }
     
     return self;
+}
+
+- (void) initMusicPlayerObservers {
+    // Add observers that enable/disable the Auto-pause Music menu item when the music player is launched/terminated.
+    NSNotificationCenter* center = [[NSWorkspace sharedWorkspace] notificationCenter];
+    
+    id<NSObject> (^addObserver)(NSString*) = ^(NSString* name) {
+        return [center addObserverForName:name
+                                   object:nil
+                                    queue:nil
+                               usingBlock:^(NSNotification* note) {
+                                   NSString* appBundleID = [note.userInfo[NSWorkspaceApplicationKey] bundleIdentifier];
+                                   NSString* musicPlayerBundleID =
+                                       (__bridge NSString*)[[[BGMMusicPlayer selectedMusicPlayer] class] bundleID];
+                                   BOOL isAboutThisMusicPlayer = [appBundleID isEqualToString:musicPlayerBundleID];
+                                   
+                                   if (isAboutThisMusicPlayer) {
+                                       dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
+                                                                    kToggleAutoPauseMusicMenuItemUpdateWaitTime * NSEC_PER_SEC),
+                                                      dispatch_get_main_queue(),
+                                                      ^{
+                                                          [self updateMenuItemTitle];
+                                                      });
+                                   }
+                               }];
+    };
+    
+    didLaunchToken = addObserver(NSWorkspaceDidLaunchApplicationNotification);
+    didTerminateToken = addObserver(NSWorkspaceDidTerminateApplicationNotification);
 }
 
 - (void) initSelectedMusicPlayer {
@@ -67,41 +100,6 @@ id didLaunchToken, didTerminateToken;
     // Get the currently selected music player from the driver and update the global in BGMMusicPlayerBase
     
     // The bundle ID and PID set on the driver
-    
-    BOOL (^isAboutThisMusicPlayer)(NSNotification*) = ^(NSNotification* note){
-        return [[note.userInfo[NSWorkspaceApplicationKey] bundleIdentifier] isEqualToString:(__bridge NSString*)[[[BGMMusicPlayer selectedMusicPlayer] class] bundleID]];
-    };
-    
-    // Add observers that create/destroy the SBApplication when the music player is launched/terminated. We
-    // only create the SBApplication when the music player is open because, if it isn't, creating the
-    // SBApplication, or sending it events, could launch the music player. Whether it does or not depends on
-    // the music player, and possibly the version of the music player, so to be safe we assume they all do.
-    //
-    // From the docs for SBApplication's applicationWithBundleIdentifier method:
-    //     "For applications that declare themselves to have a dynamic scripting interface, this method will
-    //     launch the application if it is not already running."
-    NSNotificationCenter* center = [[NSWorkspace sharedWorkspace] notificationCenter];
-    didLaunchToken = [center addObserverForName:NSWorkspaceDidLaunchApplicationNotification
-                                         object:nil
-                                          queue:nil
-                                     usingBlock:^(NSNotification* note) {
-                                         if (isAboutThisMusicPlayer(note)) {
-                                             dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kUpdateMenuWaitTime * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                                                 [self updateMenuItemTitle];
-                                             });
-                                         }
-                                     }];
-    didTerminateToken = [center addObserverForName:NSWorkspaceDidTerminateApplicationNotification
-                                            object:nil
-                                             queue:nil
-                                        usingBlock:^(NSNotification* note) {
-                                            if (isAboutThisMusicPlayer(note)) {
-                                                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kUpdateMenuWaitTime * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                                                    [self updateMenuItemTitle];
-                                                });
-                                            }
-                                        }];
-    
     CFNumberRef selectedPID = static_cast<CFNumberRef>([audioDevices bgmDevice].GetPropertyData_CFType(kBGMMusicPlayerProcessIDAddress));
     CFStringRef selectedBundleID = [audioDevices bgmDevice].GetPropertyData_CFString(kBGMMusicPlayerBundleIDAddress);
     
@@ -163,7 +161,6 @@ id didLaunchToken, didTerminateToken;
     
     // The index to start inserting music player menu items at
     NSInteger musicPlayerItemsIndex = [prefsMenu indexOfItemWithTag:kPrefsMenuAutoPauseHeaderTag] + 1;
-    [prefsMenu setAutoenablesItems:false];
     
     // Insert the options to change the music player app
     for (Class musicPlayerClass in [BGMMusicPlayerBase musicPlayerClasses]) {
@@ -234,14 +231,37 @@ id didLaunchToken, didTerminateToken;
 }
 
 - (void) updateMenuItemTitle {
-    // Set the title of the Auto-pause Music menu item, including the name of the selected music player
+    // Set the title of the Auto-pause Music menu item, including the name of the selected music player.
     NSString* musicPlayerName = [[[BGMMusicPlayer selectedMusicPlayer] class] name];
     NSString* title = [NSString stringWithFormat:kToggleAutoPauseMusicMenuItemTitleFormat, musicPlayerName];
     [toggleAutoPauseMusicMenuItem setTitle:title];
     
-    // Disable the Auto-pause option if the application is not runnning
-    [[toggleAutoPauseMusicMenuItem menu] setAutoenablesItems:false];
-    [toggleAutoPauseMusicMenuItem setEnabled:[[BGMMusicPlayer selectedMusicPlayer] isRunning]];
+    // Make the Auto-pause Music menu item appear disabled if the application is not running.
+    //
+    // We don't actually disable it just in case the user decides to disable auto-pause and their music player isn't running. E.g.
+    // someone who only recently installed Background Music and doesn't want to use auto-pause at all.
+    if ([[BGMMusicPlayer selectedMusicPlayer] isRunning]) {
+        toggleAutoPauseMusicMenuItem.attributedTitle = nil;
+        toggleAutoPauseMusicMenuItem.toolTip = nil;
+    } else {
+        // Hardcode the text colour to match disabled menu items. I couldn't figure out a way to do this properly. There's no colour
+        // constant for this, except possibly disabledControlTextColor, which just leaves the text black for me. I also couldn't get
+        // the colours from the built-in NSColorLists.
+        //
+        // TODO: Is it possible to make the tick mark grey as well?
+        BOOL darkMode = [@"Dark" isEqualToString:[[NSUserDefaults standardUserDefaults] stringForKey:@"AppleInterfaceStyle"]];
+        NSDictionary* attributes = @{ NSFontAttributeName: [NSFont menuBarFontOfSize:0],  // Default font size
+                                      NSForegroundColorAttributeName: [NSColor colorWithHue:0
+                                                                                 saturation:0
+                                                                                 brightness:(darkMode ? 0.25 : 0.75)
+                                                                                      alpha:1] };
+        NSAttributedString* pseudoDisabledTitle = [[NSAttributedString alloc] initWithString:[toggleAutoPauseMusicMenuItem title]
+                                                                                  attributes:attributes];
+        [toggleAutoPauseMusicMenuItem setAttributedTitle:pseudoDisabledTitle];
+        
+        toggleAutoPauseMusicMenuItem.toolTip =
+            [NSString stringWithFormat:kToggleAutoPauseMusicMenuItemDisabledTooltipFormat, musicPlayerName];
+    }
 }
 
 - (void) dealloc {
