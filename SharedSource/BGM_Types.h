@@ -23,7 +23,7 @@
 #ifndef __SharedSource__BGM_Types__
 #define __SharedSource__BGM_Types__
 
-#include <CoreAudio/AudioServerPlugin.h>
+#include <CoreAudio/AudioServerPlugIn.h>
 
 
 #pragma mark IDs
@@ -36,9 +36,9 @@
 #define kBGMDeviceUID                "BGMDevice"
 #define kBGMDeviceModelUID           "BGMDeviceModelUID"
 
-// The object IDs for the audio objects this driver implements
+// The object IDs for the audio objects this driver implements.
 //
-// Regardless of the wrapped device, this driver always publishes this fixed set of objects. We might need to
+// BGMDevice always publishes this fixed set of objects (regardless of the wrapped device). We might need to
 // change that at some point, but so far it hasn't caused any problems and it makes the driver much simpler.
 enum
 {
@@ -50,7 +50,7 @@ enum
 	kObjectID_Mute_Output_Master		= 6
 };
 
-#pragma mark Custom properties
+#pragma mark BGMDevice Custom Properties
 
 enum
 {
@@ -116,31 +116,9 @@ enum
 #define kAppRelativeVolumeMinDbValue    -96.0f
 #define kAppRelativeVolumeMaxDbValue	0.0f
 
-#pragma mark XPC Return Codes
+#pragma mark BGMDevice Custom Property Addresses
 
-enum {
-    kBGMXPC_Success,
-    kBGMXPC_MessageFailure,
-    kBGMXPC_Timeout,
-    kBGMXPC_BGMAppStateError,
-    kBGMXPC_HardwareError,
-    kBGMXPC_InternalError
-};
-
-#pragma mark Exceptions
-
-#if defined(__cplusplus)
-
-class BGM_InvalidClientException { };
-class BGM_InvalidClientPIDException { };
-class BGM_InvalidClientRelativeVolumeException { };
-class BGM_DeviceNotSetException { };
-
-#endif
-
-#pragma mark Property Addresses
-
-// For convenience
+// For convenience.
 
 static const AudioObjectPropertyAddress kBGMMusicPlayerProcessIDAddress = {
     kAudioDeviceCustomPropertyMusicPlayerProcessID,
@@ -171,6 +149,28 @@ static const AudioObjectPropertyAddress kBGMAppVolumesAddress = {
     kAudioObjectPropertyScopeGlobal,
     kAudioObjectPropertyElementMaster
 };
+
+#pragma mark XPC Return Codes
+
+enum {
+    kBGMXPC_Success,
+    kBGMXPC_MessageFailure,
+    kBGMXPC_Timeout,
+    kBGMXPC_BGMAppStateError,
+    kBGMXPC_HardwareError,
+    kBGMXPC_InternalError
+};
+
+#pragma mark Exceptions
+
+#if defined(__cplusplus)
+
+class BGM_InvalidClientException { };
+class BGM_InvalidClientPIDException { };
+class BGM_InvalidClientRelativeVolumeException { };
+class BGM_DeviceNotSetException { };
+
+#endif
 
 #endif /* __SharedSource__BGM_Types__ */
 

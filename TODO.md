@@ -85,9 +85,13 @@ There are also lots of other TODOs commented around the code.
 - When BGMApp changes the default device to BGMDevice, some apps seem to keep using the previous default device if they
   were running IO at the time. Not sure if we can do anything about this.
 
-- Figure out how to test BGMDriver with Address Sanitizer enabled. It isn't working because coreaudiod will try to read
-  files outside of its sandbox.
+- Figure out how to test BGMDriver with Address Sanitizer enabled. It isn't working because it makes coreaudiod try to
+  read files outside of its sandbox and the system kills it.
 
 - Crash reporting
+
+- Test Background Music on a system running OS X on a case-sensitive file system. In
+  [#64](https://github.com/kyleneideck/BackgroundMusic/issues/64), BGMDriver failed to compile and the error suggests it
+  was a case-sensitivity problem. That should be fixed now, but I haven't looked for any runtime bugs.
 
 

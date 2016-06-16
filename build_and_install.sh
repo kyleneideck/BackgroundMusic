@@ -468,9 +468,14 @@ echo "[3/3] Installing $(bold_face ${APP_DIR}) to $(bold_face ${APP_PATH})." \
 show_spinner "${BUILD_FAILED_ERROR_MSG}"
 
 # Fix Background Music.app owner/group.
-# (We have to run xcodebuild as root to install BGMXPCHelper because it installs to directories
+#
+# We have to run xcodebuild as root to install BGMXPCHelper because it installs to directories
 # owned by root. But that means the build directory gets created by root, and since BGMApp uses the
-# same build directory we have to run xcodebuild as root to install BGMApp as well.)
+# same build directory we have to run xcodebuild as root to install BGMApp as well.
+#
+# TODO: Can't we just chown -R the build dir before we install BGMApp? Then we wouldn't have to
+#       install BGMApp as root. (But maybe still handle the unlikely case of APP_PATH not being
+#       user-writable.)
 sudo chown -R "$(whoami):admin" "${APP_PATH}/${APP_DIR}"
 
 # Fix the build directories' owner/group. This is mainly so the whole source directory can be

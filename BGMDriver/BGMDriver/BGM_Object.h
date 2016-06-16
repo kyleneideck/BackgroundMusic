@@ -20,10 +20,10 @@
 //  Copyright © 2016 Kyle Neideck
 //  Portions copyright (C) 2013 Apple Inc. All Rights Reserved.
 //
-//  Based largely on SA_Object.h from Apple's SimpleAudioPlugin sample code.
+//  Based largely on SA_Object.h from Apple's SimpleAudioDriver Plug-In sample code.
 //  https://developer.apple.com/library/mac/samplecode/AudioDriverExamples
 //
-//  The base class for our classes that represent audio objects. (See AudioServerPlugin.h for a
+//  The base class for our classes that represent audio objects. (See AudioServerPlugIn.h for a
 //  quick explanation of audio objects.)
 // 
 //  This is a stripped down version of SA_Object.h. Unlike the sample code plugin that SA_Object.h

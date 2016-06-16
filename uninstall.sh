@@ -148,6 +148,7 @@ if [ "$user_prompt" == "y" ] || [ "$user_prompt" == "Y" ]; then
   # Invalidate sudo ticket
   sudo -k
 
+  # TODO: What if they only have one audio device?
   echo -e "\n${bold}Done! Toggle your sound output device in the Sound control panel to complete the uninstall.${normal}"
 
   osascript -e 'tell application "System Preferences"

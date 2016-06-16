@@ -20,8 +20,8 @@
 //  Copyright © 2016 Kyle Neideck
 //  Portions copyright (C) 2013 Apple Inc. All Rights Reserved.
 //
-//  Based largely on SA_Device.cpp from Apple's SimpleAudioPlugin sample code. Also uses a few sections from Apple's NullAudio.c
-//  sample code (found in the same sample project).
+//  Based largely on SA_Device.cpp from Apple's SimpleAudioDriver Plug-In sample code. Also uses a few sections from Apple's
+//  NullAudio.c sample code (found in the same sample project).
 //  https://developer.apple.com/library/mac/samplecode/AudioDriverExamples
 //
 
@@ -1828,7 +1828,7 @@ void	BGM_Device::StartIO(UInt32 inClientID)
         
         // An overview of the process this function is part of:
         //   - A client starts IO.
-        //   - The plugin host (the HAL) calls the StartIO function in BGM_PluginInterface, which calls this function.
+        //   - The plugin host (the HAL) calls the StartIO function in BGM_PlugInInterface, which calls this function.
         //   - BGMDriver sends a message to BGMApp telling it to start the (real) audio hardware.
         //   - BGMApp starts the hardware and, after the hardware is ready, replies to BGMDriver's message.
         //   - BGMDriver lets the host know that it's ready to do IO by returning from StartIO.

@@ -20,7 +20,7 @@
 //  Copyright © 2016 Kyle Neideck
 //  Portions copyright (C) 2013 Apple Inc. All Rights Reserved.
 //
-//  Based largely on SA_PlugIn.h from Apple's SimpleAudioPlugin sample code.
+//  Based largely on SA_PlugIn.h from Apple's SimpleAudioDriver Plug-In sample code.
 //  https://developer.apple.com/library/mac/samplecode/AudioDriverExamples
 //
 
