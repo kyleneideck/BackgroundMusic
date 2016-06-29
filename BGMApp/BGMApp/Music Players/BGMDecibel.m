@@ -18,6 +18,7 @@
 //  BGMApp
 //
 //  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016 Tanner Hoke
 //
 
 // Self Include
@@ -89,3 +90,4 @@ BGM_MUSIC_PLAYER_DEFAULT_LOAD_METHOD
 }
 
 @end
+

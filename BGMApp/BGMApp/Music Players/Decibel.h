@@ -1,5 +1,8 @@
 /*
  * Decibel.h
+ *
+ * Generated with
+ * sdef /Applications/Decibel.app | sdp -fh --basename Decibel
  */
 
 #import <AppKit/AppKit.h>
