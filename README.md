@@ -25,10 +25,10 @@ Background Music can pause your music player app when other audio starts playing
 that when I'm listening to music and pause it to watch a video or something I always forget to unpause it afterwards. So
 this keeps me from wearing headphones for hours listening to nothing.
 
-So far iTunes, [Spotify](https://www.spotify.com), [VLC](https://www.videolan.org/vlc/) and
-[VOX](http://coppertino.com/vox/mac) are supported, but adding support for a music player should only take a few minutes
-(see `BGMMusicPlayer.h`). If you don't know how to program, or just don't feel like it, create an issue and I'll try to
-add it for you.
+So far iTunes, [Spotify](https://www.spotify.com), [Decibel](https://sbooth.org/Decibel/),
+[VLC](https://www.videolan.org/vlc/) and [VOX](https://coppertino.com/vox/mac) are supported, but adding support for a
+music player should only take a few minutes (see `BGMMusicPlayer.h`). If you don't know how to program, or just don't
+feel like it, create an issue and I'll try to add it for you.
 
 ## App volumes
 
