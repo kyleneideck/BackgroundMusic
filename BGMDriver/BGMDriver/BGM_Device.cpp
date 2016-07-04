@@ -215,6 +215,8 @@ UInt32	BGM_Device::GetPropertyDataSize(AudioObjectID inObjectID, pid_t inClientP
 
 void	BGM_Device::GetPropertyData(AudioObjectID inObjectID, pid_t inClientPID, const AudioObjectPropertyAddress& inAddress, UInt32 inQualifierDataSize, const void* inQualifierData, UInt32 inDataSize, UInt32& outDataSize, void* outData) const
 {
+    ThrowIfNULL(outData, BGM_RuntimeException(), "BGM_Device::GetPropertyData: !outData");
+    
 	if(inObjectID == mObjectID)
 	{
 		Device_GetPropertyData(inObjectID, inClientPID, inAddress, inQualifierDataSize, inQualifierData, inDataSize, outDataSize, outData);
@@ -235,6 +237,8 @@ void	BGM_Device::GetPropertyData(AudioObjectID inObjectID, pid_t inClientPID, co
 
 void	BGM_Device::SetPropertyData(AudioObjectID inObjectID, pid_t inClientPID, const AudioObjectPropertyAddress& inAddress, UInt32 inQualifierDataSize, const void* inQualifierData, UInt32 inDataSize, const void* inData)
 {
+    ThrowIfNULL(inData, BGM_RuntimeException(), "BGM_Device::SetPropertyData: no data");
+    
 	if(inObjectID == mObjectID)
 	{
 		Device_SetPropertyData(inObjectID, inClientPID, inAddress, inQualifierDataSize, inQualifierData, inDataSize, inData);
@@ -1054,6 +1058,7 @@ void	BGM_Device::Device_SetPropertyData(AudioObjectID inObjectID, pid_t inClient
                 ThrowIf(inDataSize < sizeof(Float64), CAException(kAudioHardwareBadPropertySizeError), "BGM_Device::Device_SetPropertyData: wrong size for the data for kAudioDevicePropertyNominalSampleRate");
                 
                 // BGMDevice's input and output sample rates are the same, so we just pass the request to Stream_SetPropertyData for one of them
+                // TODO: Set the property for both streams just in case that assumption changes? (As unlikely as that is.)
                 
                 Float64 theNewSampleRate = *reinterpret_cast<const Float64*>(inData);
                 
@@ -1067,7 +1072,7 @@ void	BGM_Device::Device_SetPropertyData(AudioObjectID inObjectID, pid_t inClient
                 
                 theStreamFormat.mSampleRate = theNewSampleRate;
                 
-                Stream_SetPropertyData(inObjectID, inClientPID, theStreamPropertyAddress, 0, NULL, theStreamFormatDataSize, &theStreamFormat);
+                Stream_SetPropertyData(kObjectID_Stream_Input, inClientPID, theStreamPropertyAddress, 0, NULL, theStreamFormatDataSize, &theStreamFormat);
             }
             break;
             
@@ -1116,15 +1121,17 @@ void	BGM_Device::Device_SetPropertyData(AudioObjectID inObjectID, pid_t inClient
         case kAudioDeviceCustomPropertyMusicPlayerBundleID:
             {
                 ThrowIf(inDataSize < sizeof(CFStringRef), CAException(kAudioHardwareBadPropertySizeError), "BGM_Device::Device_SetPropertyData: wrong size for the data for kAudioDeviceCustomPropertyMusicPlayerBundleID");
-                
+            
                 CFStringRef theBundleIDRef = *reinterpret_cast<const CFStringRef*>(inData);
                 
+                ThrowIfNULL(theBundleIDRef, CAException(kAudioHardwareIllegalOperationError), "BGM_Device::Device_SetPropertyData: kAudioDeviceCustomPropertyMusicPlayerBundleID cannot be set to NULL");
                 ThrowIf(CFGetTypeID(theBundleIDRef) != CFStringGetTypeID(), CAException(kAudioHardwareIllegalOperationError), "BGM_Device::Device_SetPropertyData: CFType given for kAudioDeviceCustomPropertyMusicPlayerBundleID was not a CFString");
                 
                 CAMutex::Locker theStateLocker(mStateMutex);
                 
                 CFRetain(theBundleIDRef);
                 CACFString bundleID(theBundleIDRef);
+                
                 bool propertyWasChanged = mClients.SetMusicPlayer(bundleID);
                 
                 if(propertyWasChanged)
@@ -1489,7 +1496,6 @@ void	BGM_Device::Stream_SetPropertyData(AudioObjectID inObjectID, pid_t inClient
                 CAMutex::Locker theStateLocker(mStateMutex);
                 Float64 theOldSampleRate = _HW_GetSampleRate();
                 
-                //	make sure that the new value is different than the old value
 				if(theNewSampleRate != theOldSampleRate)
                 {
                     mPendingSampleRate = theNewSampleRate;
@@ -2281,7 +2287,7 @@ SInt32	BGM_Device::_HW_GetVolumeControlValue(int inObjectID) const
             return mOutputMasterVolumeControlRawValueShadow;
 	};
     
-    throw (CAException(kAudioHardwareBadObjectError));
+    Throw(CAException(kAudioHardwareBadObjectError));
 }
 
 kern_return_t	BGM_Device::_HW_SetVolumeControlValue(int inObjectID, SInt32 inNewControlValue)

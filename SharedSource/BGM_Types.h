@@ -169,6 +169,7 @@ class BGM_InvalidClientException { };
 class BGM_InvalidClientPIDException { };
 class BGM_InvalidClientRelativeVolumeException { };
 class BGM_DeviceNotSetException { };
+class BGM_RuntimeException { };
 
 #endif
 

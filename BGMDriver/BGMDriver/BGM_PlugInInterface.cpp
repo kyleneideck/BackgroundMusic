@@ -561,7 +561,8 @@ static OSStatus	BGM_SetPropertyData(AudioServerPlugInDriverRef inDriver, AudioOb
 	{
 		//	check the arguments
 		ThrowIf(inDriver != gAudioServerPlugInDriverRef, CAException(kAudioHardwareBadObjectError), "BGM_SetPropertyData: bad driver reference");
-		ThrowIfNULL(inAddress, CAException(kAudioHardwareIllegalOperationError), "BGM_SetPropertyData: no address");
+        ThrowIfNULL(inAddress, CAException(kAudioHardwareIllegalOperationError), "BGM_SetPropertyData: no address");
+        ThrowIfNULL(inData, CAException(kAudioHardwareIllegalOperationError), "BGM_SetPropertyData: no data");
 		
         BGM_Object& theAudioObject = BGM_LookUpOwnerObject(inObjectID);
 		if(theAudioObject.HasProperty(inObjectID, inClientProcessID, *inAddress))

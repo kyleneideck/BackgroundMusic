@@ -32,6 +32,11 @@
 //  The music player classes written so far use Scripting Bridge to communicate with the music
 //  player apps (see iTunes.h/Spotify.h) but any other way is fine too.
 //
+//  If you're not sure what bundle ID the music player uses, install a debug build of BGMDriver
+//  and play something in the music player. The easiest way is to do
+//      build_and_install.sh -d
+//  BGMDriver will log the bundle ID to system.log when it becomes aware of the music player.
+//
 
 // System Includes
 #import <Foundation/Foundation.h>
