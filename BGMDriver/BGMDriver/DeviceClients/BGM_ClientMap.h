@@ -101,6 +101,10 @@ private:
 public:
     std::vector<BGM_Client>                             GetClientsByPID(pid_t inPID) const;
     
+    // todo: comment
+    // todo: would it be useful at all to have a similar property that returns past clients instead? probably not...
+    CACFArray                                           CopyClientPIDsAndBundleIDs() const;
+    
     // Set the isMusicPlayer flag for each client. (True if the client has the given bundle ID/PID, false otherwise.)
     void                                                UpdateMusicPlayerFlags(pid_t inMusicPlayerPID);
     void                                                UpdateMusicPlayerFlags(CACFString inMusicPlayerBundleID);

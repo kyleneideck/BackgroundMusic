@@ -27,7 +27,7 @@
 #import <Cocoa/Cocoa.h>
 
 
-@interface BGMAppVolumes : NSObject
+@interface BGMAppVolumes : NSObject // todo: rename to BGMAppVolumesMenu 
 
 - (id) initWithMenu:(NSMenu*)menu appVolumeView:(NSView*)view audioDevices:(BGMAudioDeviceManager*)audioDevices;
 

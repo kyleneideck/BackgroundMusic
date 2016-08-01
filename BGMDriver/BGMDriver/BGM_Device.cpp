@@ -290,6 +290,7 @@ bool	BGM_Device::Device_HasProperty(AudioObjectID inObjectID, pid_t inClientPID,
         case kAudioDeviceCustomPropertyMusicPlayerBundleID:
         case kAudioDeviceCustomPropertyDeviceIsRunningSomewhereOtherThanBGMApp:
         case kAudioDeviceCustomPropertyAppVolumes:
+        case kAudioDeviceCustomPropertyClients:
 			theAnswer = true;
 			break;
 			
@@ -342,6 +343,7 @@ bool	BGM_Device::Device_IsPropertySettable(AudioObjectID inObjectID, pid_t inCli
         case kAudioObjectPropertyCustomPropertyInfoList:
         case kAudioDeviceCustomPropertyDeviceAudibleState:
         case kAudioDeviceCustomPropertyDeviceIsRunningSomewhereOtherThanBGMApp:
+        case kAudioDeviceCustomPropertyClients:
 			theAnswer = false;
 			break;
             
@@ -487,7 +489,7 @@ UInt32	BGM_Device::Device_GetPropertyDataSize(AudioObjectID inObjectID, pid_t in
             break;
             
         case kAudioObjectPropertyCustomPropertyInfoList:
-            theAnswer = sizeof(AudioServerPlugInCustomPropertyInfo) * 5;
+            theAnswer = sizeof(AudioServerPlugInCustomPropertyInfo) * 6;
             break;
             
         case kAudioDeviceCustomPropertyDeviceAudibleState:
@@ -507,7 +509,11 @@ UInt32	BGM_Device::Device_GetPropertyDataSize(AudioObjectID inObjectID, pid_t in
             break;
             
         case kAudioDeviceCustomPropertyAppVolumes:
-            theAnswer = sizeof(CFPropertyListRef);
+            theAnswer = sizeof(CFArrayRef);
+            break;
+            
+        case kAudioDeviceCustomPropertyClients:
+            theAnswer = sizeof(CFArrayRef);
             break;
 		
 		default:
@@ -902,7 +908,7 @@ void	BGM_Device::Device_GetPropertyData(AudioObjectID inObjectID, pid_t inClient
 			break;
 
 		case kAudioDevicePropertyPreferredChannelsForStereo:
-			//	This property returns which two channesl to use as left/right for stereo
+			//	This property returns which two channels to use as left/right for stereo
 			//	data by default. Note that the channel numbers are 1-based.
 			ThrowIf(inDataSize < (2 * sizeof(UInt32)), CAException(kAudioHardwareBadPropertySizeError), "BGM_Device::Device_GetPropertyData: not enough space for the return value of kAudioDevicePropertyPreferredChannelsForStereo for the device");
 			((UInt32*)outData)[0] = 1;
@@ -959,9 +965,9 @@ void	BGM_Device::Device_GetPropertyData(AudioObjectID inObjectID, pid_t inClient
             theNumberItemsToFetch = inDataSize / sizeof(AudioServerPlugInCustomPropertyInfo);
             
             //	clamp it to the number of items we have
-            if(theNumberItemsToFetch > 5)
+            if(theNumberItemsToFetch > 6)
             {
-                theNumberItemsToFetch = 5;
+                theNumberItemsToFetch = 6;
             }
             
             if(theNumberItemsToFetch > 0)
@@ -993,6 +999,12 @@ void	BGM_Device::Device_GetPropertyData(AudioObjectID inObjectID, pid_t inClient
                 ((AudioServerPlugInCustomPropertyInfo*)outData)[4].mSelector = kAudioDeviceCustomPropertyDeviceAudibleState;
                 ((AudioServerPlugInCustomPropertyInfo*)outData)[4].mPropertyDataType = kAudioServerPlugInCustomPropertyDataTypeCFPropertyList;
                 ((AudioServerPlugInCustomPropertyInfo*)outData)[4].mQualifierDataType = kAudioServerPlugInCustomPropertyDataTypeNone;
+            }
+            if(theNumberItemsToFetch > 5)
+            {
+                ((AudioServerPlugInCustomPropertyInfo*)outData)[5].mSelector = kAudioDeviceCustomPropertyClients;
+                ((AudioServerPlugInCustomPropertyInfo*)outData)[5].mPropertyDataType = kAudioServerPlugInCustomPropertyDataTypeCFPropertyList;
+                ((AudioServerPlugInCustomPropertyInfo*)outData)[5].mQualifierDataType = kAudioServerPlugInCustomPropertyDataTypeNone;
             }
             outDataSize = theNumberItemsToFetch * sizeof(AudioServerPlugInCustomPropertyInfo);
             break;
@@ -1039,6 +1051,15 @@ void	BGM_Device::Device_GetPropertyData(AudioObjectID inObjectID, pid_t inClient
                 ThrowIf(inDataSize < sizeof(CFArrayRef), CAException(kAudioHardwareBadPropertySizeError), "BGM_Device::Device_GetPropertyData: not enough space for the return value of kAudioDeviceCustomPropertyAppVolumes for the device");
                 CAMutex::Locker theStateLocker(mStateMutex);
                 *reinterpret_cast<CFArrayRef*>(outData) = mClients.CopyClientRelativeVolumesAsAppVolumes().GetCFArray();
+                outDataSize = sizeof(CFArrayRef);
+            }
+            break;
+            
+        case kAudioDeviceCustomPropertyClients:
+            {
+                ThrowIf(inDataSize < sizeof(CFArrayRef), CAException(kAudioHardwareBadPropertySizeError), "BGM_Device::Device_GetPropertyData: not enough space for the return value of kAudioDeviceCustomPropertyClients for the device");
+                CAMutex::Locker theStateLocker(mStateMutex);
+                *reinterpret_cast<CFArrayRef*>(outData) = mClients.CopyClientPIDsAndBundleIDs().GetCFArray();
                 outDataSize = sizeof(CFArrayRef);
             }
             break;

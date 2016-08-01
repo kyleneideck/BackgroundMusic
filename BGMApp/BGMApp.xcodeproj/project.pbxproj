@@ -25,7 +25,6 @@
 		1C1963091BCAF677008A4DF7 /* CAHostTimeBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1963071BCAF677008A4DF7 /* CAHostTimeBase.cpp */; };
 		1C2336DA1BEAB6E7004C1C4E /* BGMMusicPlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C2336D91BEAB6E7004C1C4E /* BGMMusicPlayer.m */; };
 		1C2336DF1BEAE10C004C1C4E /* BGMSpotify.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C2336DE1BEAE10C004C1C4E /* BGMSpotify.m */; };
-		1C3DB4891BE0885A00EC8160 /* BGMAppVolumes.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C3DB4881BE0885A00EC8160 /* BGMAppVolumes.mm */; };
 		1C4699471BD5C0E400F78043 /* BGMiTunes.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C4699461BD5C0E400F78043 /* BGMiTunes.m */; };
 		1C46994E1BD7694C00F78043 /* BGMDeviceControlSync.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C46994C1BD7694C00F78043 /* BGMDeviceControlSync.cpp */; };
 		1CB8B33D1BBA75EF000E2DD1 /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1CB8B33C1BBA75EF000E2DD1 /* AppDelegate.mm */; };
@@ -48,12 +47,15 @@
 		276972911CB16008007A2F7C /* safe_install_dir.sh in Resources */ = {isa = PBXBuildFile; fileRef = 276972901CB16008007A2F7C /* safe_install_dir.sh */; };
 		276972921CB1603E007A2F7C /* safe_install_dir.sh in Resources */ = {isa = PBXBuildFile; fileRef = 276972901CB16008007A2F7C /* safe_install_dir.sh */; };
 		277170161CA24D7C00AB34B4 /* BGMXPCListenerDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 277170151CA24D7C00AB34B4 /* BGMXPCListenerDelegate.m */; };
+		2783ABB71CE36CDB00F11FD4 /* BGMApps.m in Sources */ = {isa = PBXBuildFile; fileRef = 2783ABB61CE36CDB00F11FD4 /* BGMApps.m */; };
+		2783ABB81CE36CDB00F11FD4 /* BGMApps.m in Sources */ = {isa = PBXBuildFile; fileRef = 2783ABB61CE36CDB00F11FD4 /* BGMApps.m */; };
 		278D71E91CABB6FF00899CF9 /* BGMXPCHelperTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 279597401C996E2000A002FB /* BGMXPCHelperTests.m */; };
 		278D71F61CABBC3B00899CF9 /* BGMXPCHelperTests-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 278D71F51CABBC3B00899CF9 /* BGMXPCHelperTests-Info.plist */; };
 		2795973B1C982E4E00A002FB /* BGMXPCListener.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2795973A1C982E4E00A002FB /* BGMXPCListener.mm */; };
 		27D643BE1C9FB84C00737F6E /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 27D643BB1C9FB84C00737F6E /* Info.plist */; };
 		27D643C01C9FB99200737F6E /* BGMXPCHelperService.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D643BA1C9FB84C00737F6E /* BGMXPCHelperService.m */; };
 		27D643C11C9FB99200737F6E /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D643BC1C9FB84C00737F6E /* main.m */; };
+		27DEE37C1D4F8DA300DBFDF1 /* BGMAppVolumes.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27DEE37A1D4F8DA300DBFDF1 /* BGMAppVolumes.mm */; };
 		27F7D4901D2483B100821C4B /* BGMDecibel.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F7D48F1D2483B100821C4B /* BGMDecibel.m */; };
 /* End PBXBuildFile section */
 
@@ -114,8 +116,6 @@
 		1C2336DC1BEAB73F004C1C4E /* BGMMusicPlayer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = BGMMusicPlayer.h; path = "Music Players/BGMMusicPlayer.h"; sourceTree = "<group>"; };
 		1C2336DD1BEAE10C004C1C4E /* BGMSpotify.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGMSpotify.h; path = "Music Players/BGMSpotify.h"; sourceTree = "<group>"; };
 		1C2336DE1BEAE10C004C1C4E /* BGMSpotify.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BGMSpotify.m; path = "Music Players/BGMSpotify.m"; sourceTree = "<group>"; };
-		1C3DB4881BE0885A00EC8160 /* BGMAppVolumes.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = BGMAppVolumes.mm; sourceTree = "<group>"; };
-		1C3DB48A1BE0888500EC8160 /* BGMAppVolumes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BGMAppVolumes.h; sourceTree = "<group>"; };
 		1C4699461BD5C0E400F78043 /* BGMiTunes.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BGMiTunes.m; path = "Music Players/BGMiTunes.m"; sourceTree = "<group>"; };
 		1C46994C1BD7694C00F78043 /* BGMDeviceControlSync.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BGMDeviceControlSync.cpp; sourceTree = "<group>"; };
 		1C46994D1BD7694C00F78043 /* BGMDeviceControlSync.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BGMDeviceControlSync.h; sourceTree = "<group>"; };
@@ -161,6 +161,8 @@
 		2771700F1CA0C83B00AB34B4 /* BGM_Utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGM_Utils.h; path = ../SharedSource/BGM_Utils.h; sourceTree = "<group>"; };
 		277170141CA24D7C00AB34B4 /* BGMXPCListenerDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGMXPCListenerDelegate.h; path = BGMXPCHelper/BGMXPCListenerDelegate.h; sourceTree = SOURCE_ROOT; };
 		277170151CA24D7C00AB34B4 /* BGMXPCListenerDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BGMXPCListenerDelegate.m; path = BGMXPCHelper/BGMXPCListenerDelegate.m; sourceTree = SOURCE_ROOT; };
+		2783ABB51CE36CDB00F11FD4 /* BGMApps.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGMApps.h; path = "App Volumes/BGMApps.h"; sourceTree = "<group>"; };
+		2783ABB61CE36CDB00F11FD4 /* BGMApps.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BGMApps.m; path = "App Volumes/BGMApps.m"; sourceTree = "<group>"; };
 		278D71F11CABB6FF00899CF9 /* BGMXPCHelperTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BGMXPCHelperTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		278D71F51CABBC3B00899CF9 /* BGMXPCHelperTests-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "BGMXPCHelperTests-Info.plist"; sourceTree = "<group>"; };
 		2795970D1C91589B00A002FB /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
@@ -174,6 +176,8 @@
 		27D643BB1C9FB84C00737F6E /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = BGMXPCHelper/Info.plist; sourceTree = SOURCE_ROOT; };
 		27D643BC1C9FB84C00737F6E /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = BGMXPCHelper/main.m; sourceTree = SOURCE_ROOT; };
 		27D643C41C9FBE5600737F6E /* BGM_TestUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGM_TestUtils.h; path = ../SharedSource/BGM_TestUtils.h; sourceTree = "<group>"; };
+		27DEE37A1D4F8DA300DBFDF1 /* BGMAppVolumes.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = BGMAppVolumes.mm; path = "App Volumes/BGMAppVolumes.mm"; sourceTree = "<group>"; };
+		27DEE37B1D4F8DA300DBFDF1 /* BGMAppVolumes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGMAppVolumes.h; path = "App Volumes/BGMAppVolumes.h"; sourceTree = "<group>"; };
 		27F7D48E1D2483B100821C4B /* BGMDecibel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGMDecibel.h; path = "Music Players/BGMDecibel.h"; sourceTree = "<group>"; };
 		27F7D48F1D2483B100821C4B /* BGMDecibel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BGMDecibel.m; path = "Music Players/BGMDecibel.m"; sourceTree = "<group>"; };
 		27F7D4911D2484A300821C4B /* Decibel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Decibel.h; path = "Music Players/Decibel.h"; sourceTree = "<group>"; };
@@ -331,8 +335,7 @@
 			children = (
 				1CB8B33B1BBA75EF000E2DD1 /* AppDelegate.h */,
 				1CB8B33C1BBA75EF000E2DD1 /* AppDelegate.mm */,
-				1C3DB48A1BE0888500EC8160 /* BGMAppVolumes.h */,
-				1C3DB4881BE0885A00EC8160 /* BGMAppVolumes.mm */,
+				2783ABB01CE35C1D00F11FD4 /* App Volumes */,
 				1CED616A1C316E1A002CAFCF /* BGMAudioDeviceManager.h */,
 				1CED616B1C316E1A002CAFCF /* BGMAudioDeviceManager.mm */,
 				1C1465B91BCC49D1003AEFE6 /* BGMAutoPauseMusic.h */,
@@ -425,6 +428,17 @@
 				27D643BB1C9FB84C00737F6E /* Info.plist */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		2783ABB01CE35C1D00F11FD4 /* App Volumes */ = {
+			isa = PBXGroup;
+			children = (
+				27DEE37B1D4F8DA300DBFDF1 /* BGMAppVolumes.h */,
+				27DEE37A1D4F8DA300DBFDF1 /* BGMAppVolumes.mm */,
+				2783ABB51CE36CDB00F11FD4 /* BGMApps.h */,
+				2783ABB61CE36CDB00F11FD4 /* BGMApps.m */,
+			);
+			name = "App Volumes";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -610,14 +624,15 @@
 				1C4699471BD5C0E400F78043 /* BGMiTunes.m in Sources */,
 				1C1962E41BC94E15008A4DF7 /* CARingBuffer.cpp in Sources */,
 				273F10DF1CC3D0B900C1C6DA /* BGMVox.m in Sources */,
+				27DEE37C1D4F8DA300DBFDF1 /* BGMAppVolumes.mm in Sources */,
 				1CC1DF811BE5068A00FB8FE4 /* CACFArray.cpp in Sources */,
+				2783ABB71CE36CDB00F11FD4 /* BGMApps.m in Sources */,
 				1C0BD0A81BF1B029004F4CF5 /* BGMPreferencesMenu.mm in Sources */,
 				1C1962F41BCABFC5008A4DF7 /* CAHALAudioObject.cpp in Sources */,
 				27F7D4901D2483B100821C4B /* BGMDecibel.m in Sources */,
 				1C2336DA1BEAB6E7004C1C4E /* BGMMusicPlayer.m in Sources */,
 				1C1962F61BCABFC5008A4DF7 /* CAHALAudioSystemObject.cpp in Sources */,
 				1CC1DF821BE5068A00FB8FE4 /* CACFDictionary.cpp in Sources */,
-				1C3DB4891BE0885A00EC8160 /* BGMAppVolumes.mm in Sources */,
 				1C0BD0A51BF1A8E6004F4CF5 /* BGMAutoPauseMusicPrefs.mm in Sources */,
 				1C1963061BCAF468008A4DF7 /* CAMutex.cpp in Sources */,
 				1CE7064C1BF1EC0600BFC06D /* BGMOutputDevicePrefs.mm in Sources */,
@@ -646,6 +661,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1CB8B3501BBA75F0000E2DD1 /* BGMAppTests.m in Sources */,
+				2783ABB81CE36CDB00F11FD4 /* BGMApps.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

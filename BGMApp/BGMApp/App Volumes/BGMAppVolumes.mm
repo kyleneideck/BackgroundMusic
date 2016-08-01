@@ -14,7 +14,7 @@
 // along with Background Music. If not, see <http://www.gnu.org/licenses/>.
 
 //
-//  BGMAppVolumes.m
+//  BGMAppVolumes.mm
 //  BGMApp
 //
 //  Copyright © 2016 Kyle Neideck
@@ -25,6 +25,7 @@
 
 // BGM Includes
 #include "BGM_Types.h"
+#import "BGMApps.h"
 
 // PublicUtility Includes
 #include "CACFDictionary.h"
@@ -57,6 +58,10 @@ static float const kSlidersSnapWithin = 5;
                                         forKeyPath:@"runningApplications"
                                            options:NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld
                                            context:nil];
+        
+        // todo: delete this
+        NSArray* clients = (__bridge NSArray*)[audioDevices bgmDevice].GetPropertyData_CFType(kBGMClientsAddress);
+        BGMApps* __unused apps = [[BGMApps alloc] initWithClients:clients];
     }
     
     return self;
@@ -90,9 +95,6 @@ static float const kSlidersSnapWithin = 5;
         // TODO: Would it be better to only show apps that are registered as HAL clients?
         if ([app activationPolicy] != NSApplicationActivationPolicyRegular) continue;
         
-        // Don't show Finder
-        if ([[app bundleIdentifier] isEqualTo:@"com.apple.finder"]) continue;
-        
 #ifndef NS_BLOCK_ASSERTIONS  // If assertions are enabled
         // Count how many apps we should add menu items for so we can check it at the end of the method
         numApps++;
@@ -103,7 +105,7 @@ static float const kSlidersSnapWithin = 5;
         // Look through the menu item's subviews for the ones we want to set up
         for (NSView* subview in [[appVolItem view] subviews]) {
             if ([subview conformsToProtocol:@protocol(BGMAppVolumeSubview)]) {
-                [subview performSelector:@selector(setUpWithApp:context:) withObject:app withObject:self];
+                [(NSView<BGMAppVolumeSubview>*)subview setUpWithApp:app context:self];
             }
         }
         
@@ -150,6 +152,7 @@ static float const kSlidersSnapWithin = 5;
     }
 }
 
+// todo: split this method up so it can have a cleaner (less coupled) signature?
 - (void) setVolumeOfMenuItem:(NSMenuItem*)menuItem fromAppVolumes:(CACFArray&)appVolumes {
     // Set menuItem's volume slider to the volume of the app in appVolumes that menuItem represents
     // Leaves menuItem unchanged if it doesn't match any of the apps in appVolumes
@@ -214,6 +217,7 @@ static float const kSlidersSnapWithin = 5;
     }
 }
 
+// todo: move this into BGMApps. (it's not ui code.) should be able to remove the audioDevices instance var from this class then
 - (void) sendVolumeChangeToBGMDevice:(SInt32)newVolume appProcessID:(pid_t)appProcessID appBundleID:(NSString*)appBundleID {
     CACFDictionary appVolumeChange(true);
     appVolumeChange.AddSInt32(CFSTR(kBGMAppVolumesKey_ProcessID), appProcessID);

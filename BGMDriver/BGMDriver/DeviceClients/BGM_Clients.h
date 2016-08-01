@@ -108,6 +108,8 @@ public:
     // Returns true if any clients' relative volumes were changed.
     bool                                SetClientsRelativeVolumes(const CACFArray inAppVolumes);
     
+    CACFArray                           CopyClientPIDsAndBundleIDs() const { return mClientMap.CopyClientPIDsAndBundleIDs(); }
+    
 private:
     BGM_ClientMap                       mClientMap;
     

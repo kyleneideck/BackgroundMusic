@@ -172,6 +172,29 @@ std::vector<BGM_Client> BGM_ClientMap::GetClientsByPID(pid_t inPID) const
     return theClients;
 }
 
+CACFArray   BGM_ClientMap::CopyClientPIDsAndBundleIDs() const
+{
+    // Since this is a read-only, non-real-time operation we can read from the shadow maps to avoid
+    // locking the main maps.
+    CAMutex::Locker theShadowMapsLocker(mShadowMapsMutex);
+    
+    CACFArray theClientPIDsAndBundleIDs(false);
+    
+    for(auto& theClientEntry : mClientMapShadow)
+    {
+        CACFDictionary theClientDict(false);
+        
+        theClientDict.AddSInt32(CFSTR(kBGMClientsKey_ProcessID), theClientEntry.second.mProcessID);
+        // todo: is this a memory leak? (over retaining mBundleID, cause adding it to the dict also retains it) check for the same bug
+        //       in CopyClientIntoAppVolumesArray if so.
+        theClientDict.AddString(CFSTR(kBGMClientsKey_BundleID), theClientEntry.second.mBundleID.CopyCFString());
+        
+        theClientPIDsAndBundleIDs.AppendDictionary(theClientDict.GetDict());
+    }
+    
+    return theClientPIDsAndBundleIDs;
+}
+
 #pragma mark Music Player
 
 void    BGM_ClientMap::UpdateMusicPlayerFlags(pid_t inMusicPlayerPID)
@@ -213,7 +236,7 @@ void    BGM_ClientMap::UpdateMusicPlayerFlagsInShadowMaps(std::function<bool(BGM
 
 CACFArray   BGM_ClientMap::CopyClientRelativeVolumesAsAppVolumes(CAVolumeCurve inVolumeCurve) const
 {
-    // Since this is a read-only, non-real-time operation, we can read from the shadow maps to avoid
+    // Since this is a read-only, non-real-time operation we can read from the shadow maps to avoid
     // locking the main maps.
     CAMutex::Locker theShadowMapsLocker(mShadowMapsMutex);
     

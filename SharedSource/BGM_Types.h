@@ -56,6 +56,9 @@ enum
 {
     // TODO: Combine the two music player properties
     
+    // Remember to update the values BGM_Device returns for kAudioObjectPropertyCustomPropertyInfoList if you
+    // modify this enum.
+    
     // The process ID of the music player as a CFNumber. Setting this property will also clear the value of
     // kAudioDeviceCustomPropertyMusicPlayerBundleID. We use 0 to mean unset.
     //
@@ -74,13 +77,17 @@ enum
     // A CFBoolean similar to kAudioDevicePropertyDeviceIsRunning except it ignores whether IO is running for
     // BGMApp. This is so BGMApp knows when it can stop doing IO to save CPU.
     kAudioDeviceCustomPropertyDeviceIsRunningSomewhereOtherThanBGMApp = 'runo',
-    // A CFArray of CFDictionaries that each contain an app's pid, bundle ID and volume relative to other
+    // A CFArray of CFDictionaries that each contain an app's PID, bundle ID and volume relative to other
     // running apps. See the dictionary keys below for more info.
     //
     // Getting this property will only return apps with volumes other than the default. Setting this property
     // will add new app volumes or replace existing ones, but there's currently no way to delete an app from
     // the internal collection.
-    kAudioDeviceCustomPropertyAppVolumes                              = 'apvs'
+    kAudioDeviceCustomPropertyAppVolumes                              = 'apvs',
+    // todo: send the client ids as well. maybe combine with kAudioDeviceCustomPropertyAppVolumes
+    // A CFArray with one entry for each client of BGMDevice. Each entry is a CFDictionary that contains the
+    // client's PID and, if it has one, the client's bundle ID. See the dictionary keys below for more info.
+    kAudioDeviceCustomPropertyClients                                 = 'clts'
 };
 
 // The number of silent/audible frames before BGMDriver will change kAudioDeviceCustomPropertyDeviceAudibleState
@@ -104,11 +111,18 @@ enum
 // the midpoint increases the client's volume and a value less than the midpoint decreases it. A volume curve is
 // applied to kBGMAppVolumesKey_RelativeVolume when it's first set and then each of the app's samples are multiplied
 // by it.
-#define kBGMAppVolumesKey_RelativeVolume    "rvol"
-// The app's pid as a CFNumber. May be omitted if kBGMAppVolumesKey_BundleID is present.
-#define kBGMAppVolumesKey_ProcessID         "pid"
+#define kBGMAppVolumesKey_RelativeVolume    "av_rvol"
+// The app's process ID as a CFNumber (which wraps a pid_t). May be omitted if kBGMAppVolumesKey_BundleID is present.
+#define kBGMAppVolumesKey_ProcessID         "av_pid"
 // The app's bundle ID as a CFString. May be omitted if kBGMAppVolumesKey_ProcessID is present.
-#define kBGMAppVolumesKey_BundleID          "bid"
+#define kBGMAppVolumesKey_BundleID          "av_bid"
+
+// kAudioDeviceCustomPropertyClients keys
+//
+// The client's process ID as a CFNumber<pid_t>.
+#define kBGMClientsKey_ProcessID            "c_pid"
+// The client's bundle ID as a CFString. Omitted if the client doesn't have a bundle ID.
+#define kBGMClientsKey_BundleID             "c_bid"
 
 // Volume curve range for app volumes
 #define kAppRelativeVolumeMaxRawValue   100
@@ -146,6 +160,12 @@ static const AudioObjectPropertyAddress kBGMRunningSomewhereOtherThanBGMAppAddre
 
 static const AudioObjectPropertyAddress kBGMAppVolumesAddress = {
     kAudioDeviceCustomPropertyAppVolumes,
+    kAudioObjectPropertyScopeGlobal,
+    kAudioObjectPropertyElementMaster
+};
+
+static const AudioObjectPropertyAddress kBGMClientsAddress = {
+    kAudioDeviceCustomPropertyClients,
     kAudioObjectPropertyScopeGlobal,
     kAudioObjectPropertyElementMaster
 };
