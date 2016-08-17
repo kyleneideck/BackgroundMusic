@@ -2,20 +2,48 @@
 
 # Development Overview
 
-The codebase is split into two projects: BGMDriver, a userspace Core Audio plugin that publishes the virtual audio
-device, and BGMApp, which handles the UI, passing audio from the virtual device to the real output device and a few
-other things. The virtual device is usually referred to as "BGMDevice" in the code. Any code shared between the two
-projects is kept in the `SharedSource` dir.
+The codebase is split into two projects: BGMDriver, a [userspace](https://en.wikipedia.org/wiki/User_space) [Core
+Audio](https://developer.apple.com/library/mac/documentation/MusicAudio/Conceptual/CoreAudioOverview/Introduction/Introduction.html)
+[HAL](https://developer.apple.com/library/mac/documentation/DeviceDrivers/Conceptual/WritingAudioDrivers/AudioOnMacOSX/AudioOnMacOSX.html#//apple_ref/doc/uid/TP30000730-TPXREF104)
+[plugin](https://developer.apple.com/library/prerelease/content/samplecode/AudioDriverExamples/Listings/ReadMe_txt.html)
+that publishes the virtual audio device, and BGMApp, which handles the UI, passing audio from the virtual device to the
+real output device and a few other things. The virtual device is usually referred to as "BGMDevice" in the code.  Any
+code shared between the two projects is kept in the `SharedSource` dir.
+
+## Summary
+
+From the user's perspective, BGMDevice appears as one input device and one output device, both named "Background Music
+Device". They're shown in `System Preferences > Sound` along with the real audio devices.
+
+When you start BGMApp, it sets BGMDevice as your system's default output device so the system (i.e. Core Audio) will
+start sending all<sup id="a1">[1](#f1)</sup> your audio data to BGMDriver. BGMDriver plays that audio on BGMDevice's
+input stream, and the user can record it by selecting "Background Music Device" in QuickTime the same way they'd select
+a microphone.
+
+So that you can still hear the audio, BGMApp starts listening to BGMDevice's input stream and playing the audio out of
+your real output device. (See [BGMPlayThrough](BGMApp/BGMApp/BGMPlayThrough.h)). 
+
+The auto-pausing and per-app volume features rely on the fact that BGMDriver can also see the audio from each program
+(technically each "client") before Core Audio mixes it all together. When you change an app's volume, BGMApp sends the
+new volume to BGMDriver, which applies the app volumes by modifying the apps' audio data directly.
+
+To know when to pause your music player, first BGMApp tells BGMDriver which app you've set as your music player. Then
+when audio is playing BGMDriver tells BGMApp whether it's coming from your music player or another app. If it's from
+another app, BGMApp tells your music player to pause if it's playing as well. When the other program stops playing
+audio, BGMDriver tells BGMApp and BGMApp unpauses your music.
 
 ## Real-time Constraints
 
-One slightly tricky part of this project is the code that runs with real-time constraints. When the HAL calls certain
-functions of ours--the IO functions in BGMDriver and the IOProcs in BGMApp--they have to return within a certain amount
-of time, every time. So they can't do things that aren't guaranteed to be fast, even if they almost always are.
+One slightly tricky part of this project is the code that runs with real-time constraints. When [the
+HAL](https://developer.apple.com/library/prerelease/content/documentation/DeviceDrivers/Conceptual/WritingAudioDrivers/AudioOnMacOSX/AudioOnMacOSX.html#//apple_ref/doc/uid/TP30000730-TPXREF104)
+calls certain functions of ours--the IO functions in BGMDriver and the IOProcs in BGMApp--they have to return within a
+certain amount of time, every time. So they can't do things that aren't guaranteed to be fast, even if they almost
+always are.
 
-For example, they can't dynamically allocate memory and they can't use an algorithm with a fast enough average-case run
-time if its worst-case is too slow.  In the `BGM_Device` class, they can't lock the state mutex because a non-real-time
-function might be holding it and there's no guarantee it'll be released in time.
+They can't dynamically allocate memory because OS X doesn't specify a maximum time for that to take. They also can't use
+algorithms with a fast enough average-case run time if their worst-case is too slow.  In the `BGM_Device` class, they
+can't lock the state mutex because a non-real-time function might be holding it and there's no guarantee it'll be
+released in time.
 
 If you're interested, have a look at [Real-time Audio Programming 101: Time Waits for
 Nothing](http://www.rossbencina.com/code/real-time-audio-programming-101-time-waits-for-nothing).
@@ -32,9 +60,11 @@ thing--[Soundflower](https://github.com/mattingalls/Soundflower) is probably the
 all of those drivers were either written as kernel extensions or using AudioHardwarePlugIn, which is now deprecated
 because of [issues with the OS X sandbox](https://lists.apple.com/archives/coreaudio-api/2013/Aug/msg00030.html). The
 Apple sample code we started from gives us most of the same functionality and uses the latest Core Audio APIs. The other
-projects are still definitely worth reading, though. There's a list in the README with a few of them.
+projects are still definitely worth reading, though. There's a list in [the README](README.md) with a few of them.
 
-BGMDriver is an AudioServerPlugin (see `CoreAudio/AudioServerPlugIn.h`) based on [Apple's SimpleAudio
+BGMDriver is an AudioServerPlugin (see
+[CoreAudio/AudioServerPlugIn.h](https://github.com/phracker/MacOSX-SDKs/blob/master/MacOSX10.11.sdk/System/Library/Frameworks/CoreAudio.framework/Versions/A/Headers/AudioServerPlugIn.h))
+based on [Apple's SimpleAudio
 example](https://developer.apple.com/library/mac/samplecode/AudioDriverExamples/Introduction/Intro.html).  An
 AudioServerPlugIn is a Core Audio driver that runs in userspace and is "hosted" by the HAL, which is nice because the
 HAL handles a lot of things for us. Only running in userspace means our bugs shouldn't be able to cause a kernel panic
@@ -47,7 +77,7 @@ start. Those functions are our implementation of the interface defined by `Audio
 boilerplate and error handling code, and largely unchanged from the sample code. They call `BGM_PlugIn` or `BGM_Device`
 (and probably other subclasses of `BGM_Object` in future) to do the actual work.
 
-`BGM_Device` is by far the largest class and should really be split up, but most of its code is very straightforward.
+`BGM_Device` is by far the largest class, and should really be split up, but most of its code is very straightforward.
 The simple parts mostly handle audio object properties, which are often static. An audio object is a plugin, device,
 stream, control (e.g. volume), etc. and is part of the HAL's object model. Each object is identified by an
 `AudioObjectID`. When the HAL asks us for the value of a property (or the size of the value, whether the value can be
@@ -62,7 +92,10 @@ things like that.
 
 BGMDriver's IO functions have to be real-time safe, which means any functions they call do as well. Some other functions
 need to be real-time safe as well because they access data shared with the IO functions and have to do so on a real-time
-thread to avoid [priority inversion](https://en.wikipedia.org/wiki/Priority_inversion).
+thread to avoid [priority inversion](https://en.wikipedia.org/wiki/Priority_inversion). Those functions are usually
+called using [BGM_TaskQueue](BGMDriver/BGMDriver/BGM_TaskQueue.h), which can dispatch calls to a real-time worker
+thread. BGM_TaskQueue can also be used from a real-time thread to asynchronously dispatch calls to functions that aren't
+real-time safe.
 
 ### Building and Debugging
 
@@ -123,15 +156,14 @@ default on exit.
 There's a small amount of state data persisted by BGMApp itself. I think currently it's just whether "Auto-pause iTunes"
 is checked. Most state (app volumes, which music player to pause, etc.) is stored by BGMDriver.
 
-BGMApp communicates with BGMDriver through HAL notifications. That is, except for the audio data, which is sent through
-BGMDevice's output stream. For example, when an app other than the music player starts playing audio, BGMDriver sends
-out a notification saying that BGMDevice's `kAudioDeviceCustomPropertyDeviceAudibleState` property has changed. BGMApp
-receives the notification from the HAL and decides whether it should pause the music player.
+BGMApp mostly communicates with BGMDriver through HAL notifications. In some special cases we use XPC instead. I think
+the only communication that doesn't cover is the audio data, which is sent through BGMDevice's output stream.
+
+For example, when an app other than the music player starts playing audio, BGMDriver sends out a notification saying
+that BGMDevice's `kAudioDeviceCustomPropertyDeviceAudibleState` property has changed.  BGMApp receives the notification
+from the HAL and decides whether it should pause the music player.
 
 Our custom notifications are defined/documented in `BGM_Types.h`, which is shared between the two projects.
-
-BGMApp and BGMDriver could also communicate through XPC or shared memory (though I haven't tried the latter) but so far
-notifications seem to be all we need.
 
 BGMApp also keeps the output device in sync with BGMDevice. For example, since BGMDevice is set as the default device,
 when the user changes their system volume only BGMDevice's volume will change. So BGMApp listens for changes to
@@ -140,6 +172,16 @@ BGMDevice's volume and sets the output device's volume to match.
 The only code in BGMApp that has to be real-time safe is in `BGMPlayThrough`'s IOProcs, `InputDeviceIOProc` and
 `OutputDeviceIOProc`, which don't do very much. The most complicated part of BGMApp is probably pausing/reducing IO when
 no other processes are playing audio, which is also handled in `BGMPlayThrough`.
+
+### BGMXPCHelper
+
+From [main.m](BGMApp/BGMXPCHelper/main.m):
+
+>BGMXPCHelper passes XPC messages between BGMDriver and BGMApp. So far it's only used for synchronization while starting
+>IO.
+
+>BGMApp and BGMDriver usually communicate by changing device properties and listening for notifications about those
+>changes, which the HAL sends. We use XPC, or plan to use it, for the few cases that notifications don't suit.
 
 ### Building
 
@@ -152,5 +194,11 @@ open "BGMApp/build/Debug/Background Music.app"
 To test with Address Sanitizer, you might have to set the environment var `ASAN_OPTIONS=detect_odr_violation=0` to work
 around [Issue #647](https://github.com/google/sanitizers/issues/647). (In Xcode, go `Product` > `Scheme` > `Edit
 Scheme...`, select the Background Music scheme, and add the environment var in Run > Arguments.)
+
+----
+
+<b id="f1">[1]</b> All, unless you're playing audio through a program that's set to always use a specific device, or one
+that doesn't switch to the new default device right away. The latter would usually be a bug in that program and I doubt
+we could do anything about it. [↩](#a1)
 
 
