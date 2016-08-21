@@ -249,6 +249,7 @@ OSStatus    BGMPlayThrough::Start()
         CAMemoryBarrier();
         
         // Start our IOProcs
+        Assert(mInputDeviceIOProcID != NULL && mOutputDeviceIOProcID != NULL, "BGMPlayThrough::Start: Null IO proc ID");
         mInputDevice.StartIOProc(mInputDeviceIOProcID);
         // mOutputDevice.SetIOBufferSize(512);
         mOutputDevice.StartIOProc(mOutputDeviceIOProcID);
@@ -538,6 +539,7 @@ OSStatus    BGMPlayThrough::InputDeviceIOProc(AudioObjectID           inDevice,
     // Stop this IOProc if the main thread has told us to
     if(refCon->mInputDeviceIOProcShouldStop)
     {
+        Assert(refCon->mInputDeviceIOProcID != NULL, "BGMPlayThrough::InputDeviceIOProc: !mInputDeviceIOProcID");
         refCon->mInputDevice.StopIOProc(refCon->mInputDeviceIOProcID);
         CAMemoryBarrier();
         refCon->mInputDeviceIOProcShouldStop = false;
@@ -580,6 +582,7 @@ OSStatus    BGMPlayThrough::OutputDeviceIOProc(AudioObjectID           inDevice,
     // Stop this IOProc if the main thread has told us to
     if(refCon->mOutputDeviceIOProcShouldStop)
     {
+        Assert(refCon->mOutputDeviceIOProcID != NULL, "BGMPlayThrough::OutputDeviceIOProc: !mOutputDeviceIOProcID");
         refCon->mOutputDevice.StopIOProc(refCon->mOutputDeviceIOProcID);
         CAMemoryBarrier();
         refCon->mOutputDeviceIOProcShouldStop = false;

@@ -116,8 +116,8 @@ private:
 private:
     CARingBuffer        mBuffer;
     
-    AudioDeviceIOProcID mInputDeviceIOProcID;
-    AudioDeviceIOProcID mOutputDeviceIOProcID;
+    AudioDeviceIOProcID __nullable mInputDeviceIOProcID;
+    AudioDeviceIOProcID __nullable mOutputDeviceIOProcID;
     
     CAHALAudioDevice    mInputDevice { kAudioDeviceUnknown };
     CAHALAudioDevice    mOutputDevice { kAudioDeviceUnknown };

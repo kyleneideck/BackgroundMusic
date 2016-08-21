@@ -246,7 +246,8 @@ static float const kSlidersSnapWithin = 5;
 - (void) setUpWithApp:(NSRunningApplication*)app context:(BGMAppVolumes*)ctx {
     #pragma unused (ctx)
     
-    [self setStringValue:[app localizedName]];
+    NSString* name = app.localizedName ? (NSString*)app.localizedName : @"";
+    [self setStringValue:name];
 }
 
 @end

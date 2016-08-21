@@ -107,7 +107,11 @@ static BGMMusicPlayer* sSelectedMusicPlayer;
     return self;
 }
 
+#if __MAC_OS_X_VERSION_MAX_ALLOWED >= 101200
+- (__nullable id) eventDidFail:(const AppleEvent*)event withError:(NSError*)error {
+#else
 - (id) eventDidFail:(const AppleEvent*)event withError:(NSError*)error {
+#endif
     // SBApplicationDelegate method. So far, this just logs the error.
     
 #if DEBUG

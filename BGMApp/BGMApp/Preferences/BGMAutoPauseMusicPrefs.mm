@@ -249,7 +249,8 @@ id<NSObject> didLaunchToken, didTerminateToken;
         // the colours from the built-in NSColorLists.
         //
         // TODO: Is it possible to make the tick mark grey as well?
-        BOOL darkMode = [@"Dark" isEqualToString:[[NSUserDefaults standardUserDefaults] stringForKey:@"AppleInterfaceStyle"]];
+        NSString* __nullable appleInterfaceStyle = [[NSUserDefaults standardUserDefaults] stringForKey:@"AppleInterfaceStyle"];
+        BOOL darkMode = [appleInterfaceStyle isEqualToString:@"Dark"];
         NSDictionary* attributes = @{ NSFontAttributeName: [NSFont menuBarFontOfSize:0],  // Default font size
                                       NSForegroundColorAttributeName: [NSColor colorWithHue:0
                                                                                  saturation:0

@@ -34,8 +34,8 @@
 
 #pragma clang assume_nonnull begin
 
-static NSXPCListenerEndpoint* sBGMAppEndpoint = nil;
-static NSXPCConnection* sBGMAppConnection = nil;
+static NSXPCListenerEndpoint* __nullable sBGMAppEndpoint = nil;
+static NSXPCConnection* __nullable sBGMAppConnection = nil;
 
 @implementation BGMXPCHelperService {
     NSXPCConnection* connection;
@@ -73,7 +73,7 @@ static NSXPCConnection* sBGMAppConnection = nil;
     if (!sBGMAppConnection && sBGMAppEndpoint) {
         // Create a new connection to BGMApp from the endpoint
         @synchronized(self) {
-            sBGMAppConnection = [[NSXPCConnection alloc] initWithListenerEndpoint:sBGMAppEndpoint];
+            sBGMAppConnection = [[NSXPCConnection alloc] initWithListenerEndpoint:(NSXPCListenerEndpoint* __nonnull)sBGMAppEndpoint];
             NSAssert(sBGMAppConnection, @"NSXPCConnection::initWithListenerEndpoint returned nil");
             
             [sBGMAppConnection setRemoteObjectInterface:[NSXPCInterface interfaceWithProtocol:@protocol(BGMAppXPCProtocol)]];
