@@ -1,20 +1,34 @@
 language: objective-c
-os: osx
-osx_image: xcode7.3
-xcode_sdk: macosx10.11
-sudo: required
+matrix:
+  include:
+    - os: osx
+      osx_image: xcode8
+      xcode_sdk: macosx10.11
+      sudo: required
+    - os: osx
+      osx_image: xcode7.3
+      xcode_sdk: macosx10.11
+      sudo: required
+    - os: osx
+      osx_image: xcode7.1
+      xcode_sdk: macosx10.10
+      sudo: required
 branches:
   only:
     - master
 install:
+# Install Apple's NullAudio device. Travis' VMs don't have any audio devices installed.
   - sudo xcodebuild -project BGMApp/BGMAppTests/NullAudio/AudioDriverExamples.xcodeproj -target NullAudio DSTROOT="/" install
   - sudo launchctl kickstart -kp system/com.apple.audio.coreaudiod || sudo killall coreaudiod
 script:
   - yes | ./build_and_install.sh
   - cat build_and_install.log
   - find */build/Release/*/ -type f -exec md5 {} \;
+# Log the installed audio devices...
   - system_profiler SPAudioDataType
+# ...and their IDs.
   - say -a '?'
+# Close BGMApp (which the install script opened).
   - osascript -e 'tell application "Background Music" to quit'
   - xcodebuild -workspace BGM.xcworkspace -scheme 'Background Music Device' test
   - xcodebuild -workspace BGM.xcworkspace -scheme 'Background Music' test
