@@ -2105,15 +2105,15 @@ void	BGM_Device::ApplyClientRelativeVolume(UInt32 inClientID, UInt32 inIOBufferF
 
 bool	BGM_Device::BufferIsAudible(UInt32 inIOBufferFrameSize, const void* inBuffer)
 {
-    bool audible = false;
-    
     // Check each frame to see if any are audible
     for(UInt32 i = 0; i < inIOBufferFrameSize * 2; i++)
     {
-        audible = audible || (0. != reinterpret_cast<const Float32*>(inBuffer)[i]);
+        if (0. != reinterpret_cast<const Float32*>(inBuffer)[i]) {
+            return true;
+        }
     }
     
-    return audible;
+    return false;
 }
 
 void	BGM_Device::UpdateAudibleStateSampleTimes_PreMix(UInt32 inClientID, UInt32 inIOBufferFrameSize, Float64 inOutputSampleTime, const void* inBuffer)
