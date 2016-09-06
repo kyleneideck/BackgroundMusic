@@ -427,6 +427,15 @@ echo "[1/3] Installing the virtual audio device $(bold_face ${DRIVER_DIR}) to" \
 
 # Disable the -e shell option and error trap for build commands so we can handle errors differently.
 (set +e; trap - ERR
+    # Build Apple's PublicUtility classes as a static library.
+    sudo "${XCODEBUILD}" -project BGMDriver/BGMDriver.xcodeproj \
+                         -target "PublicUtility" \
+                         -configuration ${CONFIGURATION} \
+                         RUN_CLANG_STATIC_ANALYZER=0 \
+                         ${CLEAN} build >> ${LOG_FILE} 2>&1) &
+
+(set +e; trap - ERR
+    # Build and install BGMDriver
     sudo "${XCODEBUILD}" -project BGMDriver/BGMDriver.xcodeproj \
                          -target "Background Music Device" \
                          -configuration ${CONFIGURATION} \

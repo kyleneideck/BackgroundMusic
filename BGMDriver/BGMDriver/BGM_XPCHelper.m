@@ -98,7 +98,7 @@ UInt64 WaitForBGMAppToStartOutputDevice()
         DebugMsg("BGM_XPCHelper::WaitForBGMAppToStartOutputDevice: Got reply from BGMXPCHelper: \"%s\"",
                  [[reply localizedDescription] UTF8String]);
         
-        theAnswer = [reply code];
+        theAnswer = (UInt64)[reply code];
         
         // We only need the connection for one call, which was successful, so the losing the connection is no longer a problem.
         theConnection.interruptionHandler = nil;

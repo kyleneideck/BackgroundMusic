@@ -39,7 +39,10 @@
 #include "CACFArray.h"
 #include "CACFString.h"
 #include "CADebugMacros.h"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wsign-conversion"
 #include "CAAtomic.h"
+#pragma clang diagnostic pop
 
 // System Includes
 #include <mach/mach_time.h>
@@ -2273,7 +2276,7 @@ UInt32	BGM_Device::_HW_GetRingBufferFrameSize() const
     return (mWrappedAudioEngine != NULL) ? mWrappedAudioEngine->GetSampleBufferFrameSize() : 0;
 }
 
-SInt32	BGM_Device::_HW_GetVolumeControlValue(int inObjectID) const
+SInt32	BGM_Device::_HW_GetVolumeControlValue(AudioObjectID inObjectID) const
 {
     if(mWrappedAudioEngine != NULL)
     {
@@ -2291,7 +2294,7 @@ SInt32	BGM_Device::_HW_GetVolumeControlValue(int inObjectID) const
     Throw(CAException(kAudioHardwareBadObjectError));
 }
 
-kern_return_t	BGM_Device::_HW_SetVolumeControlValue(int inObjectID, SInt32 inNewControlValue)
+kern_return_t	BGM_Device::_HW_SetVolumeControlValue(AudioObjectID inObjectID, SInt32 inNewControlValue)
 {
     kern_return_t theError = 0;
     

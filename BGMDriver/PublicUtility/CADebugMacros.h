@@ -540,9 +540,10 @@ void	LogWarning(const char *fmt, ...);		// writes to syslog (and stderr if debug
 				Throw(inException);														\
 			}
 
+// BGM edit: Changed "unsigned int" to "int" to silence -Wsign-conversion.
 #define	ThrowIfKernelError(inKernelError, inException, inMessage)						\
 			{																			\
-				unsigned int __Err = (inKernelError);									\
+				int __Err = (inKernelError);                                            \
 				if(__Err != 0)															\
 				{																		\
 					Throw(inException);													\

@@ -25,7 +25,10 @@
 
 // PublicUtility Includes
 #include "CAPThread.h"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wsign-conversion"
 #include "CAAtomicStack.h"
+#pragma clang diagnostic pop
 
 // STL Includes
 #include <functional>

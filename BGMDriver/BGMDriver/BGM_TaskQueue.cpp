@@ -34,7 +34,10 @@
 // PublicUtility Includes
 #include "CAException.h"
 #include "CADebugMacros.h"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wsign-conversion"
 #include "CAAtomic.h"
+#pragma clang diagnostic pop
 
 // System Includes
 #include <mach/mach_init.h>

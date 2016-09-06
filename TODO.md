@@ -94,4 +94,7 @@ There are also lots of other TODOs commented around the code.
   [#64](https://github.com/kyleneideck/BackgroundMusic/issues/64), BGMDriver failed to compile and the error suggests it
   was a case-sensitivity problem. That should be fixed now, but I haven't looked for any runtime bugs.
 
+- BGMApp and BGMXPCHelper should be sandboxed. (BGMDriver already is because it runs in the `coreaudiod` system
+  process.)
+
 
