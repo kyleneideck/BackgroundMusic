@@ -74,14 +74,18 @@ private:
                                         BGM_Task(BGM_TaskID inTaskID = kBGMTaskUninitialized, bool inIsSync = false, UInt64 inArg1 = 0, UInt64 inArg2 = 0) : mNext(NULL), mTaskID(inTaskID), mIsSync(inIsSync), mArg1(inArg1), mArg2(inArg2) { };
         
         BGM_TaskID                      GetTaskID() { return mTaskID; }
-        UInt64                          GetArg1() { return mArg1; }
-        UInt64                          GetArg2() { return mArg2; }
-        UInt64                          GetReturnValue() { return mReturnValue; }
-        void                            SetReturnValue(UInt64 inReturnValue) { mReturnValue = inReturnValue; }
-        bool                            IsComplete() { return mIsComplete; }
-        void                            MarkCompleted() { mIsComplete = true; }
+        
         // True if the thread that queued this task is blocking until the task is completed
         bool                            IsSync() { return mIsSync; }
+        
+        UInt64                          GetArg1() { return mArg1; }
+        UInt64                          GetArg2() { return mArg2; }
+        
+        UInt64                          GetReturnValue() { return mReturnValue; }
+        void                            SetReturnValue(UInt64 inReturnValue) { mReturnValue = inReturnValue; }
+        
+        bool                            IsComplete() { return mIsComplete; }
+        void                            MarkCompleted() { mIsComplete = true; }
         
         // Used by TAtomicStack
         BGM_Task* __nullable &          next() { return mNext; }
@@ -89,11 +93,11 @@ private:
         
     private:
         BGM_TaskID                      mTaskID;
+        bool                            mIsSync;
         UInt64                          mArg1;
         UInt64                          mArg2;
         UInt64                          mReturnValue = INT64_MAX;
         bool                            mIsComplete = false;
-        bool                            mIsSync;
     };
     
 public:

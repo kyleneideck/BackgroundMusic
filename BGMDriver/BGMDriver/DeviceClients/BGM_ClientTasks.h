@@ -42,7 +42,6 @@ class BGM_ClientTasks
     friend class BGM_TaskQueue;
     
 private:
-    
     static bool                            StartIONonRT(BGM_Clients* inClients, UInt32 inClientID) { return inClients->StartIONonRT(inClientID); }
     static bool                            StopIONonRT(BGM_Clients* inClients, UInt32 inClientID) { return inClients->StopIONonRT(inClientID); }
     

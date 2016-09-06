@@ -172,7 +172,7 @@ private:
     CAMutex                     mStateMutex;
     CAMutex						mIOMutex;
     
-    UInt64						mSampleRateShadow;  // Currently unused
+    UInt64 __unused				mSampleRateShadow;  // Currently unused.
     const Float64               kSampleRateDefault = 44100.0;
     // Before we can change sample rate, the host has to stop the device. The new sample rate is stored here while it does.
     Float64                     mPendingSampleRate;

@@ -18,6 +18,7 @@
 //  BGMDriver
 //
 //  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016 Josh Junon
 //  Portions copyright (C) 2013 Apple Inc. All Rights Reserved.
 //
 //  Based largely on SA_Device.cpp from Apple's SimpleAudioDriver Plug-In sample code. Also uses a few sections from Apple's
@@ -79,12 +80,12 @@ BGM_Device::BGM_Device()
 	mStateMutex("Device State"),
 	mIOMutex("Device IO"),
 	mSampleRateShadow(0),
+    mWrappedAudioEngine(NULL),
+    mClients(&mTaskQueue),
+	mInputStreamIsActive(true),
+    mOutputStreamIsActive(true),
     mDeviceAudibleState(kBGMDeviceIsSilent),
     mAudibleStateSampleTimes({0, 0, 0, 0}),
-    mClients(&mTaskQueue),
-    mWrappedAudioEngine(NULL),
-	mInputStreamIsActive(true),
-	mOutputStreamIsActive(true),
 	//mInputMasterVolumeControlRawValueShadow(kDefaultMinRawVolumeValue),
 	mOutputMasterVolumeControlRawValueShadow(kDefaultMinRawVolumeValue),
     mOutputMasterMinRawVolumeShadow(kDefaultMinRawVolumeValue),
