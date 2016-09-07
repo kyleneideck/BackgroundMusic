@@ -90,9 +90,6 @@ static float const kSlidersSnapWithin = 5;
         // TODO: Would it be better to only show apps that are registered as HAL clients?
         if ([app activationPolicy] != NSApplicationActivationPolicyRegular) continue;
         
-        // Don't show Finder
-        if ([[app bundleIdentifier] isEqualTo:@"com.apple.finder"]) continue;
-        
 #ifndef NS_BLOCK_ASSERTIONS  // If assertions are enabled
         // Count how many apps we should add menu items for so we can check it at the end of the method
         numApps++;
