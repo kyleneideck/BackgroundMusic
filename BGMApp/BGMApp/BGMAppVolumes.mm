@@ -77,7 +77,7 @@ static float const kSlidersSnapWithin = 5;
     
     // Create a blank menu item to copy as a template
     NSMenuItem* blankItem = [[NSMenuItem alloc] initWithTitle:@"" action:nil keyEquivalent:@""];
-    [blankItem setView:appVolumeView];
+    blankItem.view = appVolumeView;
     
     // Get the app volumes currently set on the device
     CACFArray appVolumesOnDevice((CFArrayRef)[audioDevices bgmDevice].GetPropertyData_CFType(kBGMAppVolumesAddress), false);
@@ -88,7 +88,7 @@ static float const kSlidersSnapWithin = 5;
     for (NSRunningApplication* app in apps) {
         // Only show apps that appear in the dock (at first)
         // TODO: Would it be better to only show apps that are registered as HAL clients?
-        if ([app activationPolicy] != NSApplicationActivationPolicyRegular) continue;
+        if (app.activationPolicy != NSApplicationActivationPolicyRegular) continue;
         
 #ifndef NS_BLOCK_ASSERTIONS  // If assertions are enabled
         // Count how many apps we should add menu items for so we can check it at the end of the method
@@ -98,14 +98,14 @@ static float const kSlidersSnapWithin = 5;
         NSMenuItem* appVolItem = [blankItem copy];
         
         // Look through the menu item's subviews for the ones we want to set up
-        for (NSView* subview in [[appVolItem view] subviews]) {
+        for (NSView* subview in appVolItem.view.subviews) {
             if ([subview conformsToProtocol:@protocol(BGMAppVolumeSubview)]) {
                 [subview performSelector:@selector(setUpWithApp:context:) withObject:app withObject:self];
             }
         }
         
         // Store the NSRunningApplication object with the menu item so when the app closes we can find the item to remove it
-        [appVolItem setRepresentedObject:app];
+        appVolItem.representedObject = app;
         
         // Set the slider to the volume for this app if we got one from the driver
         [self setVolumeOfMenuItem:appVolItem fromAppVolumes:appVolumesOnDevice];
@@ -135,7 +135,7 @@ static float const kSlidersSnapWithin = 5;
         NSMenuItem* item = [bgmMenu itemAtIndex:i];
         
         for (NSRunningApplication* appToBeRemoved in apps) {
-            NSRunningApplication* itemApp = [item representedObject];
+            NSRunningApplication* itemApp = item.representedObject;
             
             if ([itemApp isEqual:appToBeRemoved]) {
                 [bgmMenu removeItem:item];
@@ -150,7 +150,7 @@ static float const kSlidersSnapWithin = 5;
 - (void) setVolumeOfMenuItem:(NSMenuItem*)menuItem fromAppVolumes:(CACFArray&)appVolumes {
     // Set menuItem's volume slider to the volume of the app in appVolumes that menuItem represents
     // Leaves menuItem unchanged if it doesn't match any of the apps in appVolumes
-    NSRunningApplication* representedApp = [menuItem representedObject];
+    NSRunningApplication* representedApp = menuItem.representedObject;
     
     for (UInt32 i = 0; i < appVolumes.GetNumberItems(); i++) {
         CACFDictionary appVolume(false);
@@ -164,13 +164,13 @@ static float const kSlidersSnapWithin = 5;
         pid_t pid;
         appVolume.GetSInt32(CFSTR(kBGMAppVolumesKey_ProcessID), pid);
         
-        if ([representedApp processIdentifier] == pid ||
-            [[representedApp bundleIdentifier] isEqualToString:(__bridge NSString*)bundleID.GetCFString()]) {
+        if ((representedApp.processIdentifier == pid) ||
+            [representedApp.bundleIdentifier isEqualToString:(__bridge NSString*)bundleID.GetCFString()]) {
             CFTypeRef relativeVolume;
             appVolume.GetCFType(CFSTR(kBGMAppVolumesKey_RelativeVolume), relativeVolume);
             
             // Update the slider
-            for (NSView* subview in [[menuItem view] subviews]) {
+            for (NSView* subview in menuItem.view.subviews) {
                 if ([subview respondsToSelector:@selector(setRelativeVolume:)]) {
                     [subview performSelector:@selector(setRelativeVolume:) withObject:(__bridge NSNumber*)relativeVolume];
                 }
@@ -233,7 +233,7 @@ static float const kSlidersSnapWithin = 5;
 - (void) setUpWithApp:(NSRunningApplication*)app context:(BGMAppVolumes*)ctx {
     #pragma unused (ctx)
     
-    [self setImage:[app icon]];
+    self.image = app.icon;
 }
 
 @end
@@ -244,7 +244,7 @@ static float const kSlidersSnapWithin = 5;
     #pragma unused (ctx)
     
     NSString* name = app.localizedName ? (NSString*)app.localizedName : @"";
-    [self setStringValue:name];
+    self.stringValue = name;
 }
 
 @end
@@ -259,37 +259,37 @@ static float const kSlidersSnapWithin = 5;
 - (void) setUpWithApp:(NSRunningApplication*)app context:(BGMAppVolumes*)ctx {
     context = ctx;
     
-    [self setTarget:self];
-    [self setAction:@selector(appVolumeChanged)];
+    self.target = self;
+    self.action = @selector(appVolumeChanged);
     
-    appProcessID = [app processIdentifier];
-    appBundleID = [app bundleIdentifier];
+    appProcessID = app.processIdentifier;
+    appBundleID = app.bundleIdentifier;
     
-    [self setMaxValue:kAppRelativeVolumeMaxRawValue];
-    [self setMinValue:kAppRelativeVolumeMinRawValue];
+    self.maxValue = kAppRelativeVolumeMaxRawValue;
+    self.minValue = kAppRelativeVolumeMinRawValue;
 }
 
 - (void) snap {
     // Snap to the 50% point
-    float midPoint = static_cast<float>(([self maxValue] - [self minValue]) / 2);
-    if ([self floatValue] > (midPoint - kSlidersSnapWithin) && [self floatValue] < (midPoint + kSlidersSnapWithin)) {
-        [self setFloatValue:midPoint];
+    float midPoint = static_cast<float>((self.maxValue - self.minValue) / 2);
+    if (self.floatValue > (midPoint - kSlidersSnapWithin) && self.floatValue < (midPoint + kSlidersSnapWithin)) {
+        self.floatValue = midPoint;
     }
 }
 
 - (void) setRelativeVolume:(NSNumber*)relativeVolume {
-    [self setIntValue:[relativeVolume intValue]];
+    self.intValue = relativeVolume.intValue;
     [self snap];
 }
 
 - (void) appVolumeChanged {
     // TODO: This (sending updates to the driver) should probably be rate-limited. It uses a fair bit of CPU for me.
     
-    DebugMsg("BGMAppVolumes::appVolumeChanged: App volume for %s changed to %d", [appBundleID UTF8String], [self intValue]);
+    DebugMsg("BGMAppVolumes::appVolumeChanged: App volume for %s changed to %d", appBundleID.UTF8String, self.intValue);
     
     [self snap];
     
-    [context sendVolumeChangeToBGMDevice:[self intValue] appProcessID:appProcessID appBundleID:appBundleID];
+    [context sendVolumeChangeToBGMDevice:self.intValue appProcessID:appProcessID appBundleID:appBundleID];
 }
 
 @end
