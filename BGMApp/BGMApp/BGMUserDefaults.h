@@ -14,31 +14,31 @@
 // along with Background Music. If not, see <http://www.gnu.org/licenses/>.
 
 //
-//  BGMAutoPauseMusic.h
+//  BGMUserDefaults.h
 //  BGMApp
 //
 //  Copyright © 2016 Kyle Neideck
 //
-//  When enabled, BGMAutoPauseMusic listens for notifications from BGMDevice to tell when music is playing and
-//  pauses the music player if other audio starts.
+//  A simple wrapper around our use of NSUserDefaults.
 //
 
-// Local Includes
-#import "BGMAudioDeviceManager.h"
-#import "BGMMusicPlayers.h"
-
-// System Includes
-#import <Foundation/Foundation.h>
+// System includes
+#import <Cocoa/Cocoa.h>
 
 
 #pragma clang assume_nonnull begin
 
-@interface BGMAutoPauseMusic : NSObject
+@interface BGMUserDefaults : NSObject
 
-- (id) initWithAudioDevices:(BGMAudioDeviceManager*)inAudioDevices musicPlayers:(BGMMusicPlayers*)inMusicPlayers;
+// Register the settings defaults. These are the preferences/state that only apply to BGMApp. The others are
+// persisted on BGMDriver.
+- (void) registerDefaults;
 
-- (void) enable;
-- (void) disable;
+// The musicPlayerID (see BGMMusicPlayer.h), as a string, of the music player selected by the user. Must be either
+// null or a string that can be parsed by NSUUID.
+@property NSString* __nullable selectedMusicPlayerID;
+
+@property BOOL autoPauseMusicEnabled;
 
 @end
 

@@ -19,18 +19,21 @@
 //
 //  Copyright © 2016 Kyle Neideck
 //
-//  The base class and protocol for music player apps. Also holds the state of the currently
-//  selected music player.
+//  The base classes and protocol for objects that represent a music player app.
 //
-//  To add support for a music player, create a subclass of BGMMusicPlayerBase that implements
-//  BGMMusicPlayerProtocol. BGMSpotify will probably be the most useful example.
+//  To add support for a music player, create a class that implements the BGMMusicPlayer protocol
+//  and add it to initWithAudioDevices in BGMMusicPlayers.mm.
 //
-//  Include the BGM_MUSIC_PLAYER_DEFAULT_LOAD_METHOD macro somewhere in the @implementation block.
-//  You might also want to override the icon method if the default implementation from
-//  BGMMusicPlayerBase doesn't work.
+//  You'll probably want to subclass BGMMusicPlayerBase and, if the music player supports
+//  AppleScript, use BGMScriptingBridge. Your class might need to override the icon method if the
+//  default implementation from BGMMusicPlayerBase doesn't work.
 //
-//  The music player classes written so far use Scripting Bridge to communicate with the music
-//  player apps (see iTunes.h/Spotify.h) but any other way is fine too.
+//  BGMSpotify will probably be the most useful example to follow, but they're all pretty
+//  similar. The music player classes written so far all use Scripting Bridge to communicate with
+//  the music player apps (see iTunes.h/Spotify.h) but any other way is fine too.
+//
+//  BGMDriver will use either the music player's bundle ID or PID to match it to the audio it
+//  plays. (Though using PIDs hasn't been tested yet.)
 //
 //  If you're not sure what bundle ID the music player uses, install a debug build of BGMDriver
 //  and play something in the music player. The easiest way is to do
@@ -39,47 +42,60 @@
 //
 
 // System Includes
-#import <Foundation/Foundation.h>
-#import <ScriptingBridge/ScriptingBridge.h>
+#import <Cocoa/Cocoa.h>
 
 
 #pragma clang assume_nonnull begin
 
-#define BGM_MUSIC_PLAYER_ADD_SELF_TO_CLASSES_LIST \
-    [BGMMusicPlayerBase addToMusicPlayerClasses:[self class]];
+@protocol BGMMusicPlayer <NSObject>
 
-#define BGM_MUSIC_PLAYER_DEFAULT_LOAD_METHOD \
-    + (void) load { \
-        BGM_MUSIC_PLAYER_ADD_SELF_TO_CLASSES_LIST \
-    }
+// Classes return an instance of themselves for each music player app they make available in
+// BGMApp. So far that's always been a single instance, and classes haven't needed to override
+// the default implementation of createInstances from BGMMusicPlayerBase. But that will probably
+// change eventually.
+//
+// For example, a class for custom music players would probably return an instance for each
+// custom player the user has created. (Also note that it could return an empty array.) In that
+// case the class would probably restore some state from user defaults in its createInstances.
+//
+// TODO: I think the return type should actually be NSArray<instancetype>*, but that doesn't seem
+//       to work. There's a Clang bug about this: https://llvm.org/bugs/show_bug.cgi?id=27323
+//       (though it hasn't been confirmed yet).
++ (NSArray<id<BGMMusicPlayer>>*) createInstances;
 
-// Forward declarations (just for the typedef)
-@class BGMMusicPlayerBase;
-@protocol BGMMusicPlayerProtocol;
+// We need a unique ID for each music player to store in user defaults. In the most common case,
+// classes that provide a static (or at least bounded) number of music players, you can generate
+// IDs with uuidgen (the command line tool) and include them in your class as constants. Otherwise,
+// you'll probably want to store them in user defaults and retrieve them in your createInstances.
+@property (readonly) NSUUID* musicPlayerID;
 
-typedef BGMMusicPlayerBase<BGMMusicPlayerProtocol> BGMMusicPlayer;
+// The name and icon of the music player, to be used in the UI.
+@property (readonly) NSString* name;
+@property (readonly) NSImage* __nullable icon;
 
-@protocol BGMMusicPlayerProtocol
+@property (readonly) NSString* __nullable bundleID;
 
-@optional
-// Subclasses usually won't need to implement these unless the music player has no bundle ID.
-+ (id) initWithPID:(pid_t)pid;
-+ (id) initWithPIDFromNSNumber:(NSNumber*)pid;
-+ (id) initWithPIDFromCFNumber:(CFNumberRef)pid;
-// The pid of each instance of the music player app currently running
-+ (NSArray<NSNumber*>*) pidsOfRunningInstances;
+// Classes will usually ignore this property and leave it nil unless the music player has no
+// bundle ID.
+//
+// TODO: If we ever add a music player class that uses this property, it'll need a way to inform
+//       BGMDevice of changes. It might be easiest to have BGMMusicPlayers to observe this property,
+//       on the selected music player, with KVO and update BGMDevice when it changes. Or
+//       BGMMusicPlayers could pass a pointer to itself to createInstances.
+@property NSNumber* __nullable pid;
 
-@required
-// The name of the music player, to be used in the UI
-+ (NSString*) name;
-
-// The refs returned by the bundleID and pid methods don't need to be released by users, but may be
-// released by the class/instance at some point (get rule applies).
-+ (CFStringRef __nullable) bundleID;
-// Subclasses will usually always return NULL unless they implement the optional methods above.
-- (CFNumberRef __nullable) pid;
-
-- (BOOL) isRunning;
+// The state of the music player.
+//
+// True if the music player app is open.
+@property (readonly, getter=isRunning) BOOL running;
+// True if the music player is playing a song or some other user-selected audio file. Note that
+// the music player playing audio for UI, notifications, etc. won't make this true (which is why we
+// need this property and can't just ask BGMDriver if the music player is playing audio).
+@property (readonly, getter=isPlaying) BOOL playing;
+// True if the music player has a current/open song (or whatever) and will continue playing it if
+// BGMMusicPlayer::unpause is called. Normally because the user was playing a song and they or
+// BGMApp paused it.
+@property (readonly, getter=isPaused) BOOL paused;
 
 // Pause the music player. Does nothing if the music player is already paused or isn't running.
 // Returns YES if the music player is paused now but wasn't before, returns NO otherwise.
@@ -89,27 +105,31 @@ typedef BGMMusicPlayerBase<BGMMusicPlayerProtocol> BGMMusicPlayer;
 // Returns YES if the music player is playing now but wasn't before, returns NO otherwise.
 - (BOOL) unpause;
 
-- (BOOL) isPlaying;
-
-- (BOOL) isPaused;
-
 @end
 
-@interface BGMMusicPlayerBase : NSObject <SBApplicationDelegate>
 
-+ (NSArray*) musicPlayerClasses;
-+ (void) addToMusicPlayerClasses:(Class)musicPlayerClass;
+@interface BGMMusicPlayerBase : NSObject
 
-// The music player currently selected in the preferences menu. (There's no real reason for this to be
-// global or in this class. I was just trying it out of curiosity.)
-+ (BGMMusicPlayer*) selectedMusicPlayer;
-+ (void) setSelectedMusicPlayer:(BGMMusicPlayer*)musicPlayer;
+- (instancetype) initWithMusicPlayerID:(NSUUID*)musicPlayerID
+                                  name:(NSString*)name
+                              bundleID:(NSString* __nullable)bundleID;
 
-+ (NSImage* __nullable) icon;
+- (instancetype) initWithMusicPlayerID:(NSUUID*)musicPlayerID
+                                  name:(NSString*)name
+                              bundleID:(NSString* __nullable)bundleID
+                                   pid:(NSNumber* __nullable)pid;
 
-// If the music player application is running, the scripting bridge object representing it. Otherwise
-// nil.
-@property (readonly) __kindof SBApplication* __nullable sbApplication;
+// Convenience wrapper around NSUUID's initWithUUIDString. musicPlayerIDString must be a string
+// generated by uuidgen (command line tool), e.g. "60BA9739-B6DD-4E6A-8134-51410A45BB84".
++ (NSUUID*) makeID:(NSString*)musicPlayerIDString;
+
+// BGMMusicPlayer default implementations
++ (NSArray<id<BGMMusicPlayer>>*) createInstances;
+@property (readonly) NSImage* __nullable icon;
+@property (readonly) NSUUID* musicPlayerID;
+@property (readonly) NSString* name;
+@property (readonly) NSString* __nullable bundleID;
+@property NSNumber* __nullable pid;
 
 @end
 

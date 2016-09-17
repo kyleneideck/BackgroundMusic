@@ -193,9 +193,7 @@
 				27D643B61C9FABDE00737F6E /* SharedSource */,
 				1CB8B36F1BBBD7AE000E2DD1 /* PublicUtility */,
 				1CB8B3651BBBB78D000E2DD1 /* Products */,
-				2795973D1C9847CF00A002FB /* Foundation.framework */,
-				1CB8B3741BBBD924000E2DD1 /* CoreAudio.framework */,
-				1CB8B3751BBBD924000E2DD1 /* CoreFoundation.framework */,
+				2743CA241D86E2E80089613B /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -274,6 +272,16 @@
 				1CB8B38D1BBCF4A9000E2DD1 /* CAVolumeCurve.h */,
 			);
 			name = PublicUtility;
+			sourceTree = "<group>";
+		};
+		2743CA241D86E2E80089613B /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				1CB8B3741BBBD924000E2DD1 /* CoreAudio.framework */,
+				1CB8B3751BBBD924000E2DD1 /* CoreFoundation.framework */,
+				2795973D1C9847CF00A002FB /* Foundation.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		27D643B61C9FABDE00737F6E /* SharedSource */ = {
@@ -803,6 +811,7 @@
 				2743C9C91D7EF84B0089613B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

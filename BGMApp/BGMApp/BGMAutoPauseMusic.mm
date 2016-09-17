@@ -43,24 +43,31 @@ static int const kUnpauseDelayMSecs = 3000;
 
 @implementation BGMAutoPauseMusic {
     BOOL enabled;
+    
     BGMAudioDeviceManager* audioDevices;
+    BGMMusicPlayers* musicPlayers;
+    
     dispatch_queue_t listenerQueue;
-    // Have to keep track of the listener block we add so we can remove it later
+    // Have to keep track of the listener block we add so we can remove it later.
     AudioObjectPropertyListenerBlock listenerBlock;
+    
+    dispatch_queue_t pauseUnpauseMusicQueue;
+    
     // True if BGMApp has paused musicPlayer and hasn't unpaused it yet. (Will be out of sync with the music player app if the user
     // has unpaused it themselves.)
     BOOL wePaused;
     // The times, in absolute time, that the BGMDevice last changed its audible state to silent...
     UInt64 wentSilent;
-    // ...and to audible
+    // ...and to audible.
     UInt64 wentAudible;
-    dispatch_queue_t pauseUnpauseMusicQueue;
 }
 
-- (id) initWithAudioDevices:(BGMAudioDeviceManager*)inAudioDevices {
+- (id) initWithAudioDevices:(BGMAudioDeviceManager*)inAudioDevices musicPlayers:(BGMMusicPlayers*)inMusicPlayers {
     if ((self = [super init])) {
-        enabled = NO;
         audioDevices = inAudioDevices;
+        musicPlayers = inMusicPlayers;
+        
+        enabled = NO;
         wePaused = NO;
         
         dispatch_queue_attr_t attr = dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_DEFAULT, 0);
@@ -127,7 +134,7 @@ static int const kUnpauseDelayMSecs = 3000;
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kPauseDelayMSecs * NSEC_PER_MSEC),
                    pauseUnpauseMusicQueue,
                    ^{
-                       BOOL stillAudible = [self deviceAudibleState] == kBGMDeviceIsAudible;
+                       BOOL stillAudible = ([self deviceAudibleState] == kBGMDeviceIsAudible);
                        
                        DebugMsg("BGMAutoPauseMusic::queuePauseBlock: Running pause block dispatched at %llu.%s wentAudible=%llu",
                                 startedPauseDelay,
@@ -137,8 +144,8 @@ static int const kUnpauseDelayMSecs = 3000;
                        // Pause if this is the most recent pause block and the device is still audible, which means the audible
                        // state hasn't changed since this block was queued. Also set wePaused to true if the player wasn't
                        // already paused.
-                       if (!wePaused && startedPauseDelay == wentAudible && stillAudible) {
-                           wePaused = [[BGMMusicPlayer selectedMusicPlayer] pause] || wePaused;
+                       if (!wePaused && (startedPauseDelay == wentAudible) && stillAudible) {
+                           wePaused = ([musicPlayers.selectedMusicPlayer pause] || wePaused);
                        }
                    });
 }
@@ -152,7 +159,7 @@ static int const kUnpauseDelayMSecs = 3000;
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kUnpauseDelayMSecs * NSEC_PER_MSEC),
                    pauseUnpauseMusicQueue,
                    ^{
-                       BOOL stillSilent = [self deviceAudibleState] == kBGMDeviceIsSilent;
+                       BOOL stillSilent = ([self deviceAudibleState] == kBGMDeviceIsSilent);
                        
                        DebugMsg("BGMAutoPauseMusic::queueUnpauseBlock: Running unpause block dispatched at %llu.%s%s wentSilent=%llu",
                                 startedUnpauseDelay,
@@ -162,9 +169,9 @@ static int const kUnpauseDelayMSecs = 3000;
                        
                        // Unpause if we were the one who paused. Also check that this is the most recent unpause block and the
                        // device is still silent, which means the audible state hasn't changed since this block was queued.
-                       if (wePaused && startedUnpauseDelay == wentSilent && stillSilent) {
+                       if (wePaused && (startedUnpauseDelay == wentSilent) && stillSilent) {
                            wePaused = NO;
-                           [[BGMMusicPlayer selectedMusicPlayer] unpause];
+                           [musicPlayers.selectedMusicPlayer unpause];
                        }
                    });
 }

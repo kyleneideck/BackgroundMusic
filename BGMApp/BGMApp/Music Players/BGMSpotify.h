@@ -24,7 +24,7 @@
 #import "BGMMusicPlayer.h"
 
 
-@interface BGMSpotify : BGMMusicPlayer
+@interface BGMSpotify : BGMMusicPlayerBase<BGMMusicPlayer>
 
 @end
 

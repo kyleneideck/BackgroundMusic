@@ -20,21 +20,23 @@
 //  Copyright © 2016 Kyle Neideck
 //
 
-// PublicUtility Includes
-#include "BGMAudioDeviceManager.h"
+// Local Includes
+#import "BGMAudioDeviceManager.h"
+#import "BGMMusicPlayers.h"
 
 // System Includes
-#import <AppKit/AppKit.h>
+#import <Cocoa/Cocoa.h>
 
+
+#pragma clang assume_nonnull begin
 
 @interface BGMAutoPauseMusicPrefs : NSObject
 
-// Note that toggleAutoPauseMusicMenuItem is the item in the main menu that enables/disables auto-pausing, rather than the
-// disabled "Auto-pause" menu item in the preferences menu that acts as a section heading. This class updates the text of
-// toggleAutoPauseMusicMenuItem when the user changes the music player.
 - (id) initWithPreferencesMenu:(NSMenu*)inPrefsMenu
-  toggleAutoPauseMusicMenuItem:(NSMenuItem*)inToggleAutoPauseMusicMenuItem
-                  audioDevices:(BGMAudioDeviceManager*)inAudioDevices;
+                  audioDevices:(BGMAudioDeviceManager*)inAudioDevices
+                  musicPlayers:(BGMMusicPlayers*)inMusicPlayers;
 
 @end
+
+#pragma clang assume_nonnull end 
 

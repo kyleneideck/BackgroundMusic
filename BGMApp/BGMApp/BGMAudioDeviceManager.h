@@ -24,7 +24,9 @@
 //
 
 // PublicUtility Includes
+#ifdef __cplusplus
 #include "CAHALAudioDevice.h"
+#endif
 
 // System Includes
 #import <Foundation/Foundation.h>
@@ -43,7 +45,9 @@ extern int const kBGMErrorCode_OutputDeviceNotFound;
 // Replace BGMDevice as the default device with the output device
 - (void) unsetBGMDeviceAsOSDefault;
 
+#ifdef __cplusplus
 - (CAHALAudioDevice) bgmDevice;
+#endif
 
 - (BOOL) isOutputDevice:(AudioObjectID)deviceID;
 // Returns NO if the output device couldn't be changed and has been reverted

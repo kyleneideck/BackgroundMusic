@@ -14,31 +14,33 @@
 // along with Background Music. If not, see <http://www.gnu.org/licenses/>.
 
 //
-//  BGMAutoPauseMusic.h
+//  BGMAutoPauseMenuItem.h
 //  BGMApp
 //
 //  Copyright © 2016 Kyle Neideck
 //
-//  When enabled, BGMAutoPauseMusic listens for notifications from BGMDevice to tell when music is playing and
-//  pauses the music player if other audio starts.
-//
 
 // Local Includes
-#import "BGMAudioDeviceManager.h"
+#import "BGMAutoPauseMusic.h"
 #import "BGMMusicPlayers.h"
+#import "BGMUserDefaults.h"
 
 // System Includes
-#import <Foundation/Foundation.h>
+#import <Cocoa/Cocoa.h>
 
 
 #pragma clang assume_nonnull begin
 
-@interface BGMAutoPauseMusic : NSObject
+@interface BGMAutoPauseMenuItem : NSObject
 
-- (id) initWithAudioDevices:(BGMAudioDeviceManager*)inAudioDevices musicPlayers:(BGMMusicPlayers*)inMusicPlayers;
+- (instancetype) initWithMenuItem:(NSMenuItem*)item
+                   autoPauseMusic:(BGMAutoPauseMusic*)autoPause
+                     musicPlayers:(BGMMusicPlayers*)players
+                     userDefaults:(BGMUserDefaults*)defaults;
 
-- (void) enable;
-- (void) disable;
+// Handle events passed along by the delegate (NSMenuDelegate) of the menu containing this menu item.
+- (void) parentMenuNeedsUpdate;
+- (void) parentMenuItemWillHighlight:(NSMenuItem* __nullable)item;
 
 @end
 

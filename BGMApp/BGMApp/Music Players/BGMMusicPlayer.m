@@ -28,139 +28,60 @@
 #define CoreAudio_ThreadStampMessages 0  // Requires C++
 #include "CADebugMacros.h"
 
-// System Includes
-#import <Cocoa/Cocoa.h>
-
 
 #pragma clang assume_nonnull begin
 
-@implementation BGMMusicPlayerBase {
-    // Tokens for the notification observers. We need these to remove the observers in dealloc.
-    id didLaunchToken;
-    id didTerminateToken;
+@implementation BGMMusicPlayerBase
+
+@synthesize musicPlayerID = _musicPlayerID;
+@synthesize name = _name;
+@synthesize bundleID = _bundleID;
+@synthesize pid = _pid;
+
+- (instancetype) initWithMusicPlayerID:(NSUUID*)musicPlayerID
+                                  name:(NSString*)name
+                              bundleID:(NSString* __nullable)bundleID {
+    return [self initWithMusicPlayerID:musicPlayerID name:name bundleID:bundleID pid:nil];
 }
 
-@synthesize sbApplication = sbApplication;
-
-// A array of the subclasses of BGMMusicPlayer
-static NSArray* sMusicPlayerClasses;
-
-// The user-selected music player. One of BGMMusicPlayer's subclasses declares itself the default music player by
-// setting this to an instance of itself in its load method.
-static BGMMusicPlayer* sSelectedMusicPlayer;
-
-// Load-time static initializer
-+ (void) load {
-    sMusicPlayerClasses = @[];
-}
-
-- (id) init {
+- (instancetype) initWithMusicPlayerID:(NSUUID*)musicPlayerID
+                                  name:(NSString*)name
+                              bundleID:(NSString* __nullable)bundleID
+                                   pid:(NSNumber* __nullable)pid {
     if ((self = [super init])) {
-        NSString* bundleID = (__bridge NSString*)[[self class] bundleID];
+        NSAssert(musicPlayerID, @"BGMMusicPlayerBase::initWithMusicPlayerID: !musicPlayerID");
         
-        void (^createSBApplication)(void) = ^{
-            sbApplication = [SBApplication applicationWithBundleIdentifier:bundleID];
-            sbApplication.delegate = self;
-        };
+        NSAssert([self conformsToProtocol:@protocol(BGMMusicPlayer)],
+                 @"BGMMusicPlayerBase::initWithMusicPlayerID: !conformsToProtocol");
         
-        BOOL (^isAboutThisMusicPlayer)(NSNotification*) = ^(NSNotification* note){
-            return [[note.userInfo[NSWorkspaceApplicationKey] bundleIdentifier] isEqualToString:bundleID];
-        };
-        
-        // Add observers that create/destroy the SBApplication when the music player is launched/terminated. We
-        // only create the SBApplication when the music player is open because, if it isn't, creating the
-        // SBApplication, or sending it events, could launch the music player. Whether it does or not depends on
-        // the music player, and possibly the version of the music player, so to be safe we assume they all do.
-        //
-        // From the docs for SBApplication's applicationWithBundleIdentifier method:
-        //     "For applications that declare themselves to have a dynamic scripting interface, this method will
-        //     launch the application if it is not already running."
-        NSNotificationCenter* center = [[NSWorkspace sharedWorkspace] notificationCenter];
-#if DEBUG
-        const char* mpName = [[[self class] name] UTF8String];
-#endif
-        didLaunchToken = [center addObserverForName:NSWorkspaceDidLaunchApplicationNotification
-                                             object:nil
-                                              queue:nil
-                                         usingBlock:^(NSNotification* note) {
-                                             if (isAboutThisMusicPlayer(note)) {
-                                                 DebugMsg("BGMMusicPlayer::init: %s launched", mpName);
-                                                 createSBApplication();
-                                             }
-                                         }];
-        didTerminateToken = [center addObserverForName:NSWorkspaceDidTerminateApplicationNotification
-                                                object:nil
-                                                 queue:nil
-                                            usingBlock:^(NSNotification* note) {
-                                             if (isAboutThisMusicPlayer(note)) {
-                                                 DebugMsg("BGMMusicPlayer::init: %s terminated", mpName);
-                                                 sbApplication = nil;
-                                                }
-                                            }];
-        
-        // Create the SBApplication if the music player is already running.
-        if ([[NSRunningApplication runningApplicationsWithBundleIdentifier:bundleID] count] > 0) {
-            createSBApplication();
-        }
+        _musicPlayerID = musicPlayerID;
+        _name = name;
+        _bundleID = bundleID;
+        _pid = pid;
     }
-    
+
     return self;
 }
 
-#if __MAC_OS_X_VERSION_MAX_ALLOWED >= 101200
-- (__nullable id) eventDidFail:(const AppleEvent*)event withError:(NSError*)error {
-#else
-- (id) eventDidFail:(const AppleEvent*)event withError:(NSError*)error {
-#endif
-    // SBApplicationDelegate method. So far, this just logs the error.
++ (NSUUID*) makeID:(NSString*)musicPlayerIDString {
+    NSUUID* __nullable musicPlayerID = [[NSUUID alloc] initWithUUIDString:musicPlayerIDString];
+    NSAssert(musicPlayerID, @"BGMMusicPlayerBase::makeID: !musicPlayerID");
     
-#if DEBUG
-    NSString* vars = [NSString stringWithFormat:@"event=%@ error=%@ sbApplication=%@", event, error, sbApplication];
-    DebugMsg("BGMMusicPlayer::eventDidFail: Apple event sent to %s failed. %s",
-             [[[self class] name] UTF8String],
-             [vars UTF8String]);
-#else
-    #pragma unused (event, error)
-#endif
+    return (NSUUID*)musicPlayerID;
+}
+
+#pragma mark BGMMusicPlayer default implementations
+
++ (NSArray<id<BGMMusicPlayer>>*) createInstances {
+    return @[ [self new] ];
+}
+
+- (NSImage* __nullable) icon {
+    NSString* __nullable bundleID = self.bundleID;
+    NSString* __nullable bundlePath =
+        (!bundleID ? nil : [[NSWorkspace sharedWorkspace] absolutePathForAppBundleWithIdentifier:(NSString*)bundleID]);
     
-    return nil;
-}
-
-- (void) dealloc {
-    // Remove the application launch/termination observers.
-    NSNotificationCenter* center = [[NSWorkspace sharedWorkspace] notificationCenter];
-    
-    if (didLaunchToken) {
-        [center removeObserver:didLaunchToken];
-    }
-    
-    if (didTerminateToken) {
-        [center removeObserver:didTerminateToken];
-    }
-}
-
-+ (void) addToMusicPlayerClasses:(Class)musicPlayerClass {
-    sMusicPlayerClasses = [sMusicPlayerClasses arrayByAddingObject:musicPlayerClass];
-}
-
-+ (NSArray*) musicPlayerClasses {
-    return sMusicPlayerClasses;
-}
-
-+ (BGMMusicPlayer*) selectedMusicPlayer {
-    NSAssert(sSelectedMusicPlayer != nil, @"One of BGMMusicPlayer's subclasses should set itself as the default "
-                                           "music player (i.e. set sSelectedMusicPlayer) in its initialize method");
-    return sSelectedMusicPlayer;
-}
-
-+ (void) setSelectedMusicPlayer:(BGMMusicPlayer*)musicPlayer {
-    sSelectedMusicPlayer = musicPlayer;
-}
-
-+ (NSImage* __nullable) icon {
-    NSString* bundleID = (__bridge NSString*)[(id<BGMMusicPlayerProtocol>)self bundleID];
-    NSString* bundlePath = [[NSWorkspace sharedWorkspace] absolutePathForAppBundleWithIdentifier:bundleID];
-    return bundlePath == nil ? nil : [[NSWorkspace sharedWorkspace] iconForFile:bundlePath];
+    return (!bundlePath ? nil : [[NSWorkspace sharedWorkspace] iconForFile:(NSString*)bundlePath]);
 }
 
 @end

@@ -87,6 +87,14 @@ static NSInteger const kOutputDeviceMenuItemTag = 2;
 }
 
 - (void) outputDeviceWasChanged:(NSMenuItem*)menuItem {
+    DebugMsg("BGMOutputDevicePrefs::outputDeviceWasChanged: '%s' menu item selected", [menuItem.title UTF8String]);
+    
+    // Make sure the menu item is actually for an output device.
+    if (![outputDeviceMenuItems containsObject:menuItem]) {
+        return;
+    }
+    
+    // Change to the new output device.
     BOOL success = [audioDevices setOutputDeviceWithID:[[menuItem representedObject] unsignedIntValue] revertOnFailure:YES];
     
     if (!success) {

@@ -31,8 +31,6 @@
 NS_ASSUME_NONNULL_BEGIN
 
 // Interface Builder tags
-static NSInteger const kToggleAutoPauseMusicMenuItemTag = 2;
-
 static NSInteger const kPreferencesMenuItemTag = 1;
 static NSInteger const kAboutPanelMenuItemTag = 3;
 
@@ -40,8 +38,6 @@ static NSInteger const kAboutPanelVersionLabelTag = 1;
 static NSInteger const kAboutPanelCopyrightLabelTag = 2;
 
 @implementation BGMPreferencesMenu {
-    BGMAudioDeviceManager* audioDevices;
-    
     // Menu sections
     BGMAutoPauseMusicPrefs* autoPauseMusicPrefs;
     BGMOutputDevicePrefs* outputDevicePrefs;
@@ -50,30 +46,29 @@ static NSInteger const kAboutPanelCopyrightLabelTag = 2;
     NSPanel* aboutPanel;
     NSTextField* aboutPanelVersionLabel;
     NSTextField* aboutPanelCopyrightLabel;
-    NSTextView* aboutPanelLicenceView;
+    NSTextView* aboutPanelLicenseView;
 }
 
-- (id) initWithbgmMenu:(NSMenu*)inBGMMenu
+- (id) initWithBGMMenu:(NSMenu*)inBGMMenu
           audioDevices:(BGMAudioDeviceManager*)inAudioDevices
+          musicPlayers:(BGMMusicPlayers*)inMusicPlayers
             aboutPanel:(NSPanel*)inAboutPanel
  aboutPanelLicenseView:(NSTextView*)inAboutPanelLicenseView {
     if ((self = [super init])) {
-        audioDevices = inAudioDevices;
         aboutPanel = inAboutPanel;
         
         aboutPanelVersionLabel = [[aboutPanel contentView] viewWithTag:kAboutPanelVersionLabelTag];
         aboutPanelCopyrightLabel = [[aboutPanel contentView] viewWithTag:kAboutPanelCopyrightLabelTag];
-        aboutPanelLicenceView = inAboutPanelLicenseView;
+        aboutPanelLicenseView = inAboutPanelLicenseView;
 
         NSMenu* prefsMenu = [[inBGMMenu itemWithTag:kPreferencesMenuItemTag] submenu];
         [prefsMenu setDelegate:self];
         
-        NSMenuItem* toggleAutoPauseMusicMenuItem = [inBGMMenu itemWithTag:kToggleAutoPauseMusicMenuItemTag];
         autoPauseMusicPrefs = [[BGMAutoPauseMusicPrefs alloc] initWithPreferencesMenu:prefsMenu
-                                                         toggleAutoPauseMusicMenuItem:toggleAutoPauseMusicMenuItem
-                                                                         audioDevices:audioDevices];
+                                                                         audioDevices:inAudioDevices
+                                                                         musicPlayers:inMusicPlayers];
         
-        outputDevicePrefs = [[BGMOutputDevicePrefs alloc] initWithAudioDevices:audioDevices];
+        outputDevicePrefs = [[BGMOutputDevicePrefs alloc] initWithAudioDevices:inAudioDevices];
         
         // Set up the "About Background Music" menu item
         NSMenuItem* aboutMenuItem = [prefsMenu itemWithTag:kAboutPanelMenuItemTag];
@@ -106,16 +101,14 @@ static NSInteger const kAboutPanelCopyrightLabelTag = 2;
         NSString* licensePath = [bundle pathForResource:@"LICENSE" ofType:nil];
         NSError* err;
         NSString* licenseStr = [NSString stringWithContentsOfFile:licensePath encoding:NSASCIIStringEncoding error:&err];
+        
         if (err != nil || [licenseStr isEqualToString:@""]) {
             NSLog(@"Error loading license file: %@", err);
             licenseStr = @"Error: could not open license file.";
         }
-        [aboutPanelLicenceView setString:licenseStr];
+        
+        [aboutPanelLicenseView setString:licenseStr];
     }
-}
-
-- (void) menuNeedsUpdate:(NSMenu*)menu {
-    [outputDevicePrefs populatePreferencesMenu:menu];
 }
 
 - (void) showAboutPanel {
@@ -123,6 +116,12 @@ static NSInteger const kAboutPanelCopyrightLabelTag = 2;
     [NSApp activateIgnoringOtherApps:YES];
     [aboutPanel setIsVisible:YES];
     [aboutPanel makeKeyAndOrderFront:self];
+}
+
+#pragma mark NSMenuDelegate
+
+- (void) menuNeedsUpdate:(NSMenu*)menu {
+    [outputDevicePrefs populatePreferencesMenu:menu];
 }
 
 @end

@@ -14,7 +14,7 @@
 // along with Background Music. If not, see <http://www.gnu.org/licenses/>.
 
 //
-//  BGMVox.h
+//  BGMVOX.h
 //  BGMApp
 //
 //  Copyright © 2016 Kyle Neideck
@@ -24,7 +24,7 @@
 #import "BGMMusicPlayer.h"
 
 
-@interface BGMVox : BGMMusicPlayer
+@interface BGMVOX : BGMMusicPlayerBase<BGMMusicPlayer>
 
 @end
 

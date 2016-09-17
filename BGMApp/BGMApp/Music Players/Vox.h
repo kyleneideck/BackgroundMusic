@@ -1,8 +1,8 @@
 /*
- * Vox.h
+ * VOX.h
  *
  * Generated with
- * sdef /Applications/Vox.app | sdp -fh --basename Vox
+ * sdef /Applications/VOX.app | sdp -fh --basename VOX
  */
 
 #import <AppKit/AppKit.h>

@@ -14,17 +14,20 @@
 // along with Background Music. If not, see <http://www.gnu.org/licenses/>.
 
 //
-//  BGMVox.m
+//  BGMVOX.m
 //  BGMApp
 //
 //  Copyright © 2016 Kyle Neideck
 //
 
 // Self Include
-#import "BGMVox.h"
+#import "BGMVOX.h"
 
 // Auto-generated Scripting Bridge header
-#import "Vox.h"
+#import "VOX.h"
+
+// Local Includes
+#import "BGMScriptingBridge.h"
 
 // PublicUtility Includes
 #undef CoreAudio_ThreadStampMessages
@@ -32,36 +35,49 @@
 #include "CADebugMacros.h"
 
 
-@implementation BGMVox
+#pragma clang assume_nonnull begin
 
-BGM_MUSIC_PLAYER_DEFAULT_LOAD_METHOD
-
-+ (NSString*) name {
-    return @"VOX";
+@implementation BGMVOX {
+    BGMScriptingBridge* scriptingBridge;
 }
 
-- (CFNumberRef) pid {
-    return NULL;
-}
-
-+ (CFStringRef) bundleID {
-    return CFSTR("com.coppertino.Vox");
+- (id) init {
+    if ((self = [super initWithMusicPlayerID:[BGMMusicPlayerBase makeID:@"26498C5D-C18B-4689-8B41-9DA91A78FFAD"]
+                                        name:@"VOX"
+                                    bundleID:@"com.coppertino.Vox"])) {
+        scriptingBridge = [[BGMScriptingBridge alloc] initWithBundleID:(NSString*)self.bundleID];
+    }
+    
+    return self;
 }
 
 - (VoxApplication* __nullable) vox {
-    return (VoxApplication*) self.sbApplication;
+    return (VoxApplication*)scriptingBridge.application;
 }
 
 - (BOOL) isRunning {
-    return self.vox && [self.vox isRunning];
+    return self.vox.running;
+}
+
+// isPlaying and isPaused check self.running first just in case VOX is closed but self.vox hasn't become
+// nil yet. In that case, reading self.vox.playerState could make Scripting Bridge open VOX.
+//
+// VOX's comment for its playerState property says "playing = 1, paused = 0".
+
+- (BOOL) isPlaying {
+    return self.running && (self.vox.playerState == 1);
+}
+
+- (BOOL) isPaused {
+    return self.running && (self.vox.playerState == 0);
 }
 
 - (BOOL) pause {
     // isPlaying checks isRunning, so we don't need to check it here and waste an Apple event
-    BOOL wasPlaying = [self isPlaying];
+    BOOL wasPlaying = self.playing;
     
     if (wasPlaying) {
-        DebugMsg("BGMVox::pause: Pausing VOX");
+        DebugMsg("BGMVOX::pause: Pausing VOX");
         [self.vox pause];
     }
     
@@ -70,25 +86,17 @@ BGM_MUSIC_PLAYER_DEFAULT_LOAD_METHOD
 
 - (BOOL) unpause {
     // isPaused checks isRunning, so we don't need to check it here and waste an Apple event
-    BOOL wasPaused = [self isPaused];
+    BOOL wasPaused = self.paused;
     
     if (wasPaused) {
-        DebugMsg("BGMVox::unpause: Unpausing VOX");
+        DebugMsg("BGMVOX::unpause: Unpausing VOX");
         [self.vox playpause];
     }
     
     return wasPaused;
 }
 
-// Vox's comment for playerState says "playing = 1, paused = 0"
-
-- (BOOL) isPlaying {
-    return [self isRunning] && [self.vox playerState] == 1;
-}
-
-- (BOOL) isPaused {
-    return [self isRunning] && [self.vox playerState] == 0;
-}
-
 @end
+
+#pragma clang assume_nonnull end
 

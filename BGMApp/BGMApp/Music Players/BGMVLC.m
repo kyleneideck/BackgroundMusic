@@ -27,43 +27,58 @@
 // Auto-generated Scripting Bridge header
 #import "VLC.h"
 
+// Local Includes
+#import "BGMScriptingBridge.h"
+
 // PublicUtility Includes
 #undef CoreAudio_ThreadStampMessages
 #define CoreAudio_ThreadStampMessages 0  // Requires C++
 #include "CADebugMacros.h"
 
 
-@implementation BGMVLC
+#pragma clang assume_nonnull begin
 
-BGM_MUSIC_PLAYER_DEFAULT_LOAD_METHOD
-
-+ (NSString*) name {
-    return @"VLC";
+@implementation BGMVLC {
+    BGMScriptingBridge* scriptingBridge;
 }
 
-- (CFNumberRef) pid {
-    return NULL;
-}
-
-+ (CFStringRef) bundleID {
-    return CFSTR("org.videolan.vlc");
+- (id) init {
+    if ((self = [super initWithMusicPlayerID:[BGMMusicPlayerBase makeID:@"5226F4B9-C740-4045-A273-4B8EABC0E8FC"]
+                                        name:@"VLC"
+                                    bundleID:@"org.videolan.vlc"])) {
+        scriptingBridge = [[BGMScriptingBridge alloc] initWithBundleID:(NSString*)self.bundleID];
+    }
+    
+    return self;
 }
 
 - (VLCApplication* __nullable) vlc {
-    return (VLCApplication*) self.sbApplication;
+    return (VLCApplication*)scriptingBridge.application;
 }
 
 - (BOOL) isRunning {
-    return self.vlc && [self.vlc isRunning];
+    return self.vlc.running;
+}
+
+// isPlaying and isPaused check self.running first just in case VLC is closed but self.vlc hasn't become
+// nil yet. In that case, reading other properties of self.vlc could make Scripting Bridge open VLC.
+
+- (BOOL) isPlaying {
+    return self.running && self.vlc.playing;
+}
+
+- (BOOL) isPaused {
+    // VLC is paused if it has a file open but isn't playing it
+    return self.running && (self.vlc.nameOfCurrentItem != nil) && !self.vlc.playing;
 }
 
 - (BOOL) pause {
     // isPlaying checks isRunning, so we don't need to check it here and waste an Apple event
-    BOOL wasPlaying = [self isPlaying];
+    BOOL wasPlaying = self.playing;
     
     if (wasPlaying) {
         DebugMsg("BGMVLC::pause: Pausing VLC");
-        [self togglePlay];
+        [BGMVLC togglePlay];
     }
     
     return wasPlaying;
@@ -71,34 +86,27 @@ BGM_MUSIC_PLAYER_DEFAULT_LOAD_METHOD
 
 - (BOOL) unpause {
     // isPaused checks isRunning, so we don't need to check it here and waste an Apple event
-    BOOL wasPaused = [self isPaused];
+    BOOL wasPaused = self.paused;
     
     if (wasPaused) {
         DebugMsg("BGMVLC::unpause: Unpausing VLC");
-        [self togglePlay];
+        [BGMVLC togglePlay];
     }
     
     return wasPaused;
-}
-
-- (BOOL) isPlaying {
-    return [self isRunning] && [self.vlc playing];
-}
-
-- (BOOL) isPaused {
-    // VLC is paused if it has a file open but isn't playing it
-    return [self isRunning] && [self.vlc nameOfCurrentItem] != nil && ![self.vlc playing];
 }
 
 // This is from SubTTS's STVLCPlayer class:
 // https://github.com/heatherleaf/subtts-mac/blob/master/SubTTS/STVLCPlayer.m
 //
 // VLC's Scripting Bridge interface doesn't seem to have a cleaner way to do this.
-- (void) togglePlay {
++ (void) togglePlay {
     NSString* src = @"tell application \"VLC\" to play";
     NSAppleScript* script = [[NSAppleScript alloc] initWithSource:src];
     [script executeAndReturnError:nil];
 }
 
 @end
+
+#pragma clang assume_nonnull end
 

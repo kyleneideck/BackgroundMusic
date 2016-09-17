@@ -24,8 +24,11 @@
 #import "BGMMusicPlayer.h"
 
 
-@interface BGMiTunes : BGMMusicPlayer
+@interface BGMiTunes : BGMMusicPlayerBase<BGMMusicPlayer>
+
+// The music player ID (see BGMMusicPlayer.h) used by BGMiTunes instances. (Though BGMApp only ever creates one instance of
+// BGMiTunes, sharedMusicPlayerID is exposed so iTunes can be set as the default music player.)
++ (NSUUID*) sharedMusicPlayerID;
 
 @end
-
 

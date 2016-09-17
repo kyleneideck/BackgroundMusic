@@ -27,39 +27,55 @@
 // Auto-generated Scripting Bridge header
 #import "Decibel.h"
 
+// Local Includes
+#import "BGMScriptingBridge.h"
+
 // PublicUtility Includes
 #undef CoreAudio_ThreadStampMessages
 #define CoreAudio_ThreadStampMessages 0  // Requires C++
 #include "CADebugMacros.h"
 
 
-@implementation BGMDecibel
+#pragma clang assume_nonnull begin
 
-BGM_MUSIC_PLAYER_DEFAULT_LOAD_METHOD
-
-+ (NSString*) name {
-    return @"Decibel";
+@implementation BGMDecibel {
+    BGMScriptingBridge* scriptingBridge;
 }
 
-- (CFNumberRef) pid {
-    return NULL;
-}
-
-+ (CFStringRef) bundleID {
-    return CFSTR("org.sbooth.Decibel");
+- (id) init {
+    if ((self = [super initWithMusicPlayerID:[BGMMusicPlayerBase makeID:@"A9790CD5-4886-47C7-9FFC-DD70743CF2BF"]
+                                        name:@"Decibel"
+                                    bundleID:@"org.sbooth.Decibel"])) {
+        scriptingBridge = [[BGMScriptingBridge alloc] initWithBundleID:(NSString*)self.bundleID];
+    }
+    
+    return self;
 }
 
 - (DecibelApplication* __nullable) decibel {
-    return (DecibelApplication*) self.sbApplication;
+    return (DecibelApplication* __nullable)scriptingBridge.application;
 }
 
 - (BOOL) isRunning {
-    return self.decibel && [self.decibel isRunning];
+    return self.decibel.running;
+}
+
+- (BOOL) isPlaying {
+    return self.running && self.decibel.playing;
+}
+
+- (BOOL) isPaused {
+    // We don't want to return true when Decibel is stopped, rather than paused. At least for me, Decibel
+    // returns -1 for playbackTime and playbackPosition when it's neither playing nor paused.
+    BOOL probablyNotStopped =
+        self.decibel.playbackTime >= 0 || self.decibel.playbackPosition >= 0;
+    
+    return self.running && !self.decibel.playing && probablyNotStopped;
 }
 
 - (BOOL) pause {
     // isPlaying checks isRunning, so we don't need to check it here and waste an Apple event
-    BOOL wasPlaying = [self isPlaying];
+    BOOL wasPlaying = self.playing;
     
     if (wasPlaying) {
         DebugMsg("BGMDecibel::pause: Pausing Decibel");
@@ -71,23 +87,17 @@ BGM_MUSIC_PLAYER_DEFAULT_LOAD_METHOD
 
 - (BOOL) unpause {
     // isPaused checks isRunning, so we don't need to check it here and waste an Apple event
-    BOOL wasPaused = [self isPaused];
+    BOOL wasPaused = self.paused;
     
     if (wasPaused) {
         DebugMsg("BGMDecibel::unpause: Unpausing Decibel");
-        [self.decibel playPause];
+        [self.decibel play];
     }
     
     return wasPaused;
 }
 
-- (BOOL) isPlaying {
-    return [self isRunning] && [self.decibel playing];
-}
-
-- (BOOL) isPaused {
-    return [self isRunning] && ![self.decibel playing];
-}
-
 @end
+
+#pragma clang assume_nonnull end
 

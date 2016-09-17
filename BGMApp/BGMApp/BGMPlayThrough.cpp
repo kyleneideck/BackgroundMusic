@@ -441,7 +441,7 @@ OSStatus    BGMPlayThrough::BGMDeviceListenerProc(AudioObjectID inObjectID,
                 // These warnings are common when you use the UI if you're running a debug build or have "Debug executable"
                 // checked. You shouldn't be seeing them otherwise.
                 DebugMsg("BGMPlayThrough::BGMDeviceListenerProc: WARNING! Got kAudioDeviceProcessorOverload notification");
-                LogWarning("Background Music: CPU overload reported");
+                LogWarning("Background Music: CPU overload reported\n");
                 break;
                 
             // Start playthrough when a client starts IO on BGMDevice and stop when BGMApp (i.e. playthrough itself) is
@@ -469,8 +469,6 @@ OSStatus    BGMPlayThrough::BGMDeviceListenerProc(AudioObjectID inObjectID,
                     dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^{
                         if(refCon->mActive)
                         {
-                            DebugMsg("BGMPlayThrough::BGMDeviceListenerProc: Handling "
-                                     "kAudioDevicePropertyDeviceIsRunning notification in dispatched block");
                             CAMutex::Locker stateLocker(refCon->mStateMutex);
                             
                             // IsRunning doesn't always return true when IO is starting. Not sure why. But using

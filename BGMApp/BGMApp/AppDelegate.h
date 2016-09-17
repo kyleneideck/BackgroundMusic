@@ -22,16 +22,17 @@
 //  Sets up and tears down the app.
 //
 
+// System Includes
 #import <Cocoa/Cocoa.h>
 
 
-@interface AppDelegate : NSObject <NSApplicationDelegate>
+@interface AppDelegate : NSObject <NSApplicationDelegate, NSMenuDelegate>
 
 @property (weak) IBOutlet NSMenu* bgmMenu;
-@property (weak) IBOutlet NSMenuItem* autoPauseMenuItem;
 @property (weak) IBOutlet NSView* appVolumeView;
 @property (weak) IBOutlet NSPanel* aboutPanel;
-@property (unsafe_unretained) IBOutlet NSTextView *aboutPanelLicenseView;
+@property (unsafe_unretained) IBOutlet NSTextView* aboutPanelLicenseView;
+@property (weak) IBOutlet NSMenuItem* autoPauseMenuItemUnwrapped;
 
 @end
 

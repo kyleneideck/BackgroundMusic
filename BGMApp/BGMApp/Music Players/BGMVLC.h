@@ -24,7 +24,7 @@
 #import "BGMMusicPlayer.h"
 
 
-@interface BGMVLC : BGMMusicPlayer
+@interface BGMVLC : BGMMusicPlayerBase<BGMMusicPlayer>
 
 @end
 

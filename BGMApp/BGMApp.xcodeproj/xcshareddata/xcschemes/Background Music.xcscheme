@@ -26,7 +26,8 @@
       buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
-      shouldUseLaunchSchemeArgsEnv = "YES">
+      shouldUseLaunchSchemeArgsEnv = "YES"
+      enableAddressSanitizer = "YES">
       <Testables>
          <TestableReference
             skipped = "NO">
@@ -35,6 +36,16 @@
                BlueprintIdentifier = "1CB8B3481BBA75F0000E2DD1"
                BuildableName = "BGMAppTests.xctest"
                BlueprintName = "BGMAppTests"
+               ReferencedContainer = "container:BGMApp.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "2743C9F51D86CFF90089613B"
+               BuildableName = "BGMAppUnitTests.xctest"
+               BlueprintName = "BGMAppUnitTests"
                ReferencedContainer = "container:BGMApp.xcodeproj">
             </BuildableReference>
          </TestableReference>
