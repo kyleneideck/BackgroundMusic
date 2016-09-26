@@ -42,6 +42,9 @@ static float const kStatusBarIconPadding = 0.25;
     // for the app. These are called "menu bar extras" in the Human Interface Guidelines.
     NSStatusItem* statusBarItem;
     
+    // Only show the 'BGMXPCHelper is missing' error dialog once.
+    BOOL haveShownXPCHelperErrorMessage;
+    
     BGMAutoPauseMusic* autoPauseMusic;
     BGMAutoPauseMenuItem* autoPauseMenuItem;
     BGMMusicPlayers* musicPlayers;
@@ -52,6 +55,8 @@ static float const kStatusBarIconPadding = 0.25;
 }
 
 - (void) awakeFromNib {
+    haveShownXPCHelperErrorMessage = NO;
+    
     // Set up the status bar item
     statusBarItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSSquareStatusItemLength];
     
@@ -103,7 +108,11 @@ static float const kStatusBarIconPadding = 0.25;
     
     xpcListener = [[BGMXPCListener alloc] initWithAudioDevices:audioDevices
                                   helperConnectionErrorHandler:^(NSError* error) {
-                                      [self showXPCHelperErrorMessageAndExit:error];
+                                      NSLog(@"AppDelegate::applicationDidFinishLaunching: (helperConnectionErrorHandler) "
+                                             "BGMXPCHelper connection error: %@",
+                                            error);
+                                      
+                                      [self showXPCHelperErrorMessage:error];
                                   }];
     
     appVolumes = [[BGMAppVolumes alloc] initWithMenu:self.bgmMenu
@@ -142,22 +151,26 @@ static float const kStatusBarIconPadding = 0.25;
     });
 }
 
-- (void) showXPCHelperErrorMessageAndExit:(NSError*)error {
-    // NSAlert should only be used on the main thread.
-    dispatch_async(dispatch_get_main_queue(), ^{
-        NSAlert* alert = [NSAlert new];
+- (void) showXPCHelperErrorMessage:(NSError*)error {
+    if (!haveShownXPCHelperErrorMessage) {
+        haveShownXPCHelperErrorMessage = YES;
         
-        // TODO: Offer to install BGMXPCHelper if it's missing.
-        [alert setMessageText:@"Error connecting to BGMXPCHelper."];
-        [alert setInformativeText:[NSString stringWithFormat:@"%s%s%@ (%lu)",
-                                   "Make sure you have BGMXPCHelper installed. There are instructions in the README.md file.",
-                                   "\n\nDetails:\n",
-                                   [error localizedDescription],
-                                   [error code]]];
-        
-        [alert runModal];
-        [NSApp terminate:self];
-    });
+        // NSAlert should only be used on the main thread.
+        dispatch_async(dispatch_get_main_queue(), ^{
+            NSAlert* alert = [NSAlert new];
+            
+            // TODO: Offer to install BGMXPCHelper if it's missing.
+            [alert setMessageText:@"Error connecting to BGMXPCHelper."];
+            [alert setInformativeText:[NSString stringWithFormat:@"%s%s%@ (%lu)",
+                                       "Make sure you have BGMXPCHelper installed. There are instructions in the "
+                                       "README.md file.\n\n"
+                                       "Background Music might still work, but it won't work as well as it could.",
+                                       "\n\nDetails:\n",
+                                       [error localizedDescription],
+                                       [error code]]];
+            [alert runModal];
+        });
+    }
 }
 
 - (void) applicationWillTerminate:(NSNotification*)aNotification {
