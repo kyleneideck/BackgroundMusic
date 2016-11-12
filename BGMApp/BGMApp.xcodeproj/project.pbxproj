@@ -87,6 +87,7 @@
 		2795973B1C982E4E00A002FB /* BGMXPCListener.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2795973A1C982E4E00A002FB /* BGMXPCListener.mm */; };
 		279F48771DD6D73A00768A85 /* BGMHermes.m in Sources */ = {isa = PBXBuildFile; fileRef = 279F48761DD6D73900768A85 /* BGMHermes.m */; };
 		27C457E61CF2BC2600A6C9A6 /* BGMAutoPauseMenuItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C457E51CF2BC2600A6C9A6 /* BGMAutoPauseMenuItem.m */; };
+		27D1D6BB1DD7226C0049E707 /* BGMAboutPanel.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D1D6BA1DD7226C0049E707 /* BGMAboutPanel.m */; };
 		27D643BE1C9FB84C00737F6E /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 27D643BB1C9FB84C00737F6E /* Info.plist */; };
 		27D643C01C9FB99200737F6E /* BGMXPCHelperService.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D643BA1C9FB84C00737F6E /* BGMXPCHelperService.m */; };
 		27D643C11C9FB99200737F6E /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D643BC1C9FB84C00737F6E /* main.m */; };
@@ -219,6 +220,8 @@
 		279F48781DD6D94000768A85 /* Hermes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Hermes.h; path = "Music Players/Hermes.h"; sourceTree = "<group>"; };
 		27C457E41CF2BC2600A6C9A6 /* BGMAutoPauseMenuItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BGMAutoPauseMenuItem.h; sourceTree = "<group>"; };
 		27C457E51CF2BC2600A6C9A6 /* BGMAutoPauseMenuItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BGMAutoPauseMenuItem.m; sourceTree = "<group>"; };
+		27D1D6B91DD7226C0049E707 /* BGMAboutPanel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGMAboutPanel.h; path = Preferences/BGMAboutPanel.h; sourceTree = "<group>"; };
+		27D1D6BA1DD7226C0049E707 /* BGMAboutPanel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BGMAboutPanel.m; path = Preferences/BGMAboutPanel.m; sourceTree = "<group>"; };
 		27D643B41C9FABBD00737F6E /* BGM_Types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGM_Types.h; path = ../SharedSource/BGM_Types.h; sourceTree = "<group>"; };
 		27D643B51C9FABBD00737F6E /* BGMXPCProtocols.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGMXPCProtocols.h; path = ../SharedSource/BGMXPCProtocols.h; sourceTree = "<group>"; };
 		27D643B91C9FB84C00737F6E /* BGMXPCHelperService.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGMXPCHelperService.h; path = BGMXPCHelper/BGMXPCHelperService.h; sourceTree = SOURCE_ROOT; };
@@ -280,6 +283,8 @@
 			children = (
 				1C0BD0A61BF1B029004F4CF5 /* BGMPreferencesMenu.h */,
 				1C0BD0A71BF1B029004F4CF5 /* BGMPreferencesMenu.mm */,
+				27D1D6B91DD7226C0049E707 /* BGMAboutPanel.h */,
+				27D1D6BA1DD7226C0049E707 /* BGMAboutPanel.m */,
 				1C0BD0A31BF1A8E6004F4CF5 /* BGMAutoPauseMusicPrefs.h */,
 				1C0BD0A41BF1A8E6004F4CF5 /* BGMAutoPauseMusicPrefs.mm */,
 				1CE7064A1BF1EC0600BFC06D /* BGMOutputDevicePrefs.h */,
@@ -758,6 +763,7 @@
 				1CB8B33F1BBA75EF000E2DD1 /* main.m in Sources */,
 				1CB8B33D1BBA75EF000E2DD1 /* AppDelegate.mm in Sources */,
 				271677BA1C6CBDFA0080B0A2 /* CACFNumber.cpp in Sources */,
+				27D1D6BB1DD7226C0049E707 /* BGMAboutPanel.m in Sources */,
 				27379B8A1C7C562D0084A24C /* BGMVLC.m in Sources */,
 				1C2336DF1BEAE10C004C1C4E /* BGMSpotify.m in Sources */,
 				1CED616C1C316E1A002CAFCF /* BGMAudioDeviceManager.mm in Sources */,

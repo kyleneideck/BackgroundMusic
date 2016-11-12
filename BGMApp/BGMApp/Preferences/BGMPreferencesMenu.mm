@@ -26,6 +26,7 @@
 // Local Includes
 #import "BGMAutoPauseMusicPrefs.h"
 #import "BGMOutputDevicePrefs.h"
+#import "BGMAboutPanel.h"
 
 
 NS_ASSUME_NONNULL_BEGIN
@@ -34,19 +35,13 @@ NS_ASSUME_NONNULL_BEGIN
 static NSInteger const kPreferencesMenuItemTag = 1;
 static NSInteger const kAboutPanelMenuItemTag = 3;
 
-static NSInteger const kAboutPanelVersionLabelTag = 1;
-static NSInteger const kAboutPanelCopyrightLabelTag = 2;
-
 @implementation BGMPreferencesMenu {
     // Menu sections
     BGMAutoPauseMusicPrefs* autoPauseMusicPrefs;
     BGMOutputDevicePrefs* outputDevicePrefs;
     
-    // About Background Music window
-    NSPanel* aboutPanel;
-    NSTextField* aboutPanelVersionLabel;
-    NSTextField* aboutPanelCopyrightLabel;
-    NSTextView* aboutPanelLicenseView;
+    // The About Background Music window
+    BGMAboutPanel* aboutPanel;
 }
 
 - (id) initWithBGMMenu:(NSMenu*)inBGMMenu
@@ -55,12 +50,6 @@ static NSInteger const kAboutPanelCopyrightLabelTag = 2;
             aboutPanel:(NSPanel*)inAboutPanel
  aboutPanelLicenseView:(NSTextView*)inAboutPanelLicenseView {
     if ((self = [super init])) {
-        aboutPanel = inAboutPanel;
-        
-        aboutPanelVersionLabel = [[aboutPanel contentView] viewWithTag:kAboutPanelVersionLabelTag];
-        aboutPanelCopyrightLabel = [[aboutPanel contentView] viewWithTag:kAboutPanelCopyrightLabelTag];
-        aboutPanelLicenseView = inAboutPanelLicenseView;
-
         NSMenu* prefsMenu = [[inBGMMenu itemWithTag:kPreferencesMenuItemTag] submenu];
         [prefsMenu setDelegate:self];
         
@@ -70,52 +59,15 @@ static NSInteger const kAboutPanelCopyrightLabelTag = 2;
         
         outputDevicePrefs = [[BGMOutputDevicePrefs alloc] initWithAudioDevices:inAudioDevices];
         
+        aboutPanel = [[BGMAboutPanel alloc] initWithPanel:inAboutPanel licenseView:inAboutPanelLicenseView];
+        
         // Set up the "About Background Music" menu item
         NSMenuItem* aboutMenuItem = [prefsMenu itemWithTag:kAboutPanelMenuItemTag];
-        [aboutMenuItem setTarget:self];
-        [aboutMenuItem setAction:@selector(showAboutPanel)];
-        
-        [self initAboutPanel];
+        [aboutMenuItem setTarget:aboutPanel];
+        [aboutMenuItem setAction:@selector(show)];
     }
     
     return self;
-}
-
-- (void) initAboutPanel {
-    // Set up the About Background Music window
-    
-    NSBundle* bundle = [NSBundle mainBundle];
-    
-    if (bundle == nil) {
-        LogWarning("Background Music: BGMPreferencesMenu::initAboutPanel: Could not find main bundle");
-    } else {
-        // Version number label
-        NSString* version = [[bundle infoDictionary] objectForKey:@"CFBundleShortVersionString"];
-        [aboutPanelVersionLabel setStringValue:[NSString stringWithFormat:@"Version %@", version]];
-        
-        // Copyright notice label
-        NSString* copyrightNotice = [[bundle infoDictionary] objectForKey:@"NSHumanReadableCopyright"];
-        [aboutPanelCopyrightLabel setStringValue:copyrightNotice];
-        
-        // Load the text of the license into the text view
-        NSString* licensePath = [bundle pathForResource:@"LICENSE" ofType:nil];
-        NSError* err;
-        NSString* licenseStr = [NSString stringWithContentsOfFile:licensePath encoding:NSASCIIStringEncoding error:&err];
-        
-        if (err != nil || [licenseStr isEqualToString:@""]) {
-            NSLog(@"Error loading license file: %@", err);
-            licenseStr = @"Error: could not open license file.";
-        }
-        
-        [aboutPanelLicenseView setString:licenseStr];
-    }
-}
-
-- (void) showAboutPanel {
-    DebugMsg("BGMPreferencesMenu::showAboutPanel: Opening \"About Background Music\" panel");
-    [NSApp activateIgnoringOtherApps:YES];
-    [aboutPanel setIsVisible:YES];
-    [aboutPanel makeKeyAndOrderFront:self];
 }
 
 #pragma mark NSMenuDelegate

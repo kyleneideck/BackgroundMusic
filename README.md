@@ -153,7 +153,8 @@ change the default device and then change it back again. Failing that, you might
 
 ## License
 
-GPLv2 or later
+Copyright © 2016 [Background Music contributors](https://github.com/kyleneideck/BackgroundMusic/graphs/contributors).
+Licensed under [GPLv2](https://www.gnu.org/licenses/gpl-2.0.html), or any later version.
 
 ----
 

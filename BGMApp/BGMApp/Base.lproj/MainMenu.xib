@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11198.2" systemVersion="16A304a" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11542" systemVersion="16B2333a" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11198.2"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11542"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="NSApplication">
@@ -88,14 +89,14 @@
         <window allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" restorable="NO" hidesOnDeactivate="YES" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" animationBehavior="default" id="Cf4-3V-gl1" customClass="NSPanel">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" utility="YES"/>
             <windowPositionMask key="initialPositionMask" topStrut="YES"/>
-            <rect key="contentRect" x="248" y="350" width="748" height="293"/>
+            <rect key="contentRect" x="248" y="350" width="816" height="310"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1280" height="778"/>
             <view key="contentView" id="HlB-hX-Y0Y">
-                <rect key="frame" x="0.0" y="0.0" width="748" height="293"/>
+                <rect key="frame" x="0.0" y="0.0" width="816" height="310"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="r51-dd-LGP">
-                        <rect key="frame" x="18" y="78" width="240" height="22"/>
+                        <rect key="frame" x="53" y="95" width="240" height="22"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Background Music" id="Dw2-nu-eBQ">
                             <font key="font" size="18" name=".HelveticaNeueDeskInterface-Regular"/>
@@ -104,7 +105,7 @@
                         </textFieldCell>
                     </textField>
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" tag="1" translatesAutoresizingMaskIntoConstraints="NO" id="ekc-h0-I43">
-                        <rect key="frame" x="18" y="53" width="240" height="17"/>
+                        <rect key="frame" x="53" y="70" width="240" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Version 0.1.0" id="FDH-7l-wFf">
                             <font key="font" metaFont="system"/>
@@ -113,7 +114,7 @@
                         </textFieldCell>
                     </textField>
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="L5P-Lw-aCd">
-                        <rect key="frame" x="299" y="256" width="270" height="17"/>
+                        <rect key="frame" x="367" y="273" width="270" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="left" title="Licensed under GPLv2 or any later version." id="ETh-En-bzX">
                             <font key="font" metaFont="system"/>
@@ -122,20 +123,29 @@
                         </textFieldCell>
                     </textField>
                     <box horizontalHuggingPriority="750" fixedFrame="YES" boxType="separator" translatesAutoresizingMaskIntoConstraints="NO" id="Zc9-gs-X8C">
-                        <rect key="frame" x="264" y="71" width="5" height="150"/>
+                        <rect key="frame" x="332" y="88" width="5" height="150"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     </box>
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" tag="2" translatesAutoresizingMaskIntoConstraints="NO" id="Vy4-dv-jQB">
-                        <rect key="frame" x="18" y="28" width="240" height="17"/>
+                        <rect key="frame" x="18" y="45" width="310" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Copyright © 2016 Kyle Neideck" placeholderString="" id="ctF-95-uVu">
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Copyright © 2016 Background Music contributors" placeholderString="" id="ctF-95-uVu">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" tag="3" translatesAutoresizingMaskIntoConstraints="NO" id="nx6-kQ-N8Z" customClass="BGMLinkField">
+                        <rect key="frame" x="18" y="20" width="310" height="17"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" tag="3" title="https://github.com/kyleneideck/BackgroundMusic" placeholderString="" id="VOb-5X-o3R">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" red="0.20000000000000001" green="0.40000000000000002" blue="0.59999999999999998" alpha="1" colorSpace="calibratedRGB"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
                     <imageView wantsLayer="YES" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Tui-Hf-FLv">
-                        <rect key="frame" x="63" y="108" width="150" height="150"/>
+                        <rect key="frame" x="98" y="125" width="150" height="150"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <shadow key="shadow">
                             <color key="color" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
@@ -143,7 +153,7 @@
                         <imageCell key="cell" refusesFirstResponder="YES" alignment="left" animates="YES" imageScaling="proportionallyUpOrDown" image="FermataIcon" id="dBU-ZS-ZzA"/>
                     </imageView>
                     <imageView wantsLayer="YES" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="R1R-Rd-xPC">
-                        <rect key="frame" x="63" y="108" width="150" height="150"/>
+                        <rect key="frame" x="98" y="125" width="150" height="150"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <shadow key="shadow">
                             <color key="color" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
@@ -151,17 +161,17 @@
                         <imageCell key="cell" refusesFirstResponder="YES" alignment="left" animates="YES" imageScaling="proportionallyUpOrDown" image="FermataIcon" id="1VP-dU-RCe"/>
                     </imageView>
                     <scrollView fixedFrame="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="eqz-ap-PAC">
-                        <rect key="frame" x="301" y="28" width="427" height="220"/>
+                        <rect key="frame" x="369" y="20" width="427" height="245"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <clipView key="contentView" ambiguous="YES" id="Cdb-RA-YK0">
-                            <rect key="frame" x="1" y="1" width="410" height="218"/>
-                            <autoresizingMask key="autoresizingMask"/>
+                            <rect key="frame" x="1" y="1" width="425" height="243"/>
+                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
                                 <textView ambiguous="YES" editable="NO" importsGraphics="NO" usesFontPanel="YES" findStyle="panel" continuousSpellChecking="YES" allowsUndo="YES" usesRuler="YES" allowsNonContiguousLayout="YES" quoteSubstitution="YES" dashSubstitution="YES" smartInsertDelete="YES" id="LSG-PF-cl8">
-                                    <rect key="frame" x="0.0" y="0.0" width="410" height="218"/>
+                                    <rect key="frame" x="0.0" y="0.0" width="425" height="243"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                    <size key="minSize" width="410" height="218"/>
+                                    <size key="minSize" width="425" height="243"/>
                                     <size key="maxSize" width="477" height="10000000"/>
                                     <color key="insertionPointColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                 </textView>
@@ -173,13 +183,13 @@
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
                         <scroller key="verticalScroller" verticalHuggingPriority="750" horizontal="NO" id="qCC-lY-zQ6">
-                            <rect key="frame" x="1" y="1" width="15" height="0.0"/>
+                            <rect key="frame" x="410" y="1" width="16" height="243"/>
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
                     </scrollView>
                 </subviews>
             </view>
-            <point key="canvasLocation" x="101" y="211.5"/>
+            <point key="canvasLocation" x="-31" y="220"/>
         </window>
         <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" setsMaxLayoutWidthAtFirstLayout="YES" id="IoN-sN-cCx">
             <rect key="frame" x="0.0" y="0.0" width="471" height="180"/>
