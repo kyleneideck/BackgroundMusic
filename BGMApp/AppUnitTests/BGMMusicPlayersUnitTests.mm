@@ -177,7 +177,7 @@
     players = [[BGMMusicPlayers alloc] initWithAudioDevices:devices
                                                userDefaults:defaults];
     
-    XCTAssertEqual(players.musicPlayers.count, 5);
+    XCTAssert(players.musicPlayers.count >= 6);
     
     XCTAssertEqualObjects(players.selectedMusicPlayer.musicPlayerID, [BGMiTunes sharedMusicPlayerID]);
     XCTAssertEqualObjects(players.selectedMusicPlayer.name, @"iTunes");
@@ -193,7 +193,7 @@
     BGMMusicPlayers* players = [[BGMMusicPlayers alloc] initWithAudioDevices:devices
                                                                 userDefaults:defaults];
     
-    XCTAssertEqual(players.musicPlayers.count, 5);
+    XCTAssert(players.musicPlayers.count >= 6);
     
     XCTAssertEqualObjects(players.selectedMusicPlayer.musicPlayerID, vlcID);
     XCTAssertEqualObjects(players.selectedMusicPlayer.name, @"VLC");
