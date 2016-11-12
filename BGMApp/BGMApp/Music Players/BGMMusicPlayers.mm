@@ -32,6 +32,7 @@
 #import "BGMVLC.h"
 #import "BGMVOX.h"
 #import "BGMDecibel.h"
+#import "BGMHermes.h"
 
 
 #pragma clang assume_nonnull begin
@@ -52,7 +53,8 @@
                                          [BGMVLC class],
                                          [BGMSpotify class],
                                          [BGMiTunes class],
-                                         [BGMDecibel class]]
+                                         [BGMDecibel class],
+                                         [BGMHermes class] ]
                          userDefaults:defaults];
 }
 

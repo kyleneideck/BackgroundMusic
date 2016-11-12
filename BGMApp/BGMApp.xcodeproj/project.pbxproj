@@ -85,6 +85,7 @@
 		278D71E91CABB6FF00899CF9 /* BGMXPCHelperTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 279597401C996E2000A002FB /* BGMXPCHelperTests.m */; };
 		278D71F61CABBC3B00899CF9 /* BGMXPCHelperTests-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 278D71F51CABBC3B00899CF9 /* BGMXPCHelperTests-Info.plist */; };
 		2795973B1C982E4E00A002FB /* BGMXPCListener.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2795973A1C982E4E00A002FB /* BGMXPCListener.mm */; };
+		279F48771DD6D73A00768A85 /* BGMHermes.m in Sources */ = {isa = PBXBuildFile; fileRef = 279F48761DD6D73900768A85 /* BGMHermes.m */; };
 		27C457E61CF2BC2600A6C9A6 /* BGMAutoPauseMenuItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C457E51CF2BC2600A6C9A6 /* BGMAutoPauseMenuItem.m */; };
 		27D643BE1C9FB84C00737F6E /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 27D643BB1C9FB84C00737F6E /* Info.plist */; };
 		27D643C01C9FB99200737F6E /* BGMXPCHelperService.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D643BA1C9FB84C00737F6E /* BGMXPCHelperService.m */; };
@@ -213,6 +214,9 @@
 		2795973A1C982E4E00A002FB /* BGMXPCListener.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = BGMXPCListener.mm; sourceTree = "<group>"; };
 		2795973C1C982E8C00A002FB /* BGMXPCListener.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BGMXPCListener.h; sourceTree = "<group>"; };
 		279597401C996E2000A002FB /* BGMXPCHelperTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BGMXPCHelperTests.m; sourceTree = "<group>"; };
+		279F48751DD6D73900768A85 /* BGMHermes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGMHermes.h; path = "Music Players/BGMHermes.h"; sourceTree = "<group>"; };
+		279F48761DD6D73900768A85 /* BGMHermes.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BGMHermes.m; path = "Music Players/BGMHermes.m"; sourceTree = "<group>"; };
+		279F48781DD6D94000768A85 /* Hermes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Hermes.h; path = "Music Players/Hermes.h"; sourceTree = "<group>"; };
 		27C457E41CF2BC2600A6C9A6 /* BGMAutoPauseMenuItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BGMAutoPauseMenuItem.h; sourceTree = "<group>"; };
 		27C457E51CF2BC2600A6C9A6 /* BGMAutoPauseMenuItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BGMAutoPauseMenuItem.m; sourceTree = "<group>"; };
 		27D643B41C9FABBD00737F6E /* BGM_Types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGM_Types.h; path = ../SharedSource/BGM_Types.h; sourceTree = "<group>"; };
@@ -352,6 +356,8 @@
 				1C4699461BD5C0E400F78043 /* BGMiTunes.m */,
 				1C2336DD1BEAE10C004C1C4E /* BGMSpotify.h */,
 				1C2336DE1BEAE10C004C1C4E /* BGMSpotify.m */,
+				279F48751DD6D73900768A85 /* BGMHermes.h */,
+				279F48761DD6D73900768A85 /* BGMHermes.m */,
 				27379B881C7C562D0084A24C /* BGMVLC.h */,
 				27379B891C7C562D0084A24C /* BGMVLC.m */,
 				273F10DD1CC3D0B900C1C6DA /* BGMVOX.h */,
@@ -463,6 +469,7 @@
 				27F7D4911D2484A300821C4B /* Decibel.h */,
 				27379B851C7C54870084A24C /* iTunes.h */,
 				27379B861C7C54870084A24C /* Spotify.h */,
+				279F48781DD6D94000768A85 /* Hermes.h */,
 				27379B871C7C552A0084A24C /* VLC.h */,
 				273F10DC1CC3CF9C00C1C6DA /* VOX.h */,
 			);
@@ -733,6 +740,7 @@
 				1C1962E41BC94E15008A4DF7 /* CARingBuffer.cpp in Sources */,
 				273F10DF1CC3D0B900C1C6DA /* BGMVOX.m in Sources */,
 				1CC1DF811BE5068A00FB8FE4 /* CACFArray.cpp in Sources */,
+				279F48771DD6D73A00768A85 /* BGMHermes.m in Sources */,
 				1C0BD0A81BF1B029004F4CF5 /* BGMPreferencesMenu.mm in Sources */,
 				1C1962F41BCABFC5008A4DF7 /* CAHALAudioObject.cpp in Sources */,
 				27F7D4901D2483B100821C4B /* BGMDecibel.m in Sources */,
@@ -1342,6 +1350,7 @@
 				2743CA001D86CFFA0089613B /* DebugOpt */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		278D71ED1CABB6FF00899CF9 /* Build configuration list for PBXNativeTarget "BGMXPCHelperTests" */ = {
 			isa = XCConfigurationList;

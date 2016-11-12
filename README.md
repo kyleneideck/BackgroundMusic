@@ -3,7 +3,7 @@
 ![](Images/README/FermataIcon.png)
 
 # Background Music
-##### OS X audio utility
+##### macOS audio utility
 
 ![](Images/README/Screenshot.png)
 
@@ -25,10 +25,11 @@ Background Music can pause your music player app when other audio starts playing
 that when I'm listening to music and pause it to watch a video or something I always forget to unpause it afterwards. So
 this keeps me from wearing headphones for hours listening to nothing.
 
-So far iTunes, [Spotify](https://www.spotify.com), [Decibel](https://sbooth.org/Decibel/),
-[VLC](https://www.videolan.org/vlc/) and [VOX](https://coppertino.com/vox/mac) are supported, but adding support for a
-music player should only take a few minutes (see `BGMMusicPlayer.h`). If you don't know how to program, or just don't
-feel like it, create an issue and I'll try to add it for you.
+So far iTunes, [Spotify](https://www.spotify.com), [VLC](https://www.videolan.org/vlc/),
+[VOX](https://coppertino.com/vox/mac), [Decibel](https://sbooth.org/Decibel/) and [Hermes](http://hermesapp.org/) are
+supported. Adding support for a new music player should only take a few minutes<sup id="a1">[1](#f1)</sup> -- see
+(BGMMusicPlayer.h)[BGMApp/BGMApp/Music Players/BGMMusicPlayer.h]. If you don't know how to program, or just don't feel
+like it, create an issue and I'll try to add it for you.
 
 ## App volumes
 
@@ -110,7 +111,7 @@ change the default device and then change it back again. Failing that, you might
   the Sound section in System Preferences, click the Output tab and change your default output device to something other
   than Background Music Device. Alternatively, you may Option+Click on the Sound icon in the menu bar to select a different output device.
 
-  This happens when OS X remembers that Background Music Device was your default audio device the last time you last
+  This happens when macOS remembers that Background Music Device was your default audio device the last time you last
   used (or didn't use) headphones.
 - [A recent Chrome bug](https://bugs.chromium.org/p/chromium/issues/detail?id=557620) can stop Chrome from switching to
   Background Music Device after you open Background Music. Chrome's audio will still play, but Background Music won't be
@@ -153,3 +154,11 @@ change the default device and then change it back again. Failing that, you might
 ## License
 
 GPLv2 or later
+
+----
+
+<b id="f1">[1]</b> However, if the music player doesn't support AppleScript, or doesn't support the events Background
+Music needs (`isPlaying`, `isPaused`, `play` and `pause`), it can take significantly more effort to add. (And in some
+cases would require changes to the music player itself.) [↩](#a1)
+
+
