@@ -30,6 +30,8 @@
 #include <AudioToolbox/AudioServices.h>
 
 
+#pragma clang assume_nonnull begin
+
 // AudioObjectPropertyElement docs: "Elements are numbered sequentially where 0 represents the master element."
 static const AudioObjectPropertyElement kMasterChannel = 0;
 
@@ -355,4 +357,6 @@ OSStatus    BGMDeviceControlSync::BGMDeviceListenerProc(AudioObjectID inObjectID
     
     return 0;
 }
+
+#pragma clang assume_nonnull end
 
