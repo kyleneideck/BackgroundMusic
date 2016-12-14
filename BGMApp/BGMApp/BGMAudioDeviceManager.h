@@ -19,8 +19,9 @@
 //
 //  Copyright © 2016 Kyle Neideck
 //
-//  Manages the BGMDevice and the output device. Sets the system's current default device as the output device on init, then
-//  starts playthrough and mirroring the devices' controls. The output device can be changed but the BGMDevice is fixed.
+//  Manages the BGMDevice and the output device. Sets the system's current default device as the
+//  output device on init, then starts playthrough and mirroring the devices' controls. The output
+//  device can be changed but the BGMDevice is fixed.
 //
 
 // PublicUtility Includes
@@ -33,28 +34,40 @@
 #include <CoreAudio/AudioHardwareBase.h>
 
 
+#pragma clang assume_nonnull begin
+
 extern int const kBGMErrorCode_BGMDeviceNotFound;
 extern int const kBGMErrorCode_OutputDeviceNotFound;
 
 @interface BGMAudioDeviceManager : NSObject
 
-- (id) initWithError:(NSError**)error;
+- (instancetype) initWithError:(NSError**)error;
 
 // Set BGMDevice as the default audio device for all processes
-- (void) setBGMDeviceAsOSDefault;
+- (NSError* __nullable) setBGMDeviceAsOSDefault;
 // Replace BGMDevice as the default device with the output device
-- (void) unsetBGMDeviceAsOSDefault;
+- (NSError* __nullable) unsetBGMDeviceAsOSDefault;
 
 #ifdef __cplusplus
 - (CAHALAudioDevice) bgmDevice;
 #endif
 
 - (BOOL) isOutputDevice:(AudioObjectID)deviceID;
-// Returns NO if the output device couldn't be changed and has been reverted
-- (BOOL) setOutputDeviceWithID:(AudioObjectID)deviceID revertOnFailure:(BOOL)revertOnFailure;
+// Set the audio output device that BGMApp uses.
+//
+// Returns an error if the output device couldn't be changed. If revertOnFailure is true in that case,
+// this method will attempt to set the output device back to the original device. If it fails to
+// revert, an additional error will be included in the error's userInfo with the key "revertError".
+//
+// Both errors' codes will be the code of the exception that caused the failure, if any, generally one
+// of the error constants from AudioHardwareBase.h.
+- (NSError* __nullable) setOutputDeviceWithID:(AudioObjectID)deviceID
+                              revertOnFailure:(BOOL)revertOnFailure;
 
-// Returns when IO has started running on the output device (for playthrough).
+// Blocks until IO has started running on the output device (for playthrough).
 - (OSStatus) waitForOutputDeviceToStart;
 
 @end
+
+#pragma clang assume_nonnull end
 

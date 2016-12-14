@@ -67,24 +67,40 @@ void	LogError(const char *fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);
-#if DEBUG
-	vprintf(fmt, args);
+    // BGM edit: vprintf leaves args in an undefined state, which can cause a crash
+    //           vsyslog. Original code commented out below.
+//#if DEBUG
+//	vprintf(fmt, args);
+//#endif
+//#if TARGET_API_MAC_OSX
+//	vsyslog(LOG_ERR, fmt, args);
+//#endif
+#if DEBUG || !TARGET_API_MAC_OSX
+    vprintf(fmt, args);
+#else
+    vsyslog(LOG_ERR, fmt, args);
 #endif
-#if TARGET_API_MAC_OSX
-	vsyslog(LOG_ERR, fmt, args);
-#endif
+    // BGM edit end
 	va_end(args);
 }
 
 void	LogWarning(const char *fmt, ...)
 {
 	va_list args;
-	va_start(args, fmt);
-#if DEBUG
-	vprintf(fmt, args);
+    va_start(args, fmt);
+    // BGM edit: vprintf leaves args in an undefined state, which can cause a crash
+    //           vsyslog. Original code commented out below.
+//#if DEBUG
+//	vprintf(fmt, args);
+//#endif
+//#if TARGET_API_MAC_OSX
+//	vsyslog(LOG_WARNING, fmt, args);
+//#endif
+#if DEBUG || !TARGET_API_MAC_OSX
+    vprintf(fmt, args);
+#else
+    vsyslog(LOG_WARNING, fmt, args);
 #endif
-#if TARGET_API_MAC_OSX
-	vsyslog(LOG_WARNING, fmt, args);
-#endif
+    // BGM edit end
 	va_end(args);
 }

@@ -33,6 +33,7 @@
 #import "BGMAppVolumes.h"
 #import "BGMPreferencesMenu.h"
 #import "BGMXPCListener.h"
+#import "SystemPreferences.h"
 
 
 static float const kStatusBarIconPadding = 0.25;
@@ -87,13 +88,22 @@ static float const kStatusBarIconPadding = 0.25;
     [userDefaults registerDefaults];
 
     // audioDevices coordinates BGMDevice and the output device. It manages playthrough, volume/mute controls, etc.
-    NSError* err;
-    audioDevices = [[BGMAudioDeviceManager alloc] initWithError:&err];
-    if (audioDevices == nil) {
-        [self showDeviceNotFoundErrorMessageAndExit:err.code];
+    {
+        NSError* error;
+        audioDevices = [[BGMAudioDeviceManager alloc] initWithError:&error];
+        if (audioDevices == nil) {
+            [self showDeviceNotFoundErrorMessageAndExit:error.code];
+        }
     }
-    
-    [audioDevices setBGMDeviceAsOSDefault];
+
+    {
+        NSError* error = [audioDevices setBGMDeviceAsOSDefault];
+        if (error) {
+            [self showSetDeviceAsDefaultError:error
+                                      message:@"Could not set Background Music Device as your default audio device."
+                              informativeText:@"You might be able to set it yourself."];
+        }
+    }
     
     musicPlayers = [[BGMMusicPlayers alloc] initWithAudioDevices:audioDevices
                                                     userDefaults:userDefaults];
@@ -129,6 +139,20 @@ static float const kStatusBarIconPadding = 0.25;
     self.bgmMenu.delegate = self;
 }
 
+- (void) applicationWillTerminate:(NSNotification*)aNotification {
+#pragma unused (aNotification)
+    
+    NSError* error = [audioDevices unsetBGMDeviceAsOSDefault];
+    
+    if (error) {
+        [self showSetDeviceAsDefaultError:error
+                                  message:@"Failed to reset your system's audio output device."
+                          informativeText:@"You'll have to change it yourself to get audio working again."];
+    }
+}
+
+#pragma mark Error messages
+
 - (void) showDeviceNotFoundErrorMessageAndExit:(NSInteger)code {
     // Show an error dialog and exit if either BGMDevice wasn't found on the system or we couldn't find any output devices
     
@@ -160,6 +184,7 @@ static float const kStatusBarIconPadding = 0.25;
             NSAlert* alert = [NSAlert new];
             
             // TODO: Offer to install BGMXPCHelper if it's missing.
+            // TODO: Show suppression button?
             [alert setMessageText:@"Error connecting to BGMXPCHelper."];
             [alert setInformativeText:[NSString stringWithFormat:@"%s%s%@ (%lu)",
                                        "Make sure you have BGMXPCHelper installed. There are instructions in the "
@@ -173,9 +198,57 @@ static float const kStatusBarIconPadding = 0.25;
     }
 }
 
-- (void) applicationWillTerminate:(NSNotification*)aNotification {
-    #pragma unused (aNotification)
-    [audioDevices unsetBGMDeviceAsOSDefault];
+- (void) showSetDeviceAsDefaultError:(NSError*)error
+                             message:(NSString*)msg
+                     informativeText:(NSString*)info {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        NSLog(@"%@ %@ Error: %@", msg, info, error);
+        
+        NSAlert* alert = [NSAlert alertWithError:error];
+        alert.messageText = msg;
+        alert.informativeText = info;
+        
+        [alert addButtonWithTitle:@"OK"];
+        [alert addButtonWithTitle:@"Open Sound in System Preferences"];
+        
+        NSModalResponse buttonClicked = [alert runModal];
+        
+        if (buttonClicked != NSAlertFirstButtonReturn) {  // 'OK' is the first button.
+            [self openSysPrefsSoundOutput];
+        }
+    });
+}
+
+- (void) openSysPrefsSoundOutput {
+    SystemPreferencesApplication* __nullable sysPrefs =
+        [SBApplication applicationWithBundleIdentifier:@"com.apple.systempreferences"];
+    
+    if (!sysPrefs) {
+        NSLog(@"Could not open System Preferences");
+        return;
+    }
+    
+    // In System Preferences, go to the "Output" tab on the "Sound" pane.
+    for (SystemPreferencesPane* pane : [sysPrefs panes]) {
+        DebugMsg("AppDelegate::openSysPrefsSoundOutput: pane = %s", [pane.name UTF8String]);
+        
+        if ([pane.id isEqualToString:@"com.apple.preference.sound"]) {
+            sysPrefs.currentPane = pane;
+            
+            for (SystemPreferencesAnchor* anchor : [pane anchors]) {
+                DebugMsg("AppDelegate::openSysPrefsSoundOutput: anchor = %s", [anchor.name UTF8String]);
+                
+                if ([[anchor.name lowercaseString] isEqualToString:@"output"]) {
+                    DebugMsg("AppDelegate::openSysPrefsSoundOutput: Showing Output in Sound pane.");
+                    
+                    [anchor reveal];
+                }
+            }
+        }
+    }
+    
+    // Bring System Preferences to the foreground.
+    [sysPrefs activate];
 }
 
 #pragma mark NSMenuDelegate

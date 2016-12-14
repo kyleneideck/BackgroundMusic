@@ -43,6 +43,7 @@
 		2743C9E21D7EF8760089613B /* CAPThread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C38210F1C4A18DE00A0C8C6 /* CAPThread.cpp */; };
 		2743C9E41D7EF8760089613B /* CAVolumeCurve.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CB8B38C1BBCF4A9000E2DD1 /* CAVolumeCurve.cpp */; };
 		2743C9E61D7EF8E00089613B /* libPublicUtility.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2743C9C61D7EF84B0089613B /* libPublicUtility.a */; };
+		275343BD1DE9B44900DF3858 /* BGM_Utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 275343BC1DE9B44900DF3858 /* BGM_Utils.cpp */; };
 		277170101CA0CFC300AB34B4 /* BGM_PlugInInterface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CB8B36D1BBBD541000E2DD1 /* BGM_PlugInInterface.cpp */; };
 		277170111CA0CFC300AB34B4 /* CACFNumber.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C305D9B1BE294B5004EBB91 /* CACFNumber.cpp */; };
 		277EE6591C7269910037F1EE /* BGM_ClientMapTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 277EE6581C7269910037F1EE /* BGM_ClientMapTests.mm */; };
@@ -60,6 +61,7 @@
 		277EE6651C728CDB0037F1EE /* CAHostTimeBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CB8B3871BBCF08A000E2DD1 /* CAHostTimeBase.cpp */; };
 		2795973E1C9847CF00A002FB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2795973D1C9847CF00A002FB /* Foundation.framework */; };
 		27D643C31C9FBE1600737F6E /* BGM_XPCHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 27381A141C8EF50F00DF167C /* BGM_XPCHelper.m */; };
+		27E6B5F01E01966A00EC0AAB /* BGM_Utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 275343BC1DE9B44900DF3858 /* BGM_Utils.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -122,6 +124,7 @@
 		27381A141C8EF50F00DF167C /* BGM_XPCHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BGM_XPCHelper.m; sourceTree = "<group>"; };
 		27381A151C8EF50F00DF167C /* BGM_XPCHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BGM_XPCHelper.h; sourceTree = "<group>"; };
 		2743C9C61D7EF84B0089613B /* libPublicUtility.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libPublicUtility.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		275343BC1DE9B44900DF3858 /* BGM_Utils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BGM_Utils.cpp; path = ../SharedSource/BGM_Utils.cpp; sourceTree = "<group>"; };
 		2771700E1CA0C16200AB34B4 /* BGM_Utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGM_Utils.h; path = ../SharedSource/BGM_Utils.h; sourceTree = "<group>"; };
 		277EE6581C7269910037F1EE /* BGM_ClientMapTests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = BGM_ClientMapTests.mm; sourceTree = "<group>"; };
 		2795973D1C9847CF00A002FB /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -289,6 +292,7 @@
 			children = (
 				27D643B71C9FABF600737F6E /* BGM_Types.h */,
 				2771700E1CA0C16200AB34B4 /* BGM_Utils.h */,
+				275343BC1DE9B44900DF3858 /* BGM_Utils.cpp */,
 				27D643C21C9FBC5800737F6E /* BGM_TestUtils.h */,
 				27D643B81C9FABF600737F6E /* BGMXPCProtocols.h */,
 			);
@@ -423,6 +427,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27E6B5F01E01966A00EC0AAB /* BGM_Utils.cpp in Sources */,
 				277170101CA0CFC300AB34B4 /* BGM_PlugInInterface.cpp in Sources */,
 				277170111CA0CFC300AB34B4 /* CACFNumber.cpp in Sources */,
 				27D643C31C9FBE1600737F6E /* BGM_XPCHelper.m in Sources */,
@@ -463,6 +468,7 @@
 				27381A161C8EF50F00DF167C /* BGM_XPCHelper.m in Sources */,
 				1C0CB6BA1C642C600084C15A /* BGM_ClientMap.cpp in Sources */,
 				1CB8B3831BBCE7B5000E2DD1 /* BGM_Object.cpp in Sources */,
+				275343BD1DE9B44900DF3858 /* BGM_Utils.cpp in Sources */,
 				1C38210E1C4A163A00A0C8C6 /* BGM_TaskQueue.cpp in Sources */,
 				1C0CB6BB1C642C600084C15A /* BGM_Clients.cpp in Sources */,
 			);

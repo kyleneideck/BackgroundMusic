@@ -20,11 +20,16 @@
 //  Copyright © 2016 Kyle Neideck
 //
 
-#ifndef __SharedSource__BGM_Types__
-#define __SharedSource__BGM_Types__
+#ifndef SharedSource__BGM_Types
+#define SharedSource__BGM_Types
 
 #include <CoreAudio/AudioServerPlugIn.h>
 
+
+#pragma mark Project URLs
+
+static const char* const kBGMProjectURL = "https://github.com/kyleneideck/BackgroundMusic";
+static const char* const kBGMIssueTrackerURL = "https://github.com/kyleneideck/BackgroundMusic/issues";
 
 #pragma mark IDs
 
@@ -173,5 +178,14 @@ class BGM_RuntimeException { };
 
 #endif
 
-#endif /* __SharedSource__BGM_Types__ */
+// Assume we've failed to start the output device if it isn't running IO after this timeout expires.
+//
+// Currently set to 30s because some devices, e.g. AirPlay, can legitimately take that long to start.
+//
+// TODO: Should we have a timeout at all? Is there a notification we can subscribe to that will tell us whether the
+//       device is still making progress? Should we regularly poll mOutputDevice.IsAlive() while we're waiting to
+//       check it's still responsive?
+static const UInt64 kStartIOTimeoutNsec = 30 * NSEC_PER_SEC;
+
+#endif /* SharedSource__BGM_Types */
 

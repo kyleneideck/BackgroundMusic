@@ -194,8 +194,9 @@
 #define DebugMessageN8(msg, N1, N2, N3, N4, N5, N6, N7, N8)		DebugMsg(msg, N1, N2, N3, N4, N5, N6, N7, N8)
 #define DebugMessageN9(msg, N1, N2, N3, N4, N5, N6, N7, N8, N9)	DebugMsg(msg, N1, N2, N3, N4, N5, N6, N7, N8, N9)
 
-void	LogError(const char *fmt, ...);			// writes to syslog (and stderr if debugging)
-void	LogWarning(const char *fmt, ...);		// writes to syslog (and stderr if debugging)
+// BGM edit: Added __printflike.
+void	LogError(const char *fmt, ...) __printflike(1, 2);			// writes to syslog (and stderr if debugging)
+void	LogWarning(const char *fmt, ...) __printflike(1, 2);		// writes to syslog (and stderr if debugging)
 
 #define	NO_ACTION	(void)0
 

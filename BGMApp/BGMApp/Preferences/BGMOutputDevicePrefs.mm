@@ -23,11 +23,16 @@
 // Self Include
 #import "BGMOutputDevicePrefs.h"
 
+// Local Includes
+#import "BGM_Utils.h"
+
 // PublicUtility Includes
 #include "CAHALAudioSystemObject.h"
 #include "CAHALAudioDevice.h"
 #include "CAAutoDisposer.h"
 
+
+#pragma clang assume_nonnull begin
 
 static NSInteger const kOutputDeviceMenuItemTag = 2;
 
@@ -64,30 +69,35 @@ static NSInteger const kOutputDeviceMenuItemTag = 2;
         
         for (UInt32 i = 0; i < numDevices; i++) {
             CAHALAudioDevice device(devices[i]);
-            BOOL hasOutputChannels = device.GetTotalNumberChannels(/* inIsInput = */ false) > 0;
             
-            if (device.GetObjectID() != [audioDevices bgmDevice].GetObjectID() && hasOutputChannels) {
-                NSString* deviceName = CFBridgingRelease(device.CopyName());
-                NSMenuItem* item = [[NSMenuItem alloc] initWithTitle:deviceName
-                                                              action:@selector(outputDeviceWasChanged:)
-                                                       keyEquivalent:@""];
+            // TODO: Handle C++ exceptions. (And the ones above that we don't swallow.)
+            BGMLogAndSwallowExceptions("BGMOutputDevicePrefs::populatePreferencesMenu", [&]() {
+                BOOL hasOutputChannels = device.GetTotalNumberChannels(/* inIsInput = */ false) > 0;
                 
-                BOOL isSelected = [audioDevices isOutputDevice:device.GetObjectID()];
-                [item setState:(isSelected ? NSOnState : NSOffState)];
-                [item setTarget:self];
-                [item setIndentationLevel:1];
-                [item setRepresentedObject:[NSNumber numberWithUnsignedInt:device.GetObjectID()]];
-                
-                [prefsMenu insertItem:item atIndex:menuItemsIdx];
-                
-                [outputDeviceMenuItems addObject:item];
-            }
+                if (device.GetObjectID() != [audioDevices bgmDevice].GetObjectID() && hasOutputChannels) {
+                    NSString* deviceName = CFBridgingRelease(device.CopyName());
+                    NSMenuItem* item = [[NSMenuItem alloc] initWithTitle:deviceName
+                                                                  action:@selector(outputDeviceWasChanged:)
+                                                           keyEquivalent:@""];
+                    
+                    BOOL selected = [audioDevices isOutputDevice:device.GetObjectID()];
+                    item.state = (selected ? NSOnState : NSOffState);
+                    item.target = self;
+                    item.indentationLevel = 1;
+                    item.representedObject = [NSNumber numberWithUnsignedInt:device.GetObjectID()];
+                    
+                    [prefsMenu insertItem:item atIndex:menuItemsIdx];
+                    
+                    [outputDeviceMenuItems addObject:item];
+                }
+            });
         }
     }
 }
 
 - (void) outputDeviceWasChanged:(NSMenuItem*)menuItem {
-    DebugMsg("BGMOutputDevicePrefs::outputDeviceWasChanged: '%s' menu item selected", [menuItem.title UTF8String]);
+    DebugMsg("BGMOutputDevicePrefs::outputDeviceWasChanged: '%s' menu item selected",
+             [menuItem.title UTF8String]);
     
     // Make sure the menu item is actually for an output device.
     if (![outputDeviceMenuItems containsObject:menuItem]) {
@@ -95,21 +105,26 @@ static NSInteger const kOutputDeviceMenuItemTag = 2;
     }
     
     // Change to the new output device.
-    BOOL success = [audioDevices setOutputDeviceWithID:[[menuItem representedObject] unsignedIntValue] revertOnFailure:YES];
+    AudioDeviceID newDeviceID = [[menuItem representedObject] unsignedIntValue];
+    NSError* __nullable error = [audioDevices setOutputDeviceWithID:newDeviceID revertOnFailure:YES];
     
-    if (!success) {
-        // Couldn't change the output device, so show a warning and change the menu selection back
+    if (error) {
+        // Couldn't change the output device, so show a warning. (No need to change the menu selection back
+        // because it's repopulated every time it's opened.)
+        NSLog(@"Failed to set output device: %@", menuItem);
+        
         NSAlert* alert = [NSAlert new];
         NSString* deviceName = [menuItem title];
-        [alert setMessageText:[NSString stringWithFormat:@"Failed to set %@ as the output device", deviceName]];
-        [alert setInformativeText:@"This is probably a bug. Feel free to report it."];
+        
+        alert.messageText =
+            [NSString stringWithFormat:@"Failed to set %@ as the output device", deviceName];
+        alert.informativeText = @"This is probably a bug. Feel free to report it.";
+        
         [alert runModal];
-        
-        [menuItem setState:NSOffState];
-        
-        // TODO: Reselect previous menu item
     }
 }
 
 @end
+
+#pragma clang assume_nonnull end
 

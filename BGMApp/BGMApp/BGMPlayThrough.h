@@ -36,13 +36,16 @@
 //  a future release.
 //
 
-#ifndef __BGMApp__BGMPlayThrough__
-#define __BGMApp__BGMPlayThrough__
+#ifndef BGMApp__BGMPlayThrough
+#define BGMApp__BGMPlayThrough
 
 // PublicUtility Includes
 #include "CARingBuffer.h"
 #include "CAHALAudioDevice.h"
 #include "CAMutex.h"
+
+// STL Includes
+#include <atomic>
 
 // System Includes
 #include <mach/semaphore.h>
@@ -82,18 +85,29 @@ private:
     void                DestroyIOProcs();
 	
 public:
-    OSStatus            Start();
+    void                Start();
+    
+    // Blocks until the output device has started our IOProc. Returns one of the error constants
+    // from AudioHardwareBase.h (e.g. kAudioHardwareNoError).
     OSStatus            WaitForOutputDeviceToStart();
     
 private:
+    void                ReleaseThreadsWaitingForOutputToStart() const;
+    
+public:
     OSStatus            Stop();
     void                StopIfIdle();
+    
+private:
     
     static OSStatus     BGMDeviceListenerProc(AudioObjectID inObjectID,
                                               UInt32 inNumberAddresses,
                                               const AudioObjectPropertyAddress* inAddresses,
                                               void* __nullable inClientData);
-    static bool         RunningSomewhereOtherThanBGMApp(const CAHALAudioDevice inBGMDevice);
+    static void         HandleBGMDeviceIsRunning(BGMPlayThrough* refCon);
+    static void         HandleBGMDeviceIsRunningSomewhereOtherThanBGMApp(BGMPlayThrough* refCon);
+    
+    static bool         IsRunningSomewhereOtherThanBGMApp(const CAHALAudioDevice& inBGMDevice);
 
     static OSStatus     InputDeviceIOProc(AudioObjectID           inDevice,
                                           const AudioTimeStamp*   inNow,
@@ -109,6 +123,21 @@ private:
                                            AudioBufferList*        outOutputData,
                                            const AudioTimeStamp*   inOutputTime,
                                            void* __nullable        inClientData);
+    
+    // The state of an IO proc. Used by the IO proc to tell other threads when it's finished starting. Used by other
+    // threads to tell the IO proc to stop itself. (Probably used for other things as well.)
+    enum class          IOState
+                        {
+                            Stopped, Starting, Running, Stopping
+                        };
+    // The IO procs call this to update their IOState member. Also stops the IO proc if its state has been set to Stopping.
+    // Returns true if it changes the state.
+    static bool         UpdateIOProcState(const char* __nullable callerName,
+                                          std::atomic<IOState>& inState,
+                                          AudioDeviceIOProcID __nullable inIOProcID,
+                                          CAHALAudioDevice& inDevice,
+                                          IOState& outNewState);
+    
     static void         HandleRingBufferError(CARingBufferError err,
                                               const char* methodName,
                                               const char* callReturningErr);
@@ -128,12 +157,13 @@ private:
     semaphore_t         mOutputDeviceIOProcSemaphore { SEMAPHORE_NULL };
     
     bool                mActive = false;
+
     bool                mPlayingThrough = false;
-    
+
     UInt64              mLastNotifiedIOStoppedOnBGMDevice;
-    
-    bool                mInputDeviceIOProcShouldStop = false;
-    bool                mOutputDeviceIOProcShouldStop = false;
+
+    std::atomic<IOState>    mInputDeviceIOProcState { IOState::Stopped };
+    std::atomic<IOState>    mOutputDeviceIOProcState { IOState::Stopped };
     
     // For debug logging.
     UInt64              mToldOutputDeviceToStartAt;
@@ -152,5 +182,5 @@ private:
 
 #pragma clang assume_nonnull end
 
-#endif /* __BGMApp__BGMPlayThrough__ */
+#endif /* BGMApp__BGMPlayThrough */
 

@@ -182,7 +182,7 @@ static NSXPCConnection* __nullable sBGMAppConnection = nil;
     }];
     
     // Wait for BGMApp's reply
-    long err = dispatch_semaphore_wait(bgmAppReplySemaphore, dispatch_time(DISPATCH_TIME_NOW, 30 * NSEC_PER_SEC));
+    long err = dispatch_semaphore_wait(bgmAppReplySemaphore, dispatch_time(DISPATCH_TIME_NOW, kStartIOTimeoutNsec));
     
     if (err != 0) {
         replyToBGMDriver = [BGMXPCHelperService errorWithCode:kBGMXPC_Timeout

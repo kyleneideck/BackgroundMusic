@@ -25,6 +25,7 @@
 
 // Local Includes
 #include "BGM_Types.h"
+#include "BGM_Utils.h"
 #include "BGMDeviceControlSync.h"
 #include "BGMPlayThrough.h"
 
@@ -57,7 +58,7 @@ public:
         bgmDevice = BGMAudioDevice(CFSTR(kBGMDeviceUID));
         
         if (bgmDevice.GetObjectID() == kAudioObjectUnknown) {
-            DebugMsg("BGMAudioDeviceManager::initWithError: BGMDevice not found");
+            LogError("BGMAudioDeviceManager::initWithError: BGMDevice not found");
             if (error) {
                 *error = [NSError errorWithDomain:@kBGMAppBundleID code:kBGMErrorCode_BGMDeviceNotFound userInfo:nil];
             }
@@ -69,7 +70,7 @@ public:
         
         
         if (outputDevice.GetObjectID() == kAudioDeviceUnknown) {
-            DebugMsg("BGMAudioDeviceManager::initWithError: output device not found");
+            LogError("BGMAudioDeviceManager::initWithError: output device not found");
             if (error) {
                 *error = [NSError errorWithDomain:@kBGMAppBundleID code:kBGMErrorCode_OutputDeviceNotFound userInfo:nil];
             }
@@ -115,10 +116,18 @@ public:
                 }
             }
             
-            [self setOutputDeviceWithID:devices[minLatencyDeviceIdx] revertOnFailure:NO];
+            BGMLogUnexpectedExceptionsMsg("BGMAudioDeviceManager::initOutputDevice",
+                                          "setOutputDeviceWithID:devices[minLatencyDeviceIdx]", [&]() {
+                // TODO: On error, try a different output device.
+                [self setOutputDeviceWithID:devices[minLatencyDeviceIdx] revertOnFailure:NO];
+            });
         }
     } else {
-        [self setOutputDeviceWithID:defaultDeviceID revertOnFailure:NO];
+        BGMLogUnexpectedExceptionsMsg("BGMAudioDeviceManager::initOutputDevice",
+                                      "setOutputDeviceWithID:defaultDeviceID", [&]() {
+            // TODO: Return the error from setOutputDeviceWithID so it can be returned by initWithError.
+            [self setOutputDeviceWithID:defaultDeviceID revertOnFailure:NO];
+        });
     }
     
     assert(outputDevice.GetObjectID() != bgmDevice.GetObjectID());
@@ -134,33 +143,114 @@ public:
 
 #pragma mark Systemwide Default Device
 
-- (void) setBGMDeviceAsOSDefault {
+// Note that there are two different "default" output devices on OS X: "output" and "system output". See
+// AudioHardwarePropertyDefaultSystemOutputDevice in AudioHardware.h.
+
+- (NSError* __nullable) setBGMDeviceAsOSDefault {
+    DebugMsg("BGMAudioDeviceManager::setBGMDeviceAsOSDefault: Setting the system's default audio "
+             "device to BGMDevice");
+    
     CAHALAudioSystemObject audioSystem;
     
+    AudioDeviceID bgmDeviceID = kAudioDeviceUnknown;
+    AudioDeviceID outputDeviceID = kAudioDeviceUnknown;
+    
     @synchronized (self) {
-        if (audioSystem.GetDefaultAudioDevice(false, true) == outputDevice.GetObjectID()) {
-            // The default system device was the same as the default device, so change that as well
-            audioSystem.SetDefaultAudioDevice(false, true, bgmDevice.GetObjectID());
-        }
-        
-        audioSystem.SetDefaultAudioDevice(false, false, bgmDevice.GetObjectID());
+        BGMLogAndSwallowExceptions("setBGMDeviceAsOSDefault", [&]() {
+            bgmDeviceID = bgmDevice.GetObjectID();
+            outputDeviceID = outputDevice.GetObjectID();
+        });
     }
+    
+    if (outputDeviceID == kAudioDeviceUnknown) {
+        return [NSError errorWithDomain:@kBGMAppBundleID code:kBGMErrorCode_OutputDeviceNotFound userInfo:nil];
+    }
+    if (bgmDeviceID == kAudioDeviceUnknown) {
+        return [NSError errorWithDomain:@kBGMAppBundleID code:kBGMErrorCode_BGMDeviceNotFound userInfo:nil];
+    }
+
+    try {
+        AudioDeviceID currentDefault = audioSystem.GetDefaultAudioDevice(false, true);
+        
+        try {
+            if (currentDefault == outputDeviceID) {
+                // The default system device was the same as the default device, so change that as well
+                audioSystem.SetDefaultAudioDevice(false, true, bgmDeviceID);
+            }
+        
+            audioSystem.SetDefaultAudioDevice(false, false, bgmDeviceID);
+        } catch (CAException e) {
+            NSLog(@"SetDefaultAudioDevice threw CAException (%d)", e.GetError());
+            return [NSError errorWithDomain:@kBGMAppBundleID code:e.GetError() userInfo:nil];
+        }
+    } catch (...) {
+        NSLog(@"Unexpected exception");
+        return [NSError errorWithDomain:@kBGMAppBundleID code:-1 userInfo:nil];
+    }
+    
+    return nil;
 }
 
-- (void) unsetBGMDeviceAsOSDefault {
+- (NSError* __nullable) unsetBGMDeviceAsOSDefault {
     CAHALAudioSystemObject audioSystem;
     
+    bool bgmDeviceIsDefault = true;
+    bool bgmDeviceIsSystemDefault = true;
+    
+    AudioDeviceID bgmDeviceID = kAudioDeviceUnknown;
+    AudioDeviceID outputDeviceID = kAudioDeviceUnknown;
+    
     @synchronized (self) {
-        if (audioSystem.GetDefaultAudioDevice(false, true) == bgmDevice.GetObjectID()) {
-            // We changed the system output device to BGMDevice, which we only do if it initially matches the
-            // default output device, so change it back
-            audioSystem.SetDefaultAudioDevice(false, true, outputDevice.GetObjectID());
-        }
+        BGMLogAndSwallowExceptions("unsetBGMDeviceAsOSDefault", [&]() {
+            bgmDeviceID = bgmDevice.GetObjectID();
+            outputDeviceID = outputDevice.GetObjectID();
+            
+            bgmDeviceIsDefault =
+                (audioSystem.GetDefaultAudioDevice(false, false) == bgmDeviceID);
+            
+            bgmDeviceIsSystemDefault =
+                (audioSystem.GetDefaultAudioDevice(false, true) == bgmDeviceID);
+        });
+    }
+    
+    if (outputDeviceID == kAudioDeviceUnknown) {
+        return [NSError errorWithDomain:@kBGMAppBundleID code:kBGMErrorCode_OutputDeviceNotFound userInfo:nil];
+    }
+    if (bgmDeviceID == kAudioDeviceUnknown) {
+        return [NSError errorWithDomain:@kBGMAppBundleID code:kBGMErrorCode_BGMDeviceNotFound userInfo:nil];
+    }
+    
+    if (bgmDeviceIsDefault) {
+        DebugMsg("BGMAudioDeviceManager::unsetBGMDeviceAsOSDefault: Setting the system's default output "
+                 "device back to device %d", outputDeviceID);
         
-        if (audioSystem.GetDefaultAudioDevice(false, false) == bgmDevice.GetObjectID()) {
-            audioSystem.SetDefaultAudioDevice(false, false, outputDevice.GetObjectID());
+        try {
+            audioSystem.SetDefaultAudioDevice(false, false, outputDeviceID);
+        } catch (CAException e) {
+            return [NSError errorWithDomain:@kBGMAppBundleID code:e.GetError() userInfo:nil];
+        } catch (...) {
+            BGMLogUnexpectedException("BGMAudioDeviceManager::unsetBGMDeviceAsOSDefault "
+                                      "SetDefaultAudioDevice (output)");
         }
     }
+    
+    // If we changed the default system output device to BGMDevice, which we only do if it's set to
+    // the same device as the default output device, change it back to the previous device.
+    if (bgmDeviceIsSystemDefault) {
+        DebugMsg("BGMAudioDeviceManager::unsetBGMDeviceAsOSDefault: Setting the system's default system "
+                 "output device back to device %d", outputDeviceID);
+        
+        try {
+            audioSystem.SetDefaultAudioDevice(false, true, outputDeviceID);
+        } catch (CAException e) {
+            return [NSError errorWithDomain:@kBGMAppBundleID code:e.GetError() userInfo:nil];
+        } catch (...) {
+            BGMLogUnexpectedException("BGMAudioDeviceManager::unsetBGMDeviceAsOSDefault "
+                                      "SetDefaultAudioDevice (system output)");
+        }
+    }
+    
+    return nil;
 }
 
 #pragma mark Accessors
@@ -175,8 +265,10 @@ public:
     }
 }
 
-- (BOOL) setOutputDeviceWithID:(AudioObjectID)deviceID revertOnFailure:(BOOL)revertOnFailure {
+- (NSError* __nullable) setOutputDeviceWithID:(AudioObjectID)deviceID revertOnFailure:(BOOL)revertOnFailure {
     DebugMsg("BGMAudioDeviceManager::setOutputDeviceWithID: Setting output device. deviceID=%u", deviceID);
+    
+    AudioDeviceID currentDeviceID = outputDevice.GetObjectID();
     
     // Set up playthrough and control sync
     BGMAudioDevice newOutputDevice(deviceID);
@@ -200,31 +292,53 @@ public:
         // TODO: If audio isn't playing, this makes playthrough run until the user plays audio and then stops it again,
         //       which wastes CPU. I think we could just have Start() call StopIfIdle(), but I haven't tried it yet.
         playThrough.Start();
+        playThrough.StopIfIdle();
     } catch (CAException e) {
-        // Using LogWarning from PublicUtility instead of NSLog here crashes from a bad access. Not sure why.
-        NSLog(@"BGMAudioDeviceManager::setOutputDeviceWithID: Couldn't set device with ID %u as output device. %s %s%d.",
-              newOutputDevice.GetObjectID(),
-              (revertOnFailure ? "Will attempt to revert to the previous device." : ""),
-              "Error: ", e.GetError());
-        
-        if (revertOnFailure) {
-            // Try to reactivate the original device listener and playthrough
-            [self setOutputDeviceWithID:outputDevice.GetObjectID() revertOnFailure:NO];
-            return NO;
-        } else {
-            // TODO: Handle in callers. (Maybe show an error dialog and try to set the original default device as the
-            //       output device.)
-            Throw(e);
-        }
+        return [self failedToSetOutputDevice:newOutputDevice.GetObjectID()
+                                   errorCode:e.GetError()
+                                    revertTo:(revertOnFailure ? &currentDeviceID : nullptr)];
+    } catch (...) {
+        return [self failedToSetOutputDevice:newOutputDevice.GetObjectID()
+                                   errorCode:kAudioHardwareUnspecifiedError
+                                    revertTo:(revertOnFailure ? &currentDeviceID : nullptr)];
     }
     
-    return YES;
+    return nil;
+}
+
+- (NSError*) failedToSetOutputDevice:(AudioDeviceID)deviceID
+                           errorCode:(OSStatus)errorCode
+                            revertTo:(AudioDeviceID*)revertTo {
+    // Using LogWarning from PublicUtility instead of NSLog here crashes from a bad access. Not sure why.
+    NSLog(@"BGMAudioDeviceManager::failedToSetOutputDevice: Couldn't set device with ID %u as output device. "
+          "%s%d. %@",
+          deviceID,
+          "Error: ", errorCode,
+          (revertTo ? [NSString stringWithFormat:@"Will attempt to revert to the previous device. "
+                                                  "Previous device ID: %u.", *revertTo] : @""));
+    
+    NSDictionary* __nullable info = nil;
+    
+    if (revertTo) {
+        // Try to reactivate the original device listener and playthrough. (Sorry about the mutual recursion.)
+        NSError* __nullable revertError = [self setOutputDeviceWithID:*revertTo revertOnFailure:NO];
+        
+        if (revertError) {
+            info = @{ @"revertError": (NSError*)revertError };
+        }
+    } else {
+        // TODO: Handle this error better in callers. Maybe show an error dialog and try to set the original
+        //       default device as the output device.
+        NSLog(@"BGMAudioDeviceManager::failedToSetOutputDevice: Failed to revert to the previous device.");
+    }
+    
+    return [NSError errorWithDomain:@kBGMAppBundleID code:errorCode userInfo:info];
 }
 
 - (OSStatus) waitForOutputDeviceToStart {
-    @synchronized (self) {
-        return playThrough.WaitForOutputDeviceToStart();
-    }
+    // Intentionally not synchronized to avoid blocking the UI thread. BGMPlayThrough::WaitForOutputDeviceToStart
+    // will be interrupted if the output device is changed.
+    return playThrough.WaitForOutputDeviceToStart();
 }
 
 @end

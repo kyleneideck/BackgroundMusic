@@ -23,6 +23,9 @@
 // Self Include
 #import "BGMAboutPanel.h"
 
+// Local Includes
+#import "BGM_Types.h"
+
 // PublicUtility Includes
 #undef CoreAudio_ThreadStampMessages
 #define CoreAudio_ThreadStampMessages 0  // Requires C++
@@ -42,8 +45,6 @@ static NSInteger const kProjectWebsiteLabelTag = 3;
     NSTextField* copyrightLabel;
     NSTextField* websiteLabel;
     
-    NSString* projectURL;
-    
     NSTextView* licenseView;
 }
 
@@ -54,8 +55,6 @@ static NSInteger const kProjectWebsiteLabelTag = 3;
         versionLabel = [[aboutPanel contentView] viewWithTag:kVersionLabelTag];
         copyrightLabel = [[aboutPanel contentView] viewWithTag:kCopyrightLabelTag];
         websiteLabel = [[aboutPanel contentView] viewWithTag:kProjectWebsiteLabelTag];
-        
-        projectURL = websiteLabel.stringValue;
         
         licenseView = inLicenseView;
         
@@ -92,6 +91,8 @@ static NSInteger const kProjectWebsiteLabelTag = 3;
         // Project website link label
         websiteLabel.selectable = YES;
         websiteLabel.allowsEditingTextAttributes = YES;
+        
+        NSString* projectURL = [NSString stringWithUTF8String:kBGMProjectURL];
         websiteLabel.attributedStringValue =
             [[NSAttributedString alloc] initWithString:projectURL
                                             attributes:@{ NSLinkAttributeName: projectURL,

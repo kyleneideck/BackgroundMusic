@@ -39,6 +39,7 @@
 		1CE7064C1BF1EC0600BFC06D /* BGMOutputDevicePrefs.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1CE7064B1BF1EC0600BFC06D /* BGMOutputDevicePrefs.mm */; };
 		1CED61691C3081C2002CAFCF /* LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = 1CED61681C3081C2002CAFCF /* LICENSE */; };
 		1CED616C1C316E1A002CAFCF /* BGMAudioDeviceManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1CED616B1C316E1A002CAFCF /* BGMAudioDeviceManager.mm */; };
+		270A84511E0044EF00F13C99 /* ScriptingBridge.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 270A84501E0044EE00F13C99 /* ScriptingBridge.framework */; };
 		271677BA1C6CBDFA0080B0A2 /* CACFNumber.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 271677B81C6CBDFA0080B0A2 /* CACFNumber.cpp */; };
 		27379B8A1C7C562D0084A24C /* BGMVLC.m in Sources */ = {isa = PBXBuildFile; fileRef = 27379B891C7C562D0084A24C /* BGMVLC.m */; };
 		273F10DF1CC3D0B900C1C6DA /* BGMVOX.m in Sources */ = {isa = PBXBuildFile; fileRef = 273F10DE1CC3D0B900C1C6DA /* BGMVOX.m */; };
@@ -72,7 +73,6 @@
 		2743CA1D1D86DA9B0089613B /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2743CA1C1D86DA9B0089613B /* Foundation.framework */; };
 		2743CA1E1D86DE1C0089613B /* Mock_CAHALAudioObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2743CA0B1D86D6420089613B /* Mock_CAHALAudioObject.cpp */; };
 		2743CA1F1D86DE1C0089613B /* CAHALAudioDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962EB1BCABFC5008A4DF7 /* CAHALAudioDevice.cpp */; };
-		2743CA201D86DE5E0089613B /* BGMPlayThrough.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962E51BC94E91008A4DF7 /* BGMPlayThrough.cpp */; };
 		2743CA211D86DE780089613B /* BGMDeviceControlSync.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C46994C1BD7694C00F78043 /* BGMDeviceControlSync.cpp */; };
 		2743CA221D86DE960089613B /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1C1963021BCAC160008A4DF7 /* CoreAudio.framework */; };
 		2743CA231D86DEA70089613B /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1CD1FD2F1BDDEAF2004F7E1B /* AudioToolbox.framework */; };
@@ -93,6 +93,9 @@
 		27D643C11C9FB99200737F6E /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D643BC1C9FB84C00737F6E /* main.m */; };
 		27F7D4901D2483B100821C4B /* BGMDecibel.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F7D48F1D2483B100821C4B /* BGMDecibel.m */; };
 		27FB8C071DD75D0A0084DB9D /* BGMHermes.m in Sources */ = {isa = PBXBuildFile; fileRef = 279F48761DD6D73900768A85 /* BGMHermes.m */; };
+		27FB8C2F1DE468320084DB9D /* BGM_Utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27FB8C2E1DE468320084DB9D /* BGM_Utils.cpp */; };
+		27FB8C301DE4758A0084DB9D /* BGMPlayThrough.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962E51BC94E91008A4DF7 /* BGMPlayThrough.cpp */; };
+		27FB8C311DE4758A0084DB9D /* BGM_Utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27FB8C2E1DE468320084DB9D /* BGM_Utils.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -182,6 +185,7 @@
 		1CED616A1C316E1A002CAFCF /* BGMAudioDeviceManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BGMAudioDeviceManager.h; sourceTree = "<group>"; };
 		1CED616B1C316E1A002CAFCF /* BGMAudioDeviceManager.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = BGMAudioDeviceManager.mm; sourceTree = "<group>"; };
 		1CF69BA41BCFF59C009B5D1F /* BGMApp.profdata */ = {isa = PBXFileReference; lastKnownFileType = file; path = BGMApp.profdata; sourceTree = "<group>"; };
+		270A84501E0044EE00F13C99 /* ScriptingBridge.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ScriptingBridge.framework; path = System/Library/Frameworks/ScriptingBridge.framework; sourceTree = SDKROOT; };
 		271677B81C6CBDFA0080B0A2 /* CACFNumber.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CACFNumber.cpp; path = PublicUtility/CACFNumber.cpp; sourceTree = "<group>"; };
 		271677B91C6CBDFA0080B0A2 /* CACFNumber.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CACFNumber.h; path = PublicUtility/CACFNumber.h; sourceTree = "<group>"; };
 		27379B851C7C54870084A24C /* iTunes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = iTunes.h; path = "Music Players/iTunes.h"; sourceTree = "<group>"; };
@@ -204,6 +208,7 @@
 		2743C9FA1D86CFFA0089613B /* BGMAppUnitTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "BGMAppUnitTests-Info.plist"; path = "../AppUnitTests/BGMAppUnitTests-Info.plist"; sourceTree = "<group>"; };
 		2743CA0B1D86D6420089613B /* Mock_CAHALAudioObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Mock_CAHALAudioObject.cpp; sourceTree = "<group>"; };
 		2743CA1C1D86DA9B0089613B /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		275343BF1DFD01BC00DF3858 /* SystemPreferences.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SystemPreferences.h; sourceTree = "<group>"; };
 		2769728B1CAFCEE8007A2F7C /* post_install.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = post_install.sh; path = BGMXPCHelper/post_install.sh; sourceTree = SOURCE_ROOT; };
 		2769728D1CAFCEFD007A2F7C /* com.bearisdriving.BGM.XPCHelper.plist.template */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; name = com.bearisdriving.BGM.XPCHelper.plist.template; path = BGMXPCHelper/com.bearisdriving.BGM.XPCHelper.plist.template; sourceTree = SOURCE_ROOT; };
 		276972901CB16008007A2F7C /* safe_install_dir.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = safe_install_dir.sh; path = BGMXPCHelper/safe_install_dir.sh; sourceTree = SOURCE_ROOT; };
@@ -233,6 +238,7 @@
 		27F7D48E1D2483B100821C4B /* BGMDecibel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGMDecibel.h; path = "Music Players/BGMDecibel.h"; sourceTree = "<group>"; };
 		27F7D48F1D2483B100821C4B /* BGMDecibel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BGMDecibel.m; path = "Music Players/BGMDecibel.m"; sourceTree = "<group>"; };
 		27F7D4911D2484A300821C4B /* Decibel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Decibel.h; path = "Music Players/Decibel.h"; sourceTree = "<group>"; };
+		27FB8C2E1DE468320084DB9D /* BGM_Utils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BGM_Utils.cpp; path = ../SharedSource/BGM_Utils.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -240,6 +246,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				270A84511E0044EF00F13C99 /* ScriptingBridge.framework in Frameworks */,
 				1CD1FD301BDDEAF2004F7E1B /* AudioToolbox.framework in Frameworks */,
 				1C1963031BCAC160008A4DF7 /* CoreAudio.framework in Frameworks */,
 			);
@@ -341,6 +348,7 @@
 			children = (
 				27D643B41C9FABBD00737F6E /* BGM_Types.h */,
 				2771700F1CA0C83B00AB34B4 /* BGM_Utils.h */,
+				27FB8C2E1DE468320084DB9D /* BGM_Utils.cpp */,
 				27D643C41C9FBE5600737F6E /* BGM_TestUtils.h */,
 				27D643B51C9FABBD00737F6E /* BGMXPCProtocols.h */,
 			);
@@ -431,6 +439,7 @@
 		1CB8B3391BBA75EF000E2DD1 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				275343BF1DFD01BC00DF3858 /* SystemPreferences.h */,
 				1CED61681C3081C2002CAFCF /* LICENSE */,
 				1CC1DF951BE8607700FB8FE4 /* Images.xcassets */,
 				1CB8B33A1BBA75EF000E2DD1 /* Info.plist */,
@@ -509,6 +518,7 @@
 		2743CA1B1D86DA9B0089613B /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				270A84501E0044EE00F13C99 /* ScriptingBridge.framework */,
 				1CD1FD2F1BDDEAF2004F7E1B /* AudioToolbox.framework */,
 				1C1963021BCAC160008A4DF7 /* CoreAudio.framework */,
 				2795970D1C91589B00A002FB /* CoreFoundation.framework */,
@@ -626,7 +636,7 @@
 			isa = PBXProject;
 			attributes = {
 				CLASSPREFIX = BGM;
-				LastUpgradeCheck = 0700;
+				LastUpgradeCheck = 0810;
 				ORGANIZATIONNAME = "Kyle Neideck";
 				TargetAttributes = {
 					1CB8B3351BBA75EF000E2DD1 = {
@@ -774,6 +784,7 @@
 				1C1963011BCAC0F6008A4DF7 /* CACFString.cpp in Sources */,
 				1C1962E71BC94E91008A4DF7 /* BGMPlayThrough.cpp in Sources */,
 				1C1962FA1BCAC061008A4DF7 /* CADebugMacros.cpp in Sources */,
+				27FB8C2F1DE468320084DB9D /* BGM_Utils.cpp in Sources */,
 				1C1962F31BCABFC5008A4DF7 /* CAHALAudioDevice.cpp in Sources */,
 				1CC1DF911BE5891300FB8FE4 /* CADebugger.cpp in Sources */,
 				2795973B1C982E4E00A002FB /* BGMXPCListener.mm in Sources */,
@@ -804,10 +815,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27FB8C301DE4758A0084DB9D /* BGMPlayThrough.cpp in Sources */,
+				27FB8C311DE4758A0084DB9D /* BGM_Utils.cpp in Sources */,
 				27FB8C071DD75D0A0084DB9D /* BGMHermes.m in Sources */,
 				2743CA1E1D86DE1C0089613B /* Mock_CAHALAudioObject.cpp in Sources */,
 				2743CA211D86DE780089613B /* BGMDeviceControlSync.cpp in Sources */,
-				2743CA201D86DE5E0089613B /* BGMPlayThrough.cpp in Sources */,
 				2743CA1F1D86DE1C0089613B /* CAHALAudioDevice.cpp in Sources */,
 				2743CA0C1D86D7FA0089613B /* CACFArray.cpp in Sources */,
 				2743CA0D1D86D7FA0089613B /* CACFDictionary.cpp in Sources */,
@@ -891,12 +903,14 @@
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_IMPLICIT_SIGN_CONVERSION = NO;
+				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_NULLABLE_TO_NONNULL_CONVERSION = YES;
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = NO;
 				CLANG_WARN_OBJC_REPEATED_USE_OF_WEAK = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CLANG_WARN__EXIT_TIME_DESTRUCTORS = YES;
@@ -995,12 +1009,14 @@
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_IMPLICIT_SIGN_CONVERSION = NO;
+				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_NULLABLE_TO_NONNULL_CONVERSION = YES;
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = NO;
 				CLANG_WARN_OBJC_REPEATED_USE_OF_WEAK = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CLANG_WARN__EXIT_TIME_DESTRUCTORS = YES;
@@ -1065,12 +1081,14 @@
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_IMPLICIT_SIGN_CONVERSION = NO;
+				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_NULLABLE_TO_NONNULL_CONVERSION = YES;
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = NO;
 				CLANG_WARN_OBJC_REPEATED_USE_OF_WEAK = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CLANG_WARN__EXIT_TIME_DESTRUCTORS = YES;

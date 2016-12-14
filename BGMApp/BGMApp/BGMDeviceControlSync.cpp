@@ -25,6 +25,7 @@
 
 // Local Includes
 #include "BGM_Types.h"
+#include "BGM_Utils.h"
 
 // System Includes
 #include <AudioToolbox/AudioServices.h>
@@ -77,7 +78,10 @@ void    BGMDeviceControlSync::Activate()
         }
         catch(CAException)
         {
+            CATry
             mBGMDevice.RemovePropertyListener(kVolumePropertyAddress, &BGMDeviceControlSync::BGMDeviceListenerProc, this);
+            CACatch
+            
             throw;
         }
         
@@ -100,8 +104,14 @@ void    BGMDeviceControlSync::Swap(BGMDeviceControlSync& inDeviceControlSync)
 {
     mBGMDevice = inDeviceControlSync.mBGMDevice;
     mOutputDevice = inDeviceControlSync.mOutputDevice;
-    inDeviceControlSync.Deactivate();
-    Activate();
+    
+    BGMLogAndSwallowExceptionsMsg("BGMDeviceControlSync::Swap", "Deactivate", [&inDeviceControlSync]() {
+        inDeviceControlSync.Deactivate();
+    });
+    
+    BGMLogAndSwallowExceptionsMsg("BGMDeviceControlSync::Swap", "Activate", [&]() {
+        Activate();
+    });
 }
 
 #pragma mark Get/Set Control Values
@@ -164,7 +174,9 @@ void    BGMDeviceControlSync::CopyVolume(CAHALAudioDevice inFromDevice, CAHALAud
             OSStatus err = e.GetError();
             char err4CC[5] = CA4CCToCString(err);
             CFStringRef uid = inToDevice.CopyDeviceUID();
-            LogWarning("BGMDeviceControlSync::CopyVolume: CAException '%s' trying to set master volume of %s", err4CC, uid);
+            LogWarning("BGMDeviceControlSync::CopyVolume: CAException '%s' trying to set master volume of %s",
+                       err4CC,
+                       CFStringGetCStringPtr(uid, kCFStringEncodingUTF8));
             CFRelease(uid);
         }
 

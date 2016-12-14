@@ -27,10 +27,14 @@
 #import <AppKit/AppKit.h>
 
 
+#pragma clang assume_nonnull begin
+
 @interface BGMOutputDevicePrefs : NSObject
 
 - (id) initWithAudioDevices:(BGMAudioDeviceManager*)inAudioDevices;
 - (void) populatePreferencesMenu:(NSMenu*)prefsMenu;
 
 @end
+
+#pragma clang assume_nonnull end
 

@@ -69,7 +69,7 @@
         dispatch_semaphore_signal(replySemaphore);
     }];
     
-    if (0 != dispatch_semaphore_wait(replySemaphore, dispatch_time(DISPATCH_TIME_NOW, 30 * NSEC_PER_SEC))) {
+    if (0 != dispatch_semaphore_wait(replySemaphore, dispatch_time(DISPATCH_TIME_NOW, kStartIOTimeoutNsec))) {
         XCTFail(@"Timed out waiting for BGMXPCHelper");
     }
 }

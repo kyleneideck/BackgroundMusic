@@ -193,7 +193,7 @@
     }
     
     switch (err) {
-        case noErr:
+        case kAudioHardwareNoError:
             description = @"BGMApp started the output device.";
             err = kBGMXPC_Success;
             break;
