@@ -51,13 +51,22 @@
 
 #if defined(__cplusplus)
 
+#define BGMLogException(exception) \
+    BGM_Utils::LogException(__FILE__, __LINE__, __FUNCTION__, exception)
+
+#define BGMLogExceptionIn(callerName, exception) \
+    BGM_Utils::LogException(__FILE__, __LINE__, callerName, exception)
+
 #define BGMLogAndSwallowExceptions(callerName, function) \
     BGM_Utils::LogAndSwallowExceptions(__FILE__, __LINE__, callerName, function)
 
 #define BGMLogAndSwallowExceptionsMsg(callerName, message, function) \
     BGM_Utils::LogAndSwallowExceptions(__FILE__, __LINE__, callerName, message, function)
 
-#define BGMLogUnexpectedException(callerName) \
+#define BGMLogUnexpectedException() \
+    BGM_Utils::LogUnexpectedException(__FILE__, __LINE__, __FUNCTION__)
+
+#define BGMLogUnexpectedExceptionIn(callerName) \
     BGM_Utils::LogUnexpectedException(__FILE__, __LINE__, callerName)
 
 #define BGMLogUnexpectedExceptions(callerName, function) \

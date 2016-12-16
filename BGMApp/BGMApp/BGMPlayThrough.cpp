@@ -395,27 +395,26 @@ void    BGMPlayThrough::Start()
     mPlayingThrough = true;
 }
 
-OSStatus    BGMPlayThrough::WaitForOutputDeviceToStart()
+OSStatus    BGMPlayThrough::WaitForOutputDeviceToStart() noexcept
 {
     semaphore_t semaphore;
     IOState state;
     UInt64 startedAt = mach_absolute_time();
     
+    try
     {
         CAMutex::Locker stateLocker(mStateMutex);
         
         // Check for errors.
         if(!mActive)
         {
+            LogError("BGMPlayThrough::WaitForOutputDeviceToStart: !mActive");
             return kAudioHardwareNotRunningError;
         }
         
-        bool outputDeviceIsAlive = true;
-        BGMLogAndSwallowExceptions("BGMPlayThrough::WaitForOutputDeviceToStart", [&]() {
-            outputDeviceIsAlive = mOutputDevice.IsAlive();
-        });
-        if(!outputDeviceIsAlive)
+        if(!mOutputDevice.IsAlive())
         {
+            LogError("BGMPlayThrough::WaitForOutputDeviceToStart: Device not alive");
             return kAudioHardwareBadDeviceError;
         }
         
@@ -430,11 +429,17 @@ OSStatus    BGMPlayThrough::WaitForOutputDeviceToStart()
         // received a kAudioDevicePropertyDeviceIsRunning notification.)
         if(state != IOState::Starting)
         {
+            LogError("BGMPlayThrough::WaitForOutputDeviceToStart: Device not starting");
             return kAudioHardwareIllegalOperationError;
         }
         
         // Copy the semaphore into a local so we don't have to hold the mutex while waiting.
         semaphore = mOutputDeviceIOProcSemaphore;
+    }
+    catch(CAException e)
+    {
+        BGMLogException(e);
+        return e.GetError();
     }
 
     // Wait for our IO proc to start. mOutputDeviceIOProcSemaphore is reset to 0

@@ -89,7 +89,7 @@ public:
     
     // Blocks until the output device has started our IOProc. Returns one of the error constants
     // from AudioHardwareBase.h (e.g. kAudioHardwareNoError).
-    OSStatus            WaitForOutputDeviceToStart();
+    OSStatus            WaitForOutputDeviceToStart() noexcept;
     
 private:
     void                ReleaseThreadsWaitingForOutputToStart() const;

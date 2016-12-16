@@ -229,8 +229,8 @@ public:
         } catch (CAException e) {
             return [NSError errorWithDomain:@kBGMAppBundleID code:e.GetError() userInfo:nil];
         } catch (...) {
-            BGMLogUnexpectedException("BGMAudioDeviceManager::unsetBGMDeviceAsOSDefault "
-                                      "SetDefaultAudioDevice (output)");
+            BGMLogUnexpectedExceptionIn("BGMAudioDeviceManager::unsetBGMDeviceAsOSDefault "
+                                        "SetDefaultAudioDevice (output)");
         }
     }
     
@@ -245,8 +245,8 @@ public:
         } catch (CAException e) {
             return [NSError errorWithDomain:@kBGMAppBundleID code:e.GetError() userInfo:nil];
         } catch (...) {
-            BGMLogUnexpectedException("BGMAudioDeviceManager::unsetBGMDeviceAsOSDefault "
-                                      "SetDefaultAudioDevice (system output)");
+            BGMLogUnexpectedExceptionIn("BGMAudioDeviceManager::unsetBGMDeviceAsOSDefault "
+                                        "SetDefaultAudioDevice (system output)");
         }
     }
     
