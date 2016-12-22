@@ -113,6 +113,11 @@ static NSInteger const kProjectWebsiteLabelTag = 3;
         }
         
         licenseView.string = licenseStr;
+        
+        NSFont* __nullable font = [NSFont fontWithName:@"Andale Mono" size:0.0];
+        if (font) {
+            licenseView.textStorage.font = font;
+        }
     }
 }
 

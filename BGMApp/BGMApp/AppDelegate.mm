@@ -36,6 +36,8 @@
 #import "SystemPreferences.h"
 
 
+#pragma clang assume_nonnull begin
+
 static float const kStatusBarIconPadding = 0.25;
 
 @implementation AppDelegate {
@@ -81,6 +83,15 @@ static float const kStatusBarIconPadding = 0.25;
 
 - (void) applicationDidFinishLaunching:(NSNotification*)aNotification {
     #pragma unused (aNotification)
+    
+    // Log the version/build number.
+    //
+    // TODO: NSLog should only be used for logging errors.
+    // TODO: Automatically add the commit ID to the end of the build number for unreleased builds. (In the
+    //       Info.plist or something -- not here.)
+    NSLog(@"BGMApp version: %@, BGMApp build number: %@",
+          NSBundle.mainBundle.infoDictionary[@"CFBundleShortVersionString"],
+          NSBundle.mainBundle.infoDictionary[@"CFBundleVersion"]);
 
     // Set up the rest of the UI and other external interfaces.
     
@@ -140,8 +151,10 @@ static float const kStatusBarIconPadding = 0.25;
 }
 
 - (void) applicationWillTerminate:(NSNotification*)aNotification {
-#pragma unused (aNotification)
+    #pragma unused (aNotification)
     
+    DebugMsg("AppDelegate::applicationWillTerminate");
+
     NSError* error = [audioDevices unsetBGMDeviceAsOSDefault];
     
     if (error) {
@@ -270,4 +283,6 @@ static float const kStatusBarIconPadding = 0.25;
 }
 
 @end
+
+#pragma clang assume_nonnull end
 

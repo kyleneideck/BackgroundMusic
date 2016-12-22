@@ -26,12 +26,12 @@
 
 // PublicUtility Includes
 #ifdef __cplusplus
-#include "CAHALAudioDevice.h"
+#import "CAHALAudioDevice.h"
 #endif
 
 // System Includes
 #import <Foundation/Foundation.h>
-#include <CoreAudio/AudioHardwareBase.h>
+#import <CoreAudio/AudioHardwareBase.h>
 
 
 #pragma clang assume_nonnull begin
@@ -53,6 +53,8 @@ extern int const kBGMErrorCode_OutputDeviceNotFound;
 #endif
 
 - (BOOL) isOutputDevice:(AudioObjectID)deviceID;
+- (BOOL) isOutputDataSource:(UInt32)dataSourceID;
+
 // Set the audio output device that BGMApp uses.
 //
 // Returns an error if the output device couldn't be changed. If revertOnFailure is true in that case,
@@ -61,7 +63,15 @@ extern int const kBGMErrorCode_OutputDeviceNotFound;
 //
 // Both errors' codes will be the code of the exception that caused the failure, if any, generally one
 // of the error constants from AudioHardwareBase.h.
+//
+// Blocks while the old device stops IO (if there was one).
 - (NSError* __nullable) setOutputDeviceWithID:(AudioObjectID)deviceID
+                              revertOnFailure:(BOOL)revertOnFailure;
+
+// As above, but also sets the new output device's data source. See kAudioDevicePropertyDataSource in
+// AudioHardware.h.
+- (NSError* __nullable) setOutputDeviceWithID:(AudioObjectID)deviceID
+                                 dataSourceID:(UInt32)dataSourceID
                               revertOnFailure:(BOOL)revertOnFailure;
 
 // Blocks until IO has started running on the output device (for playthrough).

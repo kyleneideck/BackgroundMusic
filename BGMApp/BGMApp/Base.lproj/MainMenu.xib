@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11542" systemVersion="16B2333a" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11542" systemVersion="16C48b" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
     <dependencies>
         <deployment identifier="macosx"/>
         <development version="7000" identifier="xcode"/>
@@ -86,17 +86,17 @@
             </subviews>
             <point key="canvasLocation" x="81" y="-111"/>
         </customView>
-        <window allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" restorable="NO" hidesOnDeactivate="YES" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" animationBehavior="default" id="Cf4-3V-gl1" customClass="NSPanel">
+        <window allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" restorable="NO" hidesOnDeactivate="YES" oneShot="NO" showsToolbarButton="NO" visibleAtLaunch="NO" animationBehavior="default" id="Cf4-3V-gl1" customClass="NSPanel">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" utility="YES"/>
             <windowPositionMask key="initialPositionMask" topStrut="YES"/>
-            <rect key="contentRect" x="248" y="350" width="816" height="310"/>
+            <rect key="contentRect" x="248" y="350" width="980" height="335"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1280" height="778"/>
             <view key="contentView" id="HlB-hX-Y0Y">
-                <rect key="frame" x="0.0" y="0.0" width="816" height="310"/>
+                <rect key="frame" x="0.0" y="0.0" width="980" height="335"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="r51-dd-LGP">
-                        <rect key="frame" x="53" y="95" width="240" height="22"/>
+                        <rect key="frame" x="61" y="125" width="240" height="22"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Background Music" id="Dw2-nu-eBQ">
                             <font key="font" size="18" name=".HelveticaNeueDeskInterface-Regular"/>
@@ -105,7 +105,7 @@
                         </textFieldCell>
                     </textField>
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" tag="1" translatesAutoresizingMaskIntoConstraints="NO" id="ekc-h0-I43">
-                        <rect key="frame" x="53" y="70" width="240" height="17"/>
+                        <rect key="frame" x="61" y="100" width="240" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Version 0.1.0" id="FDH-7l-wFf">
                             <font key="font" metaFont="system"/>
@@ -114,7 +114,7 @@
                         </textFieldCell>
                     </textField>
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="L5P-Lw-aCd">
-                        <rect key="frame" x="367" y="273" width="270" height="17"/>
+                        <rect key="frame" x="391" y="298" width="270" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="left" title="Licensed under GPLv2 or any later version." id="ETh-En-bzX">
                             <font key="font" metaFont="system"/>
@@ -123,11 +123,11 @@
                         </textFieldCell>
                     </textField>
                     <box horizontalHuggingPriority="750" fixedFrame="YES" boxType="separator" translatesAutoresizingMaskIntoConstraints="NO" id="Zc9-gs-X8C">
-                        <rect key="frame" x="332" y="88" width="5" height="150"/>
+                        <rect key="frame" x="361" y="93" width="5" height="150"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     </box>
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" tag="2" translatesAutoresizingMaskIntoConstraints="NO" id="Vy4-dv-jQB">
-                        <rect key="frame" x="18" y="45" width="310" height="17"/>
+                        <rect key="frame" x="26" y="75" width="310" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Copyright © 2016 Background Music contributors" placeholderString="" id="ctF-95-uVu">
                             <font key="font" metaFont="system"/>
@@ -136,7 +136,7 @@
                         </textFieldCell>
                     </textField>
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" tag="3" translatesAutoresizingMaskIntoConstraints="NO" id="nx6-kQ-N8Z" customClass="BGMLinkField">
-                        <rect key="frame" x="18" y="20" width="310" height="17"/>
+                        <rect key="frame" x="26" y="50" width="310" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" tag="3" title="https://github.com/kyleneideck/BackgroundMusic" placeholderString="" id="VOb-5X-o3R">
                             <font key="font" metaFont="system"/>
@@ -145,7 +145,7 @@
                         </textFieldCell>
                     </textField>
                     <imageView wantsLayer="YES" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Tui-Hf-FLv">
-                        <rect key="frame" x="98" y="125" width="150" height="150"/>
+                        <rect key="frame" x="106" y="155" width="150" height="150"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <shadow key="shadow">
                             <color key="color" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
@@ -153,7 +153,7 @@
                         <imageCell key="cell" refusesFirstResponder="YES" alignment="left" animates="YES" imageScaling="proportionallyUpOrDown" image="FermataIcon" id="dBU-ZS-ZzA"/>
                     </imageView>
                     <imageView wantsLayer="YES" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="R1R-Rd-xPC">
-                        <rect key="frame" x="98" y="125" width="150" height="150"/>
+                        <rect key="frame" x="106" y="155" width="150" height="150"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <shadow key="shadow">
                             <color key="color" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
@@ -161,19 +161,22 @@
                         <imageCell key="cell" refusesFirstResponder="YES" alignment="left" animates="YES" imageScaling="proportionallyUpOrDown" image="FermataIcon" id="1VP-dU-RCe"/>
                     </imageView>
                     <scrollView fixedFrame="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="eqz-ap-PAC">
-                        <rect key="frame" x="369" y="20" width="427" height="245"/>
+                        <rect key="frame" x="393" y="45" width="567" height="245"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <clipView key="contentView" ambiguous="YES" id="Cdb-RA-YK0">
-                            <rect key="frame" x="1" y="1" width="425" height="243"/>
+                            <rect key="frame" x="1" y="1" width="565" height="243"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
-                                <textView ambiguous="YES" editable="NO" importsGraphics="NO" usesFontPanel="YES" findStyle="panel" continuousSpellChecking="YES" allowsUndo="YES" usesRuler="YES" allowsNonContiguousLayout="YES" quoteSubstitution="YES" dashSubstitution="YES" smartInsertDelete="YES" id="LSG-PF-cl8">
-                                    <rect key="frame" x="0.0" y="0.0" width="425" height="243"/>
+                                <textView ambiguous="YES" editable="NO" importsGraphics="NO" richText="NO" id="LSG-PF-cl8">
+                                    <rect key="frame" x="-4" y="0.0" width="572" height="243"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                    <size key="minSize" width="425" height="243"/>
-                                    <size key="maxSize" width="477" height="10000000"/>
+                                    <size key="minSize" width="565" height="243"/>
+                                    <size key="maxSize" width="594" height="10000000"/>
                                     <color key="insertionPointColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                    <allowedInputSourceLocales>
+                                        <string>NSAllRomanInputSourcesLocaleIdentifier</string>
+                                    </allowedInputSourceLocales>
                                 </textView>
                             </subviews>
                             <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
@@ -183,13 +186,22 @@
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
                         <scroller key="verticalScroller" verticalHuggingPriority="750" horizontal="NO" id="qCC-lY-zQ6">
-                            <rect key="frame" x="410" y="1" width="16" height="243"/>
+                            <rect key="frame" x="550" y="1" width="16" height="243"/>
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
                     </scrollView>
+                    <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="6qu-yI-r00">
+                        <rect key="frame" x="391" y="20" width="203" height="11"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="The AirPlay Logo is a trademark of Apple Inc." id="lx7-k3-q16">
+                            <font key="font" metaFont="miniSystem"/>
+                            <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
                 </subviews>
             </view>
-            <point key="canvasLocation" x="-31" y="220"/>
+            <point key="canvasLocation" x="-177" y="232.5"/>
         </window>
         <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" setsMaxLayoutWidthAtFirstLayout="YES" id="IoN-sN-cCx">
             <rect key="frame" x="0.0" y="0.0" width="471" height="180"/>

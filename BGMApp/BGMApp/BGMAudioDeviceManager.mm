@@ -265,45 +265,109 @@ public:
     }
 }
 
-- (NSError* __nullable) setOutputDeviceWithID:(AudioObjectID)deviceID revertOnFailure:(BOOL)revertOnFailure {
-    DebugMsg("BGMAudioDeviceManager::setOutputDeviceWithID: Setting output device. deviceID=%u", deviceID);
+- (BOOL) isOutputDataSource:(UInt32)dataSourceID {
+    @synchronized (self) {
+        try {
+            AudioObjectPropertyScope scope = kAudioDevicePropertyScopeOutput;
+            UInt32 channel = 0;
+            
+            return outputDevice.HasDataSourceControl(scope, channel) &&
+                (dataSourceID == outputDevice.GetCurrentDataSourceID(scope, channel));
+        } catch (CAException e) {
+            BGMLogException(e);
+            return false;
+        }
+    }
+}
+
+
+- (NSError* __nullable) setOutputDeviceWithID:(AudioObjectID)deviceID
+                              revertOnFailure:(BOOL)revertOnFailure {
+    return [self setOutputDeviceWithIDImpl:deviceID
+                              dataSourceID:nil
+                           revertOnFailure:revertOnFailure];
+}
+
+- (NSError* __nullable) setOutputDeviceWithID:(AudioObjectID)deviceID
+                                 dataSourceID:(UInt32)dataSourceID
+                              revertOnFailure:(BOOL)revertOnFailure {
+    return [self setOutputDeviceWithIDImpl:deviceID
+                              dataSourceID:&dataSourceID
+                           revertOnFailure:revertOnFailure];
+}
+
+- (NSError* __nullable) setOutputDeviceWithIDImpl:(AudioObjectID)newDeviceID
+                                     dataSourceID:(UInt32* __nullable)dataSourceID
+                                  revertOnFailure:(BOOL)revertOnFailure {
+    DebugMsg("BGMAudioDeviceManager::setOutputDeviceWithID: Setting output device. newDeviceID=%u",
+             newDeviceID);
     
-    AudioDeviceID currentDeviceID = outputDevice.GetObjectID();
+    AudioDeviceID currentDeviceID = outputDevice.GetObjectID();  // (GetObjectID doesn't throw.)
     
     // Set up playthrough and control sync
-    BGMAudioDevice newOutputDevice(deviceID);
+    BGMAudioDevice newOutputDevice(newDeviceID);
     
     try {
         @synchronized (self) {
-            // Mirror changes in BGMDevice's controls to the new output device's.
-            deviceControlSync = BGMDeviceControlSync(bgmDevice, newOutputDevice);
+            // Re-read the device ID after entering the monitor. (The initial read is because
+            // currentDeviceID's used in the catch blocks.)
+            currentDeviceID = outputDevice.GetObjectID();
             
-            // Stream audio from BGMDevice to the output device.
-            //
-            // TODO: Should this be done async? Some output devices take a long time to start IO (e.g. AirPlay) and I
-            //       assume this blocks the main thread. Haven't tried it to check, though.
-            playThrough = BGMPlayThrough(bgmDevice, newOutputDevice);
+            if (newDeviceID != currentDeviceID) {
+                // Mirror changes in BGMDevice's controls to the new output device's.
+                deviceControlSync = BGMDeviceControlSync(bgmDevice, newOutputDevice);
+                
+                // Stream audio from BGMDevice to the new output device. This blocks while the old device
+                // stops IO.
+                playThrough = BGMPlayThrough(bgmDevice, newOutputDevice);
 
-            outputDevice = BGMAudioDevice(deviceID);
+                outputDevice = newOutputDevice;
+            }
+            
+            // Set the output device to use the new data source.
+            if (dataSourceID) {
+                // TODO: If this fails, ideally we'd still start playthrough and return an error, but not
+                //       revert the device. It would probably be a bit awkward, though.
+                [self setDataSource:*dataSourceID device:outputDevice];
+            }
+            
+            if (newDeviceID != currentDeviceID) {
+                // We successfully changed to the new device. Start playthrough on it, since audio might be
+                // playing. (If we only changed the data source, playthrough will already be running if it
+                // needs to be.)
+                playThrough.Start();
+                // But stop playthrough if audio isn't playing, since it uses CPU.
+                playThrough.StopIfIdle();
+            }
         }
-        
-        // Start playthrough because audio might be playing.
-        //
-        // TODO: If audio isn't playing, this makes playthrough run until the user plays audio and then stops it again,
-        //       which wastes CPU. I think we could just have Start() call StopIfIdle(), but I haven't tried it yet.
-        playThrough.Start();
-        playThrough.StopIfIdle();
     } catch (CAException e) {
-        return [self failedToSetOutputDevice:newOutputDevice.GetObjectID()
+        BGMAssert(e.GetError() != kAudioHardwareNoError,
+                  "CAException with kAudioHardwareNoError");
+        
+        return [self failedToSetOutputDevice:newDeviceID
                                    errorCode:e.GetError()
                                     revertTo:(revertOnFailure ? &currentDeviceID : nullptr)];
     } catch (...) {
-        return [self failedToSetOutputDevice:newOutputDevice.GetObjectID()
+        return [self failedToSetOutputDevice:newDeviceID
                                    errorCode:kAudioHardwareUnspecifiedError
                                     revertTo:(revertOnFailure ? &currentDeviceID : nullptr)];
     }
     
     return nil;
+}
+
+- (void) setDataSource:(UInt32)dataSourceID device:(BGMAudioDevice)device {
+    BGMLogAndSwallowExceptions("BGMAudioDeviceManager::setDataSource", [&]() {
+        AudioObjectPropertyScope scope = kAudioObjectPropertyScopeOutput;
+        UInt32 channel = 0;
+        
+        if (device.DataSourceControlIsSettable(scope, channel)) {
+            DebugMsg("BGMAudioDeviceManager::setOutputDeviceWithID: Setting dataSourceID=%u",
+                     dataSourceID);
+            
+            device.SetCurrentDataSourceByID(scope, channel, dataSourceID);
+        }
+    });
 }
 
 - (NSError*) failedToSetOutputDevice:(AudioDeviceID)deviceID

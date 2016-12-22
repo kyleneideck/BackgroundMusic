@@ -37,6 +37,7 @@
 // System Includes
 #include <mach/error.h>
 
+#pragma mark Macros
 
 // The Assert macro from CADebugMacros with support for format strings added.
 #define BGMAssert(inCondition, inMessage, ...)                                  \
@@ -46,8 +47,54 @@
         __ASSERT_STOP;                                                          \
     }
 
+#define BGMAssertNonNull(expression) \
+    BGMAssertNonNull2((expression), #expression)
 
-#pragma clang assume_nonnull begin
+#define BGMAssertNonNull2(expression, expressionStr) \
+    BGMAssert((expression), \
+              "%s:%d:%s: '%s' is null", \
+              __FILE__, \
+              __LINE__, \
+              __FUNCTION__, \
+              expressionStr);
+
+#pragma mark Objective-C Macros
+
+#if defined(__OBJC__)
+
+#if __has_feature(objc_generics)
+
+// This trick is from https://gist.github.com/robb/d55b72d62d32deaee5fa
+@interface BGMNonNullCastHelper<__covariant T>
+
+- (nonnull T) asNonNull;
+
+@end
+
+// Explicitly casts expressions from nullable to non-null. Only works with expressions that
+// evaluate to Objective-C objects. Use BGM_Utils::NN for other types.
+//
+// TODO: Replace existing non-null casts with this.
+#define BGMNN(expression) ({ \
+        __typeof((expression)) value = (expression); \
+        BGMAssertNonNull2(value, #expression); \
+        BGMNonNullCastHelper<__typeof((expression))>* helper; \
+        (__typeof(helper.asNonNull))value; \
+    })
+
+#else /* __has_feature(objc_generics) */
+
+#define BGMNN(expression) ({ \
+        id value = (expression); \
+        BGMAssertNonNull2(value, #expression); \
+        value; \
+    })
+
+#endif /* __has_feature(objc_generics) */
+
+#endif /* defined(__OBJC__) */
+
+#pragma mark C++ Macros
 
 #if defined(__cplusplus)
 
@@ -75,9 +122,25 @@
 #define BGMLogUnexpectedExceptionsMsg(callerName, message, function) \
     BGM_Utils::LogUnexpectedExceptions(__FILE__, __LINE__, callerName, message, function)
 
+#endif /* defined(__cplusplus) */
+
+
+#pragma clang assume_nonnull begin
+
+#if defined(__cplusplus)
+
+#pragma mark C++ Utility Functions
 
 namespace BGM_Utils
 {
+    // Used to explicitly cast from nullable to non-null. For Objective-C objects, use the BGMNN
+    // macro (above).
+    template <typename T>
+    inline T __nonnull NN(T __nullable v) {
+        BGMAssertNonNull(v);
+        return v;
+    }
+    
     // Log (and swallow) errors returned by Mach functions. Returns false if there was an error.
     bool LogIfMachError(const char* callerName,
                         const char* errorReturnedBy,
@@ -136,7 +199,6 @@ namespace BGM_Utils
                                      const char* callerName,
                                      const char* __nullable message,
                                      const std::function<void(void)>& function);
-    
 }
 
 #endif /* defined(__cplusplus) */
