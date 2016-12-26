@@ -3,13 +3,12 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 47;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		1C0BD0A51BF1A8E6004F4CF5 /* BGMAutoPauseMusicPrefs.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C0BD0A41BF1A8E6004F4CF5 /* BGMAutoPauseMusicPrefs.mm */; };
 		1C0BD0A81BF1B029004F4CF5 /* BGMPreferencesMenu.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C0BD0A71BF1B029004F4CF5 /* BGMPreferencesMenu.mm */; };
-		1C1108AE1C444F01003F625E /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1CB8B3421BBA75EF000E2DD1 /* MainMenu.xib */; };
 		1C1465B81BCC3A73003AEFE6 /* BGMAutoPauseMusic.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C1465B71BCC3A73003AEFE6 /* BGMAutoPauseMusic.mm */; };
 		1C1962E41BC94E15008A4DF7 /* CARingBuffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962E21BC94E15008A4DF7 /* CARingBuffer.cpp */; };
 		1C1962E71BC94E91008A4DF7 /* BGMPlayThrough.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962E51BC94E91008A4DF7 /* BGMPlayThrough.cpp */; };
@@ -76,19 +75,15 @@
 		2743CA211D86DE780089613B /* BGMDeviceControlSync.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C46994C1BD7694C00F78043 /* BGMDeviceControlSync.cpp */; };
 		2743CA221D86DE960089613B /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1C1963021BCAC160008A4DF7 /* CoreAudio.framework */; };
 		2743CA231D86DEA70089613B /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1CD1FD2F1BDDEAF2004F7E1B /* AudioToolbox.framework */; };
-		2769728C1CAFCEE8007A2F7C /* post_install.sh in Resources */ = {isa = PBXBuildFile; fileRef = 2769728B1CAFCEE8007A2F7C /* post_install.sh */; };
-		2769728E1CAFCEFD007A2F7C /* com.bearisdriving.BGM.XPCHelper.plist.template in Resources */ = {isa = PBXBuildFile; fileRef = 2769728D1CAFCEFD007A2F7C /* com.bearisdriving.BGM.XPCHelper.plist.template */; };
+		274827951E11052500B31D8D /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1CB8B3421BBA75EF000E2DD1 /* MainMenu.xib */; };
 		2769728F1CAFF22C007A2F7C /* com.bearisdriving.BGM.XPCHelper.plist.template in Resources */ = {isa = PBXBuildFile; fileRef = 2769728D1CAFCEFD007A2F7C /* com.bearisdriving.BGM.XPCHelper.plist.template */; };
-		276972911CB16008007A2F7C /* safe_install_dir.sh in Resources */ = {isa = PBXBuildFile; fileRef = 276972901CB16008007A2F7C /* safe_install_dir.sh */; };
 		276972921CB1603E007A2F7C /* safe_install_dir.sh in Resources */ = {isa = PBXBuildFile; fileRef = 276972901CB16008007A2F7C /* safe_install_dir.sh */; };
 		277170161CA24D7C00AB34B4 /* BGMXPCListenerDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 277170151CA24D7C00AB34B4 /* BGMXPCListenerDelegate.m */; };
 		278D71E91CABB6FF00899CF9 /* BGMXPCHelperTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 279597401C996E2000A002FB /* BGMXPCHelperTests.m */; };
-		278D71F61CABBC3B00899CF9 /* BGMXPCHelperTests-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 278D71F51CABBC3B00899CF9 /* BGMXPCHelperTests-Info.plist */; };
 		2795973B1C982E4E00A002FB /* BGMXPCListener.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2795973A1C982E4E00A002FB /* BGMXPCListener.mm */; };
 		279F48771DD6D73A00768A85 /* BGMHermes.m in Sources */ = {isa = PBXBuildFile; fileRef = 279F48761DD6D73900768A85 /* BGMHermes.m */; };
 		27C457E61CF2BC2600A6C9A6 /* BGMAutoPauseMenuItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C457E51CF2BC2600A6C9A6 /* BGMAutoPauseMenuItem.m */; };
 		27D1D6BB1DD7226C0049E707 /* BGMAboutPanel.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D1D6BA1DD7226C0049E707 /* BGMAboutPanel.m */; };
-		27D643BE1C9FB84C00737F6E /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 27D643BB1C9FB84C00737F6E /* Info.plist */; };
 		27D643C01C9FB99200737F6E /* BGMXPCHelperService.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D643BA1C9FB84C00737F6E /* BGMXPCHelperService.m */; };
 		27D643C11C9FB99200737F6E /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D643BC1C9FB84C00737F6E /* main.m */; };
 		27F7D4901D2483B100821C4B /* BGMDecibel.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F7D48F1D2483B100821C4B /* BGMDecibel.m */; };
@@ -637,7 +632,7 @@
 			attributes = {
 				CLASSPREFIX = BGM;
 				LastUpgradeCheck = 0810;
-				ORGANIZATIONNAME = "Kyle Neideck";
+				ORGANIZATIONNAME = "Background Music contributors";
 				TargetAttributes = {
 					1CB8B3351BBA75EF000E2DD1 = {
 						CreatedOnToolsVersion = 6.4;
@@ -662,7 +657,7 @@
 				};
 			};
 			buildConfigurationList = 1CB8B3311BBA75EF000E2DD1 /* Build configuration list for PBXProject "BGMApp" */;
-			compatibilityVersion = "Xcode 3.2";
+			compatibilityVersion = "Xcode 6.3";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -688,14 +683,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2769728C1CAFCEE8007A2F7C /* post_install.sh in Resources */,
-				2769728E1CAFCEFD007A2F7C /* com.bearisdriving.BGM.XPCHelper.plist.template in Resources */,
-				27D643BE1C9FB84C00737F6E /* Info.plist in Resources */,
+				274827951E11052500B31D8D /* MainMenu.xib in Resources */,
 				1CED61691C3081C2002CAFCF /* LICENSE in Resources */,
-				278D71F61CABBC3B00899CF9 /* BGMXPCHelperTests-Info.plist in Resources */,
 				1CC1DF961BE8607700FB8FE4 /* Images.xcassets in Resources */,
-				1C1108AE1C444F01003F625E /* MainMenu.xib in Resources */,
-				276972911CB16008007A2F7C /* safe_install_dir.sh in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -914,9 +904,8 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CLANG_WARN__EXIT_TIME_DESTRUCTORS = YES;
-				COPY_PHASE_STRIP = NO;
 				DEAD_CODE_STRIPPING = NO;
-				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -926,9 +915,9 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"CoreAudio_Debug=1",
-					"CoreAudio_UseSysLog=0",
+					"CoreAudio_UseSysLog=1",
 					"CoreAudio_StopOnAssert=1",
-					"CoreAudio_ThreadStampMessages=0",
+					"CoreAudio_ThreadStampMessages=1",
 				);
 				GCC_TREAT_IMPLICIT_FUNCTION_DECLARATIONS_AS_ERRORS = YES;
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
@@ -962,6 +951,8 @@
 				CLANG_USE_OPTIMIZATION_PROFILE = NO;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
+				DWARF_DSYM_FILE_NAME = "$(EXECUTABLE_NAME).dSYM";
+				DWARF_DSYM_FOLDER_PATH = "$(CONFIGURATION_BUILD_DIR)/$(EXECUTABLE_FOLDER_PATH)";
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				INFOPLIST_FILE = BGMApp/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
@@ -1020,9 +1011,8 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CLANG_WARN__EXIT_TIME_DESTRUCTORS = YES;
-				COPY_PHASE_STRIP = NO;
 				DEAD_CODE_STRIPPING = NO;
-				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = c11;
@@ -1032,9 +1022,9 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"CoreAudio_Debug=1",
-					"CoreAudio_UseSysLog=0",
+					"CoreAudio_UseSysLog=1",
 					"CoreAudio_StopOnAssert=1",
-					"CoreAudio_ThreadStampMessages=0",
+					"CoreAudio_ThreadStampMessages=1",
 				);
 				GCC_TREAT_IMPLICIT_FUNCTION_DECLARATIONS_AS_ERRORS = YES;
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
@@ -1092,7 +1082,6 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CLANG_WARN__EXIT_TIME_DESTRUCTORS = YES;
-				COPY_PHASE_STRIP = NO;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
@@ -1138,6 +1127,8 @@
 				CLANG_USE_OPTIMIZATION_PROFILE = NO;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
+				DWARF_DSYM_FILE_NAME = "$(EXECUTABLE_NAME).dSYM";
+				DWARF_DSYM_FOLDER_PATH = "$(CONFIGURATION_BUILD_DIR)/$(EXECUTABLE_FOLDER_PATH)";
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				INFOPLIST_FILE = BGMApp/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
@@ -1155,6 +1146,8 @@
 				CLANG_USE_OPTIMIZATION_PROFILE = NO;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
+				DWARF_DSYM_FILE_NAME = "$(EXECUTABLE_NAME).dSYM";
+				DWARF_DSYM_FOLDER_PATH = "$(CONFIGURATION_BUILD_DIR)/$(EXECUTABLE_FOLDER_PATH)";
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				INFOPLIST_FILE = BGMApp/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";

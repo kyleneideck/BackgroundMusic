@@ -75,7 +75,7 @@ void	LogError(const char *fmt, ...)
 //#if TARGET_API_MAC_OSX
 //	vsyslog(LOG_ERR, fmt, args);
 //#endif
-#if DEBUG || !TARGET_API_MAC_OSX
+#if (DEBUG || !TARGET_API_MAC_OSX) && !CoreAudio_UseSysLog
     vprintf(fmt, args);
 #else
     vsyslog(LOG_ERR, fmt, args);
@@ -96,7 +96,7 @@ void	LogWarning(const char *fmt, ...)
 //#if TARGET_API_MAC_OSX
 //	vsyslog(LOG_WARNING, fmt, args);
 //#endif
-#if DEBUG || !TARGET_API_MAC_OSX
+#if (DEBUG || !TARGET_API_MAC_OSX) && !CoreAudio_UseSysLog
     vprintf(fmt, args);
 #else
     vsyslog(LOG_WARNING, fmt, args);

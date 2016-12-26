@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 47;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -371,7 +371,7 @@
 			attributes = {
 				CLASSPREFIX = BGM_;
 				LastUpgradeCheck = 0700;
-				ORGANIZATIONNAME = "Kyle Neideck";
+				ORGANIZATIONNAME = "Background Music contributors";
 				TargetAttributes = {
 					1C8034D91BDD073B00668E00 = {
 						CreatedOnToolsVersion = 7.0.1;
@@ -386,7 +386,7 @@
 				};
 			};
 			buildConfigurationList = 1CB8B35D1BBBB69C000E2DD1 /* Build configuration list for PBXProject "BGMDriver" */;
-			compatibilityVersion = "Xcode 3.2";
+			compatibilityVersion = "Xcode 6.3";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
