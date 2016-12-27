@@ -146,18 +146,24 @@ for Xcode package, which you can find in the [Apple developer downloads](https:/
 
 ## BGMApp
 
-BGMApp is a fairly standard Cocoa status-bar app for the most part. The UI is simple and mostly built in Interface
+BGMApp is a fairly standard Cocoa status-bar app, for the most part. The UI is simple and mostly built in Interface
 Builder.
 
+`awakeFromNib` in [AppDelegate.mm](/BGMApp/BGMApp/AppDelegate.mm) is (more or less) the entry point/main function.
+`applicationDidFinishLaunching` gets called next and finishes setting things up.
+
 At launch, BGMApp sets BGMDevice as the system's default device and starts playing the audio from BGMDevice through the
-actual output device. Usually that's the device that BGMDevice replaced as default. BGMApp sets that device back as the
-default on exit.
+actual output device. Usually that's the device that BGMDevice replaced when we set it as the default device. When
+BGMApp closes, it sets that device back as the default device.
 
-There's a small amount of state data persisted by BGMApp itself. I think currently it's just whether "Auto-pause iTunes"
-is checked. Most state (app volumes, which music player to pause, etc.) is stored by BGMDriver.
+BGMApp stores a small amount of state data using [User
+Defaults](https://developer.apple.com/library/content/documentation/Cocoa/Conceptual/UserDefaults/AboutPreferenceDomains/AboutPreferenceDomains.html)
+-- currently just whether auto-pause is enabled and which music player to pause. Other persistent state (e.g. app
+volumes) is managed by BGMDriver.
 
-BGMApp mostly communicates with BGMDriver through HAL notifications. In some special cases we use XPC instead. I think
-the only communication that doesn't cover is the audio data, which is sent through BGMDevice's output stream.
+BGMApp mostly communicates with BGMDriver through HAL notifications, though in some special cases we use XPC instead.
+The only other communication between them is BGMDriver sending the system's audio data through BGMDevice's output
+stream, which BGMApp receives.
 
 For example, when an app other than the music player starts playing audio, BGMDriver sends out a notification saying
 that BGMDevice's `kAudioDeviceCustomPropertyDeviceAudibleState` property has changed.  BGMApp receives the notification
