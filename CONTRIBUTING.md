@@ -8,7 +8,8 @@ including ones from non-developers.
 ## Issues
 
 You'll probably want to update to the latest version of the code before creating an issue. The easiest way is to just
-run the installation command from [README.md](/README.md) again. (But `git pull && ./build_and_install.sh` is faster.)
+run the installation command from [README.md](/README.md#install) again. (But `git pull && ./build_and_install.sh` is
+faster.)
 
 For bug reports about `build_and_install.sh`, please include your `build_and_install.log`. It should be saved in the
 directory `build_and_install.sh` is in.

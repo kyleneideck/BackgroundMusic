@@ -69,16 +69,18 @@ If you're comfortable with it, you can just paste the following at a Terminal pr
     /bin/bash BackgroundMusic-master/build_and_install.sh && rm -rf BackgroundMusic-master)
 ```
 
-Otherwise, to build and install everything, do the following:
+Otherwise, to build and install:
 
-- Clone or [download](https://github.com/kyleneideck/BackgroundMusic/archive/master.zip) the project
-- If the project is in a zip, unzip it
-- [Go to the folder of the project](https://github.com/0nn0/terminal-mac-cheatsheet/wiki/Terminal-Cheatsheet-for-Mac-(-basics-)#core-commands) on your terminal
+- Clone or [download](https://github.com/kyleneideck/BackgroundMusic/archive/master.zip) the project.
+- If the project is in a zip, unzip it.
+- [Go to the directory of the project](https://github.com/0nn0/terminal-mac-cheatsheet/wiki/Terminal-Cheatsheet-for-Mac-(-basics-)#core-commands) in `Terminal.app`.
 - Run the following the command: `/bin/bash build_and_install.sh`.
 
-The script restarts the system audio process (coreaudiod) at the end of the installation, so you might want to pause any apps playing audio.
+The script restarts the system audio process (coreaudiod) at the end of the installation, so you might want to pause any
+apps playing audio.
 
-Additional detailed installation instructions can be found on [the Wiki](https://github.com/kyleneideck/BackgroundMusic/wiki/Installation).
+Additional detailed installation instructions can be found on [the
+Wiki](https://github.com/kyleneideck/BackgroundMusic/wiki/Installation).
 
 ## Uninstall
 
