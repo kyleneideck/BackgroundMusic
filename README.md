@@ -73,7 +73,8 @@ Otherwise, to build and install:
 
 - Clone or [download](https://github.com/kyleneideck/BackgroundMusic/archive/master.zip) the project.
 - If the project is in a zip, unzip it.
-- [Go to the directory of the project](https://github.com/0nn0/terminal-mac-cheatsheet/wiki/Terminal-Cheatsheet-for-Mac-(-basics-)#core-commands) in `Terminal.app`.
+- Open `Terminal.app` and [change directory](https://github.com/0nn0/terminal-mac-cheatsheet#core-commands) to the
+  directory containing the project.
 - Run the following the command: `/bin/bash build_and_install.sh`.
 
 The script restarts the system audio process (coreaudiod) at the end of the installation, so you might want to pause any
