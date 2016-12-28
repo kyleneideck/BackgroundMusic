@@ -48,4 +48,7 @@ Overview](https://developer.apple.com/library/mac/documentation/MusicAudio/Conce
 and the [Core Audio
 Glossary](https://developer.apple.com/library/mac/documentation/MusicAudio/Reference/CoreAudioGlossary/Glossary/core_audio_glossary.html).
 
+If you remember to, add a copyright notice with your name to any source files you change substantially. Let us know in
+the PR if you've intentionally not added one so we know not to add one for you.
+
 

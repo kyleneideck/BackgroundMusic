@@ -14,8 +14,7 @@
 - No restart required to install
 - Runs entirely in userspace
 
-**Version 0.1.0**, first release. Probably very buggy. Not very polished. Pretty much only tested on one system. (A
-MacBook running OS X 10.11 using the built-in audio device.)
+**Version 0.1.0**, first release. Probably very buggy. Not very polished or well tested.
 
 **Requires OS X 10.10+**. Might work on 10.9, but I haven't tried it. Currently unable to build in Xcode 6.
 
@@ -112,7 +111,8 @@ change the default device and then change it back again. Failing that, you might
   General tab of Skype's preferences.
 - Plugging in or unplugging headphones when Background Music isn't running can silence system audio. To fix it, go to
   the Sound section in System Preferences, click the Output tab and change your default output device to something other
-  than Background Music Device. Alternatively, you may Option+Click on the Sound icon in the menu bar to select a different output device.
+  than Background Music Device. Alternatively, you may Option+Click on the Sound icon in the menu bar to select a
+  different output device.
 
   This happens when macOS remembers that Background Music Device was your default audio device the last time you last
   used (or didn't use) headphones.
@@ -120,10 +120,10 @@ change the default device and then change it back again. Failing that, you might
   Background Music Device after you open Background Music. Chrome's audio will still play, but Background Music won't be
   aware of it.
 - Some apps play notification sounds that are only just long enough to trigger an auto-pause. The only workaround right
-  now is to increase the `kPauseDelayMSecs` constant in `BGMApp/BGMAutoPauseMusic.mm`. That will make your music overlap
-  the other audio for longer, though, so you don't want to increase it too much. See
+  now is to increase the `kPauseDelayNSec` constant in [BGMAutoPauseMusic.mm](/BGMApp/BGMApp/BGMAutoPauseMusic.mm).
+  That will make your music overlap the other audio for longer, though, so you don't want to increase it too much. See
   [#5](https://github.com/kyleneideck/BackgroundMusic/issues/5) for details.
-- Plenty more. Some are in listed in TODO.md.
+- Plenty more. Some are in listed in [TODO.md](/TODO.md).
 
 ## Related projects
 
@@ -158,6 +158,15 @@ change the default device and then change it back again. Failing that, you might
 
 Copyright © 2016 [Background Music contributors](https://github.com/kyleneideck/BackgroundMusic/graphs/contributors).
 Licensed under [GPLv2](https://www.gnu.org/licenses/gpl-2.0.html), or any later version.
+
+Background Music includes code from:
+
+- [Core Audio User-Space Driver
+  Examples](https://developer.apple.com/library/mac/samplecode/AudioDriverExamples/Introduction/Intro.html), [original
+  license](LICENSE-Apple-Sample-Code), Copyright (C) 2013 Apple Inc. All Rights Reserved.
+- [Core Audio Utility
+  Classes](https://developer.apple.com/library/content/samplecode/CoreAudioUtilityClasses/Introduction/Intro.html),
+  [original license](LICENSE-Apple-Sample-Code), Copyright (C) 2014 Apple Inc. All Rights Reserved.
 
 ----
 

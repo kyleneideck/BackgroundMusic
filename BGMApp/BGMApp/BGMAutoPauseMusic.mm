@@ -27,6 +27,9 @@
 #include "BGM_Types.h"
 #import "BGMMusicPlayer.h"
 
+// STL Includes
+#import <algorithm>  // std::max, std::min
+
 // System Includes
 #include <CoreAudio/AudioHardware.h>
 #include <mach/mach_time.h>
@@ -36,10 +39,21 @@
 // and other audio can have short periods of silence without causing music to play and quickly pause again. Of course, it's a
 // trade-off against how long the music will overlap the other audio before it gets paused and how long the music will stay paused
 // after a sound that was only slightly longer than the pause delay.
+static UInt64 const kPauseDelayNSec = 1500 * NSEC_PER_MSEC;
+// The delay before unpausing the music player is proportional to how long we paused it for, bounded by these limits. This makes it
+// a bit less annoying when a sound is just long enough to cause an auto-pause.
 //
-// TODO: Make these settable in advanced settings?
-static int const kPauseDelayMSecs = 1500;
-static int const kUnpauseDelayMSecs = 3000;
+// I haven't spent much time experimenting with different values for these constants, so they could probably be improved a fair
+// bit.
+//
+// TODO: Would it be worth listening for kAudioDeviceCustomPropertyDeviceIsRunningSomewhereOtherThanBGMApp so we can unpause
+//       immediately if we haven't been paused for long and the non-music-player client stops IO? That would usually indicate that
+//       it doesn't intend to start playing audio again soon. We'd also have to deal with music players that don't stop IO when
+//       they're paused.
+static UInt64 const kMaxUnpauseDelayNSec = 3000 * NSEC_PER_MSEC;
+static UInt64 const kMinUnpauseDelayNSec = kMaxUnpauseDelayNSec / 10;
+// We multiply the time spent paused by this factor to calculate the delay before we consider unpausing.
+static Float32 const kUnpauseDelayWeightingFactor = 0.25f;
 
 @implementation BGMAutoPauseMusic {
     BOOL enabled;
@@ -53,8 +67,8 @@ static int const kUnpauseDelayMSecs = 3000;
     
     dispatch_queue_t pauseUnpauseMusicQueue;
     
-    // True if BGMApp has paused musicPlayer and hasn't unpaused it yet. (Will be out of sync with the music player app if the user
-    // has unpaused it themselves.)
+    // True if BGMApp has paused musicPlayer and hasn't unpaused it yet. (Will be out of sync with the music player app if the
+    // user has unpaused it themselves.)
     BOOL wePaused;
     // The times, in absolute time, that the BGMDevice last changed its audible state to silent...
     UInt64 wentSilent;
@@ -101,6 +115,8 @@ static int const kUnpauseDelayMSecs = 3000;
                          audibleStateStr);
 #endif
                 
+                // TODO: We shouldn't assume this block will only get called when BGMDevice's audible state changes. (Even if
+                //       the Core Audio docs did specify that, there's no reason not to be fault tolerant.)
                 if (audibleState == kBGMDeviceIsAudible) {
                     [weakSelf queuePauseBlock];
                 } else if (audibleState == kBGMDeviceIsSilent) {
@@ -119,9 +135,12 @@ static int const kUnpauseDelayMSecs = 3000;
 
 - (SInt32) deviceAudibleState {
     SInt32 audibleState;
-    CFNumberRef audibleStateRef = static_cast<CFNumberRef>([audioDevices bgmDevice].GetPropertyData_CFType(kBGMAudibleStateAddress));
+    CFNumberRef audibleStateRef =
+        static_cast<CFNumberRef>([audioDevices bgmDevice].GetPropertyData_CFType(kBGMAudibleStateAddress));
+    
     CFNumberGetValue(audibleStateRef, kCFNumberSInt32Type, &audibleState);
     CFRelease(audibleStateRef);
+    
     return audibleState;
 }
 
@@ -131,7 +150,7 @@ static int const kUnpauseDelayMSecs = 3000;
     UInt64 startedPauseDelay = now;
     
     DebugMsg("BGMAutoPauseMusic::queuePauseBlock: Dispatching pause block at %llu", now);
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kPauseDelayMSecs * NSEC_PER_MSEC),
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kPauseDelayNSec),
                    pauseUnpauseMusicQueue,
                    ^{
                        BOOL stillAudible = ([self deviceAudibleState] == kBGMDeviceIsAudible);
@@ -155,8 +174,28 @@ static int const kUnpauseDelayMSecs = 3000;
     wentSilent = now;
     UInt64 startedUnpauseDelay = now;
     
-    DebugMsg("BGMAutoPauseMusic::queueUnpauseBlock: Dispatched unpause block at %llu", now);
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kUnpauseDelayMSecs * NSEC_PER_MSEC),
+    // Unpause sooner if we've only been paused for a short time. This is so a notification sound causing an auto-pause is
+    // less of an interruption.
+    //
+    // TODO: Would it help much if we ignored all audio played on the "system default" device rather than the "default"
+    //       device? IIRC apps are supposed to use the former for UI sounds.
+    UInt64 unpauseDelayNsec =
+        static_cast<UInt64>((wentSilent - wentAudible) * kUnpauseDelayWeightingFactor);
+    
+    // Convert from absolute time to nanos.
+    mach_timebase_info_data_t info;
+    mach_timebase_info(&info);
+    unpauseDelayNsec = unpauseDelayNsec * info.numer / info.denom;
+    
+    // Clamp.
+    unpauseDelayNsec = std::min(kMaxUnpauseDelayNSec, unpauseDelayNsec);
+    unpauseDelayNsec = std::max(kMinUnpauseDelayNSec, unpauseDelayNsec);
+    
+    DebugMsg("BGMAutoPauseMusic::queueUnpauseBlock: Dispatched unpause block at %llu. unpauseDelayNsec=%llu",
+             now,
+             unpauseDelayNsec);
+    
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, unpauseDelayNsec),
                    pauseUnpauseMusicQueue,
                    ^{
                        BOOL stillSilent = ([self deviceAudibleState] == kBGMDeviceIsSilent);
