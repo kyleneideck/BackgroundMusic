@@ -67,6 +67,14 @@ function size_check {
 }
 
 clear
+
+# Warn if running as root.
+if [[ $(id -u) -eq 0 ]]; then
+  echo "$(tput setaf 11)WARNING$(tput sgr0): This script is not intended to be run as root. Run" \
+       "it normally and it'll sudo when it needs to." >&2
+  echo ""
+fi
+
 echo "${bold}You are about to uninstall Background Music and its components!${normal}"
 echo "Please pause all audio before continuing."
 echo "You must be able to run 'sudo' commands to continue. (But don't worry if you don't know what that means.)"
@@ -129,8 +137,10 @@ if [ "$user_prompt" == "y" ] || [ "$user_prompt" == "Y" ]; then
     echo "Warning: could not delete the Background Music user/group due to an internal error in $0."
   fi
 
-  # We're done removing files, so now actually move trash_dir into the trash.
-  osascript -e 'tell application "Finder" to move the POSIX file "'"${trash_dir}"'" to trash' >/dev/null
+  # We're done removing files, so now actually move trash_dir into the trash. And if that fails, just delete it normally.
+  osascript -e 'tell application "Finder" to move the POSIX file "'"${trash_dir}"'" to trash' >/dev/null 2>&1 \
+    || rm -rf "${trash_dir}" \
+    || true
 
   echo "Restarting Core Audio."
   # The extra or-clauses are fallback versions of the command that restarts coreaudiod. Apparently some of these commands 
@@ -154,7 +164,7 @@ if [ "$user_prompt" == "y" ] || [ "$user_prompt" == "Y" ]; then
   osascript -e 'tell application "System Preferences"
 	activate
 	reveal anchor "output" of pane "Sound"
-  end tell' >/dev/null
+  end tell' >/dev/null || true
   echo ""
 
 else
