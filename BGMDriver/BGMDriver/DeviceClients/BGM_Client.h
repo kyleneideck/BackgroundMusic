@@ -72,7 +72,7 @@ public:
     // mRelativeVolumeCurve is applied this this value when it's set.
     Float32                       mRelativeVolume = 1.0;
     
-    // The client's pan position, in the range [-100, 100] where 100 is left and -100 is right
+    // The client's pan position, in the range [-100, 100] where -100 is left and 100 is right
     SInt32                        mPanPosition = 0;
     
 };
