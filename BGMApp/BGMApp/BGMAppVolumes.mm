@@ -102,6 +102,9 @@ static float const kSlidersSnapWithin = 5;
             if ([subview conformsToProtocol:@protocol(BGMAppVolumeSubview)]) {
                 [subview performSelector:@selector(setUpWithApp:context:) withObject:app withObject:self];
             }
+            if ([subview conformsToProtocol:@protocol(BGMAppPanSubview)]) {
+                [subview performSelector:@selector(setUpWithApp:context:) withObject:app withObject:self];
+            }
         }
         
         // Store the NSRunningApplication object with the menu item so when the app closes we can find the item to remove it
@@ -169,10 +172,16 @@ static float const kSlidersSnapWithin = 5;
             CFTypeRef relativeVolume;
             appVolume.GetCFType(CFSTR(kBGMAppVolumesKey_RelativeVolume), relativeVolume);
             
+            CFTypeRef panPosition;
+            appVolume.GetCFType(CFSTR(kBGMAppVolumesKey_PanPosition), panPosition);
+            
             // Update the slider
             for (NSView* subview in menuItem.view.subviews) {
                 if ([subview respondsToSelector:@selector(setRelativeVolume:)]) {
                     [subview performSelector:@selector(setRelativeVolume:) withObject:(__bridge NSNumber*)relativeVolume];
+                }
+                if ([subview respondsToSelector:@selector(setPanPosition:)]) {
+                    [subview performSelector:@selector(setPanPosition:) withObject:(__bridge NSNumber*)panPosition];
                 }
             }
         }
@@ -224,6 +233,19 @@ static float const kSlidersSnapWithin = 5;
     [audioDevices bgmDevice].SetPropertyData_CFType(kBGMAppVolumesAddress, appVolumeChanges.AsPropertyList());
 }
 
+- (void) sendPanPositionChangeToBGMDevice:(SInt32)newPanPosition appProcessID:(pid_t)appProcessID appBundleID:(NSString*)appBundleID {
+    CACFDictionary appVolumeChange(true);
+    appVolumeChange.AddSInt32(CFSTR(kBGMAppVolumesKey_ProcessID), appProcessID);
+    appVolumeChange.AddString(CFSTR(kBGMAppVolumesKey_BundleID), (__bridge CFStringRef)appBundleID);
+    
+    // The values from our sliders are in [kAppPanLeftRawValue, kAppPanRightRawValue] already
+    appVolumeChange.AddSInt32(CFSTR(kBGMAppVolumesKey_PanPosition), newPanPosition);
+    
+    CACFArray appVolumeChanges(true);
+    appVolumeChanges.AppendDictionary(appVolumeChange.GetDict());
+    
+    [audioDevices bgmDevice].SetPropertyData_CFType(kBGMAppVolumesAddress, appVolumeChanges.AsPropertyList());
+}
 @end
 
 // Custom classes for the UI elements in the app volume menu items
@@ -271,7 +293,7 @@ static float const kSlidersSnapWithin = 5;
 
 - (void) snap {
     // Snap to the 50% point
-    float midPoint = static_cast<float>((self.maxValue - self.minValue) / 2);
+    float midPoint = static_cast<float>((self.maxValue + self.minValue) / 2);
     if (self.floatValue > (midPoint - kSlidersSnapWithin) && self.floatValue < (midPoint + kSlidersSnapWithin)) {
         self.floatValue = midPoint;
     }
@@ -293,4 +315,96 @@ static float const kSlidersSnapWithin = 5;
 }
 
 @end
+
+@implementation BGMAVM_PanSlider {
+    // Will be set to -1 for apps without a pid
+    pid_t appProcessID;
+    NSString* appBundleID;
+    BGMAppVolumes* context;
+}
+
+- (id)initWithCoder:(NSCoder *)coder {
+    self = [super initWithCoder: coder];
+    
+    [NSSlider setCellClass:[BGMAVM_PanSliderCell class]];
+    
+    if(self) {
+        NSSliderCell * oldCell = [self cell];
+        
+        BGMAVM_PanSliderCell *cell = [[BGMAVM_PanSliderCell alloc] init];
+       
+        cell.minValue = oldCell.minValue;
+        cell.maxValue = oldCell.maxValue;
+        cell.intValue = oldCell.intValue;
+        cell.controlSize = oldCell.controlSize;
+
+        [self setCell:cell];
+    }
+
+    return self;
+}
+
+- (void) setUpWithApp:(NSRunningApplication*)app context:(BGMAppVolumes*)ctx {
+    context = ctx;
+    
+    self.target = self;
+    self.action = @selector(appPanPositionChanged);
+    
+    appProcessID = app.processIdentifier;
+    appBundleID = app.bundleIdentifier;
+    
+    self.minValue = kAppPanLeftRawValue;
+    self.maxValue = kAppPanRightRawValue;
+}
+
+- (void) snap {
+    // Snap to the center point
+    float midPoint = static_cast<float>((self.maxValue + self.minValue) / 2);
+    if (self.floatValue > (midPoint - 2 * kSlidersSnapWithin) && self.floatValue < (midPoint + 2 * kSlidersSnapWithin)) {
+        self.floatValue = midPoint;
+    }
+}
+
+- (void) setPanPosition:(NSNumber *)panPosition {
+    self.intValue = panPosition.intValue;
+    [self snap];
+}
+
+- (void) appPanPositionChanged {
+    // TODO: This (sending updates to the driver) should probably be rate-limited. It uses a fair bit of CPU for me.
+    
+    DebugMsg("BGMAppVolumes::appPanPositionChanged: App pan position for %s changed to %d", appBundleID.UTF8String, self.intValue);
+    
+    [self snap];
+    
+    [context sendPanPositionChangeToBGMDevice:self.intValue appProcessID:appProcessID appBundleID:appBundleID];
+}
+
+@end
+
+@implementation BGMAVM_PanSliderCell
+
+- (void)drawBarInside:(NSRect)rect flipped:(BOOL)flipped {
+    // Custom small slider cell with a single color track
+    CGFloat desiredHeight = 3.0;
+    auto color = NSColor.grayColor;
+    
+    CGFloat radius = desiredHeight / 2.0;
+
+    // Center the bar vertically in rect
+    CGFloat fullHeight = rect.size.height;
+    CGFloat yOffset = (desiredHeight - fullHeight) / 2.0;
+    if (flipped) {
+        yOffset = -yOffset;
+    }
+    rect.origin.y += yOffset;
+    rect.size.height = desiredHeight;
+    
+    NSBezierPath* bg = [NSBezierPath bezierPathWithRoundedRect: rect xRadius: radius yRadius: radius];
+    [color setFill];
+    [bg fill];
+}
+
+@end
+
 

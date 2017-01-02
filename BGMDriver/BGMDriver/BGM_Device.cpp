@@ -2092,6 +2092,31 @@ void	BGM_Device::ApplyClientRelativeVolume(UInt32 inClientID, UInt32 inIOBufferF
     Float32* theBuffer = reinterpret_cast<Float32*>(ioBuffer);
     Float32 theRelativeVolume = mClients.GetClientRelativeVolumeRT(inClientID);
     
+    auto thePanPositionInt = mClients.GetClientPanPositionRT(inClientID);
+    Float32 thePanPosition =  ((Float32)thePanPositionInt)/100.0f;
+    
+    // TODO precompute matrix coefficients w/ volume and do everything in one pass
+    
+    // Apply balance w/ crossover to the frames in the buffer.
+    // Expect samples interleaved, starting with left
+    if (thePanPosition > 0.0f) {
+        for (UInt32 i = 0; i < inIOBufferFrameSize * 2; i += 2) {
+            auto L = i;
+            auto R = i + 1;
+            
+            theBuffer[R] = theBuffer[R] + theBuffer[L] * thePanPosition;
+            theBuffer[L] = theBuffer[L] * (1 - thePanPosition);
+        }
+    } else if (thePanPosition < 0.0f) {
+        for (UInt32 i = 0; i < inIOBufferFrameSize * 2; i += 2) {
+            auto L = i;
+            auto R = i + 1;
+            
+            theBuffer[L] = theBuffer[L] + theBuffer[R] * (-thePanPosition);
+            theBuffer[R] = theBuffer[R] * (1 + thePanPosition);
+        }
+    }
+
     if(theRelativeVolume != 1.)
     {
         for(UInt32 i = 0; i < inIOBufferFrameSize * 2; i++)

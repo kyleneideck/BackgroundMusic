@@ -37,14 +37,16 @@ void    BGM_ClientMap::AddClient(BGM_Client inClient)
 {
     CAMutex::Locker theShadowMapsLocker(mShadowMapsMutex);
     
-    // If this client has been a client in the past (and has a bundle ID), copy its previous relative volume
+    // If this client has been a client in the past (and has a bundle ID), copy its previous audio settings
     auto pastClientItr = inClient.mBundleID.IsValid() ? mPastClientMap.find(inClient.mBundleID) : mPastClientMap.end();
     if(pastClientItr != mPastClientMap.end())
     {
-        DebugMsg("BGM_ClientMap::AddClient: Found previous volume %f for client %u",
+        DebugMsg("BGM_ClientMap::AddClient: Found previous volume %f and pan %d for client %u",
                  pastClientItr->second.mRelativeVolume,
+                 pastClientItr->second.mPanPosition,
                  inClient.mClientID);
         inClient.mRelativeVolume = pastClientItr->second.mRelativeVolume;
+        inClient.mPanPosition = pastClientItr->second.mPanPosition;
     }
     
     // Add the new client to the shadow maps
@@ -234,8 +236,8 @@ CACFArray   BGM_ClientMap::CopyClientRelativeVolumesAsAppVolumes(CAVolumeCurve i
 
 void    BGM_ClientMap::CopyClientIntoAppVolumesArray(BGM_Client inClient, CAVolumeCurve inVolumeCurve, CACFArray& ioAppVolumes) const
 {
-    // Only include clients set to a non-default volume
-    if(inClient.mRelativeVolume != 1.0)
+    // Only include clients set to a non-default volume or pan
+    if(inClient.mRelativeVolume != 1.0 || inClient.mPanPosition != 0)
     {
         CACFDictionary theAppVolume(false);
         
@@ -244,6 +246,8 @@ void    BGM_ClientMap::CopyClientIntoAppVolumesArray(BGM_Client inClient, CAVolu
         // Reverse the volume conversion from SetClientsRelativeVolumes
         theAppVolume.AddSInt32(CFSTR(kBGMAppVolumesKey_RelativeVolume),
                                inVolumeCurve.ConvertScalarToRaw(inClient.mRelativeVolume / 4));
+        theAppVolume.AddSInt32(CFSTR(kBGMAppVolumesKey_PanPosition),
+                               inClient.mPanPosition);
         
         ioAppVolumes.AppendDictionary(theAppVolume.GetDict());
     }
@@ -251,28 +255,76 @@ void    BGM_ClientMap::CopyClientIntoAppVolumesArray(BGM_Client inClient, CAVolu
 
 // TODO: Combine the SetClientsRelativeVolume methods? Their code is very similar.
 
-bool    BGM_ClientMap::SetClientsRelativeVolume(pid_t inAppPID, Float32 inRelativeVolume)
+template <typename T>
+std::vector<BGM_Client*> * _Nullable GetClientsFromMap(std::map<T, std::vector<BGM_Client*>> & map, T key) {
+    // TODO assert mShadowMapsMutex is locked?
+    auto theClientItr = map.find(key);
+    if(theClientItr != map.end()) {
+        return &theClientItr->second;
+    }
+    return nullptr;
+}
+
+std::vector<BGM_Client*> * _Nullable BGM_ClientMap::GetClients(pid_t inAppPid) {
+    return GetClientsFromMap(mClientMapByPIDShadow, inAppPid);
+}
+
+std::vector<BGM_Client*> * _Nullable BGM_ClientMap::GetClients(CACFString inAppBundleID) {
+    return GetClientsFromMap(mClientMapByBundleIDShadow, inAppBundleID);
+}
+
+void ShowSetRelativeVolumeMessage(pid_t inAppPID, BGM_Client* theClient);
+void ShowSetRelativeVolumeMessage(CACFString inAppBundleID, BGM_Client* theClient);
+
+void ShowSetRelativeVolumeMessage(pid_t inAppPID, BGM_Client* theClient) {
+    (void)inAppPID;
+    (void)theClient;
+    DebugMsg("BGM_ClientMap::SetClientsRelativeVolume: Set volume %f for client %u by pid (%d)",
+             theClient->mRelativeVolume,
+             theClient->mClientID,
+             inAppPID);
+}
+
+void ShowSetRelativeVolumeMessage(CACFString inAppBundleID, BGM_Client* theClient) {
+    (void)inAppBundleID;
+    (void)theClient;
+    DebugMsg("BGM_ClientMap::SetClientsRelativeVolume: Set volume %f for client %u by bundle ID (%s)",
+             theClient->mRelativeVolume,
+             theClient->mClientID,
+             CFStringGetCStringPtr(inAppBundleID.GetCFString(), kCFStringEncodingUTF8));
+}
+
+// Template method declarations are running into LLVM bug 23987
+// TODO: template these.
+
+//bool BGM_ClientMap::SetClientsRelativeVolume(pid_t inAppPID, Float32 inRelativeVolume) {
+//    return SetClientsRelativeVolumeT<pid_t>(inAppPID, inRelativeVolume);
+//}
+
+//bool BGM_ClientMap::SetClientsRelativeVolume(CACFString inAppBundleID, Float32 inRelativeVolume) {
+//    return SetClientsRelativeVolumeT<CACFString>(inAppBundleID, inRelativeVolume)
+//}
+
+//template <typename T>
+//bool BGM_ClientMap::SetClientsRelativeVolume(T searchKey, Float32 inRelativeVolume)
+
+bool BGM_ClientMap::SetClientsRelativeVolume(pid_t searchKey, Float32 inRelativeVolume)
 {
     bool didChangeVolume = false;
     
     CAMutex::Locker theShadowMapsLocker(mShadowMapsMutex);
     
     auto theSetVolumesInShadowMapsFunc = [&] {
-        // Look up the clients for the PID and update their volumes
-        auto theClientItr = mClientMapByPIDShadow.find(inAppPID);
+        // Look up the clients for the key and update their volumes
         
-        if(theClientItr != mClientMapByPIDShadow.end())
+        auto theClients = GetClients(searchKey);
+        if(theClients != nullptr)
         {
-            std::vector<BGM_Client*> theClients = theClientItr->second;
-            
-            for(BGM_Client* theClient : theClients)
+            for(BGM_Client* theClient : *theClients)
             {
                 theClient->mRelativeVolume = inRelativeVolume;
                 
-                DebugMsg("BGM_ClientMap::SetClientsRelativeVolume: Set volume %f for client %u by pid (%d)",
-                         theClient->mRelativeVolume,
-                         theClient->mClientID,
-                         theClient->mProcessID);
+                ShowSetRelativeVolumeMessage(searchKey, theClient);
                 
                 didChangeVolume = true;
             }
@@ -286,29 +338,23 @@ bool    BGM_ClientMap::SetClientsRelativeVolume(pid_t inAppPID, Float32 inRelati
     return didChangeVolume;
 }
 
-
-bool    BGM_ClientMap::SetClientsRelativeVolume(CACFString inAppBundleID, Float32 inRelativeVolume)
+bool BGM_ClientMap::SetClientsRelativeVolume(CACFString searchKey, Float32 inRelativeVolume)
 {
     bool didChangeVolume = false;
     
     CAMutex::Locker theShadowMapsLocker(mShadowMapsMutex);
     
     auto theSetVolumesInShadowMapsFunc = [&] {
-        // Look up the clients for the bundle ID and update their volumes
-        auto theClientItr = mClientMapByBundleIDShadow.find(inAppBundleID);
+        // Look up the clients for the key and update their volumes
         
-        if(theClientItr != mClientMapByBundleIDShadow.end())
+        auto theClients = GetClients(searchKey);
+        if(theClients != nullptr)
         {
-            std::vector<BGM_Client*> theClients = theClientItr->second;
-            
-            for(BGM_Client* theClient : theClients)
+            for(BGM_Client* theClient : *theClients)
             {
                 theClient->mRelativeVolume = inRelativeVolume;
                 
-                DebugMsg("BGM_ClientMap::SetClientsRelativeVolume: Set volume %f for client %u by bundle ID (%s)",
-                         theClient->mRelativeVolume,
-                         theClient->mClientID,
-                         CFStringGetCStringPtr(inAppBundleID.GetCFString(), kCFStringEncodingUTF8));
+                ShowSetRelativeVolumeMessage(searchKey, theClient);
                 
                 didChangeVolume = true;
             }
@@ -320,6 +366,62 @@ bool    BGM_ClientMap::SetClientsRelativeVolume(CACFString inAppBundleID, Float3
     theSetVolumesInShadowMapsFunc();
     
     return didChangeVolume;
+}
+
+bool BGM_ClientMap::SetClientsPanPosition(pid_t searchKey, SInt32 inPanPosition)
+{
+    bool didChangePanPosition = false;
+    
+    CAMutex::Locker theShadowMapsLocker(mShadowMapsMutex);
+    
+    auto theSetPansInShadowMapsFunc = [&] {
+      // Look up the clients for the key and update their pan positions
+        auto theClients = GetClients(searchKey);
+        if(theClients != nullptr) {
+            for(auto theClient: *theClients) {
+                theClient->mPanPosition = inPanPosition;
+                
+                // ShowSetPanPositionsMessage(searchKey, theClient)
+                
+                didChangePanPosition = true;
+            }
+        }
+    };
+    
+    theSetPansInShadowMapsFunc();
+    SwapInShadowMaps();
+    theSetPansInShadowMapsFunc();
+    
+    return didChangePanPosition;
+    
+}
+
+bool BGM_ClientMap::SetClientsPanPosition(CACFString searchKey, SInt32 inPanPosition)
+{
+    bool didChangePanPosition = false;
+    
+    CAMutex::Locker theShadowMapsLocker(mShadowMapsMutex);
+    
+    auto theSetPansInShadowMapsFunc = [&] {
+        // Look up the clients for the key and update their pan positions
+        auto theClients = GetClients(searchKey);
+        if(theClients != nullptr) {
+            for(auto theClient: *theClients) {
+                theClient->mPanPosition = inPanPosition;
+                
+                // ShowSetPanPositionsMessage(searchKey, theClient)
+                
+                didChangePanPosition = true;
+            }
+        }
+    };
+    
+    theSetPansInShadowMapsFunc();
+    SwapInShadowMaps();
+    theSetPansInShadowMapsFunc();
+    
+    return didChangePanPosition;
+    
 }
 
 void    BGM_ClientMap::UpdateClientIOStateNonRT(UInt32 inClientID, bool inDoingIO)

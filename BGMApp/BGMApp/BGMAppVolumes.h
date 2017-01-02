@@ -41,6 +41,12 @@
 
 @end
 
+@protocol BGMAppPanSubview <NSObject>
+
+- (void) setUpWithApp:(NSRunningApplication*)app context:(BGMAppVolumes*)ctx;
+
+@end
+
 // Custom classes for the UI elements in the app volume menu items
 
 @interface BGMAVM_AppIcon : NSImageView <BGMAppVolumeSubview>
@@ -55,3 +61,14 @@
 
 @end
 
+@interface BGMAVM_PanSlider : NSSlider <BGMAppPanSubview>
+
+- (void) setPanPosition:(NSNumber*)panPosition;
+
+@end
+
+@interface BGMAVM_PanSliderCell : NSSliderCell
+
+- (void)drawBarInside:(NSRect)rect flipped:(BOOL)flipped;
+
+@end

@@ -296,6 +296,13 @@ Float32 BGM_Clients::GetClientRelativeVolumeRT(UInt32 inClientID) const
     return (didGetClient ? theClient.mRelativeVolume : 1.0);
 }
 
+SInt32 BGM_Clients::GetClientPanPositionRT(UInt32 inClientID) const
+{
+    BGM_Client theClient;
+    bool didGetClient = mClientMap.GetClientRT(inClientID, &theClient);
+    return (didGetClient ? theClient.mPanPosition : kAppPanCenterRawValue);
+}
+
 bool    BGM_Clients::SetClientsRelativeVolumes(const CACFArray inAppVolumes)
 {
     bool didChangeAppVolumes = false;
@@ -320,38 +327,70 @@ bool    BGM_Clients::SetClientsRelativeVolumes(const CACFArray inAppVolumes)
                 BGM_InvalidClientRelativeVolumeException(),
                 "BGM_Clients::SetClientsRelativeVolumes: App volume was sent without PID or bundle ID for app");
         
-        Float32 theRelativeVolume;
+        bool didGetVolume;
         {
             SInt32 theRawRelativeVolume;
-            bool didGetVolume = theAppVolume.GetSInt32(CFSTR(kBGMAppVolumesKey_RelativeVolume), theRawRelativeVolume);
+            didGetVolume = theAppVolume.GetSInt32(CFSTR(kBGMAppVolumesKey_RelativeVolume), theRawRelativeVolume);
             
-            ThrowIf(!didGetVolume || theRawRelativeVolume < kAppRelativeVolumeMinRawValue || theRawRelativeVolume > kAppRelativeVolumeMaxRawValue,
-                    BGM_InvalidClientRelativeVolumeException(),
-                    "BGM_Clients::SetClientsRelativeVolumes: Relative volume for app missing or out of valid range");
+            if (didGetVolume) {
+                ThrowIf(didGetVolume && (theRawRelativeVolume < kAppRelativeVolumeMinRawValue || theRawRelativeVolume > kAppRelativeVolumeMaxRawValue),
+                        BGM_InvalidClientRelativeVolumeException(),
+                        "BGM_Clients::SetClientsRelativeVolumes: Relative volume for app out of valid range");
+                
+                // Apply the volume curve to the raw volume
+                //
+                // mRelativeVolumeCurve uses the default kPow2Over1Curve transfer function, so we also multiply by 4 to
+                // keep the middle volume equal to 1 (meaning apps' volumes are unchanged by default).
+                Float32 theRelativeVolume = mRelativeVolumeCurve.ConvertRawToScalar(theRawRelativeVolume) * 4;
+
+                // Try to update the client's volume, first by PID and then, if that fails, by bundle ID
+                //
+                // TODO: Should we always try both in case an app has multiple clients?
+                if(mClientMap.SetClientsRelativeVolume(theAppPID, theRelativeVolume))
+                {
+                    didChangeAppVolumes = true;
+                }
+                else if(mClientMap.SetClientsRelativeVolume(theAppBundleID, theRelativeVolume))
+                {
+                    didChangeAppVolumes = true;
+                }
+                else
+                {
+                    // TODO: The app isn't currently a client, so we should add it to the past clients map, or update its
+                    //       past volume if it's already in there.
+                }
             
-            // Apply the volume curve to the raw volume
-            //
-            // mRelativeVolumeCurve uses the default kPow2Over1Curve transfer function, so we also multiply by 4 to
-            // keep the middle volume equal to 1 (meaning apps' volumes are unchanged by default).
-            theRelativeVolume = mRelativeVolumeCurve.ConvertRawToScalar(theRawRelativeVolume) * 4;
+            }
         }
         
-        // Try to update the client's volume, first by PID and then, if that fails, by bundle ID
-        //
-        // TODO: Should we always try both in case an app has multiple clients?
-        if(mClientMap.SetClientsRelativeVolume(theAppPID, theRelativeVolume))
+        bool didGetPanPosition;
         {
-            didChangeAppVolumes = true;
+            SInt32 thePanPosition;
+            didGetPanPosition = theAppVolume.GetSInt32(CFSTR(kBGMAppVolumesKey_PanPosition), thePanPosition);
+            if (didGetPanPosition) {
+                ThrowIf(didGetPanPosition && (thePanPosition < kAppPanLeftRawValue || thePanPosition > kAppPanRightRawValue),
+                                              BGM_InvalidClientPanPositionException(),
+                                              "BGM_Clients::SetClientsRelativeVolumes: Pan position for app out of valid range");
+                
+                if(mClientMap.SetClientsPanPosition(theAppPID, thePanPosition))
+                {
+                    didChangeAppVolumes = true;
+                }
+                else if(mClientMap.SetClientsPanPosition(theAppBundleID, thePanPosition))
+                {
+                    didChangeAppVolumes = true;
+                }
+                else
+                {
+                    // TODO: The app isn't currently a client, so we should add it to the past clients map, or update its
+                    //       past pan position if it's already in there.
+                }
+            }
         }
-        else if(mClientMap.SetClientsRelativeVolume(theAppBundleID, theRelativeVolume))
-        {
-            didChangeAppVolumes = true;
-        }
-        else
-        {
-            // TODO: The app isn't currently a client, so we should add it to the past clients map, or update its
-            //       past volume if it's already in there.
-        }
+        
+        ThrowIf(!didGetVolume && !didGetPanPosition,
+                BGM_InvalidClientRelativeVolumeException(),
+                "BGM_Clients::SetClientsRelativeVolumes: No volume or pan position in request");
     }
     
     return didChangeAppVolumes;
