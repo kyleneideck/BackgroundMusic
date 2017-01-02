@@ -385,24 +385,13 @@ static float const kSlidersSnapWithin = 5;
 @implementation BGMAVM_PanSliderCell
 
 - (void)drawBarInside:(NSRect)rect flipped:(BOOL)flipped {
-    // Custom small slider cell with a single color track
-    CGFloat desiredHeight = 3.0;
-    auto color = NSColor.grayColor;
+    // Custom slider cell to get rid of the level highlight
     
-    CGFloat radius = desiredHeight / 2.0;
-
-    // Center the bar vertically in rect
-    CGFloat fullHeight = rect.size.height;
-    CGFloat yOffset = (desiredHeight - fullHeight) / 2.0;
-    if (flipped) {
-        yOffset = -yOffset;
-    }
-    rect.origin.y += yOffset;
-    rect.size.height = desiredHeight;
-    
-    NSBezierPath* bg = [NSBezierPath bezierPathWithRoundedRect: rect xRadius: radius yRadius: radius];
-    [color setFill];
-    [bg fill];
+    // Just run the stock method with the values swapped to get it to do what we want
+    auto savedValue = self.doubleValue;
+    self.doubleValue = self.minValue;
+    [super drawBarInside:rect flipped:flipped];
+    self.doubleValue = savedValue;
 }
 
 @end
