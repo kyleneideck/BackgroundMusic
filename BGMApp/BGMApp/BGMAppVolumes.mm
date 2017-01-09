@@ -326,8 +326,6 @@ static float const kSlidersSnapWithin = 5;
 - (id)initWithCoder:(NSCoder *)coder {
     self = [super initWithCoder: coder];
     
-    [NSSlider setCellClass:[BGMAVM_PanSliderCell class]];
-    
     if(self) {
         NSSliderCell * oldCell = [self cell];
         

@@ -257,7 +257,6 @@ void    BGM_ClientMap::CopyClientIntoAppVolumesArray(BGM_Client inClient, CAVolu
 
 template <typename T>
 std::vector<BGM_Client*> * _Nullable GetClientsFromMap(std::map<T, std::vector<BGM_Client*>> & map, T key) {
-    // TODO assert mShadowMapsMutex is locked?
     auto theClientItr = map.find(key);
     if(theClientItr != map.end()) {
         return &theClientItr->second;
