@@ -76,6 +76,8 @@ CONFIGURATION=Release
 # information after every build.
 CLEAN=clean
 
+XCODEBUILD_OPTIONS=""
+
 CONTINUE_ON_ERROR=0
 
 # Update .gitignore if you change this.
@@ -123,10 +125,11 @@ RECOMMENDED_MIN_XCODE_VERSION=7
 
 usage() {
     echo "Usage: $0 [options]" >&2
-    echo -e "\t-n\tDon't clean before building/installing." >&2
-    echo -e "\t-d\tDebug build. (Release is the default.)" >&2
-    echo -e "\t-c\tContinue on script errors. Might not be safe." >&2
-    echo -e "\t-h\tPrint this usage statement." >&2
+    echo -e "\t-n            Don't clean before building/installing." >&2
+    echo -e "\t-d            Debug build. (Release is the default.)" >&2
+    echo -e "\t-x [options]  Extra options to pass to xcodebuild." >&2
+    echo -e "\t-c            Continue on script errors. Might not be safe." >&2
+    echo -e "\t-h            Print this usage statement." >&2
     exit 1
 }
 
@@ -209,13 +212,16 @@ show_spinner() {
 }
 
 parse_options() {
-    while getopts ":ndch" opt; do
+    while getopts ":ndx:ch" opt; do
         case $opt in
             n)
                 CLEAN=""
                 ;;
             d)
                 CONFIGURATION="Debug"
+                ;;
+            x)
+                XCODEBUILD_OPTIONS="$OPTARG"
                 ;;
             c)
                 CONTINUE_ON_ERROR=1
@@ -463,6 +469,7 @@ echo "[1/3] Installing the virtual audio device $(bold_face ${DRIVER_DIR}) to" \
                          -target "PublicUtility" \
                          -configuration ${CONFIGURATION} \
                          RUN_CLANG_STATIC_ANALYZER=0 \
+			 ${XCODEBUILD_OPTIONS} \
                          ${CLEAN} build >> ${LOG_FILE} 2>&1) &
 
 (set +e; trap - ERR
@@ -473,6 +480,7 @@ echo "[1/3] Installing the virtual audio device $(bold_face ${DRIVER_DIR}) to" \
                          -configuration ${CONFIGURATION} \
                          RUN_CLANG_STATIC_ANALYZER=0 \
                          DSTROOT="/" \
+			 ${XCODEBUILD_OPTIONS} \
                          ${CLEAN} install >> ${LOG_FILE} 2>&1) &
 
 show_spinner "${BUILD_FAILED_ERROR_MSG}"
@@ -489,6 +497,7 @@ echo "[2/3] Installing $(bold_face ${XPC_HELPER_DIR}) to $(bold_face ${XPC_HELPE
                          RUN_CLANG_STATIC_ANALYZER=0 \
                          DSTROOT="/" \
                          INSTALL_PATH="${XPC_HELPER_PATH}" \
+			 ${XCODEBUILD_OPTIONS} \
                          ${CLEAN} install >> ${LOG_FILE} 2>&1) &
 
 show_spinner "${BUILD_FAILED_ERROR_MSG}"
@@ -504,6 +513,7 @@ echo "[3/3] Installing $(bold_face ${APP_DIR}) to $(bold_face ${APP_PATH})." \
                          -configuration ${CONFIGURATION} \
                          RUN_CLANG_STATIC_ANALYZER=0 \
                          DSTROOT="/" \
+			 ${XCODEBUILD_OPTIONS} \
                          ${CLEAN} install >> ${LOG_FILE} 2>&1) &
 
 show_spinner "${BUILD_FAILED_ERROR_MSG}"

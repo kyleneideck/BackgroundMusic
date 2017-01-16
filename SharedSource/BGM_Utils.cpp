@@ -41,7 +41,6 @@ namespace BGM_Utils
                                             const char* callerName,
                                             const char* __nullable message,
                                             bool expected,
-                                            bool failInDebugBuilds,
                                             const std::function<void(void)>& function);
 
 #pragma mark Exception utils
@@ -79,8 +78,7 @@ namespace BGM_Utils
                                      const char* callerName,
                                      const std::function<void(void)>& function)
     {
-        return LogAndSwallowExceptions(fileName, lineNumber, callerName, nullptr, true, true,
-                                       function);
+        return LogAndSwallowExceptions(fileName, lineNumber, callerName, nullptr, true, function);
     }
 
     OSStatus LogAndSwallowExceptions(const char* __nullable fileName,
@@ -89,8 +87,7 @@ namespace BGM_Utils
                                      const char* __nullable message,
                                      const std::function<void(void)>& function)
     {
-        return LogAndSwallowExceptions(fileName, lineNumber, callerName, message, true, true,
-                                       function);
+        return LogAndSwallowExceptions(fileName, lineNumber, callerName, message, true, function);
     }
     
     void LogException(const char* __nullable fileName,
@@ -135,8 +132,7 @@ namespace BGM_Utils
                                      const char* __nullable message,
                                      const std::function<void(void)>& function)
     {
-        return LogAndSwallowExceptions(fileName, lineNumber, callerName, message, false, true,
-                                       function);
+        return LogAndSwallowExceptions(fileName, lineNumber, callerName, message, false, function);
     }
 
 #pragma mark Implementation
@@ -146,7 +142,6 @@ namespace BGM_Utils
                                             const char* callerName,
                                             const char* __nullable message,
                                             bool expected,
-                                            bool failInDebugBuilds,
                                             const std::function<void(void)>& function)
     {
         try
@@ -170,8 +165,9 @@ namespace BGM_Utils
                                : "Feel free to report this at"),
                      kBGMIssueTrackerURL);
             
-            BGMAssert(!failInDebugBuilds, "CAException");
-            
+#if BGM_StopDebuggerOnLoggedExceptions
+            BGMAssert(false, "CAException");
+#endif
             return e.GetError();
         }
         catch(...)
@@ -186,9 +182,10 @@ namespace BGM_Utils
                      (expected ? "If you think this might be a bug:"
                                : "Feel free to report this at"),
                      kBGMIssueTrackerURL);
-            
-            BGMAssert(!failInDebugBuilds, "Unknown exception");
-            
+
+#if BGM_StopDebuggerOnLoggedExceptions
+            BGMAssert(false, "Unknown exception");
+#endif
             return -1;
         }
         
