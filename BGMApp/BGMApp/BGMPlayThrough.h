@@ -28,7 +28,7 @@
 //  sample code from 2004. This class's main addition is pausing playthrough when idle to save CPU.
 //
 //  Playing audio with this class uses more CPU, mostly in the coreaudiod process, than playing audio normally because we need
-//  an input IO proc as well as an output one, and BGMDriver is running in addition to the output device's driver. For me, it
+//  an input IOProc as well as an output one, and BGMDriver is running in addition to the output device's driver. For me, it
 //  usually adds around 1-2% (as a percentage of total usage -- it doesn't seem to be relative to the CPU used when playing
 //  audio normally).
 //
@@ -74,17 +74,27 @@ public:
 private:
     void                Swap(BGMPlayThrough& inPlayThrough);
     
+    /*! @throws CAException */
     void                Activate();
+    /*! @throws CAException */
     void                Deactivate();
     
     void                AllocateBuffer();
     
     static bool         IsBGMDevice(CAHALAudioDevice inDevice);
 
-    void                CreateIOProcs();
-    void                DestroyIOProcs();
+    /*! @throws CAException */
+    void                CreateIOProcIDs();
+    /*! @throws CAException */
+    void                DestroyIOProcIDs();
+    /*!
+        @return True if both IOProcs are stopped.
+        @nonthreadsafe
+     */
+    bool                CheckIOProcsAreStopped() const noexcept; // TODO: REQUIRES(mStateMutex);
 	
 public:
+    /*! @throws CAException */
     void                Start();
     
     // Blocks until the output device has started our IOProc. Returns one of the error constants
@@ -124,13 +134,13 @@ private:
                                            const AudioTimeStamp*   inOutputTime,
                                            void* __nullable        inClientData);
     
-    // The state of an IO proc. Used by the IO proc to tell other threads when it's finished starting. Used by other
-    // threads to tell the IO proc to stop itself. (Probably used for other things as well.)
+    // The state of an IOProc. Used by the IOProc to tell other threads when it's finished starting. Used by other
+    // threads to tell the IOProc to stop itself. (Probably used for other things as well.)
     enum class          IOState
                         {
                             Stopped, Starting, Running, Stopping
                         };
-    // The IO procs call this to update their IOState member. Also stops the IO proc if its state has been set to Stopping.
+    // The IOProcs call this to update their IOState member. Also stops the IOProc if its state has been set to Stopping.
     // Returns true if it changes the state.
     static bool         UpdateIOProcState(const char* __nullable callerName,
                                           std::atomic<IOState>& inState,
@@ -153,7 +163,7 @@ private:
     
     CAMutex             mStateMutex { "Playthrough state" };
     
-    // Signalled when the output IO proc runs. We use it to tell BGMDriver when the output device is ready to receive audio data.
+    // Signalled when the output IOProc runs. We use it to tell BGMDriver when the output device is ready to receive audio data.
     semaphore_t         mOutputDeviceIOProcSemaphore { SEMAPHORE_NULL };
     
     bool                mActive = false;
@@ -168,9 +178,9 @@ private:
     // For debug logging.
     UInt64              mToldOutputDeviceToStartAt;
 
-    // IO proc vars. (Should only be used inside IO procs.)
+    // IOProc vars. (Should only be used inside IOProcs.)
     
-    // The earliest/latest sample times seen by the IO procs since starting playthrough. -1 for unset.
+    // The earliest/latest sample times seen by the IOProcs since starting playthrough. -1 for unset.
     Float64             mFirstInputSampleTime = -1;
     Float64             mLastInputSampleTime = -1;
     Float64             mLastOutputSampleTime = -1;
