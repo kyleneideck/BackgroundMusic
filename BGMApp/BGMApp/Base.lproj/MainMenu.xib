@@ -61,7 +61,7 @@
             <point key="canvasLocation" x="-184" y="-69.5"/>
         </menu>
         <customView id="MWB-XH-kFI">
-            <rect key="frame" x="0.0" y="0.0" width="264" height="20"/>
+            <rect key="frame" x="0.0" y="0.0" width="355" height="20"/>
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
             <subviews>
                 <textField identifier="AppName" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Xmd-bg-huG" customClass="BGMAVM_AppNameLabel">
@@ -82,6 +82,11 @@
                     <rect key="frame" x="179" y="2" width="74" height="15"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <sliderCell key="cell" controlSize="small" continuous="YES" state="on" alignment="left" maxValue="100" doubleValue="50" tickMarkPosition="above" sliderType="linear" id="Jmg-df-9Xl"/>
+                </slider>
+                <slider verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2mh-uO-kOV" customClass="BGMAVM_PanSlider">
+                    <rect key="frame" x="261" y="2" width="74" height="15"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <sliderCell key="cell" controlSize="small" continuous="YES" state="on" alignment="left" minValue="-100" maxValue="100" tickMarkPosition="above" sliderType="linear" id="ccM-Mt-93g"/>
                 </slider>
             </subviews>
             <point key="canvasLocation" x="81" y="-111"/>
