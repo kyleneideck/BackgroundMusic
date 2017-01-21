@@ -18,6 +18,7 @@
 //  BGMDriver
 //
 //  Copyright © 2016 Kyle Neideck
+//  Copyright © 2017 Andrew Tonner
 //
 
 // Self Include

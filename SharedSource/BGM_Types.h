@@ -110,8 +110,8 @@ enum
 // applied to kBGMAppVolumesKey_RelativeVolume when it's first set and then each of the app's samples are multiplied
 // by it.
 #define kBGMAppVolumesKey_RelativeVolume    "rvol"
-// A CFNumber<SInt32> between kAppPanLeftRawValue and kAppPanRightRawValue. A negative value has a higher proportion of left channel,
-// and a positive value has a higher proportion of right channel.
+// A CFNumber<SInt32> between kAppPanLeftRawValue and kAppPanRightRawValue. A negative value has a higher proportion
+// of left channel, and a positive value has a higher proportion of right channel.
 #define kBGMAppVolumesKey_PanPosition       "ppos"
 // The app's pid as a CFNumber. May be omitted if kBGMAppVolumesKey_BundleID is present.
 #define kBGMAppVolumesKey_ProcessID         "pid"

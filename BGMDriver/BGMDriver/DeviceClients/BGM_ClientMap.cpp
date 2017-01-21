@@ -18,6 +18,7 @@
 //  BGMDriver
 //
 //  Copyright © 2016 Kyle Neideck
+//  Copyright © 2017 Andrew Tonner
 //
 
 // Self Include
@@ -374,7 +375,7 @@ bool BGM_ClientMap::SetClientsPanPosition(pid_t searchKey, SInt32 inPanPosition)
     CAMutex::Locker theShadowMapsLocker(mShadowMapsMutex);
     
     auto theSetPansInShadowMapsFunc = [&] {
-      // Look up the clients for the key and update their pan positions
+        // Look up the clients for the key and update their pan positions
         auto theClients = GetClients(searchKey);
         if(theClients != nullptr) {
             for(auto theClient: *theClients) {
