@@ -165,8 +165,13 @@ namespace BGM_Utils
                                : "Feel free to report this at"),
                      kBGMIssueTrackerURL);
             
-#if BGM_StopDebuggerOnLoggedExceptions
-            BGMAssert(false, "CAException");
+#if BGM_StopDebuggerOnLoggedExceptions || BGM_StopDebuggerOnLoggedUnexpectedExceptions
+#if !BGM_StopDebuggerOnLoggedExceptions
+            if(!expected)
+#endif
+            {
+                BGMAssert(false, "CAException");
+            }
 #endif
             return e.GetError();
         }
@@ -183,7 +188,7 @@ namespace BGM_Utils
                                : "Feel free to report this at"),
                      kBGMIssueTrackerURL);
 
-#if BGM_StopDebuggerOnLoggedExceptions
+#if BGM_StopDebuggerOnLoggedExceptions || BGM_StopDebuggerOnLoggedUnexpectedExceptions
             BGMAssert(false, "Unknown exception");
 #endif
             return -1;

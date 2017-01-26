@@ -351,17 +351,36 @@ void    BGMPlayThrough::DestroyIOProcIDs()
 
     DebugMsg("BGMPlayThrough::DestroyIOProcIDs: Destroying IOProcs");
 
-    if(mInputDeviceIOProcID != nullptr)
-    {
-        mInputDevice.DestroyIOProcID(mInputDeviceIOProcID);
-        mInputDeviceIOProcID = nullptr;
-    }
+    auto destroy = [](CAHALAudioDevice& device, const char* deviceName, AudioDeviceIOProcID& ioProcID) {
+        if(ioProcID != nullptr)
+        {
+            try
+            {
+                device.DestroyIOProcID(ioProcID);
+            }
+            catch(CAException e)
+            {
+                if((e.GetError() == kAudioHardwareBadDeviceError) || (e.GetError() == kAudioHardwareBadObjectError))
+                {
+                    // This means the IOProc IDs will have already been destroyed, so there's nothing to do.
+                    DebugMsg("BGMPlayThrough::DestroyIOProcIDs: Didn't destroy IOProc ID for %s device because "
+                             "it's not connected anymore. deviceID = %d",
+                             deviceName,
+                             device.GetObjectID());
+                }
+                else
+                {
+                    ioProcID = nullptr;
+                    throw;
+                }
+            }
+            
+            ioProcID = nullptr;
+        }
+    };
     
-    if(mOutputDeviceIOProcID != nullptr)
-    {
-        mOutputDevice.DestroyIOProcID(mOutputDeviceIOProcID);
-        mOutputDeviceIOProcID = nullptr;
-    }
+    destroy(mInputDevice, "input", mInputDeviceIOProcID);
+    destroy(mOutputDevice, "output", mOutputDeviceIOProcID);
 }
 
 bool    BGMPlayThrough::CheckIOProcsAreStopped() const noexcept
