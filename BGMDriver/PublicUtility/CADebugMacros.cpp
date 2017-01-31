@@ -66,13 +66,26 @@ void	DebugPrint(const char *fmt, ...)
 void	LogError(const char *fmt, ...)
 {
 	va_list args;
-	va_start(args, fmt);
+    va_start(args, fmt);
+    // BGM edit: vprintf leaves args in an undefined state, which can cause a crash in
+    //           vsyslog. Also added CADebuggerStop(). Original code commented out below.
+//#if DEBUG
+//	vprintf(fmt, args);
+//#endif
+//#if TARGET_API_MAC_OSX
+//	vsyslog(LOG_ERR, fmt, args);
+//#endif
+#if (DEBUG || !TARGET_API_MAC_OSX) && !CoreAudio_UseSysLog
+    printf("[ERROR] ");
+    vprintf(fmt, args);
+    printf("\n");
+#else
+    vsyslog(LOG_ERR, fmt, args);
+#endif
 #if DEBUG
-	vprintf(fmt, args);
+    CADebuggerStop();
 #endif
-#if TARGET_API_MAC_OSX
-	vsyslog(LOG_ERR, fmt, args);
-#endif
+    // BGM edit end
 	va_end(args);
 }
 
@@ -80,11 +93,24 @@ void	LogWarning(const char *fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);
+    // BGM edit: vprintf leaves args in an undefined state, which can cause a crash in
+    //           vsyslog. Also added CADebuggerStop(). Original code commented out below.
+//#if DEBUG
+//	vprintf(fmt, args);
+//#endif
+//#if TARGET_API_MAC_OSX
+//	vsyslog(LOG_WARNING, fmt, args);
+//#endif
+#if (DEBUG || !TARGET_API_MAC_OSX) && !CoreAudio_UseSysLog
+    printf("[WARNING] ");
+    vprintf(fmt, args);
+    printf("\n");
+#else
+    vsyslog(LOG_WARNING, fmt, args);
+#endif
 #if DEBUG
-	vprintf(fmt, args);
+    //CADebuggerStop(); // TODO: Add a toggle for this to the project file (under "Preprocessor Macros"). Default to off.
 #endif
-#if TARGET_API_MAC_OSX
-	vsyslog(LOG_WARNING, fmt, args);
-#endif
+    // BGM edit end
 	va_end(args);
 }

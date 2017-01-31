@@ -922,6 +922,7 @@
 					"CoreAudio_ThreadStampMessages=1",
 					"BGM_StopDebuggerOnLoggedExceptions=$(BGM_STOP_DEBUGGER_ON_LOGGED_EXCEPTIONS)",
 					"BGM_StopDebuggerOnLoggedUnexpectedExceptions=$(BGM_STOP_DEBUGGER_ON_LOGGED_UNEXPECTED_EXCEPTIONS)",
+					"CoreAudio_StopOnThrow=0",
 				);
 				GCC_TREAT_IMPLICIT_FUNCTION_DECLARATIONS_AS_ERRORS = YES;
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
@@ -1033,6 +1034,7 @@
 					"CoreAudio_ThreadStampMessages=1",
 					"BGM_StopDebuggerOnLoggedExceptions=$(BGM_STOP_DEBUGGER_ON_LOGGED_EXCEPTIONS)",
 					"BGM_StopDebuggerOnLoggedUnexpectedExceptions=$(BGM_STOP_DEBUGGER_ON_LOGGED_UNEXPECTED_EXCEPTIONS)",
+					"CoreAudio_StopOnThrow=0",
 				);
 				GCC_TREAT_IMPLICIT_FUNCTION_DECLARATIONS_AS_ERRORS = YES;
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
@@ -1105,6 +1107,7 @@
 					"CoreAudio_StopOnAssert=0",
 					"BGM_StopDebuggerOnLoggedExceptions=$(BGM_STOP_DEBUGGER_ON_LOGGED_EXCEPTIONS)",
 					"BGM_StopDebuggerOnLoggedUnexpectedExceptions=$(BGM_STOP_DEBUGGER_ON_LOGGED_UNEXPECTED_EXCEPTIONS)",
+					"CoreAudio_StopOnThrow=0",
 				);
 				GCC_TREAT_IMPLICIT_FUNCTION_DECLARATIONS_AS_ERRORS = YES;
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;

@@ -17,7 +17,7 @@
 //  BGMPlayThrough.h
 //  BGMApp
 //
-//  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016, 2017 Kyle Neideck
 //
 //  Reads audio from an input device and immediately writes it to an output device. We currently use this class with the input
 //  device always set to BGMDevice and the output device set to the one selected in the preferences menu.
@@ -46,6 +46,7 @@
 
 // STL Includes
 #include <atomic>
+#include <algorithm>
 
 // System Includes
 #include <mach/semaphore.h>
@@ -55,6 +56,10 @@
 
 class BGMPlayThrough
 {
+    
+public:
+    // Error codes
+    static const OSStatus kDeviceNotStarting = 100;
 
 public:
                         BGMPlayThrough(CAHALAudioDevice inInputDevice, CAHALAudioDevice inOutputDevice);
@@ -62,17 +67,16 @@ public:
                         // Disallow copying
                         BGMPlayThrough(const BGMPlayThrough&) = delete;
                         BGMPlayThrough& operator=(const BGMPlayThrough&) = delete;
-                        // Move constructor/assignment
-                        BGMPlayThrough(BGMPlayThrough&& inPlayThrough) { Swap(inPlayThrough); }
-                        BGMPlayThrough& operator=(BGMPlayThrough&& inPlayThrough) { Swap(inPlayThrough); return *this; }
 
 #ifdef __OBJC__
-                        // Only intended as a convenience for Objective-C instance vars
+                        // Only intended as a convenience (hack) for Objective-C instance vars. Call
+                        // SetDevices to initialise the instance before using it.
                         BGMPlayThrough() { }
 #endif
     
 private:
-    void                Swap(BGMPlayThrough& inPlayThrough);
+    /*! @throws CAException */
+    void                Init(CAHALAudioDevice inInputDevice, CAHALAudioDevice inOutputDevice);
     
     /*! @throws CAException */
     void                Activate();
@@ -94,6 +98,13 @@ private:
     bool                CheckIOProcsAreStopped() const noexcept; // TODO: REQUIRES(mStateMutex);
 	
 public:
+    /*!
+     Pass null for either param to only change one of the devices.
+     @throws CAException
+     */
+    void                SetDevices(CAHALAudioDevice* __nullable inInputDevice,
+                                   CAHALAudioDevice* __nullable inOutputDevice);
+    
     /*! @throws CAException */
     void                Start();
     
@@ -140,6 +151,7 @@ private:
                         {
                             Stopped, Starting, Running, Stopping
                         };
+    
     // The IOProcs call this to update their IOState member. Also stops the IOProc if its state has been set to Stopping.
     // Returns true if it changes the state.
     static bool         UpdateIOProcState(const char* __nullable callerName,
@@ -167,7 +179,6 @@ private:
     semaphore_t         mOutputDeviceIOProcSemaphore { SEMAPHORE_NULL };
     
     bool                mActive = false;
-
     bool                mPlayingThrough = false;
 
     UInt64              mLastNotifiedIOStoppedOnBGMDevice;

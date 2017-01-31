@@ -17,7 +17,7 @@
 //  BGMAudioDeviceManager.mm
 //  BGMApp
 //
-//  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016, 2017 Kyle Neideck
 //
 
 // Self Include
@@ -47,33 +47,41 @@ public:
 @implementation BGMAudioDeviceManager {
     BGMAudioDevice bgmDevice;
     BGMAudioDevice outputDevice;
+    
     BGMDeviceControlSync deviceControlSync;
     BGMPlayThrough playThrough;
+    
+    NSRecursiveLock* stateLock;
 }
 
 #pragma mark Construction/Destruction
 
 - (id) initWithError:(NSError**)error {
     if ((self = [super init])) {
+        stateLock = [NSRecursiveLock new];
+        
         bgmDevice = BGMAudioDevice(CFSTR(kBGMDeviceUID));
         
         if (bgmDevice.GetObjectID() == kAudioObjectUnknown) {
             LogError("BGMAudioDeviceManager::initWithError: BGMDevice not found");
+            
             if (error) {
                 *error = [NSError errorWithDomain:@kBGMAppBundleID code:kBGMErrorCode_BGMDeviceNotFound userInfo:nil];
             }
+            
             self = nil;
             return self;
         }
         
         [self initOutputDevice];
         
-        
         if (outputDevice.GetObjectID() == kAudioDeviceUnknown) {
             LogError("BGMAudioDeviceManager::initWithError: output device not found");
+            
             if (error) {
                 *error = [NSError errorWithDomain:@kBGMAppBundleID code:kBGMErrorCode_OutputDeviceNotFound userInfo:nil];
             }
+            
             self = nil;
             return self;
         }
@@ -86,6 +94,7 @@ public:
     CAHALAudioSystemObject audioSystem;
     // outputDevice = BGMAudioDevice(CFSTR("AppleHDAEngineOutput:1B,0,1,1:0"));
     AudioObjectID defaultDeviceID = audioSystem.GetDefaultAudioDevice(false, false);
+
     if (defaultDeviceID == bgmDevice.GetObjectID()) {
         // TODO: If BGMDevice is already the default (because BGMApp didn't shutdown properly or it was set manually)
         //       we should temporarily disable BGMDevice so we can find out what the previous default was.
@@ -95,6 +104,7 @@ public:
         if (numDevices > 0) {
             SInt32 minLatencyDeviceIdx = -1;
             UInt32 minLatency = UINT32_MAX;
+
             CAAutoArrayDelete<AudioObjectID> devices(numDevices);
             audioSystem.GetAudioDevices(numDevices, devices);
             
@@ -155,13 +165,16 @@ public:
     AudioDeviceID bgmDeviceID = kAudioDeviceUnknown;
     AudioDeviceID outputDeviceID = kAudioDeviceUnknown;
     
-    @synchronized (self) {
+    @try {
+        [stateLock lock];
         BGMLogAndSwallowExceptions("setBGMDeviceAsOSDefault", [&]() {
             bgmDeviceID = bgmDevice.GetObjectID();
             outputDeviceID = outputDevice.GetObjectID();
         });
+    } @finally {
+        [stateLock unlock];
     }
-    
+
     if (outputDeviceID == kAudioDeviceUnknown) {
         return [NSError errorWithDomain:@kBGMAppBundleID code:kBGMErrorCode_OutputDeviceNotFound userInfo:nil];
     }
@@ -200,7 +213,8 @@ public:
     AudioDeviceID bgmDeviceID = kAudioDeviceUnknown;
     AudioDeviceID outputDeviceID = kAudioDeviceUnknown;
     
-    @synchronized (self) {
+    @try {
+        [stateLock lock];
         BGMLogAndSwallowExceptions("unsetBGMDeviceAsOSDefault", [&]() {
             bgmDeviceID = bgmDevice.GetObjectID();
             outputDeviceID = outputDevice.GetObjectID();
@@ -211,8 +225,10 @@ public:
             bgmDeviceIsSystemDefault =
                 (audioSystem.GetDefaultAudioDevice(false, true) == bgmDeviceID);
         });
+    } @finally {
+        [stateLock unlock];
     }
-    
+
     if (outputDeviceID == kAudioDeviceUnknown) {
         return [NSError errorWithDomain:@kBGMAppBundleID code:kBGMErrorCode_OutputDeviceNotFound userInfo:nil];
     }
@@ -260,13 +276,18 @@ public:
 }
 
 - (BOOL) isOutputDevice:(AudioObjectID)deviceID {
-    @synchronized (self) {
+    @try {
+        [stateLock lock];
         return deviceID == outputDevice.GetObjectID();
+    } @finally {
+        [stateLock unlock];
     }
 }
 
 - (BOOL) isOutputDataSource:(UInt32)dataSourceID {
-    @synchronized (self) {
+    @try {
+        [stateLock lock];
+        
         try {
             AudioObjectPropertyScope scope = kAudioDevicePropertyScopeOutput;
             UInt32 channel = 0;
@@ -277,6 +298,8 @@ public:
             BGMLogException(e);
             return false;
         }
+    } @finally {
+        [stateLock unlock];
     }
 }
 
@@ -307,10 +330,12 @@ public:
     // Set up playthrough and control sync
     BGMAudioDevice newOutputDevice(newDeviceID);
     
-    try {
-        @synchronized (self) {
+    @try {
+        [stateLock lock];
+        
+        try {
             // Re-read the device ID after entering the monitor. (The initial read is because
-            // currentDeviceID's used in the catch blocks.)
+            // currentDeviceID is used in the catch blocks.)
             currentDeviceID = outputDevice.GetObjectID();
             
             if (newDeviceID != currentDeviceID) {
@@ -319,7 +344,7 @@ public:
                 
                 // Stream audio from BGMDevice to the new output device. This blocks while the old device
                 // stops IO.
-                playThrough = BGMPlayThrough(bgmDevice, newOutputDevice);
+                playThrough.SetDevices(&bgmDevice, &newOutputDevice);
 
                 outputDevice = newOutputDevice;
             }
@@ -339,20 +364,22 @@ public:
                 // But stop playthrough if audio isn't playing, since it uses CPU.
                 playThrough.StopIfIdle();
             }
+        } catch (CAException e) {
+            BGMAssert(e.GetError() != kAudioHardwareNoError,
+                      "CAException with kAudioHardwareNoError");
+            
+            return [self failedToSetOutputDevice:newDeviceID
+                                       errorCode:e.GetError()
+                                        revertTo:(revertOnFailure ? &currentDeviceID : nullptr)];
+        } catch (...) {
+            return [self failedToSetOutputDevice:newDeviceID
+                                       errorCode:kAudioHardwareUnspecifiedError
+                                        revertTo:(revertOnFailure ? &currentDeviceID : nullptr)];
         }
-    } catch (CAException e) {
-        BGMAssert(e.GetError() != kAudioHardwareNoError,
-                  "CAException with kAudioHardwareNoError");
-        
-        return [self failedToSetOutputDevice:newDeviceID
-                                   errorCode:e.GetError()
-                                    revertTo:(revertOnFailure ? &currentDeviceID : nullptr)];
-    } catch (...) {
-        return [self failedToSetOutputDevice:newDeviceID
-                                   errorCode:kAudioHardwareUnspecifiedError
-                                    revertTo:(revertOnFailure ? &currentDeviceID : nullptr)];
+    } @finally {
+        [stateLock unlock];
     }
-    
+
     return nil;
 }
 
@@ -400,9 +427,55 @@ public:
 }
 
 - (OSStatus) waitForOutputDeviceToStart {
-    // Intentionally not synchronized to avoid blocking the UI thread. BGMPlayThrough::WaitForOutputDeviceToStart
-    // will be interrupted if the output device is changed.
-    return playThrough.WaitForOutputDeviceToStart();
+    // We can only try for stateLock because setOutputDeviceWithID might have already taken it, then made a
+    // HAL request to BGMDevice and is now waiting for the response. Some of the requests setOutputDeviceWithID
+    // makes to BGMDevice block in the HAL if another thread is in BGM_Device::StartIO.
+    //
+    // Since BGM_Device::StartIO calls this method (via XPC), waiting for setOutputDeviceWithID to release
+    // stateLock could cause deadlocks. Instead we return early with an error code that BGMDriver knows to
+    // ignore, since the output device is (almost certainly) being changed and we can't avoid dropping frames
+    // while the output device starts up.
+    OSStatus err;
+    BOOL gotLock;
+    
+    @try {
+        gotLock = [stateLock tryLock];
+        
+        if (gotLock) {
+            err = playThrough.WaitForOutputDeviceToStart();
+        } else {
+            LogWarning("BGMAudioDeviceManager::waitForOutputDeviceToStart: Didn't get state lock. Returning "
+                       "early with kDeviceNotStarting.");
+            err = BGMPlayThrough::kDeviceNotStarting;
+        }
+        
+        if (err == BGMPlayThrough::kDeviceNotStarting) {
+            // I'm not sure if this block is currently reachable, but BGMDriver only starts waiting on the
+            // output device when IO is starting, so we should start playthrough even if BGMApp hasn't been
+            // notified by the HAL yet.
+            LogWarning("BGMAudioDeviceManager::waitForOutputDeviceToStart: Playthrough wasn't starting the "
+                       "output device. Will tell it to and then return early with kDeviceNotStarting.");
+            
+            dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^{
+                @try {
+                    [stateLock lock];
+                    
+                    BGMLogAndSwallowExceptions("BGMAudioDeviceManager::waitForOutputDeviceToStart", [&]() {
+                        playThrough.Start();
+                        playThrough.StopIfIdle();
+                    });
+                } @finally {
+                    [stateLock unlock];
+                }
+            });
+        }
+    } @finally {
+        if (gotLock) {
+            [stateLock unlock];
+        }
+    }
+    
+    return err;
 }
 
 @end

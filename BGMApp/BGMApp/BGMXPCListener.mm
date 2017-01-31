@@ -22,6 +22,7 @@
 
 // Self Include
 #import "BGMXPCListener.h"
+#import "BGMPlayThrough.h"  // For kDeviceNotStarting.
 
 
 #pragma clang assume_nonnull begin
@@ -181,11 +182,12 @@
     try {
         err = [audioDevices waitForOutputDeviceToStart];
     } catch (CAException e) {
-        DebugMsg("BGMXPCListener::waitForOutputDeviceToStartWithReply: Caught CAException (%d). Replying kBGMXPC_HardwareError.",
+        // waitForOutputDeviceToStart should never throw a CAException, but check anyway in case we change that at some point.
+        LogError("BGMXPCListener::waitForOutputDeviceToStartWithReply: Caught CAException (%d). Replying kBGMXPC_HardwareError.",
                  e.GetError());
         err = kBGMXPC_HardwareError;
     } catch (...) {
-        DebugMsg("BGMXPCListener::waitForOutputDeviceToStartWithReply: Caught unknown exception. Replying kBGMXPC_InternalError.");
+        LogError("BGMXPCListener::waitForOutputDeviceToStartWithReply: Caught unknown exception. Replying kBGMXPC_InternalError.");
         err = kBGMXPC_InternalError;
 #if DEBUG
         throw;
@@ -206,6 +208,12 @@
         case kAudioHardwareIllegalOperationError:
             description = @"The output device is not available.";
             err = kBGMXPC_HardwareError;
+            break;
+            
+        case BGMPlayThrough::kDeviceNotStarting:
+            // We have to send a more specific error in this case because BGMDevice handles this case differently.
+            description = @"The output device is not starting.";
+            err = kBGMXPC_HardwareNotStartingError;
             break;
             
         default:
