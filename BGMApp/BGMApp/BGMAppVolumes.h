@@ -35,23 +35,32 @@
 
 // Protocol for the UI custom classes
 
-@protocol BGMAppVolumeSubview <NSObject>
+@protocol BGMAppVolumeMenuItemSubview <NSObject>
 
-- (void) setUpWithApp:(NSRunningApplication*)app context:(BGMAppVolumes*)ctx;
+- (void) setUpWithApp:(NSRunningApplication*)app context:(BGMAppVolumes*)ctx menuItem:(NSMenuItem*)item;
 
 @end
 
 // Custom classes for the UI elements in the app volume menu items
 
-@interface BGMAVM_AppIcon : NSImageView <BGMAppVolumeSubview>
+@interface BGMAVM_AppIcon : NSImageView <BGMAppVolumeMenuItemSubview>
 @end
 
-@interface BGMAVM_AppNameLabel : NSTextField <BGMAppVolumeSubview>
+@interface BGMAVM_AppNameLabel : NSTextField <BGMAppVolumeMenuItemSubview>
 @end
 
-@interface BGMAVM_VolumeSlider : NSSlider <BGMAppVolumeSubview>
+@interface BGMAVM_ShowMoreControlsButton : NSButton <BGMAppVolumeMenuItemSubview>
+@end
+
+@interface BGMAVM_VolumeSlider : NSSlider <BGMAppVolumeMenuItemSubview>
 
 - (void) setRelativeVolume:(NSNumber*)relativeVolume;
+
+@end
+
+@interface BGMAVM_PanSlider : NSSlider <BGMAppVolumeMenuItemSubview>
+
+- (void) setPanPosition:(NSNumber*)panPosition;
 
 @end
 

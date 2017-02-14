@@ -17,7 +17,8 @@
 //  BGMAppVolumes.m
 //  BGMApp
 //
-//  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016, 2017 Kyle Neideck
+//  Copyright © 2017 Andrew Tonner
 //
 
 // Self Include
@@ -25,6 +26,7 @@
 
 // BGM Includes
 #include "BGM_Types.h"
+#include "BGM_Utils.h"
 
 // PublicUtility Includes
 #include "CACFDictionary.h"
@@ -32,14 +34,20 @@
 #include "CACFString.h"
 
 
-static NSInteger const kAppVolumesMenuItemTag = 3;
+// Tags for UI elements in MainMenu.xib
+static NSInteger const kAppVolumesHeadingMenuItemTag = 3;
 static NSInteger const kSeparatorBelowAppVolumesMenuItemTag = 4;
 
 static float const kSlidersSnapWithin = 5;
 
+static CGFloat const kAppVolumeViewInitialHeight = 20;
+
 @implementation BGMAppVolumes {
     NSMenu* bgmMenu;
+    
     NSView* appVolumeView;
+    CGFloat appVolumeViewFullHeight;
+    
     BGMAudioDeviceManager* audioDevices;
 }
 
@@ -47,6 +55,7 @@ static float const kSlidersSnapWithin = 5;
     if ((self = [super init])) {
         bgmMenu = menu;
         appVolumeView = view;
+        appVolumeViewFullHeight = appVolumeView.frame.size.height;
         audioDevices = devices;
         
         // Create the menu items for controlling app volumes
@@ -66,23 +75,26 @@ static float const kSlidersSnapWithin = 5;
     [[NSWorkspace sharedWorkspace] removeObserver:self forKeyPath:@"runningApplications" context:nil];
 }
 
+#pragma mark UI Modifications
+
 - (void) insertMenuItemsForApps:(NSArray<NSRunningApplication*>*)apps {
     NSAssert([NSThread isMainThread], @"insertMenuItemsForApps is not thread safe");
     
 #ifndef NS_BLOCK_ASSERTIONS  // If assertions are enabled
-    NSInteger numMenuItemsBeforeInsert =
-        [bgmMenu indexOfItemWithTag:kSeparatorBelowAppVolumesMenuItemTag] - [bgmMenu indexOfItemWithTag:kAppVolumesMenuItemTag] - 1;
+    auto numMenuItems = [&self]() {
+        NSInteger headingIdx = [bgmMenu indexOfItemWithTag:kAppVolumesHeadingMenuItemTag];
+        NSInteger separatorIdx = [bgmMenu indexOfItemWithTag:kSeparatorBelowAppVolumesMenuItemTag];
+        return separatorIdx - headingIdx - 1;
+    };
+    
+    NSInteger numMenuItemsBeforeInsert = numMenuItems();
     NSUInteger numApps = 0;
 #endif
-    
-    // Create a blank menu item to copy as a template
-    NSMenuItem* blankItem = [[NSMenuItem alloc] initWithTitle:@"" action:nil keyEquivalent:@""];
-    blankItem.view = appVolumeView;
     
     // Get the app volumes currently set on the device
     CACFArray appVolumesOnDevice((CFArrayRef)[audioDevices bgmDevice].GetPropertyData_CFType(kBGMAppVolumesAddress), false);
     
-    NSInteger index = [bgmMenu indexOfItemWithTag:kAppVolumesMenuItemTag] + 1;
+    NSInteger index = [bgmMenu indexOfItemWithTag:kAppVolumesHeadingMenuItemTag] + 1;
     
     // Add a volume-control menu item for each app
     for (NSRunningApplication* app in apps) {
@@ -95,12 +107,12 @@ static float const kSlidersSnapWithin = 5;
         numApps++;
 #endif
         
-        NSMenuItem* appVolItem = [blankItem copy];
+        NSMenuItem* appVolItem = [self createBlankAppVolumeMenuItem];
         
         // Look through the menu item's subviews for the ones we want to set up
         for (NSView* subview in appVolItem.view.subviews) {
-            if ([subview conformsToProtocol:@protocol(BGMAppVolumeSubview)]) {
-                [subview performSelector:@selector(setUpWithApp:context:) withObject:app withObject:self];
+            if ([subview conformsToProtocol:@protocol(BGMAppVolumeMenuItemSubview)]) {
+                [(NSView<BGMAppVolumeMenuItemSubview>*)subview setUpWithApp:app context:self menuItem:appVolItem];
             }
         }
         
@@ -113,21 +125,27 @@ static float const kSlidersSnapWithin = 5;
         [bgmMenu insertItem:appVolItem atIndex:index];
     }
     
-#ifndef NS_BLOCK_ASSERTIONS  // If assertions are enabled
-    NSInteger numMenuItemsAfterInsert =
-        [bgmMenu indexOfItemWithTag:kSeparatorBelowAppVolumesMenuItemTag] - [bgmMenu indexOfItemWithTag:kAppVolumesMenuItemTag] - 1;
-    NSAssert3(numMenuItemsAfterInsert == (numMenuItemsBeforeInsert + numApps),
-              @"Did not add the expected number of menu items. numMenuItemsBeforeInsert=%ld numMenuItemsAfterInsert=%ld numAppsToAdd=%lu",
+    NSAssert3(numMenuItems() == (numMenuItemsBeforeInsert + numApps),
+              @"Added more/fewer menu items than there were apps. Items before: %ld, items after: %ld, apps: %lu",
               (long)numMenuItemsBeforeInsert,
-              (long)numMenuItemsAfterInsert,
+              (long)numMenuItems(),
               (unsigned long)numApps);
-#endif
+}
+
+// Create a blank menu item to copy as a template.
+- (NSMenuItem*) createBlankAppVolumeMenuItem {
+    NSMenuItem* menuItem = [[NSMenuItem alloc] initWithTitle:@"" action:nil keyEquivalent:@""];
+    
+    menuItem.view = appVolumeView;
+    menuItem = [menuItem copy];  // So we can modify a copy of the view, rather than the template itself.
+    
+    return menuItem;
 }
 
 - (void) removeMenuItemsForApps:(NSArray<NSRunningApplication*>*)apps {
     NSAssert([NSThread isMainThread], @"removeMenuItemsForApps is not thread safe");
     
-    NSInteger firstItemIndex = [bgmMenu indexOfItemWithTag:kAppVolumesMenuItemTag] + 1;
+    NSInteger firstItemIndex = [bgmMenu indexOfItemWithTag:kAppVolumesHeadingMenuItemTag] + 1;
     NSInteger lastItemIndex = [bgmMenu indexOfItemWithTag:kSeparatorBelowAppVolumesMenuItemTag] - 1;
     
     // Check each app volume menu item, removing the items that control one of the given apps
@@ -169,15 +187,70 @@ static float const kSlidersSnapWithin = 5;
             CFTypeRef relativeVolume;
             appVolume.GetCFType(CFSTR(kBGMAppVolumesKey_RelativeVolume), relativeVolume);
             
+            CFTypeRef panPosition;
+            appVolume.GetCFType(CFSTR(kBGMAppVolumesKey_PanPosition), panPosition);
+            
             // Update the slider
             for (NSView* subview in menuItem.view.subviews) {
                 if ([subview respondsToSelector:@selector(setRelativeVolume:)]) {
                     [subview performSelector:@selector(setRelativeVolume:) withObject:(__bridge NSNumber*)relativeVolume];
                 }
+                if ([subview respondsToSelector:@selector(setPanPosition:)]) {
+                    [subview performSelector:@selector(setPanPosition:) withObject:(__bridge NSNumber*)panPosition];
+                }
             }
         }
     }
 }
+
+- (void) showHideExtraControls:(BGMAVM_ShowMoreControlsButton*)button {
+    // Show or hide an app's extra controls, currently only pan, in its App Volumes menu item.
+    
+    NSMenuItem* menuItem = button.cell.representedObject;
+    
+    BGMAssert(button, "!button");
+    BGMAssert(menuItem, "!menuItem");
+    
+    CGFloat width = menuItem.view.frame.size.width;
+    CGFloat height = menuItem.view.frame.size.height;
+    
+#if DEBUG
+    const char* appName = [((NSRunningApplication*)menuItem.representedObject).localizedName UTF8String];
+#endif
+    
+    auto nearEnough = [](CGFloat x, CGFloat y) {  // Shouldn't be necessary, but just in case.
+        return fabs(x - y) < 0.01;  // We don't need much precision.
+    };
+    
+    if (nearEnough(button.frameCenterRotation, 0.0)) {
+        // Hide extra controls
+        DebugMsg("BGMAppVolumes::showHideExtraControls: Hiding extra controls (%s)", appName);
+        
+        BGMAssert(nearEnough(height, appVolumeViewFullHeight), "Extra controls were already hidden");
+        
+        // Make the menu item shorter to hide the extra controls. Keep the width unchanged.
+        menuItem.view.frameSize = { width, kAppVolumeViewInitialHeight };
+        // Turn the button upside down so the arrowhead points down.
+        button.frameCenterRotation = 180.0;
+        // Move the button up slightly so it aligns with the volume slider.
+        [button setFrameOrigin:NSMakePoint(button.frame.origin.x, button.frame.origin.y - 1)];
+    } else {
+        // Show extra controls
+        DebugMsg("BGMAppVolumes::showHideExtraControls: Showing extra controls (%s)", appName);
+        
+        BGMAssert(nearEnough(button.frameCenterRotation, 180.0), "Unexpected button rotation");
+        BGMAssert(nearEnough(height, kAppVolumeViewInitialHeight), "Extra controls were already shown");
+        
+        // Make the menu item taller to show the extra controls. Keep the width unchanged.
+        menuItem.view.frameSize = { width, appVolumeViewFullHeight };
+        // Turn the button rightside up so the arrowhead points up.
+        button.frameCenterRotation = 0.0;
+        // Move the button down slightly, back to it's original position.
+        [button setFrameOrigin:NSMakePoint(button.frame.origin.x, button.frame.origin.y + 1)];
+    }
+}
+
+#pragma mark KVO
 
 - (void) observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
@@ -211,6 +284,8 @@ static float const kSlidersSnapWithin = 5;
     }
 }
 
+#pragma mark BGMDevice Communication
+
 - (void) sendVolumeChangeToBGMDevice:(SInt32)newVolume appProcessID:(pid_t)appProcessID appBundleID:(NSString*)appBundleID {
     CACFDictionary appVolumeChange(true);
     appVolumeChange.AddSInt32(CFSTR(kBGMAppVolumesKey_ProcessID), appProcessID);
@@ -224,14 +299,30 @@ static float const kSlidersSnapWithin = 5;
     [audioDevices bgmDevice].SetPropertyData_CFType(kBGMAppVolumesAddress, appVolumeChanges.AsPropertyList());
 }
 
+- (void) sendPanPositionChangeToBGMDevice:(SInt32)newPanPosition appProcessID:(pid_t)appProcessID appBundleID:(NSString*)appBundleID {
+    CACFDictionary appVolumeChange(true);
+    appVolumeChange.AddSInt32(CFSTR(kBGMAppVolumesKey_ProcessID), appProcessID);
+    appVolumeChange.AddString(CFSTR(kBGMAppVolumesKey_BundleID), (__bridge CFStringRef)appBundleID);
+    
+    // The values from our sliders are in [kAppPanLeftRawValue, kAppPanRightRawValue] already
+    appVolumeChange.AddSInt32(CFSTR(kBGMAppVolumesKey_PanPosition), newPanPosition);
+    
+    CACFArray appVolumeChanges(true);
+    appVolumeChanges.AppendDictionary(appVolumeChange.GetDict());
+    
+    [audioDevices bgmDevice].SetPropertyData_CFType(kBGMAppVolumesAddress, appVolumeChanges.AsPropertyList());
+}
+
 @end
+
+#pragma mark Custom Classes (IB)
 
 // Custom classes for the UI elements in the app volume menu items
 
 @implementation BGMAVM_AppIcon
 
-- (void) setUpWithApp:(NSRunningApplication*)app context:(BGMAppVolumes*)ctx {
-    #pragma unused (ctx)
+- (void) setUpWithApp:(NSRunningApplication*)app context:(BGMAppVolumes*)ctx menuItem:(NSMenuItem*)menuItem {
+    #pragma unused (ctx, menuItem)
     
     self.image = app.icon;
 }
@@ -240,11 +331,31 @@ static float const kSlidersSnapWithin = 5;
 
 @implementation BGMAVM_AppNameLabel
 
-- (void) setUpWithApp:(NSRunningApplication*)app context:(BGMAppVolumes*)ctx {
-    #pragma unused (ctx)
+- (void) setUpWithApp:(NSRunningApplication*)app context:(BGMAppVolumes*)ctx menuItem:(NSMenuItem*)menuItem {
+    #pragma unused (ctx, menuItem)
     
     NSString* name = app.localizedName ? (NSString*)app.localizedName : @"";
     self.stringValue = name;
+}
+
+@end
+
+@implementation BGMAVM_ShowMoreControlsButton
+
+- (void) setUpWithApp:(NSRunningApplication*)app context:(BGMAppVolumes*)ctx menuItem:(NSMenuItem*)menuItem {
+    #pragma unused (app)
+    
+    // Set up the button that show/hide the extra controls (currently only a pan slider) for the app.
+    self.cell.representedObject = menuItem;
+    self.target = ctx;
+    self.action = @selector(showHideExtraControls:);
+    
+    // The menu item starts out with the extra controls visible, so we hide them here.
+    //
+    // TODO: Leave them visible if any of the controls are set to non-default values. The user has no way to
+    //       tell otherwise. Maybe we should also make this button look different if the controls are hidden
+    //       when they have non-default values.
+    [ctx showHideExtraControls:self];
 }
 
 @end
@@ -256,7 +367,9 @@ static float const kSlidersSnapWithin = 5;
     BGMAppVolumes* context;
 }
 
-- (void) setUpWithApp:(NSRunningApplication*)app context:(BGMAppVolumes*)ctx {
+- (void) setUpWithApp:(NSRunningApplication*)app context:(BGMAppVolumes*)ctx menuItem:(NSMenuItem*)menuItem {
+    #pragma unused (menuItem)
+    
     context = ctx;
     
     self.target = self;
@@ -269,9 +382,11 @@ static float const kSlidersSnapWithin = 5;
     self.minValue = kAppRelativeVolumeMinRawValue;
 }
 
+// We have to handle snapping for volume sliders ourselves because adding a tick mark (snap point) in Interface Builder
+// changes how the slider looks.
 - (void) snap {
-    // Snap to the 50% point
-    float midPoint = static_cast<float>((self.maxValue - self.minValue) / 2);
+    // Snap to the 50% point.
+    float midPoint = static_cast<float>((self.maxValue + self.minValue) / 2);
     if (self.floatValue > (midPoint - kSlidersSnapWithin) && self.floatValue < (midPoint + kSlidersSnapWithin)) {
         self.floatValue = midPoint;
     }
@@ -290,6 +405,42 @@ static float const kSlidersSnapWithin = 5;
     [self snap];
     
     [context sendVolumeChangeToBGMDevice:self.intValue appProcessID:appProcessID appBundleID:appBundleID];
+}
+
+@end
+
+@implementation BGMAVM_PanSlider {
+    // Will be set to -1 for apps without a pid
+    pid_t appProcessID;
+    NSString* appBundleID;
+    BGMAppVolumes* context;
+}
+
+- (void) setUpWithApp:(NSRunningApplication*)app context:(BGMAppVolumes*)ctx menuItem:(NSMenuItem*)menuItem {
+    #pragma unused (menuItem)
+    
+    context = ctx;
+    
+    self.target = self;
+    self.action = @selector(appPanPositionChanged);
+    
+    appProcessID = app.processIdentifier;
+    appBundleID = app.bundleIdentifier;
+    
+    self.minValue = kAppPanLeftRawValue;
+    self.maxValue = kAppPanRightRawValue;
+}
+
+- (void) setPanPosition:(NSNumber *)panPosition {
+    self.intValue = panPosition.intValue;
+}
+
+- (void) appPanPositionChanged {
+    // TODO: This (sending updates to the driver) should probably be rate-limited. It uses a fair bit of CPU for me.
+    
+    DebugMsg("BGMAppVolumes::appPanPositionChanged: App pan position for %s changed to %d", appBundleID.UTF8String, self.intValue);
+    
+    [context sendPanPositionChangeToBGMDevice:self.intValue appProcessID:appProcessID appBundleID:appBundleID];
 }
 
 @end

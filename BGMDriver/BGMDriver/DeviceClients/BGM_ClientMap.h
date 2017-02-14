@@ -118,10 +118,25 @@ private:
     void                                                CopyClientIntoAppVolumesArray(BGM_Client inClient, CAVolumeCurve inVolumeCurve, CACFArray& ioAppVolumes) const;
     
 public:
-    // Returns true if a client with PID inAppPID was found and its relative volume changed.
+    // Using the template function hits LLVM Bug 23987
+    // TODO Switch to template function
+    
+    // Returns true if a client for the key was found and its relative volume changed.
+    //template <typename T>
+    //bool                                                SetClientsRelativeVolume(T _Null_unspecified searchKey, Float32 inRelativeVolume);
+    //
+    //template <typename T>
+    //bool                                                SetClientsPanPosition(T _Null_unspecified searchKey, SInt32 inPanPosition);
+    
+    // Returns true if a client for PID inAppPID was found and its relative volume changed.
     bool                                                SetClientsRelativeVolume(pid_t inAppPID, Float32 inRelativeVolume);
-    // Returns true if a client with bundle ID inAppBundleID was found and its relative volume changed.
+    // Returns true if a client for bundle ID inAppBundleID was found and its relative volume changed.
     bool                                                SetClientsRelativeVolume(CACFString inAppBundleID, Float32 inRelativeVolume);
+    
+    // Returns true if a client for PID inAppPID was found and its pan position changed.
+    bool                                                SetClientsPanPosition(pid_t inAppPID, SInt32 inPanPosition);
+    // Returns true if a client for bundle ID inAppBundleID was found and its pan position changed.
+    bool                                                SetClientsPanPosition(CACFString inAppBundleID, SInt32 inPanPosition);
     
     void                                                StartIONonRT(UInt32 inClientID) { UpdateClientIOStateNonRT(inClientID, true); }
     void                                                StopIONonRT(UInt32 inClientID) { UpdateClientIOStateNonRT(inClientID, false); }
@@ -135,6 +150,11 @@ private:
     // Note that this method is called by BGM_TaskQueue through the BGM_ClientTasks interface. The shadow maps
     // mutex must be locked when calling this method.
     void                                                SwapInShadowMapsRT();
+    
+    // Client lookup for PID inAppPID
+    std::vector<BGM_Client*> * _Nullable                GetClients(pid_t inAppPid);
+    // Client lookup for bundle ID inAppBundleID
+    std::vector<BGM_Client*> * _Nullable                GetClients(CACFString inAppBundleID);
     
 private:
     BGM_TaskQueue*                                      mTaskQueue;

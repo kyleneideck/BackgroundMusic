@@ -95,6 +95,7 @@ public:
     bool                                IsMusicPlayerRT(const UInt32 inClientID) const;
     
     Float32                             GetClientRelativeVolumeRT(UInt32 inClientID) const;
+    SInt32                              GetClientPanPositionRT(UInt32 inClientID) const;
     
     // Copies the current and past clients into an array in the format expected for
     // kAudioDeviceCustomPropertyAppVolumes. (Except that CACFArray and CACFDictionary are used instead
@@ -102,7 +103,8 @@ public:
     CACFArray                           CopyClientRelativeVolumesAsAppVolumes() const { return mClientMap.CopyClientRelativeVolumesAsAppVolumes(mRelativeVolumeCurve); };
     
     // inAppVolumes is an array of dicts with the keys kBGMAppVolumesKey_ProcessID,
-    // kBGMAppVolumesKey_BundleID and kBGMAppVolumesKey_RelativeVolume. This method finds the client for
+    // kBGMAppVolumesKey_BundleID and optionally kBGMAppVolumesKey_RelativeVolume and
+    // kBGMAppVolumesKey_PanPosition. This method finds the client for
     // each app by PID or bundle ID, sets the volume and applies mRelativeVolumeCurve to it.
     //
     // Returns true if any clients' relative volumes were changed.

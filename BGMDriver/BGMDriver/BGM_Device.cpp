@@ -19,6 +19,7 @@
 //
 //  Copyright © 2016, 2017 Kyle Neideck
 //  Copyright © 2016 Josh Junon
+//  Copyright © 2017 Andrew Tonner
 //  Portions copyright (C) 2013 Apple Inc. All Rights Reserved.
 //
 //  Based largely on SA_Device.cpp from Apple's SimpleAudioDriver Plug-In sample code. Also uses a few sections from Apple's
@@ -2102,17 +2103,44 @@ void	BGM_Device::ApplyClientRelativeVolume(UInt32 inClientID, UInt32 inIOBufferF
     Float32* theBuffer = reinterpret_cast<Float32*>(ioBuffer);
     Float32 theRelativeVolume = mClients.GetClientRelativeVolumeRT(inClientID);
     
-    if(theRelativeVolume != 1.)
+    auto thePanPositionInt = mClients.GetClientPanPositionRT(inClientID);
+    Float32 thePanPosition = static_cast<Float32>(thePanPositionInt) / 100.0f;
+    
+    // TODO When we get around to supporting devices with more than two channels, it would be worth looking into
+    //      kAudioFormatProperty_PanningMatrix and kAudioFormatProperty_BalanceFade in AudioFormat.h.
+    
+    // TODO precompute matrix coefficients w/ volume and do everything in one pass
+    
+    // Apply balance w/ crossfeed to the frames in the buffer.
+    // Expect samples interleaved, starting with left
+    if (thePanPosition > 0.0f) {
+        for (UInt32 i = 0; i < inIOBufferFrameSize * 2; i += 2) {
+            auto L = i;
+            auto R = i + 1;
+            
+            theBuffer[R] = theBuffer[R] + theBuffer[L] * thePanPosition;
+            theBuffer[L] = theBuffer[L] * (1 - thePanPosition);
+        }
+    } else if (thePanPosition < 0.0f) {
+        for (UInt32 i = 0; i < inIOBufferFrameSize * 2; i += 2) {
+            auto L = i;
+            auto R = i + 1;
+            
+            theBuffer[L] = theBuffer[L] + theBuffer[R] * (-thePanPosition);
+            theBuffer[R] = theBuffer[R] * (1 + thePanPosition);
+        }
+    }
+
+    if(theRelativeVolume != 1.0f)
     {
         for(UInt32 i = 0; i < inIOBufferFrameSize * 2; i++)
         {
             Float32 theAdjustedSample = theBuffer[i] * theRelativeVolume;
             
-            // Clamp to [-1.0, 1.0]
+            // Clamp to [-1, 1].
             // (This way is roughly 6 times faster than using std::min and std::max because the compiler can vectorize the loop.)
-            const Float32 theAdjustedSampleClippedBelow = theAdjustedSample < -1. ? -1. : theAdjustedSample;
-            theBuffer[i] = theAdjustedSampleClippedBelow > 1. ? 1. : theAdjustedSampleClippedBelow;
-
+            const Float32 theAdjustedSampleClippedBelow = theAdjustedSample < -1.0f ? -1.0f : theAdjustedSample;
+            theBuffer[i] = theAdjustedSampleClippedBelow > 1.0f ? 1.0f : theAdjustedSampleClippedBelow;
         }
     }
 }
@@ -2122,7 +2150,7 @@ bool	BGM_Device::BufferIsAudible(UInt32 inIOBufferFrameSize, const void* inBuffe
     // Check each frame to see if any are audible
     for(UInt32 i = 0; i < inIOBufferFrameSize * 2; i++)
     {
-        if (0. != reinterpret_cast<const Float32*>(inBuffer)[i]) {
+        if (0.0f != reinterpret_cast<const Float32*>(inBuffer)[i]) {
             return true;
         }
     }

@@ -110,6 +110,9 @@ enum
 // applied to kBGMAppVolumesKey_RelativeVolume when it's first set and then each of the app's samples are multiplied
 // by it.
 #define kBGMAppVolumesKey_RelativeVolume    "rvol"
+// A CFNumber<SInt32> between kAppPanLeftRawValue and kAppPanRightRawValue. A negative value has a higher proportion
+// of left channel, and a positive value has a higher proportion of right channel.
+#define kBGMAppVolumesKey_PanPosition       "ppos"
 // The app's pid as a CFNumber. May be omitted if kBGMAppVolumesKey_BundleID is present.
 #define kBGMAppVolumesKey_ProcessID         "pid"
 // The app's bundle ID as a CFString. May be omitted if kBGMAppVolumesKey_ProcessID is present.
@@ -120,6 +123,11 @@ enum
 #define kAppRelativeVolumeMinRawValue   0
 #define kAppRelativeVolumeMinDbValue    -96.0f
 #define kAppRelativeVolumeMaxDbValue	0.0f
+
+// Pan position values
+#define kAppPanLeftRawValue   -100
+#define kAppPanCenterRawValue 0
+#define kAppPanRightRawValue  100
 
 #pragma mark BGMDevice Custom Property Addresses
 
@@ -174,6 +182,7 @@ enum {
 class BGM_InvalidClientException { };
 class BGM_InvalidClientPIDException { };
 class BGM_InvalidClientRelativeVolumeException { };
+class BGM_InvalidClientPanPositionException { };
 class BGM_DeviceNotSetException { };
 class BGM_RuntimeException { };
 
