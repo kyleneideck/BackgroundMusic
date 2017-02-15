@@ -25,7 +25,7 @@ script:
   - hdiutil create -type SPARSEBUNDLE -fs 'Case-sensitive Journaled HFS+' -volname bgmbuild -nospotlight -verbose -attach -size 50m bgmbuild.dmg
   - sudo cp -r . /Volumes/bgmbuild
   - cd /Volumes/bgmbuild
-# Install Background Music
+# Install Background Music.
   - yes | ./build_and_install.sh
   - cat build_and_install.log
   - find */build/Release/*/ -type f -exec md5 {} \;
@@ -33,10 +33,22 @@ script:
   - system_profiler SPAudioDataType
 # ...and their IDs.
   - say -a '?'
+# Check the BGM dirs and files were installed. (These fail if the dir/file isn't found.)
+  - ls -la "/Applications/Background Music.app"
+  - ls -la "/Library/Audio/Plug-Ins/HAL/Background Music Device.driver"
+  - ls -la "/usr/local/libexec/BGMXPCHelper.xpc" || ls -la "/Library/Application Support/Background Music/BGMXPCHelper.xpc"
+  - ls -la "/Library/LaunchDaemons/com.bearisdriving.BGM.XPCHelper.plist"
 # Close BGMApp (which the install script opened).
   - osascript -e 'tell application "Background Music" to quit'
+# Run the tests.
   - xcodebuild -workspace BGM.xcworkspace -scheme 'Background Music Device' test
   - xcodebuild -workspace BGM.xcworkspace -scheme 'Background Music' test
   - xcodebuild -workspace BGM.xcworkspace -scheme 'BGMXPCHelper' test
+# Uninstall Background Music.
   - yes | ./uninstall.sh
-  - ls /Applications /Library/Audio/Plug-Ins/HAL /usr/local/libexec /Library/Application\ Support/Background\ Music
+# Check the BGM dirs and files were removed.
+  - ! ls -la "/Applications/Background Music.app"
+  - ! ls -la "/Library/Audio/Plug-Ins/HAL/Background Music Device.driver"
+  - ! ls -la "/usr/local/libexec/BGMXPCHelper.xpc"
+  - ! ls -la "/Library/Application Support/Background Music/BGMXPCHelper.xpc"
+  - ! ls -la "/Library/LaunchDaemons/com.bearisdriving.BGM.XPCHelper.plist"
