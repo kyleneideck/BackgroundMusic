@@ -469,7 +469,7 @@ echo "[1/3] Installing the virtual audio device $(bold_face ${DRIVER_DIR}) to" \
                          -target "PublicUtility" \
                          -configuration ${CONFIGURATION} \
                          RUN_CLANG_STATIC_ANALYZER=0 \
-			 ${XCODEBUILD_OPTIONS} \
+                         ${XCODEBUILD_OPTIONS} \
                          ${CLEAN} build >> ${LOG_FILE} 2>&1) &
 
 (set +e; trap - ERR
@@ -480,7 +480,7 @@ echo "[1/3] Installing the virtual audio device $(bold_face ${DRIVER_DIR}) to" \
                          -configuration ${CONFIGURATION} \
                          RUN_CLANG_STATIC_ANALYZER=0 \
                          DSTROOT="/" \
-			 ${XCODEBUILD_OPTIONS} \
+                         ${XCODEBUILD_OPTIONS} \
                          ${CLEAN} install >> ${LOG_FILE} 2>&1) &
 
 show_spinner "${BUILD_FAILED_ERROR_MSG}"
@@ -497,7 +497,7 @@ echo "[2/3] Installing $(bold_face ${XPC_HELPER_DIR}) to $(bold_face ${XPC_HELPE
                          RUN_CLANG_STATIC_ANALYZER=0 \
                          DSTROOT="/" \
                          INSTALL_PATH="${XPC_HELPER_PATH}" \
-			 ${XCODEBUILD_OPTIONS} \
+                         ${XCODEBUILD_OPTIONS} \
                          ${CLEAN} install >> ${LOG_FILE} 2>&1) &
 
 show_spinner "${BUILD_FAILED_ERROR_MSG}"
@@ -513,7 +513,7 @@ echo "[3/3] Installing $(bold_face ${APP_DIR}) to $(bold_face ${APP_PATH})." \
                          -configuration ${CONFIGURATION} \
                          RUN_CLANG_STATIC_ANALYZER=0 \
                          DSTROOT="/" \
-			 ${XCODEBUILD_OPTIONS} \
+                         ${XCODEBUILD_OPTIONS} \
                          ${CLEAN} install >> ${LOG_FILE} 2>&1) &
 
 show_spinner "${BUILD_FAILED_ERROR_MSG}"
