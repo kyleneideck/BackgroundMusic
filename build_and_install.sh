@@ -127,6 +127,7 @@ usage() {
     echo "Usage: $0 [options]" >&2
     echo -e "\t-n            Don't clean before building/installing." >&2
     echo -e "\t-d            Debug build. (Release is the default.)" >&2
+    echo -e "\t-w            Ignore compiler warnings. (They're treated as errors by default.)" >&2
     echo -e "\t-x [options]  Extra options to pass to xcodebuild." >&2
     echo -e "\t-c            Continue on script errors. Might not be safe." >&2
     echo -e "\t-h            Print this usage statement." >&2
@@ -212,13 +213,17 @@ show_spinner() {
 }
 
 parse_options() {
-    while getopts ":ndx:ch" opt; do
+    while getopts ":ndwx:ch" opt; do
         case $opt in
             n)
                 CLEAN=""
                 ;;
             d)
                 CONFIGURATION="Debug"
+                ;;
+            w)
+                # TODO: What if they also pass their own OTHER_CFLAGS with -x?
+                XCODEBUILD_OPTIONS="${XCODEBUILD_OPTIONS} OTHER_CFLAGS=\"-Wno-error\""
                 ;;
             x)
                 XCODEBUILD_OPTIONS="$OPTARG"
@@ -371,9 +376,11 @@ handle_check_xcode_failure() {
 log_debug_info() {
     # Log some environment details, version numbers, etc. This takes a while, so we do it in the
     # background.
+
     (set +e; trap - ERR
         echo "Background Music Build Log" >> ${LOG_FILE}
         echo "----" >> ${LOG_FILE}
+        echo "Build script args: $*" >> ${LOG_FILE}
         echo "System details:" >> ${LOG_FILE}
 
         sw_vers >> ${LOG_FILE} 2>&1
@@ -454,7 +461,7 @@ fi
 
 handle_check_xcode_result
 
-log_debug_info
+log_debug_info $*
 
 # BGMDriver
 

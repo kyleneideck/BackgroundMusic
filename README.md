@@ -65,7 +65,7 @@ If you're comfortable with it, you can just paste the following at a Terminal pr
 ```shell
 (set -eo pipefail; URL='https://github.com/kyleneideck/BackgroundMusic/archive/master.tar.gz'; \
     cd $(mktemp -d); echo Downloading $URL to $(pwd); curl -qfL# $URL | gzcat - | tar x && \
-    /bin/bash BackgroundMusic-master/build_and_install.sh && rm -rf BackgroundMusic-master)
+    /bin/bash BackgroundMusic-master/build_and_install.sh -w && rm -rf BackgroundMusic-master)
 ```
 
 Otherwise, to build and install:
