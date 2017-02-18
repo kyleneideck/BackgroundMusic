@@ -52,5 +52,10 @@ script:
   - if ls -la "/usr/local/libexec/BGMXPCHelper.xpc"; then false; fi
   - if ls -la "/Library/Application Support/Background Music/BGMXPCHelper.xpc"; then false; fi
   - if ls -la "/Library/LaunchDaemons/com.bearisdriving.BGM.XPCHelper.plist"; then false; fi
+# Post on IRC when Travis builds finish.
 notifications:
-  irc: "irc.freenode.org#backgroundmusic"
+  irc:
+    channels:
+     - "irc.freenode.org#backgroundmusic"
+    use_notice: true
+    skip_join: true
