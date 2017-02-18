@@ -34,7 +34,6 @@
 		1CC1DF911BE5891300FB8FE4 /* CADebugger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CC1DF8F1BE5891300FB8FE4 /* CADebugger.cpp */; };
 		1CC1DF961BE8607700FB8FE4 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1CC1DF951BE8607700FB8FE4 /* Images.xcassets */; };
 		1CCC4F3E1E58196C008053E4 /* BGMXPCHelperTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 1CCC4F3C1E58196C008053E4 /* BGMXPCHelperTests.m */; };
-		1CCC4F411E581A8D008053E4 /* BGMAppTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 1CCC4F401E581A8D008053E4 /* BGMAppTests.m */; };
 		1CCC4F4D1E581C40008053E4 /* BGMMusicPlayersUnitTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1CCC4F4B1E581C40008053E4 /* BGMMusicPlayersUnitTests.mm */; };
 		1CCC4F4E1E581C40008053E4 /* Mock_CAHALAudioObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CCC4F4C1E581C40008053E4 /* Mock_CAHALAudioObject.cpp */; };
 		1CD1FD301BDDEAF2004F7E1B /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1CD1FD2F1BDDEAF2004F7E1B /* AudioToolbox.framework */; };
@@ -94,13 +93,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		1CB8B34A1BBA75F0000E2DD1 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 1CB8B32E1BBA75EF000E2DD1 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 1CB8B3351BBA75EF000E2DD1;
-			remoteInfo = BGMApp;
-		};
 		278D71F31CABB88B00899CF9 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 1CB8B32E1BBA75EF000E2DD1 /* Project object */;
@@ -163,7 +155,6 @@
 		1CB8B33C1BBA75EF000E2DD1 /* AppDelegate.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = AppDelegate.mm; sourceTree = "<group>"; };
 		1CB8B33E1BBA75EF000E2DD1 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		1CB8B3431BBA75EF000E2DD1 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
-		1CB8B3491BBA75F0000E2DD1 /* BGMAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BGMAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1CC1DF7D1BE5068A00FB8FE4 /* CACFArray.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CACFArray.cpp; path = PublicUtility/CACFArray.cpp; sourceTree = "<group>"; };
 		1CC1DF7E1BE5068A00FB8FE4 /* CACFArray.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CACFArray.h; path = PublicUtility/CACFArray.h; sourceTree = "<group>"; };
 		1CC1DF7F1BE5068A00FB8FE4 /* CACFDictionary.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CACFDictionary.cpp; path = PublicUtility/CACFDictionary.cpp; sourceTree = "<group>"; };
@@ -173,8 +164,6 @@
 		1CC1DF951BE8607700FB8FE4 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		1CCC4F3B1E58196C008053E4 /* BGMXPCHelperTests-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "BGMXPCHelperTests-Info.plist"; path = "BGMXPCHelperTests/BGMXPCHelperTests-Info.plist"; sourceTree = SOURCE_ROOT; };
 		1CCC4F3C1E58196C008053E4 /* BGMXPCHelperTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BGMXPCHelperTests.m; path = BGMXPCHelperTests/BGMXPCHelperTests.m; sourceTree = SOURCE_ROOT; };
-		1CCC4F401E581A8D008053E4 /* BGMAppTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BGMAppTests.m; sourceTree = "<group>"; };
-		1CCC4F461E581BA5008053E4 /* BGMAppTests-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "BGMAppTests-Info.plist"; sourceTree = "<group>"; };
 		1CCC4F491E581C0D008053E4 /* BGMAppUnitTests-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "BGMAppUnitTests-Info.plist"; path = "UnitTests/BGMAppUnitTests-Info.plist"; sourceTree = "<group>"; };
 		1CCC4F4B1E581C40008053E4 /* BGMMusicPlayersUnitTests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = BGMMusicPlayersUnitTests.mm; path = UnitTests/BGMMusicPlayersUnitTests.mm; sourceTree = "<group>"; };
 		1CCC4F4C1E581C40008053E4 /* Mock_CAHALAudioObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Mock_CAHALAudioObject.cpp; path = UnitTests/Mock_CAHALAudioObject.cpp; sourceTree = "<group>"; };
@@ -244,13 +233,6 @@
 				270A84511E0044EF00F13C99 /* ScriptingBridge.framework in Frameworks */,
 				1CD1FD301BDDEAF2004F7E1B /* AudioToolbox.framework in Frameworks */,
 				1C1963031BCAC160008A4DF7 /* CoreAudio.framework in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		1CB8B3461BBA75F0000E2DD1 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -395,7 +377,6 @@
 			isa = PBXGroup;
 			children = (
 				1CB8B3361BBA75EF000E2DD1 /* Background Music.app */,
-				1CB8B3491BBA75F0000E2DD1 /* BGMAppTests.xctest */,
 				27379B8F1C7F57DA0084A24C /* BGMXPCHelper.xpc */,
 				278D71F11CABB6FF00899CF9 /* BGMXPCHelperTests.xctest */,
 				2743C9F61D86CFF90089613B /* BGMAppUnitTests.xctest */,
@@ -447,7 +428,6 @@
 		1CB8B34C1BBA75F0000E2DD1 /* BGMApp Tests */ = {
 			isa = PBXGroup;
 			children = (
-				1CCC4F401E581A8D008053E4 /* BGMAppTests.m */,
 				1CCC4F4F1E581C52008053E4 /* Unit Tests */,
 				1CCC4F481E581BAA008053E4 /* Supporting Files */,
 			);
@@ -477,7 +457,6 @@
 			isa = PBXGroup;
 			children = (
 				1CCC4F491E581C0D008053E4 /* BGMAppUnitTests-Info.plist */,
-				1CCC4F461E581BA5008053E4 /* BGMAppTests-Info.plist */,
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";
@@ -569,24 +548,6 @@
 			productReference = 1CB8B3361BBA75EF000E2DD1 /* Background Music.app */;
 			productType = "com.apple.product-type.application";
 		};
-		1CB8B3481BBA75F0000E2DD1 /* BGMAppTests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 1CB8B3561BBA75F0000E2DD1 /* Build configuration list for PBXNativeTarget "BGMAppTests" */;
-			buildPhases = (
-				1CB8B3451BBA75F0000E2DD1 /* Sources */,
-				1CB8B3461BBA75F0000E2DD1 /* Frameworks */,
-				1CB8B3471BBA75F0000E2DD1 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				1CB8B34B1BBA75F0000E2DD1 /* PBXTargetDependency */,
-			);
-			name = BGMAppTests;
-			productName = BGMAppTests;
-			productReference = 1CB8B3491BBA75F0000E2DD1 /* BGMAppTests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
-		};
 		27379B8E1C7F57DA0084A24C /* BGMXPCHelper */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 27379B981C7F57DB0084A24C /* Build configuration list for PBXNativeTarget "BGMXPCHelper" */;
@@ -658,10 +619,6 @@
 							};
 						};
 					};
-					1CB8B3481BBA75F0000E2DD1 = {
-						CreatedOnToolsVersion = 6.4;
-						TestTargetID = 1CB8B3351BBA75EF000E2DD1;
-					};
 					27379B8E1C7F57DA0084A24C = {
 						CreatedOnToolsVersion = 7.2.1;
 						DevelopmentTeam = PR7PXC66S5;
@@ -686,7 +643,6 @@
 			projectRoot = "";
 			targets = (
 				1CB8B3351BBA75EF000E2DD1 /* Background Music */,
-				1CB8B3481BBA75F0000E2DD1 /* BGMAppTests */,
 				2743C9F51D86CFF90089613B /* BGMAppUnitTests */,
 				27379B8E1C7F57DA0084A24C /* BGMXPCHelper */,
 				278D71E51CABB6FF00899CF9 /* BGMXPCHelperTests */,
@@ -702,13 +658,6 @@
 				274827951E11052500B31D8D /* MainMenu.xib in Resources */,
 				1CED61691C3081C2002CAFCF /* LICENSE in Resources */,
 				1CC1DF961BE8607700FB8FE4 /* Images.xcassets in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		1CB8B3471BBA75F0000E2DD1 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -799,14 +748,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		1CB8B3451BBA75F0000E2DD1 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				1CCC4F411E581A8D008053E4 /* BGMAppTests.m in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		27379B8B1C7F57DA0084A24C /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -865,11 +806,6 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		1CB8B34B1BBA75F0000E2DD1 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 1CB8B3351BBA75EF000E2DD1 /* Background Music */;
-			targetProxy = 1CB8B34A1BBA75F0000E2DD1 /* PBXContainerItemProxy */;
-		};
 		278D71F41CABB88B00899CF9 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 27379B8E1C7F57DA0084A24C /* BGMXPCHelper */;
@@ -981,23 +917,6 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.bearisdriving.BGM.App;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WARNING_CFLAGS = "";
-			};
-			name = DebugOpt;
-		};
-		1C4603C71C05963C00150F9B /* DebugOpt */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CLANG_ADDRESS_SANITIZER_CONTAINER_OVERFLOW = YES;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(DEVELOPER_FRAMEWORKS_DIR)",
-					"$(inherited)",
-				);
-				INFOPLIST_FILE = "BGMAppTests/BGMAppTests-Info.plist";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.bearisdriving.BGM.AppTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Background Music.app/Contents/MacOS/Background Music";
 			};
 			name = DebugOpt;
 		};
@@ -1187,40 +1106,6 @@
 			};
 			name = Release;
 		};
-		1CB8B3571BBA75F0000E2DD1 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CLANG_ADDRESS_SANITIZER_CONTAINER_OVERFLOW = YES;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(DEVELOPER_FRAMEWORKS_DIR)",
-					"$(inherited)",
-				);
-				INFOPLIST_FILE = "BGMAppTests/BGMAppTests-Info.plist";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.bearisdriving.BGM.AppTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Background Music.app/Contents/MacOS/Background Music";
-			};
-			name = Debug;
-		};
-		1CB8B3581BBA75F0000E2DD1 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CLANG_ADDRESS_SANITIZER_CONTAINER_OVERFLOW = YES;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(DEVELOPER_FRAMEWORKS_DIR)",
-					"$(inherited)",
-				);
-				INFOPLIST_FILE = "BGMAppTests/BGMAppTests-Info.plist";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.bearisdriving.BGM.AppTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Background Music.app/Contents/MacOS/Background Music";
-			};
-			name = Release;
-		};
 		27379B991C7F57DB0084A24C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1366,16 +1251,6 @@
 				1CB8B3541BBA75F0000E2DD1 /* Debug */,
 				1CB8B3551BBA75F0000E2DD1 /* Release */,
 				1C4603C61C05963C00150F9B /* DebugOpt */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		1CB8B3561BBA75F0000E2DD1 /* Build configuration list for PBXNativeTarget "BGMAppTests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				1CB8B3571BBA75F0000E2DD1 /* Debug */,
-				1CB8B3581BBA75F0000E2DD1 /* Release */,
-				1C4603C71C05963C00150F9B /* DebugOpt */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

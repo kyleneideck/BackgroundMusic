@@ -37,7 +37,7 @@ There are also lots of other TODOs commented around the code.
   reduce the other app's volumes in the driver so they sound the same. Matching the output device's volume curve might
   be a little tricky.
 
-- More tests
+- More tests. Integration or performance tests would be nice.
 
 - Support for more music players
 
@@ -88,11 +88,14 @@ There are also lots of other TODOs commented around the code.
 - Figure out how to test BGMDriver with Address Sanitizer enabled. It isn't working because it makes coreaudiod try to
   read files outside of its sandbox and the system kills it.
 
-- Crash reporting
+- Proper crash reporting.
+    - CrashReporter doesn't show a GUI if BGMApp crashes because it has `LSUIElement` set in its `Info.plist`.
+    - We can't always symbolicate users' crash logs (from CrashReporter) because we don't have their debug symbols.
 
-- Test Background Music on a system running OS X on a case-sensitive file system. In
-  [#64](https://github.com/kyleneideck/BackgroundMusic/issues/64), BGMDriver failed to compile and the error suggests it
-  was a case-sensitivity problem. That should be fixed now, but I haven't looked for any runtime bugs.
+- Test Background Music on a system running OS X on a case-sensitive file system.
+    - In [#64](https://github.com/kyleneideck/BackgroundMusic/issues/64), BGMDriver failed to compile and the error
+      suggests it was a case-sensitivity problem. That should be fixed now, but I haven't looked for any runtime bugs.
+    - As a partial solution, Travis CI now builds Background Music in a case-sensitive disk image.
 
 - BGMApp and BGMXPCHelper should be sandboxed. (BGMDriver already is because it runs in the `coreaudiod` system
   process.)

@@ -15,7 +15,7 @@
 
 //
 //  BGMXPCHelperTests.m
-//  BGMAppTests
+//  BGMXPCHelperTests
 //
 //  Copyright © 2016 Kyle Neideck
 //
