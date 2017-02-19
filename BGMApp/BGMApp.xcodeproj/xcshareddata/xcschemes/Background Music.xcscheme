@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "0810"
+   LastUpgradeVersion = "0820"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -33,9 +33,9 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "1CB8B3481BBA75F0000E2DD1"
-               BuildableName = "BGMAppTests.xctest"
-               BlueprintName = "BGMAppTests"
+               BlueprintIdentifier = "2743C9F51D86CFF90089613B"
+               BuildableName = "BGMAppUnitTests.xctest"
+               BlueprintName = "BGMAppUnitTests"
                ReferencedContainer = "container:BGMApp.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -43,9 +43,9 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "2743C9F51D86CFF90089613B"
-               BuildableName = "BGMAppUnitTests.xctest"
-               BlueprintName = "BGMAppUnitTests"
+               BlueprintIdentifier = "1CCC4F531E584081008053E4"
+               BuildableName = "BGMAppUITests.xctest"
+               BlueprintName = "BGMAppUITests"
                ReferencedContainer = "container:BGMApp.xcodeproj">
             </BuildableReference>
          </TestableReference>

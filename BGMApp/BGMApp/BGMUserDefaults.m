@@ -17,7 +17,7 @@
 //  BGMUserDefaults.m
 //  BGMApp
 //
-//  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016, 2017 Kyle Neideck
 //
 
 // Self include
@@ -30,31 +30,74 @@
 static NSString* const BGMDefaults_AutoPauseMusicEnabled = @"AutoPauseMusicEnabled";
 static NSString* const BGMDefaults_SelectedMusicPlayerID = @"SelectedMusicPlayerID";
 
-@implementation BGMUserDefaults
+@implementation BGMUserDefaults {
+    // The defaults object wrapped by this object.
+    NSUserDefaults* defaults;
+    // When we're not persisting defaults, settings are stored in this dictionary instead. This
+    // var should only be accessed if 'defaults' is nil.
+    NSMutableDictionary<NSString*,id>* transientDefaults;
+}
 
-- (void) registerDefaults {
-    // iTunes is the default music player, but we don't set BGMDefaults_SelectedMusicPlayerID here so we know when
-    // it's never been set. (If it hasn't, we try using BGMDevice's kAudioDeviceCustomPropertyMusicPlayerBundleID
-    // property to tell which music player should be selected. See BGMMusicPlayers.)
-    [[NSUserDefaults standardUserDefaults] registerDefaults:@{ BGMDefaults_AutoPauseMusicEnabled: @YES }];
+- (instancetype) initWithDefaults:(NSUserDefaults* __nullable)inDefaults {
+    if ((self = [super init])) {
+        defaults = inDefaults;
+
+        // Register the settings defaults.
+        //
+        // iTunes is the default music player, but we don't set BGMDefaults_SelectedMusicPlayerID
+        // here so we know when it's never been set. (If it hasn't, we try using BGMDevice's
+        // kAudioDeviceCustomPropertyMusicPlayerBundleID property to tell which music player should
+        // be selected. See BGMMusicPlayers.)
+        NSDictionary* defaultsDict = @{ BGMDefaults_AutoPauseMusicEnabled: @YES };
+
+        if (defaults) {
+            [defaults registerDefaults:defaultsDict];
+        } else {
+            transientDefaults = [defaultsDict mutableCopy];
+        }
+    }
+
+    return self;
 }
 
 - (NSString* __nullable) selectedMusicPlayerID {
-    return [[NSUserDefaults standardUserDefaults] stringForKey:BGMDefaults_SelectedMusicPlayerID];
+    return [self get:BGMDefaults_SelectedMusicPlayerID];
 }
 
 - (void) setSelectedMusicPlayerID:(NSString* __nullable)selectedMusicPlayerID {
-    [[NSUserDefaults standardUserDefaults] setObject:selectedMusicPlayerID
-                                              forKey:BGMDefaults_SelectedMusicPlayerID];
+    [self set:BGMDefaults_SelectedMusicPlayerID to:selectedMusicPlayerID];
 }
 
 - (BOOL) autoPauseMusicEnabled {
-    return [[NSUserDefaults standardUserDefaults] boolForKey:BGMDefaults_AutoPauseMusicEnabled];
+    return [self getBool:BGMDefaults_AutoPauseMusicEnabled];
 }
 
 - (void) setAutoPauseMusicEnabled:(BOOL)autoPauseMusicEnabled {
-    [[NSUserDefaults standardUserDefaults] setBool:autoPauseMusicEnabled
-                                            forKey:BGMDefaults_AutoPauseMusicEnabled];
+    [self setBool:BGMDefaults_AutoPauseMusicEnabled to:autoPauseMusicEnabled];
+}
+
+- (id __nullable) get:(NSString*)key {
+    return defaults ? [defaults objectForKey:key] : transientDefaults[key];
+}
+
+- (void) set:(NSString*)key to:(NSObject<NSCopying,NSSecureCoding>* __nullable)value {
+    if (defaults) {
+        [defaults setObject:value forKey:key];
+    } else {
+        transientDefaults[key] = value;
+    }
+}
+
+- (BOOL) getBool:(NSString*)key {
+    return defaults ? [defaults boolForKey:key] : [transientDefaults[key] boolValue];
+}
+
+- (void) setBool:(NSString*)key to:(BOOL)value {
+    if (defaults) {
+        [defaults setBool:value forKey:key];
+    } else {
+        transientDefaults[key] = [NSNumber numberWithBool:value];
+    }
 }
 
 @end

@@ -17,9 +17,10 @@
 //  BGMUserDefaults.h
 //  BGMApp
 //
-//  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016, 2017 Kyle Neideck
 //
-//  A simple wrapper around our use of NSUserDefaults.
+//  A simple wrapper around our use of NSUserDefaults. Used to store the preferences/state that only
+//  apply to BGMApp. The others are stored on BGMDriver.
 //
 
 // System includes
@@ -30,12 +31,11 @@
 
 @interface BGMUserDefaults : NSObject
 
-// Register the settings defaults. These are the preferences/state that only apply to BGMApp. The others are
-// persisted on BGMDriver.
-- (void) registerDefaults;
+// If inDefaults is nil, settings are not loaded from or saved to disk, which is useful for testing.
+- (instancetype) initWithDefaults:(NSUserDefaults* __nullable)inDefaults;
 
-// The musicPlayerID (see BGMMusicPlayer.h), as a string, of the music player selected by the user. Must be either
-// null or a string that can be parsed by NSUUID.
+// The musicPlayerID (see BGMMusicPlayer.h), as a string, of the music player selected by the user.
+// Must be either null or a string that can be parsed by NSUUID.
 @property NSString* __nullable selectedMusicPlayerID;
 
 @property BOOL autoPauseMusicEnabled;

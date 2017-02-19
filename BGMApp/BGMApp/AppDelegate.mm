@@ -17,7 +17,7 @@
 //  AppDelegate.mm
 //  BGMApp
 //
-//  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016, 2017 Kyle Neideck
 //
 
 // Self Includes
@@ -58,6 +58,11 @@ static float const kStatusBarIconPadding = 0.25;
 }
 
 - (void) awakeFromNib {
+    // Show BGMApp in the dock, if the command-line option for that was passed. This is used by the UI tests.
+    if ([NSProcessInfo.processInfo.arguments indexOfObject:@"--show-dock-icon"] != NSNotFound) {
+        [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
+    }
+    
     haveShownXPCHelperErrorMessage = NO;
     
     // Set up the status bar item
@@ -94,9 +99,6 @@ static float const kStatusBarIconPadding = 0.25;
           NSBundle.mainBundle.infoDictionary[@"CFBundleVersion"]);
 
     // Set up the rest of the UI and other external interfaces.
-    
-    BGMUserDefaults* userDefaults = [BGMUserDefaults new];
-    [userDefaults registerDefaults];
 
     // audioDevices coordinates BGMDevice and the output device. It manages playthrough, volume/mute controls, etc.
     {
@@ -115,7 +117,9 @@ static float const kStatusBarIconPadding = 0.25;
                               informativeText:@"You might be able to set it yourself."];
         }
     }
-    
+
+    BGMUserDefaults* userDefaults = [self createUserDefaults];
+
     musicPlayers = [[BGMMusicPlayers alloc] initWithAudioDevices:audioDevices
                                                     userDefaults:userDefaults];
     
@@ -148,6 +152,12 @@ static float const kStatusBarIconPadding = 0.25;
     
     // Handle events about the main menu. (See the NSMenuDelegate methods below.)
     self.bgmMenu.delegate = self;
+}
+
+- (BGMUserDefaults*) createUserDefaults {
+    BOOL persistentDefaults = [NSProcessInfo.processInfo.arguments indexOfObject:@"--no-persistent-data"] == NSNotFound;
+    NSUserDefaults* wrappedDefaults = persistentDefaults ? [NSUserDefaults standardUserDefaults] : nil;
+    return [[BGMUserDefaults alloc] initWithDefaults:wrappedDefaults];
 }
 
 - (void) applicationWillTerminate:(NSNotification*)aNotification {

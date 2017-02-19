@@ -2,8 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>AudioHardwarePowerHint</key>
-	<string>None</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleExecutable</key>
@@ -15,24 +13,10 @@
 	<key>CFBundleName</key>
 	<string>$(PRODUCT_NAME)</string>
 	<key>CFBundlePackageType</key>
-	<string>APPL</string>
+	<string>BNDL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.1.0</string>
-	<key>CFBundleSignature</key>
-	<string>????</string>
+	<string>1.0</string>
 	<key>CFBundleVersion</key>
-	<string>1.0.0</string>
-	<key>LSApplicationCategoryType</key>
-	<string>public.app-category.utilities</string>
-	<key>LSMinimumSystemVersion</key>
-	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
-	<key>LSUIElement</key>
-	<true/>
-	<key>NSHumanReadableCopyright</key>
-	<string>Copyright © 2016, 2017 Background Music contributors</string>
-	<key>NSMainNibFile</key>
-	<string>MainMenu</string>
-	<key>NSPrincipalClass</key>
-	<string>NSApplication</string>
+	<string>1</string>
 </dict>
 </plist>
