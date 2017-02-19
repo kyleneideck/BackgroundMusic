@@ -62,8 +62,4 @@ script:
   - if ls -la "/Library/LaunchDaemons/com.bearisdriving.BGM.XPCHelper.plist"; then false; fi
 # Post on IRC when Travis builds finish.
 notifications:
-  irc:
-    channels:
-     - "irc.freenode.org#backgroundmusic"
-    use_notice: true
-    skip_join: true
+  irc: "irc.freenode.org#backgroundmusic"
