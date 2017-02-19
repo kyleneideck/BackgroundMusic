@@ -19,7 +19,7 @@
 # travis-skip.py
 # BGMAppUITests
 #
-# Copyright © 2017 Kyle Neideck
+# Copyright (c) 2017 Kyle Neideck
 #
 # Skip the UI tests in Travis builds because they aren't supported.
 #
