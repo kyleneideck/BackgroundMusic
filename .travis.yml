@@ -48,6 +48,8 @@ script:
   - ls -la "/Library/LaunchDaemons/com.bearisdriving.BGM.XPCHelper.plist"
 # Close BGMApp (which the install script opened).
   - osascript -e 'tell application "Background Music" to quit'
+# Skip the UI tests until Travis has support for them.
+  - BGMApp/BGMAppTests/UITests/travis-skip.py
 # Run the tests.
   - xcodebuild -workspace BGM.xcworkspace -scheme 'Background Music Device' test
   - xcodebuild -workspace BGM.xcworkspace -scheme 'Background Music' test
