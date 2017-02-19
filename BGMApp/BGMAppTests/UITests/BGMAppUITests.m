@@ -46,6 +46,19 @@
     XCUIElement* prefs;
 }
 
+- (void) runTest {
+    // We can't run the tests on Travis because Xcode needs permission to use the Accessibility API
+    // to control BGMApp. There's no way to set that up programmatically without disabling SIP and
+    // Travis doesn't support that.
+    //
+    // See https://github.com/travis-ci/travis-ci/issues/5819
+    if (NSProcessInfo.processInfo.environment[@"TRAVIS"]) {
+        NSLog(@"Skipping the UI tests because Travis CI doesn't support UI testing.");
+    } else {
+        [super runTest];
+    }
+}
+
 - (void) setUp {
     [super setUp];
     
