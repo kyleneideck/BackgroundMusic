@@ -58,14 +58,14 @@
 
 #pragma clang assume_nonnull begin
 
-int main(int argc, const char *argv[]) {
+int main(int argc, const char* __nullable argv[]) {
     #pragma unused (argc, argv)
     
     DebugMsg("BGMXPCHelper::main: Service starting up");
     
     // Set up the one NSXPCListener for this service. It will handle all incoming connections. This checks our service in with
     // the bootstrap service.
-    NSXPCListener *listener = [[NSXPCListener alloc] initWithMachServiceName:kBGMXPCHelperMachServiceName];
+    NSXPCListener* listener = [[NSXPCListener alloc] initWithMachServiceName:kBGMXPCHelperMachServiceName];
     BGMXPCListenerDelegate* delegate = [BGMXPCListenerDelegate new];
     listener.delegate = delegate;
     

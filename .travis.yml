@@ -2,6 +2,10 @@ language: objective-c
 matrix:
   include:
     - os: osx
+      osx_image: xcode8.3
+      xcode_sdk: macosx10.12
+      sudo: required
+    - os: osx
       osx_image: xcode8.2
       xcode_sdk: macosx10.12
       sudo: required

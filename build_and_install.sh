@@ -61,6 +61,8 @@ error_handler() {
          "is alpha software so you never know." >&2
     echo >&2
     echo "To try building and installing without this build script, see MANUAL-INSTALL.md." >&2
+    echo >&2
+    echo "You can also try ignoring compiler warnings with: $0 -w" >&2
 
     # Finish logging debug info if the script fails early.
     if ! [[ -z ${LOG_DEBUG_INFO_TASK_PID:-} ]]; then
