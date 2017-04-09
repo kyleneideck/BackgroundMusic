@@ -143,9 +143,11 @@ if [ "$user_prompt" == "y" ] || [ "$user_prompt" == "Y" ]; then
     || true
 
   echo "Restarting Core Audio."
+  # Wait a little because moving files to the trash plays a short sound.
+  sleep 2
   # The extra or-clauses are fallback versions of the command that restarts coreaudiod. Apparently some of these commands 
-  # don't work with older versions of launchctl, so I figure there's no harm in trying a bunch of different ways (which
-  # should all work).
+  # don't work with older versions of launchctl, so I figure there's no harm in trying a bunch of different ways until
+  # one works.
   (sudo launchctl kill SIGTERM system/com.apple.audio.coreaudiod &>/dev/null || \
     sudo launchctl kill TERM system/com.apple.audio.coreaudiod &>/dev/null || \
     sudo launchctl kill 15 system/com.apple.audio.coreaudiod &>/dev/null || \
@@ -153,7 +155,8 @@ if [ "$user_prompt" == "y" ] || [ "$user_prompt" == "Y" ]; then
     (sudo launchctl unload "${coreaudiod_plist}" &>/dev/null && \
       sudo launchctl load "${coreaudiod_plist}" &>/dev/null) || \
     sudo killall coreaudiod &>/dev/null) && \
-    sleep 5
+    echo "..." && \
+    sleep 3
 
   # Invalidate sudo ticket
   sudo -k
@@ -161,9 +164,10 @@ if [ "$user_prompt" == "y" ] || [ "$user_prompt" == "Y" ]; then
   # TODO: What if they only have one audio device?
   echo -e "\n${bold}Done! Toggle your sound output device in the Sound control panel to complete the uninstall.${normal}"
 
+  # Open System Preferences and go to Sound > Output.
   osascript -e 'tell application "System Preferences"
 	activate
-	reveal anchor "output" of pane "Sound"
+    reveal anchor "output" of pane id "com.apple.preference.sound"
   end tell' >/dev/null || true
   echo ""
 
