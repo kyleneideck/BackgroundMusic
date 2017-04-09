@@ -9,8 +9,7 @@
 
 - Automatically pauses your music player when other audio starts playing and unpauses it afterwards
 - Per-application volume, boost quiet apps
-- Record system audio <br>
-<br>
+- Record system audio <br><br>
 - No restart required to install
 - Runs entirely in userspace
 
@@ -27,7 +26,7 @@ this keeps me from wearing headphones for hours listening to nothing.
 So far iTunes, [Spotify](https://www.spotify.com), [VLC](https://www.videolan.org/vlc/),
 [VOX](https://coppertino.com/vox/mac), [Decibel](https://sbooth.org/Decibel/) and [Hermes](http://hermesapp.org/) are
 supported. Adding support for a new music player should only take a few minutes<sup id="a1">[1](#f1)</sup> -- see
-[BGMMusicPlayer.h](BGMApp/BGMApp/Music Players/BGMMusicPlayer.h). If you don't know how to program, or just don't feel
+[BGMMusicPlayer.h](BGMApp/BGMApp/Music%20Players/BGMMusicPlayer.h). If you don't know how to program, or just don't feel
 like it, create an issue and I'll try to add it for you.
 
 ## App volumes
@@ -56,12 +55,14 @@ No binaries yet (working on it) but building should take less than a minute.
 
 If you're comfortable with it, you can just paste the following at a Terminal prompt.
 
-[//]: # (Uses /bin/bash instead of just bash on the off chance that someone has a non standard Bash in their $PATH, but)
-[//]: # (it doesn't do that for Tar or cURL because I'm fairly sure any versions of them should work here. That said,)
-[//]: # (build_and_install.sh doesn't call things by absolute paths (yet?) anyway.)
-[//]: # ( )
-[//]: # (Uses "gzcat - | tar x" instead of "tar xz" because gzcat will also check the file's integrity. (Gzip files)
-[//]: # (include a checksum.))
+<!--
+Uses /bin/bash instead of just bash on the off chance that someone has a non standard Bash in their $PATH, but
+it doesn't do that for Tar or cURL because I'm fairly sure any versions of them should work here. That said,
+build_and_install.sh doesn't call most things by absolute paths yet anyway.
+
+Uses "gzcat - | tar x" instead of "tar xz" because gzcat will also check the file's integrity (gzip files
+include a checksum), which makes sure we can't run a half-downloaded copy of build_and_install.sh.
+-->
 ```shell
 (set -eo pipefail; URL='https://github.com/kyleneideck/BackgroundMusic/archive/master.tar.gz'; \
     cd $(mktemp -d); echo Downloading $URL to $(pwd); curl -qfL# $URL | gzcat - | tar x && \
@@ -156,7 +157,7 @@ change the default device and then change it back again. Failing that, you might
 
 ## License
 
-Copyright © 2016 [Background Music contributors](https://github.com/kyleneideck/BackgroundMusic/graphs/contributors).
+Copyright © 2016, 2017 [Background Music contributors](https://github.com/kyleneideck/BackgroundMusic/graphs/contributors).
 Licensed under [GPLv2](https://www.gnu.org/licenses/gpl-2.0.html), or any later version.
 
 Background Music includes code from:
