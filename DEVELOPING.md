@@ -102,10 +102,13 @@ real-time safe.
 To test your changes, build `Background Music Device.driver`, either inside Xcode (set the active scheme to "BGMDevice",
 go `Product > Build For > Running` and look in the `products` folder) or with something like
 ```shell
+xcodebuild -project BGMDriver/BGMDriver.xcodeproj -target "PublicUtility" -configuration Debug
 xcodebuild -project BGMDriver/BGMDriver.xcodeproj -configuration Debug
 ```
 And then run `BGMDriver/BGMDriver/quick_install.sh` to install. Or if you'd rather install manually, copy `Background
 Music Device.driver` to `/Library/Audio/Plug-Ins/HAL` and restart coreaudiod.
+
+You might have to delete `BGMDriver/build` first if you're using `xcodebuild` and run into permissions problems.
 
 Before you build, Xcode might show incorrect warnings on the `#pragma clang assume_nonnull` lines for some reason. They
 go away after you build and don't seem to cause any problems.
@@ -191,11 +194,21 @@ From [main.m](BGMApp/BGMXPCHelper/main.m):
 
 ### Building
 
-Build and run `Background Music.app` either inside Xcode or with something like
+Build and install/run BGMXPCHelper and `Background Music.app` either inside Xcode or with something like
 ```shell
-xcodebuild -project BGMApp/BGMApp.xcodeproj -configuration Debug
+sudo xcodebuild -project BGMApp/BGMApp.xcodeproj \
+                -target BGMXPCHelper \
+                DSTROOT="/" \
+                INSTALL_PATH="$(BGMApp/BGMXPCHelper/safe_install_dir.sh)" \
+                -configuration Debug \
+                install
+sudo chown -R $(whoami):staff BGMApp/build  # Fix build dir ownership
+xcodebuild -project BGMApp/BGMApp.xcodeproj \
+           -configuration Debug
 open "BGMApp/build/Debug/Background Music.app"
 ```
+
+You might have to delete `BGMApp/build` first if you're using `xcodebuild` and run into permissions problems.
 
 To test with Address Sanitizer, you might have to set the environment var `ASAN_OPTIONS=detect_odr_violation=0` to work
 around [Issue #647](https://github.com/google/sanitizers/issues/647). (In Xcode, go `Product` > `Scheme` > `Edit

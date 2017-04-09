@@ -6,10 +6,14 @@
 
   ```shell
   sudo xcodebuild -project BGMDriver/BGMDriver.xcodeproj \
+                  -target "PublicUtility" \
+                  RUN_CLANG_STATIC_ANALYZER=0 \
+                  clean build
+  sudo xcodebuild -project BGMDriver/BGMDriver.xcodeproj \
                   -target "Background Music Device" \
                   RUN_CLANG_STATIC_ANALYZER=0 \
                   DSTROOT="/" \
-                  install
+                  clean install
   ```
 - Install the XPC helper.
 
@@ -19,16 +23,16 @@
                   RUN_CLANG_STATIC_ANALYZER=0 \
                   DSTROOT="/" \
                   INSTALL_PATH="$(BGMApp/BGMXPCHelper/safe_install_dir.sh)" \
-                  install
+                  clean install
   ```
 - Install `Background Music.app` to `/Applications` (or wherever).
 
   ```shell
-  xcodebuild -project BGMApp/BGMApp.xcodeproj \
-             -target "Background Music" \
-             RUN_CLANG_STATIC_ANALYZER=0 \
-             DSTROOT="/" \
-             install
+  sudo xcodebuild -project BGMApp/BGMApp.xcodeproj \
+                  -target "Background Music" \
+                  RUN_CLANG_STATIC_ANALYZER=0 \
+                  DSTROOT="/" \
+                  clean install
   ```
 - Restart `coreaudiod`: <br>
   (Audio will stop working until the next step, so you might want to pause any running audio apps.)
