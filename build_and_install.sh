@@ -24,22 +24,26 @@
 #
 # Builds and installs BGMApp, BGMDriver and BGMXPCHelper. Requires xcodebuild and Xcode.
 #
+# Don't let the length of this script scare you away from building/installing without it (using
+# either Xcode or xcodebuild). 90% of this code is for error handling, logging, user friendliness,
+# etc. See MANUAL-INSTALL.md, DEVELOPING.md and BGMDriver/BGMDriver/quick_install.sh.
+#
 
 # Safe mode
 set -euo pipefail
 IFS=$'\n\t'
 
-# Subshells and function inherit the ERR trap
+# Subshells and functions inherit the ERR trap
 set -o errtrace
 
 # Go to the project directory.
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
 error_handler() {
-    local LAST_COMMAND="${BASH_COMMAND}" LAST_COMMAND_EXIT_STATUS=$?
+    LAST_COMMAND="${BASH_COMMAND}" LAST_COMMAND_EXIT_STATUS=$?
 
     # Log the error.
-    echo "Failure in ${0} at line ${1}. The last command was (probably)" >> ${LOG_FILE}
+    echo "Failure in $0 at line $1. The last command was (probably)" >> ${LOG_FILE}
     echo "    ${LAST_COMMAND}" >> ${LOG_FILE}
     echo "which exited with status ${LAST_COMMAND_EXIT_STATUS}." >> ${LOG_FILE}
     echo "Error message: ${ERROR_MSG}" >> ${LOG_FILE}
@@ -51,8 +55,7 @@ error_handler() {
     rm "${LOG_FILE}tmp"
 
     # Print an error message.
-    echo "$(tput setaf 9)ERROR$(tput sgr0): Install failed at line $1 with the message:"
-    echo
+    echo "$(tput setaf 9)ERROR$(tput sgr0): Install failed at line $1 with the message:" >&2
     echo -e "${ERROR_MSG}" >&2
     echo >&2
     echo "Feel free to report this. If you do, you'll probably want to include the" \
@@ -64,10 +67,32 @@ error_handler() {
     echo >&2
     echo "You can also try ignoring compiler warnings with: $0 -w" >&2
 
+    echo >&2
+    echo "Error details:" >&2
+    echo "Line $1. The last command was (probably)" >&2
+    echo "    ${LAST_COMMAND}" >&2
+    echo "which exited with status ${LAST_COMMAND_EXIT_STATUS}." >&2
+    echo >&2
+
     # Finish logging debug info if the script fails early.
     if ! [[ -z ${LOG_DEBUG_INFO_TASK_PID:-} ]]; then
         wait ${LOG_DEBUG_INFO_TASK_PID}
     fi
+}
+
+enable_error_handling() {
+    if [[ -z ${CONTINUE_ON_ERROR} ]] || [[ ${CONTINUE_ON_ERROR} -eq 0 ]]; then
+        set -e
+        # TODO: The version of Bash that ships with OSX only gives you the line number of the
+        #       function the error occurred in -- not the line the error occurred on. There are a
+        #       few solutions suggested on various websites, but none of them work.
+        trap 'error_handler ${LINENO}' ERR
+    fi
+}
+
+disable_error_handling() {
+    set +e
+    trap - ERR
 }
 
 # Build for release by default. Use -d for a debug build.
@@ -152,8 +177,7 @@ is_alive() {
 #  - The error message to show if the previous command fails.
 #  - An optional timeout in seconds.
 show_spinner() {
-    set +e
-    trap - ERR
+    disable_error_handling
 
     local PREV_COMMAND_PID=$!
 
@@ -206,10 +230,7 @@ show_spinner() {
         fi
     fi
 
-    if [[ ${CONTINUE_ON_ERROR} -eq 0 ]]; then
-        set -e
-        trap 'error_handler ${LINENO}' ERR
-    fi
+    enable_error_handling
 
     return ${EXIT_STATUS}
 }
@@ -233,8 +254,7 @@ parse_options() {
             c)
                 CONTINUE_ON_ERROR=1
                 echo "$(tput setaf 11)WARNING$(tput sgr0): Ignoring errors."
-                set +e
-                trap - ERR
+                disable_error_handling
                 ;;
             h)
                 usage
@@ -247,139 +267,221 @@ parse_options() {
     done
 }
 
-# Checks if $XCODEBUILD is a usable xcodebuild. Exits with an error status if it isn't.
+# check_xcode return codes
+CHECK_XCODE_NO_ERR=0
+CHECK_XCODE_ERR_NO_CLTOOLS=1
+CHECK_XCODE_ERR_NO_XCODE=2
+CHECK_XCODE_ERR_NO_CLTOOLS_OR_XCODE=3
+CHECK_XCODE_ERR_LICENSE_NOT_ACCEPTED=4
+CHECK_XCODE_ERR_OLD_VERSION=5
+
+# Checks if $XCODEBUILD is a usable xcodebuild. Exits with one of the status codes above.
 check_xcode() {
-    RETURN=0
+    local EXIT_CODE=${CHECK_XCODE_NO_ERR}
 
     # First, check xcodebuild exists on the system an is an executable.
     if ! [[ -x "${XCODEBUILD}" ]] || ! /usr/bin/xcode-select --print-path &>/dev/null || \
         ! pkgutil --pkg-info=com.apple.pkg.CLTools_Executables &>/dev/null; then
-        RETURN=1
+        EXIT_CODE=${CHECK_XCODE_ERR_NO_CLTOOLS}
     fi
 
     # Check that Xcode is installed, not just the command line tools.
-    if ! "${XCODEBUILD}" -version &>/dev/null; then
-        ((RETURN+=2))
+    if [[ "${XCODE_VERSION}" == "-1" ]]; then
+        ((EXIT_CODE+=2))
     fi
 
     # Check they've already accepted the Xcode license. This code is mostly copied from
     # Homebrew/Library/Homebrew/brew.sh.
-    set +e
-    trap - ERR
+    disable_error_handling
 
-    XCRUN_OUTPUT="$(/usr/bin/xcrun clang 2>&1)"  # Making this a local breaks $?. Not sure why.
+    local XCRUN_OUTPUT  # (Declared local before assigning so we can get $?.)
+    XCRUN_OUTPUT="$(/usr/bin/xcrun clang 2>&1)"
     local XCRUN_STATUS="$?"
-    if [[ ${RETURN} -eq 0 ]] && \
+    if [[ ${EXIT_CODE} -eq 0 ]] && \
         [[ "${XCRUN_STATUS}" -ne 0 ]] && \
         ( [[ "${XCRUN_OUTPUT}" = *license* ]] || [[ "${XCRUN_OUTPUT}" = *licence* ]] ); then
-        RETURN=4
+        EXIT_CODE=${CHECK_XCODE_ERR_LICENSE_NOT_ACCEPTED}
     fi
 
-    if [[ ${CONTINUE_ON_ERROR} -eq 0 ]]; then
-        set -e
-        trap 'error_handler ${LINENO}' ERR
-    fi
+    enable_error_handling
 
     # Version check.
     local XCODE_MAJOR_VERSION="$(echo ${XCODE_VERSION} | sed 's/\..*$//g')" 
-    if [[ ${RETURN} -eq 0 ]] && \
+    if [[ ${EXIT_CODE} -eq 0 ]] && \
         [[ "${XCODE_MAJOR_VERSION}" -lt ${RECOMMENDED_MIN_XCODE_VERSION} ]]
     then
-        RETURN=5
+        EXIT_CODE=${CHECK_XCODE_ERR_OLD_VERSION}
     fi
 
-    exit ${RETURN}
+    exit ${EXIT_CODE}
 }
 
-# Expects CHECK_XCODE_TASK_PID to be set.
+# Expects CHECK_XCODE_TASK_PID to be set and error handling to be disabled. Returns 1 if we need to
+# check for Xcode again.
 handle_check_xcode_result() {
     if [[ -z ${HANDLED_CHECK_XCODE_RESULT:-} ]]; then
         HANDLED_CHECK_XCODE_RESULT=1
         # Wait for the Xcode checks to finish.
-        set +e
-        trap - ERR
         wait ${CHECK_XCODE_TASK_PID}
         CHECK_XCODE_TASK_STATUS=$?
-        if [[ ${CONTINUE_ON_ERROR} -eq 0 ]]; then
-            set -e
-            trap 'error_handler ${LINENO}' ERR
-        fi
 
         # If there was a problem with Xcode/xcodebuild, print the error message and exit.
-        if [[ ${CHECK_XCODE_TASK_STATUS} -ne 0 ]]; then
+        if [[ ${CHECK_XCODE_TASK_STATUS} -ne ${CHECK_XCODE_NO_ERR} ]]; then
             handle_check_xcode_failure ${CHECK_XCODE_TASK_STATUS}
+            local STATUS=$?
+            return ${STATUS}
         fi
     fi
+
+    return 0
 }
 
+# Returns 1 if we need to check for Xcode again. Expects error handling to be disabled.
+#
+# Params:
+#  - The exit code of check_xcode.
 handle_check_xcode_failure() {
+    local CONTINUE=${CONTINUE_ON_ERROR}
+
     # No command line tools
-    if [[ $1 -eq 1 ]] || [[ $1 -eq 3 ]]; then
+    if [[ $1 -eq ${CHECK_XCODE_ERR_NO_CLTOOLS} ]] || \
+            [[ $1 -eq ${CHECK_XCODE_ERR_NO_CLTOOLS_OR_XCODE} ]]; then
         echo "$(tput setaf 9)ERROR$(tput sgr0): The Xcode Command Line Tools don't seem to be" \
              "installed on your system." >&2
         echo >&2
         echo "If you have Xcode installed, you should be able to install them with" >&2
-        echo "    xcode-select --install" >&2
+        echo "    sudo /usr/bin/xcode-select --install" >&2
         echo "If not, you'll need to install Xcode (~9GB), because xcodebuild no longer works" \
              "without it." >&2
         echo >&2
     fi
 
-    # No Xcode
-    if [[ $1 -eq 2 ]] || [[ $1 -eq 3 ]]; then
-        echo "$(tput setaf 9)ERROR$(tput sgr0): Unfortunately, Xcode (~9GB) is required to build" \
-             "Background Music, but ${XCODEBUILD} doesn't appear to be usable. You may need to" \
-             "tell the Xcode command line tools where your Xcode is installed to with" >&2
-        echo "    xcode-select --switch /the/path/to/your/Xcode.app" >&2
-        echo >&2
-        echo "Output from ${XCODEBUILD}:" >&2
-
-        "${XCODEBUILD}" -version >&2 || true
-
-        echo >&2
+    # No Xcode (that the command line tools are aware of)
+    if [[ $1 -eq ${CHECK_XCODE_ERR_NO_XCODE} ]] || \
+            [[ $1 -eq ${CHECK_XCODE_ERR_NO_CLTOOLS_OR_XCODE} ]]; then
+        if ! handle_check_xcode_failure_no_xcode $1; then
+            return 1
+        fi
     fi
 
-    # Need to agree to the Xcode license
-    if [[ $1 -eq 4 ]]; then
+    # They need to agree to the Xcode license.
+    if [[ $1 -eq ${CHECK_XCODE_ERR_LICENSE_NOT_ACCEPTED} ]]; then
         echo "$(tput setaf 9)ERROR$(tput sgr0): You need to agree to the Xcode license before you" \
              "can build Background Music. Run this command and then try again:" >&2
-        echo "    sudo xcodebuild -license" >&2
+        echo "    sudo ${XCODEBUILD} -license" >&2
+        echo >&2
     fi
 
-    if [[ $1 -eq 5 ]]; then
-        # Xcode version is probably too old.
+    # Xcode version is probably too old.
+    if [[ $1 -eq ${CHECK_XCODE_ERR_OLD_VERSION} ]]; then
         echo "$(tput setaf 11)WARNING$(tput sgr0): Your version of Xcode (${XCODE_VERSION}) may" \
-             "not be recent enough to build Background Music." >&2
+             "not be recent enough to build Background Music. If you have a newer version" \
+             "installed, you can set the Xcode command line tools to use it with" >&2
+        echo "    sudo /usr/bin/xcode-select --switch /the/path/to/your/Xcode.app" >&2
+        echo >&2
+        CONTINUE=1
     fi
 
     # Try to find Xcode and print a more useful error message.
-    if [[ $1 -lt 4 ]]; then
-        # Disable error handlers
-        set +e; trap - ERR
-
-        echo "Looking for Xcode..." >&2
+    if [[ $1 -eq ${CHECK_XCODE_ERR_NO_CLTOOLS} ]] || \
+            [[ $1 -eq ${CHECK_XCODE_ERR_NO_XCODE} ]] || \
+            [[ $1 -eq ${CHECK_XCODE_ERR_NO_CLTOOLS_OR_XCODE} ]] || \
+            [[ $1 -eq ${CHECK_XCODE_ERR_OLD_VERSION} ]]; then
+        echo "Searching for Xcode installations..." >&2
+        echo >&2
         XCODE_PATHS=$(mdfind "kMDItemCFBundleIdentifier == 'com.apple.dt.Xcode' || \
                               kMDItemCFBundleIdentifier == 'com.apple.Xcode'")
 
         if [[ "${XCODE_PATHS}" != "" ]]; then
-            echo "It looks like you have Xcode installed to" >&2
+            echo "It looks like you have Xcode installed to:" >&2
             echo "${XCODE_PATHS}" >&2
         else
-            echo "Not found." >&2
+            echo "None found." >&2
         fi
     fi
 
     # Exit with an error status, unless we only printed a warning or were told to continue anyway.
-    if [[ $1 -ne 5 ]] && [[ ${CONTINUE_ON_ERROR} -eq 0 ]]; then
-        exit "$1"
+    if [[ ${CONTINUE} -eq 0 ]]; then
+        exit $1
     fi
+
+    return 0
+}
+
+# Returns 1 if we need to check for Xcode again. Expects error handling to be disabled.
+#
+# Params:
+#  - The exit code of check_xcode.
+handle_check_xcode_failure_no_xcode() {
+    # The problem could be that they have Xcode installed, but the command line tools can't find
+    # it.
+
+    # Just check for Xcode in the default location at first, since searching with mdfind can
+    # take a while.
+    if [[ $1 -eq ${CHECK_XCODE_ERR_NO_XCODE} ]] && [[ -d /Applications/Xcode.app ]]; then
+        echo "It looks like you have Xcode installed to /Applications/Xcode.app, but the" \
+             "Xcode command line tools aren't set to use it. Try" >&2
+        echo "    sudo /usr/bin/xcode-select --switch /Applications/Xcode.app" >&2
+        echo "and then run this installer again." >&2
+    else
+        echo "$(tput setaf 9)ERROR$(tput sgr0): Unfortunately, Xcode (~9GB) is required to" \
+             "build Background Music, but ${XCODEBUILD} doesn't appear to be usable. If you" \
+             "do have Xcode installed, try telling the Xcode command line tools where to find" \
+             "it with" >&2
+        echo "    sudo /usr/bin/xcode-select --switch /the/path/to/your/Xcode.app" >&2
+        echo "and then running this installer again." >&2
+    fi
+    echo >&2
+
+    # Explain how to revert the command we suggested.
+    local DEV_DIR_PATH  # (Declared local before assigning so we can get $?.)
+    DEV_DIR_PATH=$(/usr/bin/xcode-select --print-path 2>/dev/null)
+    local XCSELECT_STATUS="$?"
+    if [[ "${XCSELECT_STATUS}" -eq 0 ]] && [[ "${DEV_DIR_PATH}" != "" ]]; then
+        echo "If you want to change it back afterwards for some reason, use" >&2
+        echo "    sudo /usr/bin/xcode-select --switch ${DEV_DIR_PATH}" >&2
+    fi
+    echo >&2
+
+    # Print the error message from xcodebuild.
+    local OUTPUT_MSG="Output from ${XCODEBUILD}: ------------------------------------------"
+    echo "${OUTPUT_MSG}" >&2
+    "${XCODEBUILD}" -version >&2 || true
+    echo "${OUTPUT_MSG}" | tr '[:print:]' - >&2
+    echo >&2
+
+    # Offer to switch if it will probably work.
+    if [[ -d /Applications/Xcode.app ]]; then
+        local SWITCH_CMD="sudo xcode-select --switch /Applications/Xcode.app"
+        read -p "Try \"$(bold_face ${SWITCH_CMD})\" now (y/N)? " TRY_SWITCH
+        if [[ "${TRY_SWITCH}" == "y" ]] || [[ "${TRY_SWITCH}" == "Y" ]]; then
+            echo
+            echo "+ ${SWITCH_CMD}"
+            eval ${SWITCH_CMD}
+            local XCS_STATUS=$?
+            if [[ ${XCS_STATUS} -eq 0 ]]; then
+                # Return that we should call check_xcode again to see if it worked.
+                echo
+                echo Seemed to work. Trying to start installation again...
+                echo
+                return 1
+            else
+                echo >&2
+                echo "\"$(bold_face ${SWITCH_CMD})\" failed with exit status ${XCS_STATUS}." >&2
+                exit ${XCS_STATUS}
+            fi
+        fi
+        echo
+    fi
+
+    return 0
 }
 
 log_debug_info() {
     # Log some environment details, version numbers, etc. This takes a while, so we do it in the
     # background.
 
-    (set +e; trap - ERR
+    (disable_error_handling
         echo "Background Music Build Log" >> ${LOG_FILE}
         echo "----" >> ${LOG_FILE}
         echo "Build script args: $*" >> ${LOG_FILE}
@@ -416,7 +518,7 @@ log_debug_info() {
 }
 
 # Register our handler so we can print a message and clean up if there's an error.
-trap 'error_handler ${LINENO}' ERR
+enable_error_handling
 
 parse_options "$@"
 
@@ -438,7 +540,8 @@ echo " - /Library/LaunchDaemons/com.bearisdriving.BGM.XPCHelper.plist"
 echo
 
 # Make sure Xcode and the command line tools are installed and recent enough.
-XCODE_VERSION=$(${XCODEBUILD} -version | head -n 1 | awk '{ print $2 }' 2>/dev/null || echo 0)
+# This sets XCODE_VERSION to major.minor, e.g. 8.3, or -1 if Xcode isn't installed.
+XCODE_VERSION=$((${XCODEBUILD} -version 2>/dev/null || echo 'V -1') | head -n 1 | awk '{ print $2 }')
 check_xcode &
 CHECK_XCODE_TASK_PID=$!
 
@@ -450,18 +553,33 @@ if [[ "${CONTINUE_INSTALLATION}" != "y" ]] && [[ "${CONTINUE_INSTALLATION}" != "
 fi
 
 # If the check_xcode process has already finished, we can check the result early.
+NEED_TO_HANDLE_CHECK_XCODE_RESULT=1
 if ! is_alive ${CHECK_XCODE_TASK_PID}; then
+    disable_error_handling
+
     handle_check_xcode_result
+    NEED_TO_HANDLE_CHECK_XCODE_RESULT=$?
+
+    enable_error_handling
 fi
 
 # Update the user's sudo timestamp. (Prompts the user for their password.)
 # Don't call sudo -v if this is a Travis CI build.
 if ([[ -z ${TRAVIS:-} ]] || [[ "${TRAVIS}" != true ]]) && ! sudo -v; then
-    echo "ERROR: This script must be run by a user with administrator (sudo) privileges." >&2
+    echo "$(tput setaf 9)ERROR$(tput sgr0): This script must be run by a user with administrator" \
+         "(sudo) privileges." >&2
     exit 1
 fi
+echo
 
-handle_check_xcode_result
+while [[ ${NEED_TO_HANDLE_CHECK_XCODE_RESULT} -ne 0 ]]; do
+    disable_error_handling
+
+    handle_check_xcode_result
+    NEED_TO_HANDLE_CHECK_XCODE_RESULT=$?
+
+    enable_error_handling
+done
 
 log_debug_info $*
 
@@ -472,7 +590,7 @@ echo "[1/3] Installing the virtual audio device $(bold_face ${DRIVER_DIR}) to" \
      | tee -a ${LOG_FILE}
 
 # Disable the -e shell option and error trap for build commands so we can handle errors differently.
-(set +e; trap - ERR
+(disable_error_handling
     # Build Apple's PublicUtility classes as a static library.
     sudo "${XCODEBUILD}" -project BGMDriver/BGMDriver.xcodeproj \
                          -target "PublicUtility" \
@@ -481,7 +599,7 @@ echo "[1/3] Installing the virtual audio device $(bold_face ${DRIVER_DIR}) to" \
                          ${XCODEBUILD_OPTIONS} \
                          ${CLEAN} build >> ${LOG_FILE} 2>&1) &
 
-(set +e; trap - ERR
+(disable_error_handling
     # Build and install BGMDriver
     # TODO: Should these use -scheme instead?
     sudo "${XCODEBUILD}" -project BGMDriver/BGMDriver.xcodeproj \
@@ -499,7 +617,7 @@ show_spinner "${BUILD_FAILED_ERROR_MSG}"
 echo "[2/3] Installing $(bold_face ${XPC_HELPER_DIR}) to $(bold_face ${XPC_HELPER_PATH})." \
      | tee -a ${LOG_FILE}
 
-(set +e; trap - ERR
+(disable_error_handling
     sudo "${XCODEBUILD}" -project BGMApp/BGMApp.xcodeproj \
                          -target BGMXPCHelper \
                          -configuration ${CONFIGURATION} \
@@ -516,7 +634,7 @@ show_spinner "${BUILD_FAILED_ERROR_MSG}"
 echo "[3/3] Installing $(bold_face ${APP_DIR}) to $(bold_face ${APP_PATH})." \
      | tee -a ${LOG_FILE}
 
-(set +e; trap - ERR
+(disable_error_handling
     sudo "${XCODEBUILD}" -project BGMApp/BGMApp.xcodeproj \
                          -target "Background Music" \
                          -configuration ${CONFIGURATION} \
@@ -572,8 +690,7 @@ ERROR_MSG="${BGMAPP_FAILED_TO_START_ERROR_MSG}"
 open "${APP_PATH}/${APP_DIR}"
 
 # Ignore script errors from this point.
-set +e
-trap - ERR
+disable_error_handling
 
 # Wait up to 5 seconds for Background Music to start.
 (trap 'exit 1' TERM

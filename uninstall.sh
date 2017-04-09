@@ -166,7 +166,7 @@ if [ "$user_prompt" == "y" ] || [ "$user_prompt" == "Y" ]; then
 
   # Open System Preferences and go to Sound > Output.
   osascript -e 'tell application "System Preferences"
-	activate
+    activate
     reveal anchor "output" of pane id "com.apple.preference.sound"
   end tell' >/dev/null || true
   echo ""
