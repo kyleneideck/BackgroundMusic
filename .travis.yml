@@ -5,6 +5,7 @@ matrix:
       osx_image: xcode8.3
       xcode_sdk: macosx10.12
       sudo: required
+      env: DEPLOY=true
     - os: osx
       osx_image: xcode8.2
       xcode_sdk: macosx10.12
@@ -80,7 +81,9 @@ deploy:
   api_key:
     secure: j5GdMTkJI/9lfGMcAW4dnBnfNSW0EUGSuaKSXw49FfjfcshLL2RFxIbQkyA7QqjoJm6ohstU3tOCo7c9FrqIWjE/+5itGJpq7NXDRxFtd2qzcli1u+1IRvQUZJ4VYC9982pSS0IUynK9/f0rhbdkWsCuXWIjoClYPBRscc8soDBJvkDbfilPFfFgkc8TuSmtGDCdu9coGVi6b9HuTLNQU0g5DZkjmv71Vj3SwJ2CmvOk3GFfV1SjvG2SRgBDwyP1g9MRGRiNYkmK9lJRgsq2KLluzb04lt22x8RIcZ+kZYOQVmgDlCeWlOcXi0iz1wU/QzdoYFEAnJdG4q0hqKeqIi+p8Tc31nHPuc1ZlYpifzMQ6KuOoOP19eceJwriAT133t2RSB3Rl3nxh9bymNPNyQ2dJwGNFtO68f3aZsuE5L92lVgW/ipZ6e5Sw1ovXldR04mxNtyY4WvFXFlkn/776tKV0vgAubsHfceGM/aRoBj+E2gDvqkFqIR8wrZAZEeSM2reMHPMx5ICFppIZ8dCIVjF5bsxZQsbojY+LXV8BUU5kLAou0yD7Q+lHi9r3HYdN90+cC02HKGFYzsIiMAyf4IAngnLhwmmrLOwr3wWdACjYTJhznAZGNJh4lCeB4dx85iyj3EexJ6J/DL1k2+ZNKyMN3+i/215t+AvSsXuw5U=
   file: Background-Music-*/*
+  skip_cleanup: true
   on:
     repo: kyleneideck/BackgroundMusic
+    condition: $DEPLOY = true
 
 
