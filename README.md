@@ -142,18 +142,16 @@ change the default device and then change it back again. Failing that, you might
 - [PulseAudio OS X](https://github.com/zonque/PulseAudioOSX) - "PulseAudio for Mac OS X"
 - [Sound Pusher](https://github.com/q-p/SoundPusher) - "Virtual audio device, real-time encoder and SPDIF forwarder for
   Mac OS X"
-- [eqMac](http://www.bitgapp.com/eqmac/) - "System-wide Audio Equalizer for Mac OSX"
 - [Zirkonium](https://code.google.com/archive/p/zirkonium) - "An infrastructure and application for multi-channel sound
   spatialization on MacOS X."
 
 ### Non-free
 
 - [Audio Hijack](https://rogueamoeba.com/audiohijack/) - "Capture Audio From Anywhere on Your Mac"
-- [Volume Mixer For Mac](http://www.volumemixer-app.com/) - "Application specific volume control for Mac OS Yosemite and
-  El Capitan"
-- [Sound Siphon](http://staticz.com) - System/app audio recording, per-app volumes, system audio equaliser
+- [Sound Siphon](https://staticz.com/soundsiphon/), [Sound Control](https://staticz.com/soundcontrol/) - System/app audio recording, per-app volumes, system audio equaliser
 - [SoundBunny](https://www.prosofteng.com/soundbunny-mac-volume-control/) - "Control application volume independently."
 - [Boom 2](http://www.globaldelight.com/boom/index.php) - "The Best Volume Booster & Equalizer For Mac"
+- [eqMac](http://www.bitgapp.com/eqmac/) - "System-wide Audio Equalizer for Mac OSX"
 
 ## License
 
