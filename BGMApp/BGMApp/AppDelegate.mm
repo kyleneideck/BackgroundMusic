@@ -106,6 +106,7 @@ static float const kStatusBarIconPadding = 0.25;
         audioDevices = [[BGMAudioDeviceManager alloc] initWithError:&error];
         if (audioDevices == nil) {
             [self showDeviceNotFoundErrorMessageAndExit:error.code];
+            return;
         }
     }
 
