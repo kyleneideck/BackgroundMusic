@@ -23,6 +23,8 @@
 // Self Include
 #include "BGM_WrappedAudioEngine.h"
 
+#pragma clang assume_nonnull begin
+
 
 // TODO: Register to be notified when the IO Registry values for these change so we can cache them
 
@@ -43,3 +45,4 @@ UInt32 BGM_WrappedAudioEngine::GetSampleBufferFrameSize() const
     return 0;
 }
 
+#pragma clang assume_nonnull end

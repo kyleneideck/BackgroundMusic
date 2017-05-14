@@ -36,6 +36,7 @@
 #include "CAException.h"
 #include "CADebugMacros.h"
 
+#pragma clang assume_nonnull begin
 
 #pragma mark Construction/Destruction
 
@@ -217,4 +218,6 @@ void	BGM_PlugIn::SetPropertyData(AudioObjectID inObjectID, pid_t inClientPID, co
 			break;
 	};
 }
+
+#pragma clang assume_nonnull end
 

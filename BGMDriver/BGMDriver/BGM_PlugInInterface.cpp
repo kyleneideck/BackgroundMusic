@@ -37,6 +37,8 @@
 #include "BGM_PlugIn.h"
 #include "BGM_Device.h"
 
+#pragma clang assume_nonnull begin
+
 
 #pragma mark COM Prototypes
 
@@ -810,4 +812,6 @@ static OSStatus	BGM_EndIOOperation(AudioServerPlugInDriverRef inDriver, AudioObj
 	
 	return theAnswer;
 }
+
+#pragma clang assume_nonnull end
 

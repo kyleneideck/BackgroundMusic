@@ -34,6 +34,8 @@
 #include "CADebugMacros.h"
 #include "CAException.h"
 
+#pragma clang assume_nonnull begin
+
 
 //==================================================================================================
 #pragma mark -
@@ -185,4 +187,6 @@ void	BGM_Object::SetPropertyData(AudioObjectID inObjectID, pid_t inClientPID, co
 			break;
 	};
 }
+
+#pragma clang assume_nonnull end
 
