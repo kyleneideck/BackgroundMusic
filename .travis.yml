@@ -21,10 +21,6 @@ matrix:
       osx_image: xcode7.3
       xcode_sdk: macosx10.11
       sudo: required
-    - os: osx
-      osx_image: xcode6.4
-      xcode_sdk: macosx10.10
-      sudo: required
 branches:
   only:
     - master
