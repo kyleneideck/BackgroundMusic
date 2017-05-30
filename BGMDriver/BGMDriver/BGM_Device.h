@@ -17,24 +17,25 @@
 //  BGM_Device.h
 //  BGMDriver
 //
-//  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016, 2017 Kyle Neideck
 //  Portions copyright (C) 2013 Apple Inc. All Rights Reserved.
 //
 //  Based largely on SA_Device.h from Apple's SimpleAudioDriver Plug-In sample code.
 //  https://developer.apple.com/library/mac/samplecode/AudioDriverExamples
 //
 
-#ifndef __BGMDriver__BGM_Device__
-#define __BGMDriver__BGM_Device__
+#ifndef BGMDriver__BGM_Device
+#define BGMDriver__BGM_Device
 
 // SuperClass Includes
-#include "BGM_Object.h"
+#include "BGM_AbstractDevice.h"
 
 // Local Includes
 #include "BGM_Types.h"
 #include "BGM_WrappedAudioEngine.h"
 #include "BGM_Clients.h"
 #include "BGM_TaskQueue.h"
+#include "BGM_Stream.h"
 
 // PublicUtility Includes
 #include "CAMutex.h"
@@ -42,11 +43,12 @@
 
 // System Includes
 #include <CoreFoundation/CoreFoundation.h>
+#include <pthread.h>
 
 
 class BGM_Device
 :
-	public BGM_Object
+	public BGM_AbstractDevice
 {
 
 #pragma mark Construction/Destruction
@@ -85,15 +87,6 @@ private:
 	void						Device_GetPropertyData(AudioObjectID inObjectID, pid_t inClientPID, const AudioObjectPropertyAddress& inAddress, UInt32 inQualifierDataSize, const void* __nullable inQualifierData, UInt32 inDataSize, UInt32& outDataSize, void* __nonnull outData) const;
 	void						Device_SetPropertyData(AudioObjectID inObjectID, pid_t inClientPID, const AudioObjectPropertyAddress& inAddress, UInt32 inQualifierDataSize, const void* __nullable inQualifierData, UInt32 inDataSize, const void* __nonnull inData);
 
-#pragma mark Stream Property Operations
-    
-private:
-	bool						Stream_HasProperty(AudioObjectID inObjectID, pid_t inClientPID, const AudioObjectPropertyAddress& inAddress) const;
-	bool						Stream_IsPropertySettable(AudioObjectID inObjectID, pid_t inClientPID, const AudioObjectPropertyAddress& inAddress) const;
-	UInt32						Stream_GetPropertyDataSize(AudioObjectID inObjectID, pid_t inClientPID, const AudioObjectPropertyAddress& inAddress, UInt32 inQualifierDataSize, const void* __nullable inQualifierData) const;
-	void						Stream_GetPropertyData(AudioObjectID inObjectID, pid_t inClientPID, const AudioObjectPropertyAddress& inAddress, UInt32 inQualifierDataSize, const void* __nullable inQualifierData, UInt32 inDataSize, UInt32& outDataSize, void* __nonnull outData) const;
-	void						Stream_SetPropertyData(AudioObjectID inObjectID, pid_t inClientPID, const AudioObjectPropertyAddress& inAddress, UInt32 inQualifierDataSize, const void* __nullable inQualifierData, UInt32 inDataSize, const void* __nonnull inData);
-
 #pragma mark Control Property Operations
     
 private:
@@ -125,6 +118,50 @@ private:
     void                        UpdateAudibleStateSampleTimes_PostMix(UInt32 inIOBufferFrameSize, Float64 inOutputSampleTime, const void* __nonnull inBuffer);
     void                        UpdateDeviceAudibleState(UInt32 inIOBufferFrameSize, Float64 inOutputSampleTime);
 
+#pragma mark Accessors
+
+public:
+	/*!
+	 Enable or disable the device's volume and/or mute controls. This function is async because it
+	 has to ask the host to stop IO for the device before the controls can be enabled/disabled.
+
+	 See BGM_Device::PerformConfigChange and RequestDeviceConfigurationChange in AudioServerPlugIn.h.
+	 */
+    void                        RequestEnabledControls(bool inVolumeEnabled, bool inMuteEnabled);
+
+    Float64						GetSampleRate() const;
+    void                        RequestSampleRate(Float64 inRequestedSampleRate);
+
+private:
+    /*!
+     Enable or disable the device's volume and/or mute controls.
+
+     Private because (after initialisation) this can only be called after asking the host to stop IO
+     for the device. See BGM_Device::RequestEnabledControls, BGM_Device::PerformConfigChange and
+     RequestDeviceConfigurationChange in AudioServerPlugIn.h.
+     */
+    void                        SetEnabledControls(bool inVolumeEnabled, bool inMuteEnabled);
+    /*!
+     Set the device's sample rate.
+
+     Private because (after initialisation) this can only be called after asking the host to stop IO
+     for the device. See BGM_Device::RequestEnabledControls, BGM_Device::PerformConfigChange and
+     RequestDeviceConfigurationChange in AudioServerPlugIn.h.
+
+     @throws CAException if inNewSampleRate < 1 or if applying the sample rate to one of the streams
+             fails.
+     */
+    void                        SetSampleRate(Float64 inNewSampleRate);
+
+    /*! @return True if inObjectID is the ID of one of this device's streams. */
+    bool                        IsStreamID(AudioObjectID inObjectID) const noexcept;
+    /*! 
+     @return The stream that has the ID inObjectID and belongs to this device.
+     @throws CAException if there is no such stream (i.e. if inObjectID is neither
+             kObjectID_Stream_Input nor kObjectID_Stream_Output.)
+     */
+    const BGM_Stream&           GetStreamByID(AudioObjectID inObjectID) const;
+
 #pragma mark Hardware Accessors
     
 private:
@@ -146,7 +183,12 @@ public:
 	CFStringRef __nonnull		CopyDeviceUID() const { return CFSTR(kBGMDeviceUID); }
     void                        AddClient(const AudioServerPlugInClientInfo* __nonnull inClientInfo);
     void                        RemoveClient(const AudioServerPlugInClientInfo* __nonnull inClientInfo);
+    /*!
+     Apply a change requested with BGM_PlugIn::Host_RequestDeviceConfigurationChange. See
+     PerformDeviceConfigurationChange in AudioServerPlugIn.h.
+     */
 	void						PerformConfigChange(UInt64 inChangeAction, void* __nullable inChangeInfo);
+    /*! Cancel a change requested with BGM_PlugIn::Host_RequestDeviceConfigurationChange. */
 	void						AbortConfigChange(UInt64 inChangeAction, void* __nullable inChangeInfo);
 
 private:
@@ -164,9 +206,7 @@ private:
 								
 								kNumberOfStreams					= 2,
 								kNumberOfInputStreams				= 1,
-								kNumberOfOutputStreams				= 1,
-								
-								kNumberOfControls					= 2
+								kNumberOfOutputStreams				= 1
 	};
     
     CAMutex                     mStateMutex;
@@ -174,7 +214,8 @@ private:
     
     UInt64 __unused				mSampleRateShadow;  // Currently unused.
     const Float64               kSampleRateDefault = 44100.0;
-    // Before we can change sample rate, the host has to stop the device. The new sample rate is stored here while it does.
+    // Before we can change sample rate, the host has to stop the device. The new sample rate is
+    // stored here while it does.
     Float64                     mPendingSampleRate;
     
     BGM_WrappedAudioEngine* __nullable mWrappedAudioEngine;
@@ -193,8 +234,8 @@ private:
         UInt64					anchorHostTime    = 0;
     }                           mLoopbackTime;
 	
-	bool						mInputStreamIsActive;
-    bool						mOutputStreamIsActive;
+    BGM_Stream                  mInputStream;
+    BGM_Stream                  mOutputStream;
     
     SInt32                      mDeviceAudibleState;
     struct
@@ -204,13 +245,24 @@ private:
         Float64                 latestAudibleMusic;
         Float64                 latestSilentMusic;
     }                           mAudibleStateSampleTimes;
-    
+
+    enum class ChangeAction : UInt64
+    {
+        SetSampleRate,
+        SetEnabledControls
+    };
+
     // This volume range will be used when the BGMDevice isn't wrapping another device (or we fail to
     // get the range of the wrapped device for some reason).
     #define kDefaultMinRawVolumeValue   0
     #define kDefaultMaxRawVolumeValue	96
     #define kDefaultMinDbVolumeValue	-96.0f
     #define kDefaultMaxDbVolumeValue	0.0f
+
+    bool                        mOutputVolumeControlEnabled        = true;
+    bool                        mOutputMuteControlEnabled          = true;
+    bool                        mPendingOutputVolumeControlEnabled = true;
+    bool                        mPendingOutputMuteControlEnabled   = true;
 	
 	SInt32						mOutputMasterVolumeControlRawValueShadow;
     SInt32                      mOutputMasterMinRawVolumeShadow;
@@ -222,5 +274,5 @@ private:
 
 };
 
-#endif /* __BGMDriver__BGM_Device__ */
+#endif /* BGMDriver__BGM_Device */
 

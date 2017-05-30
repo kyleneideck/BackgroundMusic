@@ -254,8 +254,6 @@ void    BGM_ClientMap::CopyClientIntoAppVolumesArray(BGM_Client inClient, CAVolu
     }
 }
 
-// TODO: Combine the SetClientsRelativeVolume methods? Their code is very similar.
-
 template <typename T>
 std::vector<BGM_Client*> * _Nullable GetClientsFromMap(std::map<T, std::vector<BGM_Client*>> & map, T key) {
     auto theClientItr = map.find(key);
@@ -279,7 +277,7 @@ void ShowSetRelativeVolumeMessage(CACFString inAppBundleID, BGM_Client* theClien
 void ShowSetRelativeVolumeMessage(pid_t inAppPID, BGM_Client* theClient) {
     (void)inAppPID;
     (void)theClient;
-    DebugMsg("BGM_ClientMap::SetClientsRelativeVolume: Set volume %f for client %u by pid (%d)",
+    DebugMsg("BGM_ClientMap::ShowSetRelativeVolumeMessage: Set volume %f for client %u by pid (%d)",
              theClient->mRelativeVolume,
              theClient->mClientID,
              inAppPID);
@@ -288,7 +286,7 @@ void ShowSetRelativeVolumeMessage(pid_t inAppPID, BGM_Client* theClient) {
 void ShowSetRelativeVolumeMessage(CACFString inAppBundleID, BGM_Client* theClient) {
     (void)inAppBundleID;
     (void)theClient;
-    DebugMsg("BGM_ClientMap::SetClientsRelativeVolume: Set volume %f for client %u by bundle ID (%s)",
+    DebugMsg("BGM_ClientMap::ShowSetRelativeVolumeMessage: Set volume %f for client %u by bundle ID (%s)",
              theClient->mRelativeVolume,
              theClient->mClientID,
              CFStringGetCStringPtr(inAppBundleID.GetCFString(), kCFStringEncodingUTF8));
@@ -380,9 +378,6 @@ bool BGM_ClientMap::SetClientsPanPosition(pid_t searchKey, SInt32 inPanPosition)
         if(theClients != nullptr) {
             for(auto theClient: *theClients) {
                 theClient->mPanPosition = inPanPosition;
-                
-                // ShowSetPanPositionsMessage(searchKey, theClient)
-                
                 didChangePanPosition = true;
             }
         }
@@ -393,7 +388,6 @@ bool BGM_ClientMap::SetClientsPanPosition(pid_t searchKey, SInt32 inPanPosition)
     theSetPansInShadowMapsFunc();
     
     return didChangePanPosition;
-    
 }
 
 bool BGM_ClientMap::SetClientsPanPosition(CACFString searchKey, SInt32 inPanPosition)
@@ -408,9 +402,6 @@ bool BGM_ClientMap::SetClientsPanPosition(CACFString searchKey, SInt32 inPanPosi
         if(theClients != nullptr) {
             for(auto theClient: *theClients) {
                 theClient->mPanPosition = inPanPosition;
-                
-                // ShowSetPanPositionsMessage(searchKey, theClient)
-                
                 didChangePanPosition = true;
             }
         }
@@ -421,7 +412,6 @@ bool BGM_ClientMap::SetClientsPanPosition(CACFString searchKey, SInt32 inPanPosi
     theSetPansInShadowMapsFunc();
     
     return didChangePanPosition;
-    
 }
 
 void    BGM_ClientMap::UpdateClientIOStateNonRT(UInt32 inClientID, bool inDoingIO)

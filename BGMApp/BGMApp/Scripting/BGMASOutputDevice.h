@@ -14,25 +14,33 @@
 // along with Background Music. If not, see <http://www.gnu.org/licenses/>.
 
 //
-//  AppDelegate.h
+//  BGMASOutputDevice.h
 //  BGMApp
 //
-//  Copyright © 2016 Kyle Neideck
+//  Copyright © 2017 Kyle Neideck
 //
-//  Sets up and tears down the app.
+//  An AppleScript class for the output devices that can be selected in the preferences menu.
 //
+
+// Local Includes
+#import "BGMAudioDeviceManager.h"
 
 // System Includes
-#import <Cocoa/Cocoa.h>
+#import <Foundation/Foundation.h>
 
 
-@interface AppDelegate : NSObject <NSApplicationDelegate, NSMenuDelegate>
+#pragma clang assume_nonnull begin
 
-@property (weak) IBOutlet NSMenu* bgmMenu;
-@property (weak) IBOutlet NSView* appVolumeView;
-@property (weak) IBOutlet NSPanel* aboutPanel;
-@property (unsafe_unretained) IBOutlet NSTextView* aboutPanelLicenseView;
-@property (weak) IBOutlet NSMenuItem* autoPauseMenuItemUnwrapped;
+@interface BGMASOutputDevice : NSObject
+
+- (instancetype) initWithAudioObjectID:(AudioObjectID)objID
+                          audioDevices:(BGMAudioDeviceManager*)devices
+                       parentSpecifier:(NSScriptObjectSpecifier* __nullable)parentSpecifier;
+
+@property (readonly) NSString* name;
+@property BOOL selected;  // is this the device to be used for audio output?
 
 @end
+
+#pragma clang assume_nonnull end
 

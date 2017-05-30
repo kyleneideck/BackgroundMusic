@@ -190,7 +190,7 @@ static SInt64 const kMenuItemUpdateWaitTime = 1;
     
     // Only update the menu item if it's changing (from highlighted to unhighlighted or vice versa) to save a little
     // CPU.
-    if (willHighlightMenuItem ^ menuItem.highlighted) {
+    if (willHighlightMenuItem != menuItem.highlighted) {
         [self updateMenuItemTitleWithHighlight:willHighlightMenuItem];
     }
 }

@@ -34,5 +34,13 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSAppleScriptEnabled</key>
+	<true/>
+	<key>OSAScriptingDefinition</key>
+	<string>BGMApp.sdef</string>
+	<key>NSServices</key>
+	<array>
+		<dict/>
+	</array>
 </dict>
 </plist>

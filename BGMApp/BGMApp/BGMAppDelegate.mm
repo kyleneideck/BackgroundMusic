@@ -14,19 +14,18 @@
 // along with Background Music. If not, see <http://www.gnu.org/licenses/>.
 
 //
-//  AppDelegate.mm
+//  BGMAppDelegate.mm
 //  BGMApp
 //
 //  Copyright © 2016, 2017 Kyle Neideck
 //
 
 // Self Includes
-#import "AppDelegate.h"
+#import "BGMAppDelegate.h"
 
 // Local Includes
 #import "BGM_Types.h"
 #import "BGMUserDefaults.h"
-#import "BGMAudioDeviceManager.h"
 #import "BGMMusicPlayers.h"
 #import "BGMAutoPauseMusic.h"
 #import "BGMAutoPauseMenuItem.h"
@@ -40,7 +39,7 @@
 
 static float const kStatusBarIconPadding = 0.25;
 
-@implementation AppDelegate {
+@implementation BGMAppDelegate {
     // The button in the system status bar (the bar with volume, battery, clock, etc.) to show the main menu
     // for the app. These are called "menu bar extras" in the Human Interface Guidelines.
     NSStatusItem* statusBarItem;
@@ -52,10 +51,11 @@ static float const kStatusBarIconPadding = 0.25;
     BGMAutoPauseMenuItem* autoPauseMenuItem;
     BGMMusicPlayers* musicPlayers;
     BGMAppVolumes* appVolumes;
-    BGMAudioDeviceManager* audioDevices;
     BGMPreferencesMenu* prefsMenu;
     BGMXPCListener* xpcListener;
 }
+
+@synthesize audioDevices = audioDevices;
 
 - (void) awakeFromNib {
     // Show BGMApp in the dock, if the command-line option for that was passed. This is used by the UI tests.
@@ -134,7 +134,7 @@ static float const kStatusBarIconPadding = 0.25;
     
     xpcListener = [[BGMXPCListener alloc] initWithAudioDevices:audioDevices
                                   helperConnectionErrorHandler:^(NSError* error) {
-                                      NSLog(@"AppDelegate::applicationDidFinishLaunching: (helperConnectionErrorHandler) "
+                                      NSLog(@"BGMAppDelegate::applicationDidFinishLaunching: (helperConnectionErrorHandler) "
                                              "BGMXPCHelper connection error: %@",
                                             error);
                                       
@@ -164,7 +164,7 @@ static float const kStatusBarIconPadding = 0.25;
 - (void) applicationWillTerminate:(NSNotification*)aNotification {
     #pragma unused (aNotification)
     
-    DebugMsg("AppDelegate::applicationWillTerminate");
+    DebugMsg("BGMAppDelegate::applicationWillTerminate");
 
     NSError* error = [audioDevices unsetBGMDeviceAsOSDefault];
     
@@ -254,16 +254,16 @@ static float const kStatusBarIconPadding = 0.25;
     
     // In System Preferences, go to the "Output" tab on the "Sound" pane.
     for (SystemPreferencesPane* pane : [sysPrefs panes]) {
-        DebugMsg("AppDelegate::openSysPrefsSoundOutput: pane = %s", [pane.name UTF8String]);
+        DebugMsg("BGMAppDelegate::openSysPrefsSoundOutput: pane = %s", [pane.name UTF8String]);
         
         if ([pane.id isEqualToString:@"com.apple.preference.sound"]) {
             sysPrefs.currentPane = pane;
             
             for (SystemPreferencesAnchor* anchor : [pane anchors]) {
-                DebugMsg("AppDelegate::openSysPrefsSoundOutput: anchor = %s", [anchor.name UTF8String]);
+                DebugMsg("BGMAppDelegate::openSysPrefsSoundOutput: anchor = %s", [anchor.name UTF8String]);
                 
                 if ([[anchor.name lowercaseString] isEqualToString:@"output"]) {
-                    DebugMsg("AppDelegate::openSysPrefsSoundOutput: Showing Output in Sound pane.");
+                    DebugMsg("BGMAppDelegate::openSysPrefsSoundOutput: Showing Output in Sound pane.");
                     
                     [anchor reveal];
                 }
@@ -281,7 +281,7 @@ static float const kStatusBarIconPadding = 0.25;
     if ([menu isEqual:self.bgmMenu]) {
         [autoPauseMenuItem parentMenuNeedsUpdate];
     } else {
-        DebugMsg("AppDelegate::menuNeedsUpdate: Warning: unexpected menu. menu=%s", menu.description.UTF8String);
+        DebugMsg("BGMAppDelegate::menuNeedsUpdate: Warning: unexpected menu. menu=%s", menu.description.UTF8String);
     }
 }
 
@@ -289,7 +289,7 @@ static float const kStatusBarIconPadding = 0.25;
     if ([menu isEqual:self.bgmMenu]) {
         [autoPauseMenuItem parentMenuItemWillHighlight:item];
     } else {
-        DebugMsg("AppDelegate::menu: Warning: unexpected menu. menu=%s", menu.description.UTF8String);
+        DebugMsg("BGMAppDelegate::menu: Warning: unexpected menu. menu=%s", menu.description.UTF8String);
     }
 }
 

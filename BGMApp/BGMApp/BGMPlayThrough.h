@@ -77,12 +77,14 @@ public:
 private:
     /*! @throws CAException */
     void                Init(CAHALAudioDevice inInputDevice, CAHALAudioDevice inOutputDevice);
-    
+
+public:
     /*! @throws CAException */
     void                Activate();
     /*! @throws CAException */
     void                Deactivate();
-    
+
+private:
     void                AllocateBuffer();
     
     static bool         IsBGMDevice(CAHALAudioDevice inDevice);
@@ -170,8 +172,8 @@ private:
     AudioDeviceIOProcID __nullable mInputDeviceIOProcID;
     AudioDeviceIOProcID __nullable mOutputDeviceIOProcID;
     
-    CAHALAudioDevice    mInputDevice { kAudioDeviceUnknown };
-    CAHALAudioDevice    mOutputDevice { kAudioDeviceUnknown };
+    CAHALAudioDevice    mInputDevice { kAudioObjectUnknown };
+    CAHALAudioDevice    mOutputDevice { kAudioObjectUnknown };
     
     CAMutex             mStateMutex { "Playthrough state" };
     

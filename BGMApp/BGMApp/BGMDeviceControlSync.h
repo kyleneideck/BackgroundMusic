@@ -17,65 +17,105 @@
 //  BGMDeviceControlSync.h
 //  BGMApp
 //
-//  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016, 2017 Kyle Neideck
 //
-//  Listens for notifications that BGMDevice's controls (just volume and mute currently) have changed value, and
-//  copies the new values to the output device.
+//  Synchronises BGMDevice's controls (just volume and mute currently) with the output device's
+//  controls. This allows the user to control the output device normally while BGMDevice is set as
+//  the default device.
+//
+//  BGMDeviceControlSync disables any BGMDevice controls that the output device doesn't also have.
+//  When the value of one of BGMDevice's controls is changed, BGMDeviceControlSync copies the new
+//  value to the output device.
+//
+//  Thread safe.
 //
 
-#ifndef __BGMApp__BGMDeviceControlSync__
-#define __BGMApp__BGMDeviceControlSync__
+#ifndef BGMApp__BGMDeviceControlSync
+#define BGMApp__BGMDeviceControlSync
+
+// Local Includes
+#include "BGMAudioDevice.h"
+#include "BGMDeviceControlsList.h"
 
 // PublicUtility Includes
-#include "CAHALAudioDevice.h"
+#include "CAHALAudioSystemObject.h"
+#include "CAMutex.h"
+
+// System Includes
+#include <AudioToolbox/AudioServices.h>
 
 
 #pragma clang assume_nonnull begin
 
 class BGMDeviceControlSync
 {
-    
+
+#pragma mark Construction/Destruction
+
 public:
-                        BGMDeviceControlSync(CAHALAudioDevice inBGMDevice, CAHALAudioDevice inOutputDevice);
+                        BGMDeviceControlSync(AudioObjectID inBGMDevice,
+                                             AudioObjectID inOutputDevice,
+                                             CAHALAudioSystemObject inAudioSystem
+                                                     = CAHALAudioSystemObject());
                         ~BGMDeviceControlSync();
                         // Disallow copying
                         BGMDeviceControlSync(const BGMDeviceControlSync&) = delete;
                         BGMDeviceControlSync& operator=(const BGMDeviceControlSync&) = delete;
-                        // Move constructor/assignment
-                        BGMDeviceControlSync(BGMDeviceControlSync&& inDeviceControlSync) { Swap(inDeviceControlSync); }
-                        BGMDeviceControlSync& operator=(BGMDeviceControlSync&& inDeviceControlSync) { Swap(inDeviceControlSync); return *this; }
-    
+
 #ifdef __OBJC__
                         // Only intended as a convenience for Objective-C instance vars
-                        BGMDeviceControlSync() { };
+                        BGMDeviceControlSync()
+                        : BGMDeviceControlSync(kAudioObjectUnknown, kAudioObjectUnknown) { };
 #endif
-    
-private:
+
+    /*!
+     Begin synchronising BGMDevice's controls with the output device's.
+
+     @throws BGM_DeviceNotSetException if BGMDevice isn't set.
+     @throws CAException if the HAL or one of the devices returns an error when this function
+                         registers for device property notifications or when it copies the current
+                         values of the output device's controls to BGMDevice. This
+                         BGMDeviceControlSync will remain inactive if this function throws.
+     */
     void                Activate();
+    /*! Stop synchronising BGMDevice's controls with the output device's. */
     void                Deactivate();
-    void                Swap(BGMDeviceControlSync& inDeviceControlSync);
-    
-    static void         CopyMute(CAHALAudioDevice inFromDevice, CAHALAudioDevice inToDevice, AudioObjectPropertyScope inScope);
-    static void         CopyVolume(CAHALAudioDevice inFromDevice, CAHALAudioDevice inToDevice, AudioObjectPropertyScope inScope);
-    
-    static bool         SetMasterVolumeScalar(CAHALAudioDevice inDevice, AudioObjectPropertyScope inScope, Float32 inVolume);
-    static bool         GetVirtualMasterVolume(CAHALAudioDevice inDevice, AudioObjectPropertyScope inScope, Float32& outVirtualMasterVolume);
-    static bool         SetVirtualMasterVolume(CAHALAudioDevice inDevice, AudioObjectPropertyScope inScope, Float32 inVolume);
-    static bool         GetVirtualMasterBalance(CAHALAudioDevice inDevice, AudioObjectPropertyScope inScope, Float32& outVirtualMasterBalance);
-    
-    static OSStatus     AHSGetPropertyData(AudioObjectID inObjectID, const AudioObjectPropertyAddress* inAddress, UInt32* ioDataSize, void* outData);
-    static OSStatus     AHSSetPropertyData(AudioObjectID inObjectID, const AudioObjectPropertyAddress* inAddress, UInt32 inDataSize, const void* inData);
-    
-    static OSStatus     BGMDeviceListenerProc(AudioObjectID inObjectID, UInt32 inNumberAddresses, const AudioObjectPropertyAddress* inAddresses, void* __nullable inClientData);
+
+#pragma mark Accessors
+
+    /*!
+     Set the IDs of BGMDevice and the output device to synchronise with.
+
+     @throws BGM_DeviceNotSetException if BGMDevice isn't set.
+     @throws CAException if the HAL or one of the new devices returns an error while restarting
+                         synchronisation. This BGMDeviceControlSync will be deactivated if this
+                         function throws, but its devices will still be set.
+     */
+    void                SetDevices(AudioObjectID inBGMDevice, AudioObjectID inOutputDevice);
+
+#pragma mark Listener Procs
     
 private:
-    bool                mActive = false;
-    CAHALAudioDevice    mBGMDevice { kAudioDeviceUnknown };
-    CAHALAudioDevice    mOutputDevice { kAudioDeviceUnknown };
+    /*! Receives HAL notifications about the BGMDevice properties this class listens to. */
+    static OSStatus     BGMDeviceListenerProc(AudioObjectID inObjectID,
+                                              UInt32 inNumberAddresses,
+                                              const AudioObjectPropertyAddress* inAddresses,
+                                              void* __nullable inClientData);
+    
+private:
+    CAMutex             mMutex         { "Device Control Sync" };
+    bool                mActive        = false;
+
+    CAHALAudioSystemObject mAudioSystem;
+    
+    BGMAudioDevice      mBGMDevice     { (AudioObjectID)kAudioObjectUnknown };
+    BGMAudioDevice      mOutputDevice  { (AudioObjectID)kAudioObjectUnknown };
+
+    BGMDeviceControlsList mBGMDeviceControlsList;
     
 };
 
 #pragma clang assume_nonnull end
 
-#endif /* __BGMApp__BGMDeviceControlSync__ */
+#endif /* BGMApp__BGMDeviceControlSync */
 

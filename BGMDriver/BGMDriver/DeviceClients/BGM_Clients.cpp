@@ -31,6 +31,7 @@
 // PublicUtility Includes
 #include "CAException.h"
 #include "CACFDictionary.h"
+#include "CADispatchQueue.h"
 
 
 #pragma mark Construction/Destruction
@@ -209,24 +210,26 @@ void    BGM_Clients::SendIORunningNotifications(bool sendIsRunningNotification, 
 {
     if(sendIsRunningNotification || sendIsRunningSomewhereOtherThanBGMAppNotification)
     {
-        AudioObjectPropertyAddress theChangedProperties[2];
-        UInt32 theNotificationCount = 0;
-        
-        if(sendIsRunningNotification)
-        {
-            DebugMsg("BGM_Clients::SendIORunningNotifications: Sending kAudioDevicePropertyDeviceIsRunning");
-            theChangedProperties[0] = { kAudioDevicePropertyDeviceIsRunning, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster };
-            theNotificationCount++;
-        }
-        
-        if(sendIsRunningSomewhereOtherThanBGMAppNotification)
-        {
-            DebugMsg("BGM_Clients::SendIORunningNotifications: Sending kAudioDeviceCustomPropertyDeviceIsRunningSomewhereOtherThanBGMApp");
-            theChangedProperties[theNotificationCount] = kBGMRunningSomewhereOtherThanBGMAppAddress;
-            theNotificationCount++;
-        }
-        
-        BGM_PlugIn::Host_PropertiesChanged(kObjectID_Device, theNotificationCount, theChangedProperties);
+        CADispatchQueue::GetGlobalSerialQueue().Dispatch(false, ^{
+            AudioObjectPropertyAddress theChangedProperties[2];
+            UInt32 theNotificationCount = 0;
+
+            if(sendIsRunningNotification)
+            {
+                DebugMsg("BGM_Clients::SendIORunningNotifications: Sending kAudioDevicePropertyDeviceIsRunning");
+                theChangedProperties[0] = { kAudioDevicePropertyDeviceIsRunning, kAudioObjectPropertyScopeGlobal, kAudioObjectPropertyElementMaster };
+                theNotificationCount++;
+            }
+
+            if(sendIsRunningSomewhereOtherThanBGMAppNotification)
+            {
+                DebugMsg("BGM_Clients::SendIORunningNotifications: Sending kAudioDeviceCustomPropertyDeviceIsRunningSomewhereOtherThanBGMApp");
+                theChangedProperties[theNotificationCount] = kBGMRunningSomewhereOtherThanBGMAppAddress;
+                theNotificationCount++;
+            }
+
+            BGM_PlugIn::Host_PropertiesChanged(kObjectID_Device, theNotificationCount, theChangedProperties);
+        });
     }
 }
 

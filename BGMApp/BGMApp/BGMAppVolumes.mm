@@ -121,6 +121,9 @@ static CGFloat const kAppVolumeViewInitialHeight = 20;
         
         // Set the slider to the volume for this app if we got one from the driver
         [self setVolumeOfMenuItem:appVolItem fromAppVolumes:appVolumesOnDevice];
+
+        // TODO: This doesn't show up in Accessibility Inspector for me. Not sure why.
+        appVolItem.accessibilityTitle = [NSString stringWithFormat:@"%@", [app localizedName]];
         
         [bgmMenu insertItem:appVolItem atIndex:index];
     }
@@ -356,6 +359,8 @@ static CGFloat const kAppVolumeViewInitialHeight = 20;
     //       tell otherwise. Maybe we should also make this button look different if the controls are hidden
     //       when they have non-default values.
     [ctx showHideExtraControls:self];
+
+    self.accessibilityTitle = @"More options";
 }
 
 @end
@@ -380,6 +385,8 @@ static CGFloat const kAppVolumeViewInitialHeight = 20;
     
     self.maxValue = kAppRelativeVolumeMaxRawValue;
     self.minValue = kAppRelativeVolumeMinRawValue;
+
+    self.accessibilityTitle = [NSString stringWithFormat:@"Volume for %@", [app localizedName]];
 }
 
 // We have to handle snapping for volume sliders ourselves because adding a tick mark (snap point) in Interface Builder
@@ -429,6 +436,8 @@ static CGFloat const kAppVolumeViewInitialHeight = 20;
     
     self.minValue = kAppPanLeftRawValue;
     self.maxValue = kAppPanRightRawValue;
+
+    self.accessibilityTitle = [NSString stringWithFormat:@"Pan for %@", [app localizedName]];
 }
 
 - (void) setPanPosition:(NSNumber *)panPosition {

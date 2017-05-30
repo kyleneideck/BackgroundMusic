@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE dictionary SYSTEM "file://localhost/System/Library/DTDs/sdef.dtd">
+<dictionary>
+    <suite name="Background Music" code="BGMs" description="Background Music specific classes">
+             <!-- TODO: Figure out why Script Editor returns output device objects as
+                      «class» "Built-in Output" of application "Background Music"
+                  instead of
+                      device "Built-in Output" of application "Background Music" -->
+        <class name="output device"
+               code="aDev"
+               description="A hardware device that can play audio"
+               plural="output devices"
+               inherits="item">
+            <synonym name="audio device"/>
+
+            <cocoa class="BGMASOutputDevice"/>
+
+            <property name="name"
+                      code="pnam"
+                      description="The name of the output device."
+                      type="text"
+                      access="r"/>
+
+            <property name="selected"
+                      code="Slcd"
+                      type="boolean"
+                      access="rw"
+                      description="Is this the device to be used for audio output?">
+                <synonym name="default"/>
+            </property>
+        </class>
+
+        <class name="application"
+               code="capp"
+               description="The application program">
+            <cocoa class="NSApplication"/>
+
+            <!-- We have a class called "output device", so we have to call this class something
+                 else. -->
+            <property name="selected output device"
+                      type="output device"
+                      code="selO"
+                      access="rw"
+                      description="The device to be used for audio output">
+                <synonym name="selected device"/>
+                <synonym name="default device"/>
+                <synonym name="default output device"/>
+
+                <cocoa key="selectedOutputDevice"/>
+            </property>
+
+            <!-- Unintuitively, this is for the array of output devices. -->
+            <element type="output device" access="r">
+                <cocoa key="outputDevices"/>
+            </element>
+        </class>
+    </suite>
+</dictionary>
+

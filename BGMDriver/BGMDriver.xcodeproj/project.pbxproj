@@ -14,6 +14,7 @@
 		1C38210E1C4A163A00A0C8C6 /* BGM_TaskQueue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C38210C1C4A163A00A0C8C6 /* BGM_TaskQueue.cpp */; };
 		1C3DB4871BE063C500EC8160 /* BGM_DeviceTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C3DB4861BE063C500EC8160 /* BGM_DeviceTests.mm */; };
 		1C8034DD1BDD073B00668E00 /* BGM_ClientsTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C8034DC1BDD073B00668E00 /* BGM_ClientsTests.mm */; };
+		1CA2A9E21E8D1D08007A76A4 /* BGM_Stream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CA2A9E01E8D1D08007A76A4 /* BGM_Stream.cpp */; };
 		1CB8B36E1BBBD541000E2DD1 /* BGM_PlugInInterface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CB8B36D1BBBD541000E2DD1 /* BGM_PlugInInterface.cpp */; };
 		1CB8B3761BBBD924000E2DD1 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1CB8B3741BBBD924000E2DD1 /* CoreAudio.framework */; };
 		1CB8B3771BBBD924000E2DD1 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1CB8B3751BBBD924000E2DD1 /* CoreFoundation.framework */; };
@@ -27,6 +28,11 @@
 		1CC1DF931BE7B79500FB8FE4 /* CADebugger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CC1DF871BE558B000FB8FE4 /* CADebugger.cpp */; };
 		1CC1DF941BE7B79500FB8FE4 /* CAVolumeCurve.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CB8B38C1BBCF4A9000E2DD1 /* CAVolumeCurve.cpp */; };
 		1CC1DF9E1BE94AA200FB8FE4 /* DeviceIcon.icns in Resources */ = {isa = PBXBuildFile; fileRef = 1CC1DF9D1BE94AA200FB8FE4 /* DeviceIcon.icns */; };
+		1CD95B121E93AA5200EB8EF0 /* BGM_AbstractDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CDF3ABD1E8644C20001E9B7 /* BGM_AbstractDevice.cpp */; };
+		1CD95B131E93AA5200EB8EF0 /* BGM_NullDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CDF3ABA1E863B980001E9B7 /* BGM_NullDevice.cpp */; };
+		1CD95B141E93AA5200EB8EF0 /* BGM_Stream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CA2A9E01E8D1D08007A76A4 /* BGM_Stream.cpp */; };
+		1CDF3ABC1E863B980001E9B7 /* BGM_NullDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CDF3ABA1E863B980001E9B7 /* BGM_NullDevice.cpp */; };
+		1CDF3ABF1E8644C20001E9B7 /* BGM_AbstractDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CDF3ABD1E8644C20001E9B7 /* BGM_AbstractDevice.cpp */; };
 		27379B821C76D62D0084A24C /* CADebugMacros.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CB8B3701BBBD8A4000E2DD1 /* CADebugMacros.cpp */; };
 		27379B831C76D62D0084A24C /* CADebugPrintf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CB8B3781BBBDFA2000E2DD1 /* CADebugPrintf.cpp */; };
 		27381A161C8EF50F00DF167C /* BGM_XPCHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 27381A141C8EF50F00DF167C /* BGM_XPCHelper.m */; };
@@ -77,6 +83,7 @@
 		1C0CB6B81C642C600084C15A /* BGM_ClientTasks.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BGM_ClientTasks.h; sourceTree = "<group>"; };
 		1C305D9B1BE294B5004EBB91 /* CACFNumber.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CACFNumber.cpp; path = PublicUtility/CACFNumber.cpp; sourceTree = "<group>"; };
 		1C305D9C1BE294B5004EBB91 /* CACFNumber.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CACFNumber.h; path = PublicUtility/CACFNumber.h; sourceTree = "<group>"; };
+		1C37B3681E9B8D3C000DF98F /* CAPropertyAddress.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CAPropertyAddress.h; path = PublicUtility/CAPropertyAddress.h; sourceTree = "<group>"; };
 		1C38210C1C4A163A00A0C8C6 /* BGM_TaskQueue.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BGM_TaskQueue.cpp; sourceTree = "<group>"; };
 		1C38210D1C4A163A00A0C8C6 /* BGM_TaskQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BGM_TaskQueue.h; sourceTree = "<group>"; };
 		1C38210F1C4A18DE00A0C8C6 /* CAPThread.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CAPThread.cpp; path = PublicUtility/CAPThread.cpp; sourceTree = "<group>"; };
@@ -85,6 +92,8 @@
 		1C8034DA1BDD073B00668E00 /* BGMDriverTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BGMDriverTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1C8034DC1BDD073B00668E00 /* BGM_ClientsTests.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = BGM_ClientsTests.mm; sourceTree = "<group>"; };
 		1C8034DE1BDD073B00668E00 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		1CA2A9E01E8D1D08007A76A4 /* BGM_Stream.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BGM_Stream.cpp; sourceTree = "<group>"; };
+		1CA2A9E11E8D1D08007A76A4 /* BGM_Stream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BGM_Stream.h; sourceTree = "<group>"; };
 		1CB8B3641BBBB78D000E2DD1 /* Background Music Device.driver */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Background Music Device.driver"; sourceTree = BUILT_PRODUCTS_DIR; };
 		1CB8B3681BBBB78D000E2DD1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		1CB8B36D1BBBD541000E2DD1 /* BGM_PlugInInterface.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BGM_PlugInInterface.cpp; sourceTree = "<group>"; };
@@ -117,6 +126,10 @@
 		1CC1DF881BE558B000FB8FE4 /* CADebugger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CADebugger.h; path = PublicUtility/CADebugger.h; sourceTree = "<group>"; };
 		1CC1DF991BE865C000FB8FE4 /* quick_install.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = quick_install.sh; sourceTree = "<group>"; };
 		1CC1DF9D1BE94AA200FB8FE4 /* DeviceIcon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = DeviceIcon.icns; sourceTree = "<group>"; };
+		1CDF3ABA1E863B980001E9B7 /* BGM_NullDevice.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BGM_NullDevice.cpp; sourceTree = "<group>"; };
+		1CDF3ABB1E863B980001E9B7 /* BGM_NullDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BGM_NullDevice.h; sourceTree = "<group>"; };
+		1CDF3ABD1E8644C20001E9B7 /* BGM_AbstractDevice.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BGM_AbstractDevice.cpp; sourceTree = "<group>"; };
+		1CDF3ABE1E8644C20001E9B7 /* BGM_AbstractDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BGM_AbstractDevice.h; sourceTree = "<group>"; };
 		1CE3E68C1BE263CA00167F5D /* CACFDictionary.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CACFDictionary.cpp; path = PublicUtility/CACFDictionary.cpp; sourceTree = "<group>"; };
 		1CE3E68D1BE263CA00167F5D /* CACFDictionary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CACFDictionary.h; path = PublicUtility/CACFDictionary.h; sourceTree = "<group>"; };
 		1CE3E68F1BE2683900167F5D /* CACFArray.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CACFArray.cpp; path = PublicUtility/CACFArray.cpp; sourceTree = "<group>"; };
@@ -218,8 +231,14 @@
 				1CB8B37B1BBCCF62000E2DD1 /* BGM_PlugIn.cpp */,
 				1CB8B3821BBCE7B5000E2DD1 /* BGM_Object.h */,
 				1CB8B3811BBCE7B5000E2DD1 /* BGM_Object.cpp */,
+				1CDF3ABE1E8644C20001E9B7 /* BGM_AbstractDevice.h */,
+				1CDF3ABD1E8644C20001E9B7 /* BGM_AbstractDevice.cpp */,
 				1CB8B37F1BBCCF87000E2DD1 /* BGM_Device.h */,
 				1CB8B37E1BBCCF87000E2DD1 /* BGM_Device.cpp */,
+				1CDF3ABB1E863B980001E9B7 /* BGM_NullDevice.h */,
+				1CDF3ABA1E863B980001E9B7 /* BGM_NullDevice.cpp */,
+				1CA2A9E11E8D1D08007A76A4 /* BGM_Stream.h */,
+				1CA2A9E01E8D1D08007A76A4 /* BGM_Stream.cpp */,
 				1C0CB6AF1C642C600084C15A /* DeviceClients */,
 				1C38210D1C4A163A00A0C8C6 /* BGM_TaskQueue.h */,
 				1C38210C1C4A163A00A0C8C6 /* BGM_TaskQueue.cpp */,
@@ -246,6 +265,7 @@
 			isa = PBXGroup;
 			children = (
 				1C0CB6A71C4E06F70084C15A /* CAAtomic.h */,
+				1C37B3681E9B8D3C000DF98F /* CAPropertyAddress.h */,
 				1C0CB6A61C4E06C00084C15A /* CAAtomicStack.h */,
 				1C0CB6A91C50A3AF0084C15A /* CAAutoDisposer.h */,
 				1CE3E68F1BE2683900167F5D /* CACFArray.cpp */,
@@ -427,6 +447,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1CD95B121E93AA5200EB8EF0 /* BGM_AbstractDevice.cpp in Sources */,
+				1CD95B131E93AA5200EB8EF0 /* BGM_NullDevice.cpp in Sources */,
+				1CD95B141E93AA5200EB8EF0 /* BGM_Stream.cpp in Sources */,
 				27E6B5F01E01966A00EC0AAB /* BGM_Utils.cpp in Sources */,
 				277170101CA0CFC300AB34B4 /* BGM_PlugInInterface.cpp in Sources */,
 				277170111CA0CFC300AB34B4 /* CACFNumber.cpp in Sources */,
@@ -460,17 +483,20 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1CA2A9E21E8D1D08007A76A4 /* BGM_Stream.cpp in Sources */,
 				1CB8B3801BBCCF87000E2DD1 /* BGM_Device.cpp in Sources */,
 				1C0CB6B91C642C600084C15A /* BGM_Client.cpp in Sources */,
 				1CB8B3921BBCF50A000E2DD1 /* BGM_WrappedAudioEngine.cpp in Sources */,
 				1CB8B36E1BBBD541000E2DD1 /* BGM_PlugInInterface.cpp in Sources */,
 				1CB8B37D1BBCCF62000E2DD1 /* BGM_PlugIn.cpp in Sources */,
 				27381A161C8EF50F00DF167C /* BGM_XPCHelper.m in Sources */,
+				1CDF3ABF1E8644C20001E9B7 /* BGM_AbstractDevice.cpp in Sources */,
 				1C0CB6BA1C642C600084C15A /* BGM_ClientMap.cpp in Sources */,
 				1CB8B3831BBCE7B5000E2DD1 /* BGM_Object.cpp in Sources */,
 				275343BD1DE9B44900DF3858 /* BGM_Utils.cpp in Sources */,
 				1C38210E1C4A163A00A0C8C6 /* BGM_TaskQueue.cpp in Sources */,
 				1C0CB6BB1C642C600084C15A /* BGM_Clients.cpp in Sources */,
+				1CDF3ABC1E863B980001E9B7 /* BGM_NullDevice.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

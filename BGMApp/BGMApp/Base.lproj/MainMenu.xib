@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11762" systemVersion="16D32" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="12120" systemVersion="16E195" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
     <dependencies>
         <deployment identifier="macosx"/>
         <development version="7000" identifier="xcode"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11762"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="12120"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="NSApplication">
@@ -13,7 +13,7 @@
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
-        <customObject id="Voe-Tx-rLC" customClass="AppDelegate">
+        <customObject id="Voe-Tx-rLC" customClass="BGMAppDelegate">
             <connections>
                 <outlet property="aboutPanel" destination="Cf4-3V-gl1" id="cgo-Hw-rE2"/>
                 <outlet property="aboutPanelLicenseView" destination="LSG-PF-cl8" id="mbu-kv-Jfc"/>
@@ -59,13 +59,14 @@
                     </connections>
                 </menuItem>
             </items>
+            <accessibility description="Background Music Main Menu" identifier="MainMenu"/>
             <point key="canvasLocation" x="-184" y="-69.5"/>
         </menu>
         <customView wantsLayer="YES" id="MWB-XH-kFI">
             <rect key="frame" x="0.0" y="0.0" width="269" height="47"/>
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
             <subviews>
-                <textField identifier="AppName" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Xmd-bg-huG" customClass="BGMAVM_AppNameLabel">
+                <textField identifier="AppName" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Xmd-bg-huG" customClass="BGMAVM_AppNameLabel">
                     <rect key="frame" x="42" y="28" width="115" height="14"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <textFieldCell key="cell" controlSize="small" lineBreakMode="truncatingTail" allowsUndo="NO" sendsActionOnEndEditing="YES" alignment="left" title="App name here" usesSingleLineMode="YES" id="ZHF-ZW-Oqg">
@@ -102,7 +103,7 @@
                             </configuration>
                         </ciFilter>
                     </contentFilters>
-                    <buttonCell key="cell" type="square" title="⌃" bezelStyle="shadowlessSquare" image="747DB04F-A1B8-4533-9C4F-E9A8593F7F7F" alignment="center" lineBreakMode="truncatingTail" imageScaling="proportionallyDown" inset="2" id="IXo-C7-3uE">
+                    <buttonCell key="cell" type="square" title="⌃" bezelStyle="shadowlessSquare" image="buttonCell:IXo-C7-3uE:image" alignment="center" lineBreakMode="truncatingTail" imageScaling="proportionallyDown" inset="2" id="IXo-C7-3uE">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                         <font key="font" metaFont="system"/>
                     </buttonCell>
@@ -139,7 +140,7 @@
                 <rect key="frame" x="0.0" y="0.0" width="1002" height="335"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="r51-dd-LGP">
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="r51-dd-LGP">
                         <rect key="frame" x="71" y="125" width="240" height="22"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Background Music" id="Dw2-nu-eBQ">
@@ -148,7 +149,7 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" tag="1" translatesAutoresizingMaskIntoConstraints="NO" id="ekc-h0-I43">
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" tag="1" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ekc-h0-I43">
                         <rect key="frame" x="71" y="100" width="240" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Version 0.1.0" id="FDH-7l-wFf">
@@ -157,7 +158,7 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="L5P-Lw-aCd">
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="L5P-Lw-aCd">
                         <rect key="frame" x="413" y="298" width="270" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="left" title="Licensed under GPL v2 or any later version." id="ETh-En-bzX">
@@ -170,7 +171,7 @@
                         <rect key="frame" x="383" y="93" width="5" height="150"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     </box>
-                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" tag="2" translatesAutoresizingMaskIntoConstraints="NO" id="Vy4-dv-jQB">
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" tag="2" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Vy4-dv-jQB">
                         <rect key="frame" x="18" y="75" width="346" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Copyright © 2016, 2017 Background Music contributors" placeholderString="" id="ctF-95-uVu">
@@ -179,7 +180,7 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" tag="3" translatesAutoresizingMaskIntoConstraints="NO" id="nx6-kQ-N8Z" customClass="BGMLinkField">
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" tag="3" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="nx6-kQ-N8Z" customClass="BGMLinkField">
                         <rect key="frame" x="36" y="50" width="310" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" tag="3" title="https://github.com/kyleneideck/BackgroundMusic" placeholderString="" id="VOb-5X-o3R">
@@ -209,7 +210,7 @@
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <clipView key="contentView" ambiguous="YES" id="Cdb-RA-YK0">
                             <rect key="frame" x="1" y="1" width="565" height="243"/>
-                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                            <autoresizingMask key="autoresizingMask"/>
                             <subviews>
                                 <textView ambiguous="YES" editable="NO" importsGraphics="NO" richText="NO" id="LSG-PF-cl8">
                                     <rect key="frame" x="-4" y="0.0" width="572" height="243"/>
@@ -230,11 +231,11 @@
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
                         <scroller key="verticalScroller" verticalHuggingPriority="750" horizontal="NO" id="qCC-lY-zQ6">
-                            <rect key="frame" x="550" y="1" width="16" height="243"/>
+                            <rect key="frame" x="-15" y="1" width="16" height="0.0"/>
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
                     </scrollView>
-                    <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="6qu-yI-r00">
+                    <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="6qu-yI-r00">
                         <rect key="frame" x="413" y="20" width="203" height="11"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="The AirPlay Logo is a trademark of Apple Inc." id="lx7-k3-q16">
@@ -247,7 +248,7 @@
             </view>
             <point key="canvasLocation" x="-200" y="232.5"/>
         </window>
-        <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" setsMaxLayoutWidthAtFirstLayout="YES" id="IoN-sN-cCx">
+        <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" setsMaxLayoutWidthAtFirstLayout="YES" allowsCharacterPickerTouchBarItem="YES" id="IoN-sN-cCx">
             <rect key="frame" x="0.0" y="0.0" width="471" height="180"/>
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
             <textFieldCell key="cell" controlSize="mini" sendsActionOnEndEditing="YES" drawsBackground="YES" id="Ay8-8n-FHi">
@@ -261,7 +262,8 @@
         </textField>
     </objects>
     <resources>
-        <image name="747DB04F-A1B8-4533-9C4F-E9A8593F7F7F" width="1" height="1">
+        <image name="FermataIcon" width="284" height="284"/>
+        <image name="buttonCell:IXo-C7-3uE:image" width="1" height="1">
             <mutableData key="keyedArchiveRepresentation">
 YnBsaXN0MDDUAQIDBAUGPT5YJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoK4HCBMU
 GR4fIyQrLjE3OlUkbnVsbNUJCgsMDQ4PEBESVk5TU2l6ZVYkY2xhc3NcTlNJbWFnZUZsYWdzVk5TUmVw
@@ -312,6 +314,5 @@ ALAAswC1ALcAuQC7AMAA1wDZANsJiwmQCZsJpAm3CbsJxgnPCdQJ3AnfCeQJ8wn3Cf4KBgoTChgKGgoc
 CiEKKQosCjEKOQo8Ck4KUQpWAAAAAAAAAgEAAAAAAAAAQQAAAAAAAAAAAAAAAAAAClg
 </mutableData>
         </image>
-        <image name="FermataIcon" width="284" height="284"/>
     </resources>
 </document>

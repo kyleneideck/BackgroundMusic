@@ -152,8 +152,8 @@ for Xcode package, which you can find in the [Apple developer downloads](https:/
 BGMApp is a fairly standard Cocoa status-bar app, for the most part. The UI is simple and mostly built in Interface
 Builder.
 
-`awakeFromNib` in [AppDelegate.mm](/BGMApp/BGMApp/AppDelegate.mm) is (more or less) the entry point/main function.
-`applicationDidFinishLaunching` gets called next and finishes setting things up.
+`awakeFromNib` in [BGMAppDelegate.mm](/BGMApp/BGMApp/BGMAppDelegate.mm) is (more or less) the entry point/main
+function. `applicationDidFinishLaunching` gets called next and finishes setting things up.
 
 At launch, BGMApp sets BGMDevice as the system's default device and starts playing the audio from BGMDevice through the
 actual output device. Usually that's the device that BGMDevice replaced when we set it as the default device. When

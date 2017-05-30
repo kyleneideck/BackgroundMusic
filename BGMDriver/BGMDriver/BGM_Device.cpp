@@ -35,6 +35,7 @@
 // Local Includes
 #include "BGM_PlugIn.h"
 #include "BGM_XPCHelper.h"
+#include "BGM_Utils.h"
 
 // PublicUtility Includes
 #include "CADispatchQueue.h"
@@ -57,7 +58,7 @@
 #pragma mark Construction/Destruction
 
 pthread_once_t				BGM_Device::sStaticInitializer = PTHREAD_ONCE_INIT;
-BGM_Device*					BGM_Device::sInstance = NULL;
+BGM_Device*					BGM_Device::sInstance = nullptr;
 
 BGM_Device&	BGM_Device::GetInstance()
 {
@@ -76,20 +77,20 @@ void	BGM_Device::StaticInitializer()
     {
         DebugMsg("BGM_Device::StaticInitializer: failed to create the device");
         delete sInstance;
-        sInstance = NULL;
+        sInstance = nullptr;
     }
 }
 
 BGM_Device::BGM_Device()
 :
-	BGM_Object(kObjectID_Device, kAudioDeviceClassID, kAudioObjectClassID, kAudioObjectPlugInObject),
+	BGM_AbstractDevice(kObjectID_Device, kAudioObjectPlugInObject),
 	mStateMutex("Device State"),
 	mIOMutex("Device IO"),
 	mSampleRateShadow(0),
-    mWrappedAudioEngine(NULL),
+    mWrappedAudioEngine(nullptr),
     mClients(&mTaskQueue),
-	mInputStreamIsActive(true),
-    mOutputStreamIsActive(true),
+    mInputStream(kObjectID_Stream_Input, kObjectID_Device, false, kSampleRateDefault),
+    mOutputStream(kObjectID_Stream_Output, kObjectID_Device, false, kSampleRateDefault),
     mDeviceAudibleState(kBGMDeviceIsSilent),
     mAudibleStateSampleTimes({0, 0, 0, 0}),
 	//mInputMasterVolumeControlRawValueShadow(kDefaultMinRawVolumeValue),
@@ -104,7 +105,7 @@ BGM_Device::BGM_Device()
     mVolumeCurve.AddRange(kDefaultMinRawVolumeValue, kDefaultMaxRawVolumeValue, kDefaultMinDbVolumeValue, kDefaultMaxDbVolumeValue);
     
     // Initialises the loopback clock with the default sample rate and, if there is one, sets the wrapped device to the same sample rate
-    _HW_SetSampleRate(kSampleRateDefault);
+    SetSampleRate(kSampleRateDefault);
 }
 
 BGM_Device::~BGM_Device()
@@ -117,7 +118,7 @@ void	BGM_Device::Activate()
 	//_HW_Open();
 	
 	//	Call the super-class, which just marks the object as active
-	BGM_Object::Activate();
+	BGM_AbstractDevice::Activate();
 }
 
 void	BGM_Device::Deactivate()
@@ -129,7 +130,7 @@ void	BGM_Device::Deactivate()
 	CAMutex::Locker theIOLocker(mIOMutex);
 	
 	//	mark the object inactive by calling the super-class
-	BGM_Object::Deactivate();
+	BGM_AbstractDevice::Deactivate();
 	
 	//	close the connection to the driver
 	//_HW_Close();
@@ -161,9 +162,9 @@ bool	BGM_Device::HasProperty(AudioObjectID inObjectID, pid_t inClientPID, const 
 	{
 		theAnswer = Device_HasProperty(inObjectID, inClientPID, inAddress);
 	}
-	else if((inObjectID == kObjectID_Stream_Input) || (inObjectID == kObjectID_Stream_Output))
+    else if(IsStreamID(inObjectID))
 	{
-		theAnswer = Stream_HasProperty(inObjectID, inClientPID, inAddress);
+		theAnswer = GetStreamByID(inObjectID).HasProperty(inObjectID, inClientPID, inAddress);
 	}
 	else if(/*(inObjectID == mInputMasterVolumeControlObjectID) ||*/ (inObjectID == kObjectID_Volume_Output_Master) || (inObjectID == kObjectID_Mute_Output_Master))
 	{
@@ -183,9 +184,9 @@ bool	BGM_Device::IsPropertySettable(AudioObjectID inObjectID, pid_t inClientPID,
 	{
 		theAnswer = Device_IsPropertySettable(inObjectID, inClientPID, inAddress);
 	}
-	else if((inObjectID == kObjectID_Stream_Input) || (inObjectID == kObjectID_Stream_Output))
+	else if(IsStreamID(inObjectID))
 	{
-		theAnswer = Stream_IsPropertySettable(inObjectID, inClientPID, inAddress);
+		theAnswer = GetStreamByID(inObjectID).IsPropertySettable(inObjectID, inClientPID, inAddress);
 	}
 	else if(/*(inObjectID == mInputMasterVolumeControlObjectID) ||*/ (inObjectID == kObjectID_Volume_Output_Master) || (inObjectID == kObjectID_Mute_Output_Master))
 	{
@@ -205,9 +206,9 @@ UInt32	BGM_Device::GetPropertyDataSize(AudioObjectID inObjectID, pid_t inClientP
 	{
 		theAnswer = Device_GetPropertyDataSize(inObjectID, inClientPID, inAddress, inQualifierDataSize, inQualifierData);
 	}
-	else if((inObjectID == kObjectID_Stream_Input) || (inObjectID == kObjectID_Stream_Output))
+	else if(IsStreamID(inObjectID))
 	{
-		theAnswer = Stream_GetPropertyDataSize(inObjectID, inClientPID, inAddress, inQualifierDataSize, inQualifierData);
+		theAnswer = GetStreamByID(inObjectID).GetPropertyDataSize(inObjectID, inClientPID, inAddress, inQualifierDataSize, inQualifierData);
 	}
 	else if(/*(inObjectID == mInputMasterVolumeControlObjectID) ||*/ (inObjectID == kObjectID_Volume_Output_Master) || (inObjectID == kObjectID_Mute_Output_Master))
 	{
@@ -228,9 +229,9 @@ void	BGM_Device::GetPropertyData(AudioObjectID inObjectID, pid_t inClientPID, co
 	{
 		Device_GetPropertyData(inObjectID, inClientPID, inAddress, inQualifierDataSize, inQualifierData, inDataSize, outDataSize, outData);
 	}
-	else if((inObjectID == kObjectID_Stream_Input) || (inObjectID == kObjectID_Stream_Output))
+	else if(IsStreamID(inObjectID))
 	{
-		Stream_GetPropertyData(inObjectID, inClientPID, inAddress, inQualifierDataSize, inQualifierData, inDataSize, outDataSize, outData);
+		GetStreamByID(inObjectID).GetPropertyData(inObjectID, inClientPID, inAddress, inQualifierDataSize, inQualifierData, inDataSize, outDataSize, outData);
 	}
 	else if(/*(inObjectID == mInputMasterVolumeControlObjectID) ||*/ (inObjectID == kObjectID_Volume_Output_Master) || (inObjectID == kObjectID_Mute_Output_Master))
 	{
@@ -250,9 +251,22 @@ void	BGM_Device::SetPropertyData(AudioObjectID inObjectID, pid_t inClientPID, co
 	{
 		Device_SetPropertyData(inObjectID, inClientPID, inAddress, inQualifierDataSize, inQualifierData, inDataSize, inData);
 	}
-	else if((inObjectID == kObjectID_Stream_Input) || (inObjectID == kObjectID_Stream_Output))
-	{
-		Stream_SetPropertyData(inObjectID, inClientPID, inAddress, inQualifierDataSize, inQualifierData, inDataSize, inData);
+	else if(IsStreamID(inObjectID))
+    {
+        // Forward stream properties.
+        BGM_Stream& stream = (inObjectID == kObjectID_Stream_Input) ? mInputStream : mOutputStream;
+        stream.SetPropertyData(inObjectID, inClientPID, inAddress, inQualifierDataSize, inQualifierData, inDataSize, inData);
+
+        // When one of the stream's sample rate changes, set the new sample rate for both streams
+        // and the device. The streams check the new format before this point but don't change until
+        // the device tells them to, as it has to get the host to pause IO first.
+        if(inAddress.mSelector == kAudioStreamPropertyVirtualFormat ||
+           inAddress.mSelector == kAudioStreamPropertyPhysicalFormat)
+        {
+            const AudioStreamBasicDescription* theNewFormat =
+                reinterpret_cast<const AudioStreamBasicDescription*>(inData);
+            RequestSampleRate(theNewFormat->mSampleRate);
+        }
 	}
 	else if(/*(inObjectID == mInputMasterVolumeControlObjectID) ||*/ (inObjectID == kObjectID_Volume_Output_Master) || (inObjectID == kObjectID_Mute_Output_Master))
 	{
@@ -275,20 +289,6 @@ bool	BGM_Device::Device_HasProperty(AudioObjectID inObjectID, pid_t inClientPID,
 	bool theAnswer = false;
 	switch(inAddress.mSelector)
 	{
-		case kAudioObjectPropertyName:
-		case kAudioObjectPropertyManufacturer:
-		case kAudioDevicePropertyDeviceUID:
-		case kAudioDevicePropertyModelUID:
-		case kAudioDevicePropertyTransportType:
-		case kAudioDevicePropertyRelatedDevices:
-		case kAudioDevicePropertyClockDomain:
-		case kAudioDevicePropertyDeviceIsAlive:
-		case kAudioDevicePropertyDeviceIsRunning:
-		case kAudioObjectPropertyControlList:
-		case kAudioDevicePropertyNominalSampleRate:
-		case kAudioDevicePropertyAvailableNominalSampleRates:
-		case kAudioDevicePropertyIsHidden:
-		case kAudioDevicePropertyZeroTimeStampPeriod:
         case kAudioDevicePropertyStreams:
         case kAudioDevicePropertyIcon:
         case kAudioObjectPropertyCustomPropertyInfoList:
@@ -297,6 +297,7 @@ bool	BGM_Device::Device_HasProperty(AudioObjectID inObjectID, pid_t inClientPID,
         case kAudioDeviceCustomPropertyMusicPlayerBundleID:
         case kAudioDeviceCustomPropertyDeviceIsRunningSomewhereOtherThanBGMApp:
         case kAudioDeviceCustomPropertyAppVolumes:
+        case kAudioDeviceCustomPropertyEnabledOutputControls:
 			theAnswer = true;
 			break;
 			
@@ -310,7 +311,7 @@ bool	BGM_Device::Device_HasProperty(AudioObjectID inObjectID, pid_t inClientPID,
 			break;
 			
 		default:
-			theAnswer = BGM_Object::HasProperty(inObjectID, inClientPID, inAddress);
+			theAnswer = BGM_AbstractDevice::HasProperty(inObjectID, inClientPID, inAddress);
 			break;
 	};
 	return theAnswer;
@@ -324,27 +325,14 @@ bool	BGM_Device::Device_IsPropertySettable(AudioObjectID inObjectID, pid_t inCli
 	
 	bool theAnswer = false;
 	switch(inAddress.mSelector)
-	{
-		case kAudioObjectPropertyName:
-		case kAudioObjectPropertyManufacturer:
-		case kAudioDevicePropertyDeviceUID:
-		case kAudioDevicePropertyModelUID:
-		case kAudioDevicePropertyTransportType:
-		case kAudioDevicePropertyRelatedDevices:
-		case kAudioDevicePropertyClockDomain:
-		case kAudioDevicePropertyDeviceIsAlive:
-		case kAudioDevicePropertyDeviceIsRunning:
+    {
+		case kAudioDevicePropertyStreams:
+		case kAudioDevicePropertyLatency:
+		case kAudioDevicePropertySafetyOffset:
+        case kAudioDevicePropertyPreferredChannelsForStereo:
+        case kAudioDevicePropertyPreferredChannelLayout:
 		case kAudioDevicePropertyDeviceCanBeDefaultDevice:
 		case kAudioDevicePropertyDeviceCanBeDefaultSystemDevice:
-		case kAudioDevicePropertyLatency:
-		case kAudioDevicePropertyStreams:
-		case kAudioObjectPropertyControlList:
-		case kAudioDevicePropertySafetyOffset:
-		case kAudioDevicePropertyAvailableNominalSampleRates:
-		case kAudioDevicePropertyIsHidden:
-		case kAudioDevicePropertyPreferredChannelsForStereo:
-		case kAudioDevicePropertyPreferredChannelLayout:
-		case kAudioDevicePropertyZeroTimeStampPeriod:
         case kAudioDevicePropertyIcon:
         case kAudioObjectPropertyCustomPropertyInfoList:
         case kAudioDeviceCustomPropertyDeviceAudibleState:
@@ -356,11 +344,12 @@ bool	BGM_Device::Device_IsPropertySettable(AudioObjectID inObjectID, pid_t inCli
         case kAudioDeviceCustomPropertyMusicPlayerProcessID:
         case kAudioDeviceCustomPropertyMusicPlayerBundleID:
         case kAudioDeviceCustomPropertyAppVolumes:
+        case kAudioDeviceCustomPropertyEnabledOutputControls:
 			theAnswer = true;
 			break;
 		
 		default:
-			theAnswer = BGM_Object::IsPropertySettable(inObjectID, inClientPID, inAddress);
+			theAnswer = BGM_AbstractDevice::IsPropertySettable(inObjectID, inClientPID, inAddress);
 			break;
 	};
 	return theAnswer;
@@ -375,14 +364,6 @@ UInt32	BGM_Device::Device_GetPropertyDataSize(AudioObjectID inObjectID, pid_t in
 	UInt32 theAnswer = 0;
 	switch(inAddress.mSelector)
 	{
-		case kAudioObjectPropertyName:
-			theAnswer = sizeof(CFStringRef);
-			break;
-			
-		case kAudioObjectPropertyManufacturer:
-			theAnswer = sizeof(CFStringRef);
-			break;
-			
 		case kAudioObjectPropertyOwnedObjects:
 			switch(inAddress.mScope)
 			{
@@ -400,47 +381,7 @@ UInt32	BGM_Device::Device_GetPropertyDataSize(AudioObjectID inObjectID, pid_t in
 			};
 			break;
 
-		case kAudioDevicePropertyDeviceUID:
-			theAnswer = sizeof(CFStringRef);
-			break;
-
-		case kAudioDevicePropertyModelUID:
-			theAnswer = sizeof(CFStringRef);
-			break;
-
-		case kAudioDevicePropertyTransportType:
-			theAnswer = sizeof(UInt32);
-			break;
-
-		case kAudioDevicePropertyRelatedDevices:
-			theAnswer = sizeof(AudioObjectID);
-			break;
-
-		case kAudioDevicePropertyClockDomain:
-			theAnswer = sizeof(UInt32);
-			break;
-
-		case kAudioDevicePropertyDeviceIsAlive:
-			theAnswer = sizeof(AudioClassID);
-			break;
-
-		case kAudioDevicePropertyDeviceIsRunning:
-			theAnswer = sizeof(UInt32);
-			break;
-
-		case kAudioDevicePropertyDeviceCanBeDefaultDevice:
-			theAnswer = sizeof(UInt32);
-			break;
-
-		case kAudioDevicePropertyDeviceCanBeDefaultSystemDevice:
-			theAnswer = sizeof(UInt32);
-			break;
-
-		case kAudioDevicePropertyLatency:
-			theAnswer = sizeof(UInt32);
-			break;
-
-		case kAudioDevicePropertyStreams:
+        case kAudioDevicePropertyStreams:
 			switch(inAddress.mScope)
 			{
 				case kAudioObjectPropertyScopeGlobal:
@@ -457,24 +398,13 @@ UInt32	BGM_Device::Device_GetPropertyDataSize(AudioObjectID inObjectID, pid_t in
 			};
 			break;
 
-		case kAudioObjectPropertyControlList:
-			theAnswer = kNumberOfControls * sizeof(AudioObjectID);
-			break;
-
-		case kAudioDevicePropertySafetyOffset:
-			theAnswer = sizeof(UInt32);
-			break;
-
-		case kAudioDevicePropertyNominalSampleRate:
-			theAnswer = sizeof(Float64);
-			break;
+        case kAudioObjectPropertyControlList:
+            theAnswer = (mOutputVolumeControlEnabled ? 1 : 0) * sizeof(AudioObjectID);
+            theAnswer += (mOutputMuteControlEnabled ? 1 : 0) * sizeof(AudioObjectID);
+            break;
 
 		case kAudioDevicePropertyAvailableNominalSampleRates:
 			theAnswer = 1 * sizeof(AudioValueRange);
-			break;
-		
-		case kAudioDevicePropertyIsHidden:
-			theAnswer = sizeof(UInt32);
 			break;
 
 		case kAudioDevicePropertyPreferredChannelsForStereo:
@@ -485,16 +415,12 @@ UInt32	BGM_Device::Device_GetPropertyDataSize(AudioObjectID inObjectID, pid_t in
 			theAnswer = offsetof(AudioChannelLayout, mChannelDescriptions) + (2 * sizeof(AudioChannelDescription));
 			break;
 
-		case kAudioDevicePropertyZeroTimeStampPeriod:
-			theAnswer = sizeof(UInt32);
-            break;
-            
         case kAudioDevicePropertyIcon:
             theAnswer = sizeof(CFURLRef);
             break;
             
         case kAudioObjectPropertyCustomPropertyInfoList:
-            theAnswer = sizeof(AudioServerPlugInCustomPropertyInfo) * 5;
+            theAnswer = sizeof(AudioServerPlugInCustomPropertyInfo) * 6;
             break;
             
         case kAudioDeviceCustomPropertyDeviceAudibleState:
@@ -516,9 +442,13 @@ UInt32	BGM_Device::Device_GetPropertyDataSize(AudioObjectID inObjectID, pid_t in
         case kAudioDeviceCustomPropertyAppVolumes:
             theAnswer = sizeof(CFPropertyListRef);
             break;
+
+        case kAudioDeviceCustomPropertyEnabledOutputControls:
+            theAnswer = sizeof(CFArrayRef);
+            break;
 		
 		default:
-			theAnswer = BGM_Object::GetPropertyDataSize(inObjectID, inClientPID, inAddress, inQualifierDataSize, inQualifierData);
+			theAnswer = BGM_AbstractDevice::GetPropertyDataSize(inObjectID, inClientPID, inAddress, inQualifierDataSize, inQualifierData);
 			break;
 	};
 	return theAnswer;
@@ -539,7 +469,7 @@ void	BGM_Device::Device_GetPropertyData(AudioObjectID inObjectID, pid_t inClient
 			//	This is the human readable name of the device. Note that in this case we return a
 			//	value that is a key into the localizable strings in this bundle. This allows us to
 			//	return a localized name for the device.
-			ThrowIf(inDataSize < sizeof(AudioObjectID), CAException(kAudioHardwareBadPropertySizeError), "BGM_Device::Device_GetPropertyData: not enough space for the return value of kAudioObjectPropertyManufacturer for the device");
+			ThrowIf(inDataSize < sizeof(AudioObjectID), CAException(kAudioHardwareBadPropertySizeError), "BGM_Device::Device_GetPropertyData: not enough space for the return value of kAudioObjectPropertyName for the device");
 			*reinterpret_cast<CFStringRef*>(outData) = CFSTR(kDeviceName);
 			outDataSize = sizeof(CFStringRef);
 			break;
@@ -659,99 +589,12 @@ void	BGM_Device::Device_GetPropertyData(AudioObjectID inObjectID, pid_t inClient
 			*reinterpret_cast<CFStringRef*>(outData) = CFSTR(kBGMDeviceModelUID);
 			outDataSize = sizeof(CFStringRef);
 			break;
-
-		case kAudioDevicePropertyTransportType:
-			//	This value represents how the device is attached to the system. This can be
-			//	any 32 bit integer, but common values for this property are defined in
-			//	<CoreAudio/AudioHardwareBase.h>
-			ThrowIf(inDataSize < sizeof(UInt32), CAException(kAudioHardwareBadPropertySizeError), "BGM_Device::Device_GetPropertyData: not enough space for the return value of kAudioDevicePropertyTransportType for the device");
-			*reinterpret_cast<UInt32*>(outData) = kAudioDeviceTransportTypeVirtual;
-			outDataSize = sizeof(UInt32);
-			break;
-
-		case kAudioDevicePropertyRelatedDevices:
-			//	The related devices property identifies device objects that are very closely
-			//	related. Generally, this is for relating devices that are packaged together
-			//	in the hardware such as when the input side and the output side of a piece
-			//	of hardware can be clocked separately and therefore need to be represented
-			//	as separate AudioDevice objects. In such case, both devices would report
-			//	that they are related to each other. Note that at minimum, a device is
-			//	related to itself, so this list will always be at least one item long.
-
-			//	Calculate the number of items that have been requested. Note that this
-			//	number is allowed to be smaller than the actual size of the list. In such
-			//	case, only that number of items will be returned
-			theNumberItemsToFetch = inDataSize / sizeof(AudioObjectID);
-			
-			//	we only have the one device...
-			if(theNumberItemsToFetch > 1)
-			{
-				theNumberItemsToFetch = 1;
-			}
-			
-			//	Write the devices' object IDs into the return value
-			if(theNumberItemsToFetch > 0)
-			{
-				reinterpret_cast<AudioObjectID*>(outData)[0] = GetObjectID();
-			}
-			
-			//	report how much we wrote
-			outDataSize = theNumberItemsToFetch * sizeof(AudioObjectID);
-			break;
-
-		case kAudioDevicePropertyClockDomain:
-			//	This property allows the device to declare what other devices it is
-			//	synchronized with in hardware. The way it works is that if two devices have
-			//	the same value for this property and the value is not zero, then the two
-			//	devices are synchronized in hardware. Note that a device that either can't
-			//	be synchronized with others or doesn't know should return 0 for this
-			//	property.
-			ThrowIf(inDataSize < sizeof(UInt32), CAException(kAudioHardwareBadPropertySizeError), "BGM_Device::Device_GetPropertyData: not enough space for the return value of kAudioDevicePropertyClockDomain for the device");
-            *reinterpret_cast<UInt32*>(outData) = 0;
-			outDataSize = sizeof(UInt32);
-			break;
-
-		case kAudioDevicePropertyDeviceIsAlive:
-			//	This property returns whether or not the device is alive. Note that it is
-			//	note uncommon for a device to be dead but still momentarily availble in the
-			//	device list. In the case of this device, it will always be alive.
-			ThrowIf(inDataSize < sizeof(UInt32), CAException(kAudioHardwareBadPropertySizeError), "BGM_Device::Device_GetPropertyData: not enough space for the return value of kAudioDevicePropertyDeviceIsAlive for the device");
-			*reinterpret_cast<UInt32*>(outData) = 1;
-			outDataSize = sizeof(UInt32);
-			break;
             
 		case kAudioDevicePropertyDeviceIsRunning:
 			//	This property returns whether or not IO is running for the device.
             ThrowIf(inDataSize < sizeof(UInt32), CAException(kAudioHardwareBadPropertySizeError), "BGM_Device::Device_GetPropertyData: not enough space for the return value of kAudioDevicePropertyDeviceIsRunning for the device");
-            *reinterpret_cast<UInt32*>(outData) = mClients.ClientsRunningIO();
+            *reinterpret_cast<UInt32*>(outData) = mClients.ClientsRunningIO() ? 1 : 0;
             outDataSize = sizeof(UInt32);
-			break;
-
-		case kAudioDevicePropertyDeviceCanBeDefaultDevice:
-			//	This property returns whether or not the device wants to be able to be the
-			//	default device for content. This is the device that iTunes and QuickTime
-			//	will use to play their content on and FaceTime will use as it's microphone.
-			//	Nearly all devices should allow for this.
-			ThrowIf(inDataSize < sizeof(UInt32), CAException(kAudioHardwareBadPropertySizeError), "BGM_Device::Device_GetPropertyData: not enough space for the return value of kAudioDevicePropertyDeviceCanBeDefaultDevice for the device");
-			*reinterpret_cast<UInt32*>(outData) = 1;
-			outDataSize = sizeof(UInt32);
-			break;
-
-		case kAudioDevicePropertyDeviceCanBeDefaultSystemDevice:
-			//	This property returns whether or not the device wants to be the system
-			//	default device. This is the device that is used to play interface sounds and
-			//	other incidental or UI-related sounds on. Most devices should allow this
-			//	although devices with lots of latency may not want to.
-			ThrowIf(inDataSize < sizeof(UInt32), CAException(kAudioHardwareBadPropertySizeError), "BGM_Device::Device_GetPropertyData: not enough space for the return value of kAudioDevicePropertyDeviceCanBeDefaultSystemDevice for the device");
-			*reinterpret_cast<UInt32*>(outData) = 1;
-			outDataSize = sizeof(UInt32);
-			break;
-
-		case kAudioDevicePropertyLatency:
-			//	This property returns the presentation latency of the device.
-			ThrowIf(inDataSize < sizeof(UInt32), CAException(kAudioHardwareBadPropertySizeError), "BGM_Device::Device_GetPropertyData: not enough space for the return value of kAudioDevicePropertyLatency for the device");
-			*reinterpret_cast<UInt32*>(outData) = 0;
-			outDataSize = sizeof(UInt32);
 			break;
 
 		case kAudioDevicePropertyStreams:
@@ -815,54 +658,58 @@ void	BGM_Device::Device_GetPropertyData(AudioObjectID inObjectID, pid_t inClient
 			break;
 
 		case kAudioObjectPropertyControlList:
-			//	Calculate the number of items that have been requested. Note that this
-			//	number is allowed to be smaller than the actual size of the list. In such
-			//	case, only that number of items will be returned
-			theNumberItemsToFetch = inDataSize / sizeof(AudioObjectID);
-			if(theNumberItemsToFetch > kNumberOfControls)
-			{
-				theNumberItemsToFetch = kNumberOfControls;
-			}
-			
-			//	fill out the list with as many objects as requested, which is everything
-            /*
-			if(theNumberItemsToFetch > 0)
-			{
-				reinterpret_cast<AudioObjectID*>(outData)[0] = mInputMasterVolumeControlObjectID;
-			}
-             */
-            if(theNumberItemsToFetch > 0)
             {
-                reinterpret_cast<AudioObjectID*>(outData)[0] = kObjectID_Volume_Output_Master;
+                //	Calculate the number of items that have been requested. Note that this
+                //	number is allowed to be smaller than the actual size of the list, in which
+                //	case only that many items will be returned.
+                theNumberItemsToFetch = inDataSize / sizeof(AudioObjectID);
+                if(theNumberItemsToFetch > 2)
+                {
+                    theNumberItemsToFetch = 2;
+                }
+
+                UInt32 theNumberOfItemsFetched = 0;
+
+                CAMutex::Locker theStateLocker(mStateMutex);
+                
+                //	fill out the list with as many objects as requested
+                if(theNumberItemsToFetch > 0)
+                {
+                    if(mOutputVolumeControlEnabled)
+                    {
+                        reinterpret_cast<AudioObjectID*>(outData)[0] = kObjectID_Volume_Output_Master;
+                        theNumberOfItemsFetched++;
+                    }
+                    else if (mOutputMuteControlEnabled)
+                    {
+                        reinterpret_cast<AudioObjectID*>(outData)[0] = kObjectID_Mute_Output_Master;
+                        theNumberOfItemsFetched++;
+                    }
+                }
+
+                if(theNumberItemsToFetch > 1 && mOutputVolumeControlEnabled && mOutputMuteControlEnabled)
+                {
+                    reinterpret_cast<AudioObjectID*>(outData)[1] = kObjectID_Mute_Output_Master;
+                    theNumberOfItemsFetched++;
+                }
+                
+                //	report how much we wrote
+                outDataSize = theNumberOfItemsFetched * sizeof(AudioObjectID);
             }
-            if(theNumberItemsToFetch > 1)
-            {
-                reinterpret_cast<AudioObjectID*>(outData)[1] = kObjectID_Mute_Output_Master;
-            }
-			
-			//	report how much we wrote
-			outDataSize = theNumberItemsToFetch * sizeof(AudioObjectID);
 			break;
 
-		case kAudioDevicePropertySafetyOffset:
-			//	This property returns the how close to now the HAL can read and write.
-			ThrowIf(inDataSize < sizeof(UInt32), CAException(kAudioHardwareBadPropertySizeError), "BGM_Device::Device_GetPropertyData: not enough space for the return value of kAudioDevicePropertySafetyOffset for the device");
-			*reinterpret_cast<UInt32*>(outData) = 0;
-			outDataSize = sizeof(UInt32);
-			break;
+        // TODO: Should we return the real kAudioDevicePropertyLatency and/or
+        //       kAudioDevicePropertySafetyOffset for the real/wrapped output device?
+        //       If so, should we also add on the extra latency added by Background Music? 
 
 		case kAudioDevicePropertyNominalSampleRate:
-			//	This property returns the nominal sample rate of the device. Note that we
-			//	only need to take the state lock to get this value.
-			{
-				ThrowIf(inDataSize < sizeof(Float64), CAException(kAudioHardwareBadPropertySizeError), "BGM_Device::Device_GetPropertyData: not enough space for the return value of kAudioDevicePropertyNominalSampleRate for the device");
-			
-				//	The sample rate is protected by the state lock
-				CAMutex::Locker theStateLocker(mStateMutex);
+			//	This property returns the nominal sample rate of the device.
+            ThrowIf(inDataSize < sizeof(Float64),
+                    CAException(kAudioHardwareBadPropertySizeError),
+                    "BGM_Device::Device_GetPropertyData: not enough space for the return value of kAudioDevicePropertyNominalSampleRate for the device");
 
-				*reinterpret_cast<Float64*>(outData) = _HW_GetSampleRate();
-				outDataSize = sizeof(Float64);
-			}
+            *reinterpret_cast<Float64*>(outData) = GetSampleRate();
+            outDataSize = sizeof(Float64);
 			break;
 
 		case kAudioDevicePropertyAvailableNominalSampleRates:
@@ -900,16 +747,9 @@ void	BGM_Device::Device_GetPropertyData(AudioObjectID inObjectID, pid_t inClient
 			//	report how much we wrote
 			outDataSize = theNumberItemsToFetch * sizeof(AudioValueRange);
 			break;
-		
-		case kAudioDevicePropertyIsHidden:
-			//	This returns whether or not the device is visible to clients.
-			ThrowIf(inDataSize < sizeof(UInt32), CAException(kAudioHardwareBadPropertySizeError), "BGM_Device::Device_GetPropertyData: not enough space for the return value of kAudioDevicePropertyIsHidden for the device");
-			*reinterpret_cast<UInt32*>(outData) = 0;
-			outDataSize = sizeof(UInt32);
-			break;
 
 		case kAudioDevicePropertyPreferredChannelsForStereo:
-			//	This property returns which two channesl to use as left/right for stereo
+			//	This property returns which two channels to use as left/right for stereo
 			//	data by default. Note that the channel numbers are 1-based.
 			ThrowIf(inDataSize < (2 * sizeof(UInt32)), CAException(kAudioHardwareBadPropertySizeError), "BGM_Device::Device_GetPropertyData: not enough space for the return value of kAudioDevicePropertyPreferredChannelsForStereo for the device");
 			((UInt32*)outData)[0] = 1;
@@ -966,9 +806,9 @@ void	BGM_Device::Device_GetPropertyData(AudioObjectID inObjectID, pid_t inClient
             theNumberItemsToFetch = inDataSize / sizeof(AudioServerPlugInCustomPropertyInfo);
             
             //	clamp it to the number of items we have
-            if(theNumberItemsToFetch > 5)
+            if(theNumberItemsToFetch > 6)
             {
-                theNumberItemsToFetch = 5;
+                theNumberItemsToFetch = 6;
             }
             
             if(theNumberItemsToFetch > 0)
@@ -1001,6 +841,13 @@ void	BGM_Device::Device_GetPropertyData(AudioObjectID inObjectID, pid_t inClient
                 ((AudioServerPlugInCustomPropertyInfo*)outData)[4].mPropertyDataType = kAudioServerPlugInCustomPropertyDataTypeCFPropertyList;
                 ((AudioServerPlugInCustomPropertyInfo*)outData)[4].mQualifierDataType = kAudioServerPlugInCustomPropertyDataTypeNone;
             }
+            if(theNumberItemsToFetch > 5)
+            {
+                ((AudioServerPlugInCustomPropertyInfo*)outData)[5].mSelector = kAudioDeviceCustomPropertyEnabledOutputControls;
+                ((AudioServerPlugInCustomPropertyInfo*)outData)[5].mPropertyDataType = kAudioServerPlugInCustomPropertyDataTypeCFPropertyList;
+                ((AudioServerPlugInCustomPropertyInfo*)outData)[5].mQualifierDataType = kAudioServerPlugInCustomPropertyDataTypeNone;
+            }
+
             outDataSize = theNumberItemsToFetch * sizeof(AudioServerPlugInCustomPropertyInfo);
             break;
             
@@ -1050,8 +897,24 @@ void	BGM_Device::Device_GetPropertyData(AudioObjectID inObjectID, pid_t inClient
             }
             break;
 
+        case kAudioDeviceCustomPropertyEnabledOutputControls:
+            {
+                ThrowIf(inDataSize < sizeof(CFArrayRef), CAException(kAudioHardwareBadPropertySizeError), "BGM_Device::Device_GetPropertyData: not enough space for the return value of kAudioDeviceCustomPropertyEnabledOutputControls for the device");
+                CACFArray theEnabledControls(2, true);
+
+				{
+					CAMutex::Locker theStateLocker(mStateMutex);
+					theEnabledControls.AppendCFType(mOutputVolumeControlEnabled ? kCFBooleanTrue : kCFBooleanFalse);
+					theEnabledControls.AppendCFType(mOutputMuteControlEnabled ? kCFBooleanTrue : kCFBooleanFalse);
+				}
+
+                *reinterpret_cast<CFArrayRef*>(outData) = theEnabledControls.CopyCFArray();
+                outDataSize = sizeof(CFArrayRef);
+            }
+            break;
+
 		default:
-			BGM_Object::GetPropertyData(inObjectID, inClientPID, inAddress, inQualifierDataSize, inQualifierData, inDataSize, outDataSize, outData);
+			BGM_AbstractDevice::GetPropertyData(inObjectID, inClientPID, inAddress, inQualifierDataSize, inQualifierData, inDataSize, outDataSize, outData);
 			break;
 	};
 }
@@ -1061,26 +924,10 @@ void	BGM_Device::Device_SetPropertyData(AudioObjectID inObjectID, pid_t inClient
 	switch(inAddress.mSelector)
 	{
         case kAudioDevicePropertyNominalSampleRate:
-            {
-                ThrowIf(inDataSize < sizeof(Float64), CAException(kAudioHardwareBadPropertySizeError), "BGM_Device::Device_SetPropertyData: wrong size for the data for kAudioDevicePropertyNominalSampleRate");
-                
-                // BGMDevice's input and output sample rates are the same, so we just pass the request to Stream_SetPropertyData for one of them
-                // TODO: Set the property for both streams just in case that assumption changes? (As unlikely as that is.)
-                
-                Float64 theNewSampleRate = *reinterpret_cast<const Float64*>(inData);
-                
-                // Get the stream description so we can just update the sample rate
-                AudioObjectPropertyAddress theStreamPropertyAddress = { kAudioStreamPropertyVirtualFormat, inAddress.mScope, inAddress.mElement };
-                UInt32 theStreamFormatDataSize;
-                AudioStreamBasicDescription theStreamFormat;
-                Stream_GetPropertyData(kObjectID_Stream_Input, inClientPID, theStreamPropertyAddress, 0, NULL, sizeof(AudioStreamBasicDescription), theStreamFormatDataSize, &theStreamFormat);
-                
-                ThrowIf(theStreamFormatDataSize < sizeof(AudioStreamBasicDescription), CAException(kAudioHardwareUnspecifiedError), "BGM_Device::Device_SetPropertyData: too little data returned by Stream_GetPropertyData for kAudioStreamPropertyVirtualFormat");
-                
-                theStreamFormat.mSampleRate = theNewSampleRate;
-                
-                Stream_SetPropertyData(kObjectID_Stream_Input, inClientPID, theStreamPropertyAddress, 0, NULL, theStreamFormatDataSize, &theStreamFormat);
-            }
+            ThrowIf(inDataSize < sizeof(Float64),
+                    CAException(kAudioHardwareBadPropertySizeError),
+                    "BGM_Device::Device_SetPropertyData: wrong size for the data for kAudioDevicePropertyNominalSampleRate");
+            RequestSampleRate(*reinterpret_cast<const Float64*>(inData));
             break;
             
         case kAudioDeviceCustomPropertyMusicPlayerProcessID:
@@ -1154,19 +1001,20 @@ void	BGM_Device::Device_SetPropertyData(AudioObjectID inObjectID, pid_t inClient
             
         case kAudioDeviceCustomPropertyAppVolumes:
             {
-                CAMutex::Locker theStateLocker(mStateMutex);
-                
                 ThrowIf(inDataSize < sizeof(CFArrayRef), CAException(kAudioHardwareBadPropertySizeError), "BGM_Device::Device_SetPropertyData: wrong size for the data for kAudioDeviceCustomPropertyAppVolumes");
                 
                 CFArrayRef arrayRef = *reinterpret_cast<const CFArrayRef*>(inData);
-                
+
+                ThrowIfNULL(arrayRef, CAException(kAudioHardwareIllegalOperationError), "BGM_Device::Device_SetPropertyData: kAudioDeviceCustomPropertyAppVolumes cannot be set to NULL");
                 ThrowIf(CFGetTypeID(arrayRef) != CFArrayGetTypeID(), CAException(kAudioHardwareIllegalOperationError), "BGM_Device::Device_SetPropertyData: CFType given for kAudioDeviceCustomPropertyAppVolumes was not a CFArray");
                 
                 CACFArray array(arrayRef, false);
 
                 bool propertyWasChanged = false;
-                
-                try
+
+				CAMutex::Locker theStateLocker(mStateMutex);
+
+				try
                 {
                     propertyWasChanged = mClients.SetClientsRelativeVolumes(array);
                 }
@@ -1185,342 +1033,56 @@ void	BGM_Device::Device_SetPropertyData(AudioObjectID inObjectID, pid_t inClient
                 }
             }
             break;
-            
+
+        case kAudioDeviceCustomPropertyEnabledOutputControls:
+            {
+                ThrowIf(inDataSize < sizeof(CFArrayRef),
+                        CAException(kAudioHardwareBadPropertySizeError),
+                        "BGM_Device::Device_SetPropertyData: wrong size for the data for "
+                        "kAudioDeviceCustomPropertyEnabledOutputControls");
+
+                CFArrayRef theEnabledControlsRef = *reinterpret_cast<const CFArrayRef*>(inData);
+
+                ThrowIfNULL(theEnabledControlsRef,
+                            CAException(kAudioHardwareIllegalOperationError),
+                            "BGM_Device::Device_SetPropertyData: null reference given for "
+                            "kAudioDeviceCustomPropertyEnabledOutputControls");
+                ThrowIf(CFGetTypeID(theEnabledControlsRef) != CFArrayGetTypeID(),
+                        CAException(kAudioHardwareIllegalOperationError),
+                        "BGM_Device::Device_SetPropertyData: CFType given for "
+                        "kAudioDeviceCustomPropertyEnabledOutputControls was not a CFArray");
+
+                CACFArray theEnabledControls(theEnabledControlsRef, true);
+
+                ThrowIf(theEnabledControls.GetNumberItems() != 2,
+                        CAException(kAudioHardwareIllegalOperationError),
+                        "BGM_Device::Device_SetPropertyData: Expected the CFArray given for "
+                        "kAudioDeviceCustomPropertyEnabledOutputControls to have exactly 2 elements");
+
+                bool theVolumeControlEnabled;
+                bool didGetBool = theEnabledControls.GetBool(kBGMEnabledOutputControlsIndex_Volume,
+															 theVolumeControlEnabled);
+                ThrowIf(!didGetBool,
+                        CAException(kAudioHardwareIllegalOperationError),
+                        "BGM_Device::Device_SetPropertyData: Expected CFBoolean for volume elem of "
+                        "kAudioDeviceCustomPropertyEnabledOutputControls");
+
+                bool theMuteControlEnabled;
+                didGetBool = theEnabledControls.GetBool(kBGMEnabledOutputControlsIndex_Mute,
+														theMuteControlEnabled);
+                ThrowIf(!didGetBool,
+                        CAException(kAudioHardwareIllegalOperationError),
+                        "BGM_Device::Device_SetPropertyData: Expected CFBoolean for mute elem of "
+                        "kAudioDeviceCustomPropertyEnabledOutputControls");
+
+                RequestEnabledControls(theVolumeControlEnabled, theMuteControlEnabled);
+            }
+            break;
+
 		default:
-			BGM_Object::SetPropertyData(inObjectID, inClientPID, inAddress, inQualifierDataSize, inQualifierData, inDataSize, inData);
+			BGM_AbstractDevice::SetPropertyData(inObjectID, inClientPID, inAddress, inQualifierDataSize, inQualifierData, inDataSize, inData);
 			break;
     };
-}
-
-#pragma mark Stream Property Operations
-
-bool	BGM_Device::Stream_HasProperty(AudioObjectID inObjectID, pid_t inClientPID, const AudioObjectPropertyAddress& inAddress) const
-{
-	//	For each object, this driver implements all the required properties plus a few extras that
-	//	are useful but not required. There is more detailed commentary about each property in the
-	//	Stream_GetPropertyData() method.
-	
-	bool theAnswer = false;
-	switch(inAddress.mSelector)
-	{
-		case kAudioStreamPropertyIsActive:
-		case kAudioStreamPropertyDirection:
-		case kAudioStreamPropertyTerminalType:
-		case kAudioStreamPropertyStartingChannel:
-		case kAudioStreamPropertyLatency:
-		case kAudioStreamPropertyVirtualFormat:
-		case kAudioStreamPropertyPhysicalFormat:
-		case kAudioStreamPropertyAvailableVirtualFormats:
-		case kAudioStreamPropertyAvailablePhysicalFormats:
-			theAnswer = true;
-			break;
-			
-		default:
-			theAnswer = BGM_Object::HasProperty(inObjectID, inClientPID, inAddress);
-			break;
-	};
-	return theAnswer;
-}
-
-bool	BGM_Device::Stream_IsPropertySettable(AudioObjectID inObjectID, pid_t inClientPID, const AudioObjectPropertyAddress& inAddress) const
-{
-	//	For each object, this driver implements all the required properties plus a few extras that
-	//	are useful but not required. There is more detailed commentary about each property in the
-	//	Stream_GetPropertyData() method.
-	
-	bool theAnswer = false;
-	switch(inAddress.mSelector)
-	{
-		case kAudioStreamPropertyDirection:
-		case kAudioStreamPropertyTerminalType:
-		case kAudioStreamPropertyStartingChannel:
-		case kAudioStreamPropertyLatency:
-		case kAudioStreamPropertyAvailableVirtualFormats:
-		case kAudioStreamPropertyAvailablePhysicalFormats:
-			theAnswer = false;
-			break;
-		
-		case kAudioStreamPropertyIsActive:
-		case kAudioStreamPropertyVirtualFormat:
-		case kAudioStreamPropertyPhysicalFormat:
-			theAnswer = true;
-			break;
-		
-		default:
-			theAnswer = BGM_Object::IsPropertySettable(inObjectID, inClientPID, inAddress);
-			break;
-	};
-	return theAnswer;
-}
-
-UInt32	BGM_Device::Stream_GetPropertyDataSize(AudioObjectID inObjectID, pid_t inClientPID, const AudioObjectPropertyAddress& inAddress, UInt32 inQualifierDataSize, const void* inQualifierData) const
-{
-	//	For each object, this driver implements all the required properties plus a few extras that
-	//	are useful but not required. There is more detailed commentary about each property in the
-	//	Stream_GetPropertyData() method.
-	
-	UInt32 theAnswer = 0;
-	switch(inAddress.mSelector)
-	{
-		case kAudioStreamPropertyIsActive:
-			theAnswer = sizeof(UInt32);
-			break;
-
-		case kAudioStreamPropertyDirection:
-			theAnswer = sizeof(UInt32);
-			break;
-
-		case kAudioStreamPropertyTerminalType:
-			theAnswer = sizeof(UInt32);
-			break;
-
-		case kAudioStreamPropertyStartingChannel:
-			theAnswer = sizeof(UInt32);
-			break;
-		
-		case kAudioStreamPropertyLatency:
-			theAnswer = sizeof(UInt32);
-			break;
-
-		case kAudioStreamPropertyVirtualFormat:
-		case kAudioStreamPropertyPhysicalFormat:
-			theAnswer = sizeof(AudioStreamBasicDescription);
-			break;
-
-		case kAudioStreamPropertyAvailableVirtualFormats:
-		case kAudioStreamPropertyAvailablePhysicalFormats:
-			theAnswer = 1 * sizeof(AudioStreamRangedDescription);
-			break;
-
-		default:
-			theAnswer = BGM_Object::GetPropertyDataSize(inObjectID, inClientPID, inAddress, inQualifierDataSize, inQualifierData);
-			break;
-	};
-	return theAnswer;
-}
-
-void	BGM_Device::Stream_GetPropertyData(AudioObjectID inObjectID, pid_t inClientPID, const AudioObjectPropertyAddress& inAddress, UInt32 inQualifierDataSize, const void* inQualifierData, UInt32 inDataSize, UInt32& outDataSize, void* outData) const
-{
-	//	For each object, this driver implements all the required properties plus a few extras that
-	//	are useful but not required.
-	//	Also, since most of the data that will get returned is static, there are few instances where
-	//	it is necessary to lock the state mutex.
-	
-	UInt32 theNumberItemsToFetch;
-	switch(inAddress.mSelector)
-	{
-		case kAudioObjectPropertyBaseClass:
-			//	The base class for kAudioStreamClassID is kAudioObjectClassID
-			ThrowIf(inDataSize < sizeof(AudioClassID), CAException(kAudioHardwareBadPropertySizeError), "BGM_Device::Stream_GetPropertyData: not enough space for the return value of kAudioObjectPropertyBaseClass for the stream");
-			*reinterpret_cast<AudioClassID*>(outData) = kAudioObjectClassID;
-			outDataSize = sizeof(AudioClassID);
-			break;
-			
-		case kAudioObjectPropertyClass:
-			//	Streams are of the class, kAudioStreamClassID
-			ThrowIf(inDataSize < sizeof(AudioClassID), CAException(kAudioHardwareBadPropertySizeError), "BGM_Device::Stream_GetPropertyData: not enough space for the return value of kAudioObjectPropertyClass for the stream");
-			*reinterpret_cast<AudioClassID*>(outData) = kAudioStreamClassID;
-			outDataSize = sizeof(AudioClassID);
-			break;
-			
-		case kAudioObjectPropertyOwner:
-			//	The stream's owner is the device object
-			ThrowIf(inDataSize < sizeof(AudioObjectID), CAException(kAudioHardwareBadPropertySizeError), "BGM_Device::Stream_GetPropertyData: not enough space for the return value of kAudioObjectPropertyOwner for the stream");
-			*reinterpret_cast<AudioObjectID*>(outData) = GetObjectID();
-			outDataSize = sizeof(AudioObjectID);
-			break;
-			
-		case kAudioStreamPropertyIsActive:
-			//	This property tells the device whether or not the given stream is going to
-			//	be used for IO. Note that we need to take the state lock to examine this
-			//	value.
-			{
-				ThrowIf(inDataSize < sizeof(UInt32), CAException(kAudioHardwareBadPropertySizeError), "BGM_Device::Stream_GetPropertyData: not enough space for the return value of kAudioStreamPropertyIsActive for the stream");
-				
-				//	lock the state mutex
-				CAMutex::Locker theStateLocker(mStateMutex);
-				
-				//	return the requested value
-				*reinterpret_cast<UInt32*>(outData) = (inAddress.mScope == kAudioObjectPropertyScopeInput) ? mInputStreamIsActive : mOutputStreamIsActive;
-				outDataSize = sizeof(UInt32);
-			}
-			break;
-
-		case kAudioStreamPropertyDirection:
-			//	This returns whether the stream is an input stream or an output stream.
-			ThrowIf(inDataSize < sizeof(UInt32), CAException(kAudioHardwareBadPropertySizeError), "BGM_Device::Stream_GetPropertyData: not enough space for the return value of kAudioStreamPropertyDirection for the stream");
-			*reinterpret_cast<UInt32*>(outData) = (inObjectID == kObjectID_Stream_Input) ? 1 : 0;
-			outDataSize = sizeof(UInt32);
-			break;
-
-		case kAudioStreamPropertyTerminalType:
-			//	This returns a value that indicates what is at the other end of the stream
-			//	such as a speaker or headphones, or a microphone. Values for this property
-			//	are defined in <CoreAudio/AudioHardwareBase.h>
-			ThrowIf(inDataSize < sizeof(UInt32), CAException(kAudioHardwareBadPropertySizeError), "BGM_Device::Stream_GetPropertyData: not enough space for the return value of kAudioStreamPropertyTerminalType for the stream");
-			*reinterpret_cast<UInt32*>(outData) = (inObjectID == kObjectID_Stream_Input) ? kAudioStreamTerminalTypeMicrophone : kAudioStreamTerminalTypeSpeaker;
-			outDataSize = sizeof(UInt32);
-			break;
-
-		case kAudioStreamPropertyStartingChannel:
-			//	This property returns the absolute channel number for the first channel in
-			//	the stream. For example, if a device has two output streams with two
-			//	channels each, then the starting channel number for the first stream is 1
-			//	and the starting channel number for the second stream is 3.
-			ThrowIf(inDataSize < sizeof(UInt32), CAException(kAudioHardwareBadPropertySizeError), "BGM_Device::Stream_GetPropertyData: not enough space for the return value of kAudioStreamPropertyStartingChannel for the stream");
-			*reinterpret_cast<UInt32*>(outData) = 1;
-			outDataSize = sizeof(UInt32);
-			break;
-
-		case kAudioStreamPropertyLatency:
-			//	This property returns any additonal presentation latency the stream has.
-			ThrowIf(inDataSize < sizeof(UInt32), CAException(kAudioHardwareBadPropertySizeError), "BGM_Device::Stream_GetPropertyData: not enough space for the return value of kAudioStreamPropertyLatency for the stream");
-			*reinterpret_cast<UInt32*>(outData) = 0;
-			outDataSize = sizeof(UInt32);
-			break;
-
-		case kAudioStreamPropertyVirtualFormat:
-		case kAudioStreamPropertyPhysicalFormat:
-			//	This returns the current format of the stream in an AudioStreamBasicDescription.
-			//	For devices that don't override the mix operation, the virtual format has to be the
-			//	same as the physical format.
-			{
-				ThrowIf(inDataSize < sizeof(AudioStreamBasicDescription), CAException(kAudioHardwareBadPropertySizeError), "BGM_Device::Stream_GetPropertyData: not enough space for the return value of kAudioStreamPropertyVirtualFormat for the stream");
-				
-				CAMutex::Locker theStateLocker(mStateMutex);
-				
-				//	This particular device always vends 32-bit native endian floats
-				reinterpret_cast<AudioStreamBasicDescription*>(outData)->mSampleRate = _HW_GetSampleRate();
-				reinterpret_cast<AudioStreamBasicDescription*>(outData)->mFormatID = kAudioFormatLinearPCM;
-				reinterpret_cast<AudioStreamBasicDescription*>(outData)->mFormatFlags = kAudioFormatFlagIsFloat | kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsPacked;
-				reinterpret_cast<AudioStreamBasicDescription*>(outData)->mBytesPerPacket = 8;
-				reinterpret_cast<AudioStreamBasicDescription*>(outData)->mFramesPerPacket = 1;
-				reinterpret_cast<AudioStreamBasicDescription*>(outData)->mBytesPerFrame = 8;
-				reinterpret_cast<AudioStreamBasicDescription*>(outData)->mChannelsPerFrame = 2;
-				reinterpret_cast<AudioStreamBasicDescription*>(outData)->mBitsPerChannel = 32;
-				outDataSize = sizeof(AudioStreamBasicDescription);
-			}
-			break;
-
-		case kAudioStreamPropertyAvailableVirtualFormats:
-		case kAudioStreamPropertyAvailablePhysicalFormats:
-			//	This returns an array of AudioStreamRangedDescriptions that describe what
-			//	formats are supported.
-
-			//	Calculate the number of items that have been requested. Note that this
-			//	number is allowed to be smaller than the actual size of the list. In such
-			//	case, only that number of items will be returned
-			theNumberItemsToFetch = inDataSize / sizeof(AudioStreamRangedDescription);
-			
-			//	clamp it to the number of items we have
-			if(theNumberItemsToFetch > 1)
-			{
-				theNumberItemsToFetch = 1;
-			}
-			
-			//	fill out the return array
-			if(theNumberItemsToFetch > 0)
-			{
-				((AudioStreamRangedDescription*)outData)[0].mFormat.mSampleRate = kSampleRateDefault;
-				((AudioStreamRangedDescription*)outData)[0].mFormat.mFormatID = kAudioFormatLinearPCM;
-				((AudioStreamRangedDescription*)outData)[0].mFormat.mFormatFlags = kAudioFormatFlagIsFloat | kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsPacked;
-				((AudioStreamRangedDescription*)outData)[0].mFormat.mBytesPerPacket = 8;
-				((AudioStreamRangedDescription*)outData)[0].mFormat.mFramesPerPacket = 1;
-				((AudioStreamRangedDescription*)outData)[0].mFormat.mBytesPerFrame = 8;
-				((AudioStreamRangedDescription*)outData)[0].mFormat.mChannelsPerFrame = 2;
-				((AudioStreamRangedDescription*)outData)[0].mFormat.mBitsPerChannel = 32;
-                // These match kAudioDevicePropertyAvailableNominalSampleRates.
-				((AudioStreamRangedDescription*)outData)[0].mSampleRateRange.mMinimum = 1.0;
-				((AudioStreamRangedDescription*)outData)[0].mSampleRateRange.mMaximum = 1000000000.0;
-			}
-			
-			//	report how much we wrote
-			outDataSize = theNumberItemsToFetch * sizeof(AudioStreamRangedDescription);
-			break;
-
-		default:
-			BGM_Object::GetPropertyData(inObjectID, inClientPID, inAddress, inQualifierDataSize, inQualifierData, inDataSize, outDataSize, outData);
-			break;
-	};
-}
-
-void	BGM_Device::Stream_SetPropertyData(AudioObjectID inObjectID, pid_t inClientPID, const AudioObjectPropertyAddress& inAddress, UInt32 inQualifierDataSize, const void* inQualifierData, UInt32 inDataSize, const void* inData)
-{
-	//	For each object, this driver implements all the required properties plus a few extras that
-	//	are useful but not required. There is more detailed commentary about each property in the
-	//	Stream_GetPropertyData() method.
-	
-	switch(inAddress.mSelector)
-	{
-		case kAudioStreamPropertyIsActive:
-			{
-				//	Changing the active state of a stream doesn't affect IO or change the structure
-				//	so we can just save the state and send the notification.
-				ThrowIf(inDataSize != sizeof(UInt32), CAException(kAudioHardwareBadPropertySizeError), "BGM_Device::Stream_SetPropertyData: wrong size for the data for kAudioStreamPropertyIsActive");
-				bool theNewIsActive = *reinterpret_cast<const UInt32*>(inData) != 0;
-				
-				CAMutex::Locker theStateLocker(mStateMutex);
-				if(inObjectID == kObjectID_Stream_Input)
-				{
-					if(mInputStreamIsActive != theNewIsActive)
-					{
-						mInputStreamIsActive = theNewIsActive;
-					}
-				}
-				else
-				{
-					if(mOutputStreamIsActive != theNewIsActive)
-					{
-						mOutputStreamIsActive = theNewIsActive;
-					}
-				}
-			}
-			break;
-			
-		case kAudioStreamPropertyVirtualFormat:
-		case kAudioStreamPropertyPhysicalFormat:
-			{
-				//	Changing the stream format needs to be handled via the
-				//	RequestConfigChange/PerformConfigChange machinery. Note that because this
-				//	device only supports 2 channel 32 bit float data, the only thing that can
-				//	change is the sample rate.
-				ThrowIf(inDataSize != sizeof(AudioStreamBasicDescription), CAException(kAudioHardwareBadPropertySizeError), "BGM_Device::Stream_SetPropertyData: wrong size for the data for kAudioStreamPropertyPhysicalFormat");
-				
-				const AudioStreamBasicDescription* theNewFormat = reinterpret_cast<const AudioStreamBasicDescription*>(inData);
-				ThrowIf(theNewFormat->mFormatID != kAudioFormatLinearPCM, CAException(kAudioDeviceUnsupportedFormatError), "BGM_Device::Stream_SetPropertyData: unsupported format ID for kAudioStreamPropertyPhysicalFormat");
-				ThrowIf(theNewFormat->mFormatFlags != (kAudioFormatFlagIsFloat | kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsPacked), CAException(kAudioDeviceUnsupportedFormatError), "BGM_Device::Stream_SetPropertyData: unsupported format flags for kAudioStreamPropertyPhysicalFormat");
-				ThrowIf(theNewFormat->mBytesPerPacket != 8, CAException(kAudioDeviceUnsupportedFormatError), "BGM_Device::Stream_SetPropertyData: unsupported bytes per packet for kAudioStreamPropertyPhysicalFormat");
-				ThrowIf(theNewFormat->mFramesPerPacket != 1, CAException(kAudioDeviceUnsupportedFormatError), "BGM_Device::Stream_SetPropertyData: unsupported frames per packet for kAudioStreamPropertyPhysicalFormat");
-				ThrowIf(theNewFormat->mBytesPerFrame != 8, CAException(kAudioDeviceUnsupportedFormatError), "BGM_Device::Stream_SetPropertyData: unsupported bytes per frame for kAudioStreamPropertyPhysicalFormat");
-				ThrowIf(theNewFormat->mChannelsPerFrame != 2, CAException(kAudioDeviceUnsupportedFormatError), "BGM_Device::Stream_SetPropertyData: unsupported channels per frame for kAudioStreamPropertyPhysicalFormat");
-				ThrowIf(theNewFormat->mBitsPerChannel != 32, CAException(kAudioDeviceUnsupportedFormatError), "BGM_Device::Stream_SetPropertyData: unsupported bits per channel for kAudioStreamPropertyPhysicalFormat");
-				ThrowIf(theNewFormat->mSampleRate < 1.0, //(theNewFormat->mSampleRate != 44100.0) && (theNewFormat->mSampleRate != 48000.0),
-                        CAException(kAudioDeviceUnsupportedFormatError),
-                        "BGM_Device::Stream_SetPropertyData: unsupported sample rate for kAudioStreamPropertyPhysicalFormat");
-                
-                Float64 theNewSampleRate = *reinterpret_cast<const Float64*>(inData);
-
-                CAMutex::Locker theStateLocker(mStateMutex);
-                Float64 theOldSampleRate = _HW_GetSampleRate();
-                
-				if(theNewSampleRate != theOldSampleRate)
-                {
-                    mPendingSampleRate = theNewSampleRate;
-                    
-					//	we dispatch this so that the change can happen asynchronously
-                    AudioObjectID theDeviceObjectID = GetObjectID();
-					CADispatchQueue::GetGlobalSerialQueue().Dispatch(false,
-                                                                     ^{
-                                                                         BGM_PlugIn::Host_RequestDeviceConfigurationChange(theDeviceObjectID, 0,  NULL);
-                                                                     });
-				}
-			}
-			break;
-		
-		default:
-			BGM_Object::SetPropertyData(inObjectID, inClientPID, inAddress, inQualifierDataSize, inQualifierData, inDataSize, inData);
-			break;
-	};
 }
 
 #pragma mark Control Property Operations
@@ -2252,6 +1814,169 @@ void	BGM_Device::UpdateDeviceAudibleState(UInt32 inIOBufferFrameSize, Float64 in
     }
 }
 
+#pragma mark Accessors
+
+void    BGM_Device::RequestEnabledControls(bool inVolumeEnabled, bool inMuteEnabled)
+{
+    CAMutex::Locker theStateLocker(mStateMutex);
+
+    bool changeVolume = (mOutputVolumeControlEnabled != inVolumeEnabled);
+    bool changeMute = (mOutputMuteControlEnabled != inMuteEnabled);
+
+    if(changeVolume)
+    {
+        DebugMsg("BGM_Device::RequestEnabledControls: %s volume control",
+                 (inVolumeEnabled ? "Enabling" : "Disabling"));
+        mPendingOutputVolumeControlEnabled = inVolumeEnabled;
+    }
+
+    if(changeMute)
+    {
+        DebugMsg("BGM_Device::RequestEnabledControls: %s mute control",
+                 (inMuteEnabled ? "Enabling" : "Disabling"));
+        mPendingOutputMuteControlEnabled = inMuteEnabled;
+    }
+
+    if(changeVolume || changeMute)
+    {
+        // Ask the host to stop IO (and whatever else) so we can safely update the device's list of
+        // controls. See RequestDeviceConfigurationChange in AudioServerPlugIn.h.
+        AudioObjectID theDeviceObjectID = GetObjectID();
+        UInt64 action = static_cast<UInt64>(ChangeAction::SetEnabledControls);
+        
+        CADispatchQueue::GetGlobalSerialQueue().Dispatch(false,	^{
+            BGM_PlugIn::Host_RequestDeviceConfigurationChange(theDeviceObjectID, action, nullptr);
+        });
+    }
+}
+
+Float64	BGM_Device::GetSampleRate() const
+{
+    // The sample rate is guarded by the state lock. Note that we don't need to take the IO lock.
+    CAMutex::Locker theStateLocker(mStateMutex);
+
+    Float64 theSampleRate;
+
+    // Report the sample rate from the wrapped device if we have one. Note that _HW_GetSampleRate
+    // the device's nominal sample rate, not one calculated from its timestamps.
+    if(mWrappedAudioEngine == nullptr)
+    {
+        theSampleRate = mLoopbackSampleRate;
+    }
+    else
+    {
+        theSampleRate = _HW_GetSampleRate();
+    }
+
+    return theSampleRate;
+}
+
+void	BGM_Device::RequestSampleRate(Float64 inRequestedSampleRate)
+{
+    // Changing the sample rate needs to be handled via the RequestConfigChange/PerformConfigChange
+    // machinery. See RequestDeviceConfigurationChange in AudioServerPlugIn.h.
+
+	// We try to support any sample rate a real output device might.
+    ThrowIf(inRequestedSampleRate < 1.0,
+            CAException(kAudioDeviceUnsupportedFormatError),
+            "BGM_Device::RequestSampleRate: unsupported sample rate");
+
+    DebugMsg("BGM_Device::RequestSampleRate: Sample rate change requested: %f",
+             inRequestedSampleRate);
+
+    CAMutex::Locker theStateLocker(mStateMutex);
+
+    if(inRequestedSampleRate != GetSampleRate())  // Check the sample rate will actually be changed.
+    {
+        mPendingSampleRate = inRequestedSampleRate;
+
+        // Dispatch this so the change can happen asynchronously.
+        auto requestSampleRate = ^{
+			UInt64 action = static_cast<UInt64>(ChangeAction::SetSampleRate);
+            BGM_PlugIn::Host_RequestDeviceConfigurationChange(GetObjectID(), action, nullptr);
+        };
+
+        CADispatchQueue::GetGlobalSerialQueue().Dispatch(false, requestSampleRate);
+    }
+}
+
+void    BGM_Device::SetEnabledControls(bool inVolumeEnabled, bool inMuteEnabled)
+{
+    CAMutex::Locker theStateLocker(mStateMutex);
+
+    if(mOutputVolumeControlEnabled != inVolumeEnabled)
+    {
+        DebugMsg("BGM_Device::SetEnabledControls: %s the volume control",
+                 inVolumeEnabled ? "Enabling" : "Disabling");
+
+        mOutputVolumeControlEnabled = inVolumeEnabled;
+    }
+
+    if(mOutputMuteControlEnabled != inMuteEnabled)
+    {
+        DebugMsg("BGM_Device::SetEnabledControls: %s the mute control",
+                 inMuteEnabled ? "Enabling" : "Disabling");
+
+        mOutputMuteControlEnabled = inMuteEnabled;
+    }
+}
+
+void	BGM_Device::SetSampleRate(Float64 inSampleRate)
+{
+    // We try to support any sample rate a real output device might.
+    ThrowIf(inSampleRate < 1.0,
+            CAException(kAudioDeviceUnsupportedFormatError),
+            "BGM_Device::SetSampleRate: unsupported sample rate");
+
+    CAMutex::Locker theStateLocker(mStateMutex);
+    
+    // Update the sample rate on the wrapped device if we have one.
+    if(mWrappedAudioEngine != nullptr)
+    {
+        kern_return_t theError = _HW_SetSampleRate(inSampleRate);
+        ThrowIfKernelError(theError,
+                           CAException(kAudioHardwareUnspecifiedError),
+                           "BGM_Device::SetSampleRate: Error setting the sample rate on the "
+                           "wrapped audio device.");
+    }
+
+    // Update the sample rate for loopback.
+    mLoopbackSampleRate = inSampleRate;
+    InitLoopback();
+
+    // Update the streams.
+    mInputStream.SetSampleRate(inSampleRate);
+    mOutputStream.SetSampleRate(inSampleRate);
+}
+
+bool    BGM_Device::IsStreamID(AudioObjectID inObjectID) const noexcept
+{
+    return (inObjectID == kObjectID_Stream_Input) || (inObjectID == kObjectID_Stream_Output);
+}
+
+const BGM_Stream&  BGM_Device::GetStreamByID(AudioObjectID inObjectID) const
+{
+    BGMAssert(IsStreamID(inObjectID),
+              "BGM_Device::GetStreamByID: Object is not a stream. inObjectID = %u",
+              inObjectID);
+    ThrowIf(!IsStreamID(inObjectID),
+            CAException(kAudioHardwareBadStreamError),
+            "BGM_Device::GetStreamByID: Object is not a stream");
+
+    switch(inObjectID)
+    {
+        case kObjectID_Stream_Input:
+            return mInputStream;
+
+        case kObjectID_Stream_Output:
+            return mOutputStream;
+
+        default:
+            LogError("BGM_Device::GetStreamByID: Unknown stream ID. inObjectID = %u", inObjectID);
+            throw CAException(kAudioHardwareBadStreamError);
+    };
+}
+
 #pragma mark Hardware Accessors
 
 // TODO: Out of laziness, some of these hardware functions do more than their names suggest
@@ -2279,7 +2004,7 @@ kern_return_t	BGM_Device::_HW_StartIO()
     mAudibleStateSampleTimes.latestSilentMusic = 0;
     mAudibleStateSampleTimes.latestAudibleMusic = 0;
     
-    return 0;
+    return KERN_SUCCESS;
 }
 
 void	BGM_Device::_HW_StopIO()
@@ -2291,22 +2016,22 @@ void	BGM_Device::_HW_StopIO()
 
 Float64	BGM_Device::_HW_GetSampleRate() const
 {
-    return (mWrappedAudioEngine != NULL) ? mWrappedAudioEngine->GetSampleRate() : mLoopbackSampleRate;
+    // This function should only be called when wrapping a device.
+    ThrowIf(mWrappedAudioEngine == nullptr,
+            CAException(kAudioHardwareUnspecifiedError),
+            "BGM_Device::_HW_GetSampleRate: No wrapped audio device");
+
+    return mWrappedAudioEngine->GetSampleRate();
 }
 
 kern_return_t	BGM_Device::_HW_SetSampleRate(Float64 inNewSampleRate)
 {
-    kern_return_t theError = 0;
-    
-    if(mWrappedAudioEngine != NULL)
-    {
-        theError = mWrappedAudioEngine->SetSampleRate(inNewSampleRate);
-    }
-    
-    mLoopbackSampleRate = inNewSampleRate;
-    InitLoopback();
-    
-    return theError;
+    // This function should only be called when wrapping a device.
+    ThrowIf(mWrappedAudioEngine == nullptr,
+            CAException(kAudioHardwareUnspecifiedError),
+            "BGM_Device::_HW_SetSampleRate: No wrapped audio device");
+
+    return mWrappedAudioEngine->SetSampleRate(inNewSampleRate);
 }
 
 UInt32	BGM_Device::_HW_GetRingBufferFrameSize() const
@@ -2418,18 +2143,38 @@ void	BGM_Device::RemoveClient(const AudioServerPlugInClientInfo* inClientInfo)
     
     CAMutex::Locker theStateLocker(mStateMutex);
 
+    // If we're removing BGMApp, reenable all of BGMDevice's controls.
+    if(mClients.IsBGMApp(inClientInfo->mClientID))
+    {
+        RequestEnabledControls(true, true);
+    }
+
     mClients.RemoveClient(inClientInfo->mClientID);
 }
 
 void	BGM_Device::PerformConfigChange(UInt64 inChangeAction, void* inChangeInfo)
 {
-	#pragma unused(inChangeAction, inChangeInfo)
-	
-	// This device only supports changing the sample rate
-	
-    //	we need to lock the state lock around telling the hardware about the new sample rate
-    CAMutex::Locker theStateLocker(mStateMutex);
-    _HW_SetSampleRate(mPendingSampleRate);
+	#pragma unused(inChangeInfo)
+    DebugMsg("BGM_Device::PerformConfigChange: inChangeAction = %llu", inChangeAction);
+
+    // Apply a change requested with BGM_PlugIn::Host_RequestDeviceConfigurationChange. See
+    // PerformDeviceConfigurationChange in AudioServerPlugIn.h.
+
+    switch(static_cast<ChangeAction>(inChangeAction))
+    {
+        case ChangeAction::SetSampleRate:
+            SetSampleRate(mPendingSampleRate);
+            break;
+
+        case ChangeAction::SetEnabledControls:
+            SetEnabledControls(mPendingOutputVolumeControlEnabled,
+                               mPendingOutputMuteControlEnabled);
+            break;
+
+        default:
+            throw CAException(kAudioHardwareIllegalOperationError);
+            break;
+    }
 }
 
 void	BGM_Device::AbortConfigChange(UInt64 inChangeAction, void* inChangeInfo)

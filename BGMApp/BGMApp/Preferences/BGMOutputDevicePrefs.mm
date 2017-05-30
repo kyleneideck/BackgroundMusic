@@ -25,6 +25,8 @@
 
 // Local Includes
 #import "BGM_Utils.h"
+#import "BGM_Types.h"
+#import "BGMAudioDevice.h"
 
 // PublicUtility Includes
 #include "CAHALAudioSystemObject.h"
@@ -67,29 +69,26 @@ static NSInteger const kOutputDeviceMenuItemTag = 2;
         audioSystem.GetAudioDevices(numDevices, devices);
         
         for (UInt32 i = 0; i < numDevices; i++) {
-            CAHALAudioDevice device(devices[i]);
-            [self insertMenuItemsForDevice:device preferencesMenu:prefsMenu];
+            [self insertMenuItemsForDevice:devices[i] preferencesMenu:prefsMenu];
         }
     }
 }
 
-- (void) insertMenuItemsForDevice:(CAHALAudioDevice)device preferencesMenu:(NSMenu*)prefsMenu {
+- (void) insertMenuItemsForDevice:(BGMAudioDevice)device preferencesMenu:(NSMenu*)prefsMenu {
     // Insert menu items after the item for the "Output Device" heading.
     const NSInteger menuItemsIdx = [prefsMenu indexOfItemWithTag:kOutputDeviceMenuItemTag] + 1;
-    
-    BGMLogAndSwallowExceptions("BGMOutputDevicePrefs::insertMenuItemsForDevice", [&]() {
-        BOOL isBGMDevice = (device.GetObjectID() == [audioDevices bgmDevice].GetObjectID());
-        BOOL isHidden = device.IsHidden();
-        BOOL hasOutputChannels = device.GetTotalNumberChannels(/* inIsInput = */ false) > 0;
-        BOOL canBeDefault = device.CanBeDefaultDevice(/* inIsInput = */ false, /* inIsSystem = */ false);
-        
-        if (!isBGMDevice && !isHidden && hasOutputChannels && canBeDefault) {
-            for (NSMenuItem* item : [self createMenuItemsForDevice:device]) {
-                [prefsMenu insertItem:item atIndex:menuItemsIdx];
-                [outputDeviceMenuItems addObject:item];
-            }
+
+    BOOL canBeOutputDevice = YES;
+    BGMLogAndSwallowExceptions("BGMOutputDevicePrefs::insertMenuItemsForDevice", ([&] {
+        canBeOutputDevice = device.CanBeOutputDeviceInBGMApp();
+    }));
+
+    if (canBeOutputDevice) {
+        for (NSMenuItem* item : [self createMenuItemsForDevice:device]) {
+            [prefsMenu insertItem:item atIndex:menuItemsIdx];
+            [outputDeviceMenuItems addObject:item];
         }
-    });
+    }
 }
 
 - (NSArray<NSMenuItem*>*) createMenuItemsForDevice:(CAHALAudioDevice)device {
@@ -108,7 +107,7 @@ static NSInteger const kOutputDeviceMenuItemTag = 2;
     // TODO: Use the current data source's name when the control isn't settable, but only add one menu item.
     UInt32 numDataSources = 0;
     
-    BGMLogAndSwallowExceptions("BGMOutputDevicePrefs::createMenuItemsForDevice", [&]() {
+    BGMLogAndSwallowExceptions("BGMOutputDevicePrefs::createMenuItemsForDevice", [&] {
         if (device.HasDataSourceControl(scope, channel) &&
                 device.DataSourceControlIsSettable(scope, channel)) {
             numDataSources = device.GetNumberAvailableDataSources(scope, channel);
@@ -141,12 +140,12 @@ static NSInteger const kOutputDeviceMenuItemTag = 2;
         DebugMsg("BGMOutputDevicePrefs::createMenuItemsForDevice: Creating item. %s%u",
                  "Device ID:", device.GetObjectID());
         
-        BGMLogAndSwallowExceptions("BGMOutputDevicePrefs::createMenuItemsForDevice", [&]() {
+        BGMLogAndSwallowExceptions("BGMOutputDevicePrefs::createMenuItemsForDevice", ([&] {
             [items addObject:[self createMenuItemForDevice:device
                                               dataSourceID:nil
                                                      title:CFBridgingRelease(device.CopyName())
                                                    toolTip:nil]];
-        });
+        }));
     }
     
     return items;
@@ -168,7 +167,7 @@ static NSInteger const kOutputDeviceMenuItemTag = 2;
     // Add the AirPlay icon to the labels of AirPlay devices.
     //
     // TODO: Test this with real hardware that supports AirPlay. (I don't have any.)
-    BGMLogAndSwallowExceptions("BGMOutputDevicePrefs::createMenuItemForDevice", [&]() {
+    BGMLogAndSwallowExceptions("BGMOutputDevicePrefs::createMenuItemForDevice", [&] {
         if (device.GetTransportType() == kAudioDeviceTransportTypeAirPlay) {
             item.image = [NSImage imageNamed:@"AirPlayIcon"];
             

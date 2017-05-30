@@ -26,8 +26,7 @@
       buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
-      shouldUseLaunchSchemeArgsEnv = "YES"
-      enableAddressSanitizer = "YES">
+      shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
          <TestableReference
             skipped = "NO">
@@ -70,6 +69,7 @@
       useCustomWorkingDirectory = "NO"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
+      enableAddressSanitizer = "YES"
       debugServiceExtension = "internal"
       allowLocationSimulation = "NO">
       <BuildableProductRunnable
@@ -85,7 +85,7 @@
       <EnvironmentVariables>
          <EnvironmentVariable
             key = "ASAN_OPTIONS"
-            value = "detect_odr_violation=0"
+            value = "detect_odr_violation=0,use_odr_indicator=1"
             isEnabled = "YES">
          </EnvironmentVariable>
       </EnvironmentVariables>

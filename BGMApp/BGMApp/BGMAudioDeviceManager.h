@@ -49,7 +49,12 @@ extern int const kBGMErrorCode_OutputDeviceNotFound;
 - (NSError* __nullable) unsetBGMDeviceAsOSDefault;
 
 #ifdef __cplusplus
+// The virtual device published by BGMDriver.
 - (CAHALAudioDevice) bgmDevice;
+
+// The device BGMApp will play audio through, making it, from the user's perspective, the system's
+// default output device.
+- (CAHALAudioDevice) outputDevice;
 #endif
 
 - (BOOL) isOutputDevice:(AudioObjectID)deviceID;

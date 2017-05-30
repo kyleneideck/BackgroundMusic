@@ -28,6 +28,7 @@
 #include "BGM_Utils.h"
 #include "BGMDeviceControlSync.h"
 #include "BGMPlayThrough.h"
+#include "BGMAudioDevice.h"
 
 // PublicUtility Includes
 #include "CAHALAudioSystemObject.h"
@@ -36,13 +37,6 @@
 
 int const kBGMErrorCode_BGMDeviceNotFound = 0;
 int const kBGMErrorCode_OutputDeviceNotFound = 1;
-
-// Hack/workaround that adds a default constructor to CAHALAudioDevice so we don't have to use pointers for the instance variables
-class BGMAudioDevice : public CAHALAudioDevice {
-    using CAHALAudioDevice::CAHALAudioDevice;
-public:
-    BGMAudioDevice() : CAHALAudioDevice(kAudioDeviceUnknown) { }
-};
 
 @implementation BGMAudioDeviceManager {
     BGMAudioDevice bgmDevice;
@@ -75,7 +69,7 @@ public:
         
         [self initOutputDevice];
         
-        if (outputDevice.GetObjectID() == kAudioDeviceUnknown) {
+        if (outputDevice.GetObjectID() == kAudioObjectUnknown) {
             LogError("BGMAudioDeviceManager::initWithError: output device not found");
             
             if (error) {
@@ -143,7 +137,7 @@ public:
     assert(outputDevice.GetObjectID() != bgmDevice.GetObjectID());
     
     // Log message
-    if (outputDevice.GetObjectID() == kAudioDeviceUnknown) {
+    if (outputDevice.GetObjectID() == kAudioObjectUnknown) {
         CFStringRef outputDeviceUID = outputDevice.CopyDeviceUID();
         DebugMsg("BGMAudioDeviceManager::initDevices: Set output device to %s",
                  CFStringGetCStringPtr(outputDeviceUID, kCFStringEncodingUTF8));
@@ -159,26 +153,25 @@ public:
 - (NSError* __nullable) setBGMDeviceAsOSDefault {
     DebugMsg("BGMAudioDeviceManager::setBGMDeviceAsOSDefault: Setting the system's default audio "
              "device to BGMDevice");
-    
+
     CAHALAudioSystemObject audioSystem;
     
-    AudioDeviceID bgmDeviceID = kAudioDeviceUnknown;
-    AudioDeviceID outputDeviceID = kAudioDeviceUnknown;
+    AudioDeviceID bgmDeviceID = kAudioObjectUnknown;
+    AudioDeviceID outputDeviceID = kAudioObjectUnknown;
     
     @try {
         [stateLock lock];
-        BGMLogAndSwallowExceptions("setBGMDeviceAsOSDefault", [&]() {
-            bgmDeviceID = bgmDevice.GetObjectID();
-            outputDeviceID = outputDevice.GetObjectID();
-        });
+
+        bgmDeviceID = bgmDevice.GetObjectID();
+        outputDeviceID = outputDevice.GetObjectID();
     } @finally {
         [stateLock unlock];
     }
 
-    if (outputDeviceID == kAudioDeviceUnknown) {
+    if (outputDeviceID == kAudioObjectUnknown) {
         return [NSError errorWithDomain:@kBGMAppBundleID code:kBGMErrorCode_OutputDeviceNotFound userInfo:nil];
     }
-    if (bgmDeviceID == kAudioDeviceUnknown) {
+    if (bgmDeviceID == kAudioObjectUnknown) {
         return [NSError errorWithDomain:@kBGMAppBundleID code:kBGMErrorCode_BGMDeviceNotFound userInfo:nil];
     }
 
@@ -210,15 +203,16 @@ public:
     bool bgmDeviceIsDefault = true;
     bool bgmDeviceIsSystemDefault = true;
     
-    AudioDeviceID bgmDeviceID = kAudioDeviceUnknown;
-    AudioDeviceID outputDeviceID = kAudioDeviceUnknown;
+    AudioDeviceID bgmDeviceID = kAudioObjectUnknown;
+    AudioDeviceID outputDeviceID = kAudioObjectUnknown;
     
     @try {
         [stateLock lock];
+
+        bgmDeviceID = bgmDevice.GetObjectID();
+        outputDeviceID = outputDevice.GetObjectID();
+
         BGMLogAndSwallowExceptions("unsetBGMDeviceAsOSDefault", [&]() {
-            bgmDeviceID = bgmDevice.GetObjectID();
-            outputDeviceID = outputDevice.GetObjectID();
-            
             bgmDeviceIsDefault =
                 (audioSystem.GetDefaultAudioDevice(false, false) == bgmDeviceID);
             
@@ -229,10 +223,10 @@ public:
         [stateLock unlock];
     }
 
-    if (outputDeviceID == kAudioDeviceUnknown) {
+    if (outputDeviceID == kAudioObjectUnknown) {
         return [NSError errorWithDomain:@kBGMAppBundleID code:kBGMErrorCode_OutputDeviceNotFound userInfo:nil];
     }
-    if (bgmDeviceID == kAudioDeviceUnknown) {
+    if (bgmDeviceID == kAudioObjectUnknown) {
         return [NSError errorWithDomain:@kBGMAppBundleID code:kBGMErrorCode_BGMDeviceNotFound userInfo:nil];
     }
     
@@ -273,6 +267,10 @@ public:
 
 - (CAHALAudioDevice) bgmDevice {
     return bgmDevice;
+}
+
+- (CAHALAudioDevice) outputDevice {
+    return outputDevice;
 }
 
 - (BOOL) isOutputDevice:(AudioObjectID)deviceID {
@@ -339,12 +337,17 @@ public:
             currentDeviceID = outputDevice.GetObjectID();
             
             if (newDeviceID != currentDeviceID) {
-                // Mirror changes in BGMDevice's controls to the new output device's.
-                deviceControlSync = BGMDeviceControlSync(bgmDevice, newOutputDevice);
-                
+                // Deactivate playthrough rather than stopping it so it can't be started by HAL
+                // notifications while we're updating deviceControlSync.
+                playThrough.Deactivate();
+
+                deviceControlSync.SetDevices(bgmDevice, newOutputDevice);
+                deviceControlSync.Activate();
+
                 // Stream audio from BGMDevice to the new output device. This blocks while the old device
                 // stops IO.
                 playThrough.SetDevices(&bgmDevice, &newOutputDevice);
+                playThrough.Activate();
 
                 outputDevice = newOutputDevice;
             }
@@ -387,7 +390,7 @@ public:
     BGMLogAndSwallowExceptions("BGMAudioDeviceManager::setDataSource", [&]() {
         AudioObjectPropertyScope scope = kAudioObjectPropertyScopeOutput;
         UInt32 channel = 0;
-        
+
         if (device.DataSourceControlIsSettable(scope, channel)) {
             DebugMsg("BGMAudioDeviceManager::setOutputDeviceWithID: Setting dataSourceID=%u",
                      dataSourceID);
@@ -455,7 +458,7 @@ public:
             // notified by the HAL yet.
             LogWarning("BGMAudioDeviceManager::waitForOutputDeviceToStart: Playthrough wasn't starting the "
                        "output device. Will tell it to and then return early with kDeviceNotStarting.");
-            
+
             dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^{
                 @try {
                     [stateLock lock];

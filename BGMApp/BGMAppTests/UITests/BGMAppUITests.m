@@ -19,11 +19,15 @@
 //
 //  Copyright © 2017 Kyle Neideck
 //
-//  You'll probably want to use Xcode's UI test recording feature if you add new tests.
+//  You might want to use Xcode's UI test recording feature if you add new tests.
 //
 
-// Local includes
+// Local Includes
 #import "BGM_TestUtils.h"
+#import "BGM_Types.h"
+
+// Scripting Bridge Includes
+#import "BGMApp.h"
 
 
 // TODO: Skip these tests if macOS SDK 10.11 or higher isn't available.
@@ -58,6 +62,8 @@
     icon = [app.menuBars childrenMatchingType:XCUIElementTypeMenuBarItem].element;
     prefs = menuItems[@"Preferences"];
 
+    // TODO: Make sure BGMDevice isn't set as the OS X default device before launching BGMApp.
+
     // Tell BGMApp not to load/store user defaults (settings) and to use
     // NSApplicationActivationPolicyRegular. If it used the "accessory" policy as usual, the tests
     // would fail to start because of a bug in Xcode.
@@ -79,6 +85,69 @@
     XCTAssert(!app.exists);
     
     [super tearDown];
+}
+
+- (void) testCycleOutputDevices {
+    const int NUM_CYCLES = 2;
+
+    // Get the list of output devices from the preferences menu.
+    [icon click];
+    [prefs hover];
+    NSArray<XCUIElement*>* outputDeviceMenuItems = [self outputDeviceMenuItems];
+
+    // For debugging certain issues, it can be useful to repeatedly switch between two
+    // devices:
+    // outputDeviceMenuItems = [outputDeviceMenuItems subarrayWithRange:NSMakeRange(0,2)];
+
+    XCTAssertGreaterThan(outputDeviceMenuItems.count, 0);
+
+    // Click the last device to close the menu again.
+    [outputDeviceMenuItems.lastObject click];
+
+    BGMAppApplication* sbApp = [SBApplication applicationWithBundleIdentifier:@kBGMAppBundleID];
+
+    for (int i = 0; i < NUM_CYCLES; i++) {
+        // Select each output device.
+        for (XCUIElement* item in outputDeviceMenuItems) {
+            [icon click];
+            [prefs hover];
+
+            [item click];
+
+            // Assert that the device we clicked is the selected device now.
+            for (BGMAppOutputDevice* device in [sbApp outputDevices]) {
+                // TODO: This seems a bit fragile. Would it still work with long device names?
+                if ([device.name isEqualToString:[item title]]) {
+                    XCTAssert(device.selected);
+                } else {
+                    XCTAssertFalse(device.selected);
+                }
+            }
+        }
+    }
+}
+
+// Find the menu items for the output devices in the preferences menu.
+- (NSArray<XCUIElement*>*) outputDeviceMenuItems {
+    NSArray<XCUIElement*>* items = @[];
+    BOOL inOutputDeviceSection = NO;
+
+    for (int i = 0; i < prefs.menuItems.count; i++) {
+        XCUIElement* menuItem = [prefs.menuItems elementBoundByIndex:i];
+
+        if ([menuItem.title isEqual:@"Output Device"]) {
+            inOutputDeviceSection = YES;
+        } else if (inOutputDeviceSection) {
+            // Assume that finding a separator menu item means we've reached the end of the section.
+            if (((NSMenuItem*)menuItem.value).separatorItem || [menuItem.title isEqual:@""]) {
+                break;
+            }
+
+            items = [items arrayByAddingObject:menuItem];
+        }
+    }
+
+    return items;
 }
 
 - (void) testSelectMusicPlayer {

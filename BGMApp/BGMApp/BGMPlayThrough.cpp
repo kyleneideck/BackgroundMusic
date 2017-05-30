@@ -30,6 +30,7 @@
 // PublicUtility Includes
 #include "CAAtomic.h"
 #include "CAHALAudioSystemObject.h"
+#include "CAPropertyAddress.h"
 
 // STL Includes
 #include <algorithm>  // For std::max
@@ -40,19 +41,11 @@
 #include <mach/task.h>
 
 
+// The number of IO cycles (roughly) to wait for our IOProcs to stop themselves before assuming something
+// went wrong. If that happens, we try to stop them from a non-IO thread and continue anyway. 
+static const UInt32 kStopIOProcTimeoutInIOCycles = 600;
+
 #pragma mark Construction/Destruction
-
-static const AudioObjectPropertyAddress kDeviceIsRunningAddress = {
-    kAudioDevicePropertyDeviceIsRunning,
-    kAudioObjectPropertyScopeGlobal,
-    kAudioObjectPropertyElementMaster
-};
-
-static const AudioObjectPropertyAddress kProcessorOverloadAddress = {
-    kAudioDeviceProcessorOverload,
-    kAudioObjectPropertyScopeGlobal,
-    kAudioObjectPropertyElementMaster
-};
 
 BGMPlayThrough::BGMPlayThrough(CAHALAudioDevice inInputDevice, CAHALAudioDevice inOutputDevice)
 :
@@ -149,10 +142,10 @@ void    BGMPlayThrough::Activate()
         
         DebugMsg("BGMPlayThrough::Activate: Registering for notifications from BGMDevice.");
         
-        mInputDevice.AddPropertyListener(kDeviceIsRunningAddress,
+        mInputDevice.AddPropertyListener(CAPropertyAddress(kAudioDevicePropertyDeviceIsRunning),
                                          &BGMPlayThrough::BGMDeviceListenerProc,
                                          this);
-        mInputDevice.AddPropertyListener(kProcessorOverloadAddress,
+        mInputDevice.AddPropertyListener(CAPropertyAddress(kAudioDeviceProcessorOverload),
                                          &BGMPlayThrough::BGMDeviceListenerProc,
                                          this);
         
@@ -196,13 +189,13 @@ void    BGMPlayThrough::Deactivate()
             // There's not much we can do if these calls throw. The docs for AudioObjectRemovePropertyListener
             // just say that means it failed.
             BGMLogAndSwallowExceptions("BGMPlayThrough::Deactivate", [&]() {
-                mInputDevice.RemovePropertyListener(kDeviceIsRunningAddress,
+                mInputDevice.RemovePropertyListener(CAPropertyAddress(kAudioDevicePropertyDeviceIsRunning),
                                                     &BGMPlayThrough::BGMDeviceListenerProc,
                                                     this);
             });
             
             BGMLogAndSwallowExceptions("BGMPlayThrough::Deactivate", [&]() {
-                mInputDevice.RemovePropertyListener(kProcessorOverloadAddress,
+                mInputDevice.RemovePropertyListener(CAPropertyAddress(kAudioDeviceProcessorOverload),
                                                     &BGMPlayThrough::BGMDeviceListenerProc,
                                                     this);
             });
@@ -213,8 +206,10 @@ void    BGMPlayThrough::Deactivate()
                                                     this);
             });
         }
-        
-        Stop();
+
+        BGMLogAndSwallowExceptions("BGMPlayThrough::Deactivate", [&]() {
+            Stop();
+        });
         
         BGMLogAndSwallowExceptions("BGMPlayThrough::Deactivate", [&]() {
             DestroyIOProcIDs();
@@ -663,8 +658,8 @@ OSStatus    BGMPlayThrough::Stop()
             mOutputDeviceIOProcState = IOState::Stopping;
         }
         
-        // Wait for the IOProcs to stop themselves, with a timeout of about four IO cycles. This is so the IOProcs don't get
-        // called after the BGMPlayThrough instance (pointed to by the client data they get from the HAL) is deallocated.
+        // Wait for the IOProcs to stop themselves. This is so the IOProcs don't get called after the BGMPlayThrough instance
+        // (pointed to by the client data they get from the HAL) is deallocated.
         //
         // From Jeff Moore on the Core Audio mailing list:
         //     Note that there is no guarantee about how many times your IOProc might get called after AudioDeviceStop() returns
@@ -680,7 +675,7 @@ OSStatus    BGMPlayThrough::Stop()
                 static_cast<UInt64>(std::max(expectedInputCycleNs, expectedOutputCycleNs));
             
             while((mInputDeviceIOProcState == IOState::Stopping || mOutputDeviceIOProcState == IOState::Stopping)
-                  && (totalWaitNs < 4 * expectedMaxCycleNs))
+                  && (totalWaitNs < kStopIOProcTimeoutInIOCycles * expectedMaxCycleNs))
             {
                 // TODO: If playthrough is started again while we're waiting in this loop we could drop frames. Wait on a
                 //       semaphore instead of sleeping? That way Start() could also signal it, before waiting on the state mutex,
@@ -694,25 +689,25 @@ OSStatus    BGMPlayThrough::Stop()
         // Clean up if the IOProcs didn't stop themselves
         if(mInputDeviceIOProcState == IOState::Stopping && mInputDeviceIOProcID != nullptr)
         {
-            LogWarning("BGMPlayThrough::Stop: The input IOProc didn't stop itself in time. Stopping "
-                       "it from outside of the IO thread.");
+            LogError("BGMPlayThrough::Stop: The input IOProc didn't stop itself in time. Stopping "
+                     "it from outside of the IO thread.");
             
             BGMLogUnexpectedExceptions("BGMPlayThrough::Stop", [&]() {
                 mInputDevice.StopIOProc(mInputDeviceIOProcID);
             });
-            
+
             mInputDeviceIOProcState = IOState::Stopped;
         }
         
         if(mOutputDeviceIOProcState == IOState::Stopping && mOutputDeviceIOProcID != nullptr)
         {
-            LogWarning("BGMPlayThrough::Stop: The output IOProc didn't stop itself in time. Stopping "
-                       "it from outside of the IO thread.");
+            LogError("BGMPlayThrough::Stop: The output IOProc didn't stop itself in time. Stopping "
+                     "it from outside of the IO thread.");
             
             BGMLogUnexpectedExceptions("BGMPlayThrough::Stop", [&]() {
                 mOutputDevice.StopIOProc(mOutputDeviceIOProcID);
             });
-            
+
             mOutputDeviceIOProcState = IOState::Stopped;
         }
         

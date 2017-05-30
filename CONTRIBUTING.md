@@ -36,7 +36,7 @@ No dependencies so far. (Though you're welcome to add some.)
 The best place to start is probably [DEVELOPING.md](/DEVELOPING.md), which has an overview of the project and
 instructions for building, debugging, etc. It's kind of long, though, and not very interesting, so you might prefer to
 go straight into the code. In that case, you'll probably want to start with
-[AppDelegate.mm](/BGMApp/BGMApp/AppDelegate.mm).
+[BGMAppDelegate.mm](/BGMApp/BGMApp/BGMAppDelegate.mm).
 
 If you get stuck or have questions about the project, feel free to open an issue. You could also [email
 me](mailto:kyle@bearisdriving.com) or try [#backgroundmusic on
