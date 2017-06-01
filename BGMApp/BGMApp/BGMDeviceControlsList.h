@@ -53,8 +53,13 @@ public:
                         BGMDeviceControlsList(const BGMDeviceControlsList&) = delete;
                         BGMDeviceControlsList& operator=(const BGMDeviceControlsList&) = delete;
 
+#pragma mark Accessors
+
     /*! @param inBGMDeviceID The ID of BGMDevice. */
     void                SetBGMDevice(AudioObjectID inBGMDeviceID);
+
+#pragma mark Update Controls List
+
     /*!
      Enable the BGMDevice controls (volume and mute currently) that can be matched to controls of
      the given device, and disable the ones that can't.
@@ -80,7 +85,11 @@ public:
      */
     void                PropagateControlListChange();
 
+#pragma mark Implementation
+
 private:
+    /* This class is lazily initialised, mainly as a convenience for the unit tests. */
+    void                LazyInit();
     /*! Changes the OS X default audio device to the Null Device and then back to BGMDevice. */
     void                ToggleDefaultDevice();
     /*!
@@ -99,7 +108,8 @@ private:
     void                DestroyBlock(dispatch_block_t __nullable & block);
 
 private:
-    CAMutex             mMutex         { "Device Controls List" };
+    CAMutex             mMutex { "Device Controls List" };
+    bool                mInitialised = false;
 
     BGMAudioDevice      mBGMDevice;
     CAHALAudioSystemObject mAudioSystem;  // Not guarded by the mutex.

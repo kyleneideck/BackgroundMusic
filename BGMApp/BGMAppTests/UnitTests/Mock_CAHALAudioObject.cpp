@@ -66,7 +66,7 @@ void	CAHALAudioObject::SetPropertyData(const AudioObjectPropertyAddress& inAddre
 
 AudioObjectID	CAHALAudioObject::GetObjectID() const
 {
-    Throw(new CAException(kAudio_UnimplementedError));
+    return kAudioObjectUnknown;
 }
 
 void	CAHALAudioObject::SetObjectID(AudioObjectID inObjectID)
