@@ -42,7 +42,7 @@ xpc_path1="/usr/local/libexec/BGMXPCHelper.xpc"
 xpc_path2="/Library/Application Support/Background Music/BGMXPCHelper.xpc"
 
 # Check that files/directories are at most this big before we delete them, just to be safe.
-max_size_mb_for_rm=5
+max_size_mb_for_rm=15
 
 file_paths=("${app_path}" "${driver_path}" "${xpc_path1}" "${xpc_path2}")
 
@@ -103,9 +103,13 @@ if [ "$user_prompt" == "y" ] || [ "$user_prompt" == "Y" ]; then
 
   # Remove the files defined in file_paths
   for path in "${file_paths[@]}"; do
-    if [ -e "${path}" ] && size_check "${path}"; then
-      echo "Moving \"${path}\" to the trash."
-      sudo mv -f "${path}" "${trash_dir}" &>/dev/null
+    if [ -e "${path}" ]; then
+      if size_check "${path}"; then
+        echo "Moving \"${path}\" to the trash."
+        sudo mv -f "${path}" "${trash_dir}" &>/dev/null
+      else
+        echo "Error: Refusing to delete \"${path}\" because it was much larger than expected."
+      fi
     fi
   done
 
