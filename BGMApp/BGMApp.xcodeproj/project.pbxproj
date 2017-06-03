@@ -1114,11 +1114,12 @@
 				GCC_WARN_UNUSED_LABEL = YES;
 				GCC_WARN_UNUSED_PARAMETER = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				RUN_CLANG_STATIC_ANALYZER = YES;
 				SDKROOT = macosx;
+				WARNING_CFLAGS = "-Wpartial-availability";
 			};
 			name = DebugOpt;
 		};
@@ -1137,7 +1138,7 @@
 				LLVM_LTO = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = com.bearisdriving.BGM.App;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				WARNING_CFLAGS = "";
+				WARNING_CFLAGS = "-Wpartial-availability";
 			};
 			name = DebugOpt;
 		};
@@ -1209,11 +1210,12 @@
 				GCC_WARN_UNUSED_LABEL = YES;
 				GCC_WARN_UNUSED_PARAMETER = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				RUN_CLANG_STATIC_ANALYZER = YES;
 				SDKROOT = macosx;
+				WARNING_CFLAGS = "-Wpartial-availability";
 			};
 			name = Debug;
 		};
@@ -1282,10 +1284,11 @@
 				GCC_WARN_UNUSED_LABEL = YES;
 				GCC_WARN_UNUSED_PARAMETER = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				RUN_CLANG_STATIC_ANALYZER = YES;
 				SDKROOT = macosx;
+				WARNING_CFLAGS = "-Wpartial-availability";
 			};
 			name = Release;
 		};
@@ -1304,7 +1307,7 @@
 				LLVM_LTO = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = com.bearisdriving.BGM.App;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				WARNING_CFLAGS = "";
+				WARNING_CFLAGS = "-Wpartial-availability";
 			};
 			name = Debug;
 		};
@@ -1323,7 +1326,10 @@
 				LLVM_LTO = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.bearisdriving.BGM.App;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				WARNING_CFLAGS = "-Wno-profile-instr-out-of-date";
+				WARNING_CFLAGS = (
+					"-Wno-profile-instr-out-of-date",
+					"-Wpartial-availability",
+				);
 			};
 			name = Release;
 		};
@@ -1339,6 +1345,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.bearisdriving.BGM.AppUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TEST_TARGET_NAME = "Background Music";
+				WARNING_CFLAGS = "";
 			};
 			name = Debug;
 		};
@@ -1353,6 +1360,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.bearisdriving.BGM.AppUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TEST_TARGET_NAME = "Background Music";
+				WARNING_CFLAGS = "";
 			};
 			name = Release;
 		};
@@ -1368,6 +1376,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.bearisdriving.BGM.AppUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				TEST_TARGET_NAME = "Background Music";
+				WARNING_CFLAGS = "";
 			};
 			name = DebugOpt;
 		};
@@ -1432,6 +1441,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.bearisdriving.BGM.AppUnitTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				WARNING_CFLAGS = "";
 			};
 			name = Debug;
 		};
@@ -1448,6 +1458,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.bearisdriving.BGM.AppUnitTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				WARNING_CFLAGS = "";
 			};
 			name = Release;
 		};
@@ -1464,6 +1475,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.bearisdriving.BGM.AppUnitTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				WARNING_CFLAGS = "";
 			};
 			name = DebugOpt;
 		};
@@ -1474,6 +1486,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.bearisdriving.BGM.XPCHelperTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				WARNING_CFLAGS = "";
 			};
 			name = Debug;
 		};
@@ -1484,6 +1497,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.bearisdriving.BGM.XPCHelperTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				WARNING_CFLAGS = "";
 			};
 			name = Release;
 		};
@@ -1494,6 +1508,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.bearisdriving.BGM.XPCHelperTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				WARNING_CFLAGS = "";
 			};
 			name = DebugOpt;
 		};

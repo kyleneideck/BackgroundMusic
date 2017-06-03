@@ -122,9 +122,14 @@ static CGFloat const kAppVolumeViewInitialHeight = 20;
         // Set the slider to the volume for this app if we got one from the driver
         [self setVolumeOfMenuItem:appVolItem fromAppVolumes:appVolumesOnDevice];
 
-        // TODO: This doesn't show up in Accessibility Inspector for me. Not sure why.
-        appVolItem.accessibilityTitle = [NSString stringWithFormat:@"%@", [app localizedName]];
-        
+        // NSMenuItem didn't implement NSAccessibility before OS X SDK 10.12.
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101200  // MAC_OS_X_VERSION_10_12
+        if ([self respondsToSelector:@selector(accessibilityTitle)]) {
+            // TODO: This doesn't show up in Accessibility Inspector for me. Not sure why.
+            appVolItem.accessibilityTitle = [NSString stringWithFormat:@"%@", [app localizedName]];
+        }
+#endif
+
         [bgmMenu insertItem:appVolItem atIndex:index];
     }
     
