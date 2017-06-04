@@ -1052,7 +1052,7 @@ void	BGM_Device::Device_SetPropertyData(AudioObjectID inObjectID, pid_t inClient
                         "BGM_Device::Device_SetPropertyData: CFType given for "
                         "kAudioDeviceCustomPropertyEnabledOutputControls was not a CFArray");
 
-                CACFArray theEnabledControls(theEnabledControlsRef, true);
+                CACFArray theEnabledControls(theEnabledControlsRef, false);
 
                 ThrowIf(theEnabledControls.GetNumberItems() != 2,
                         CAException(kAudioHardwareIllegalOperationError),
