@@ -17,7 +17,7 @@
 //  BGMAutoPauseMusic.m
 //  BGMApp
 //
-//  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016, 2017 Kyle Neideck
 //
 
 // Self Include
@@ -84,7 +84,18 @@ static Float32 const kUnpauseDelayWeightingFactor = 0.25f;
         enabled = NO;
         wePaused = NO;
         
-        dispatch_queue_attr_t attr = dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_DEFAULT, 0);
+        dispatch_queue_attr_t attr;
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpartial-availability"
+        if (&dispatch_queue_attr_make_with_qos_class) {
+            attr = dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_DEFAULT, 0);
+        } else {
+            // OS X 10.9 fallback
+            attr = DISPATCH_QUEUE_SERIAL;
+        }
+#pragma clang diagnostic pop
+
         listenerQueue = dispatch_queue_create("com.bearisdriving.BGM.AutoPauseMusic.Listener", attr);
         pauseUnpauseMusicQueue = dispatch_queue_create("com.bearisdriving.BGM.AutoPauseMusic.PauseUnpauseMusic", attr);
         

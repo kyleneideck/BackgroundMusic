@@ -88,8 +88,8 @@ public:
 #pragma mark Implementation
 
 private:
-    /* This class is lazily initialised, mainly as a convenience for the unit tests. */
-    void                LazyInit();
+    /*! Lazily initialises the fields used to toggle the default device. */
+    void                InitDeviceToggling();
     /*! Changes the OS X default audio device to the Null Device and then back to BGMDevice. */
     void                ToggleDefaultDevice();
     /*!
@@ -109,7 +109,9 @@ private:
 
 private:
     CAMutex             mMutex { "Device Controls List" };
-    bool                mInitialised = false;
+    bool                mDeviceTogglingInitialised = false;
+    // OS X 10.9 doesn't have the functions we use for PropagateControlListChange.
+    bool                mCanToggleDeviceOnSystem;
 
     BGMAudioDevice      mBGMDevice;
     CAHALAudioSystemObject mAudioSystem;  // Not guarded by the mutex.

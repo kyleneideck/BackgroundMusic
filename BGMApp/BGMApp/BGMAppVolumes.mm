@@ -124,9 +124,12 @@ static CGFloat const kAppVolumeViewInitialHeight = 20;
 
         // NSMenuItem didn't implement NSAccessibility before OS X SDK 10.12.
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101200  // MAC_OS_X_VERSION_10_12
-        if ([self respondsToSelector:@selector(accessibilityTitle)]) {
+        if ([appVolItem respondsToSelector:@selector(setAccessibilityTitle:)]) {
             // TODO: This doesn't show up in Accessibility Inspector for me. Not sure why.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpartial-availability"
             appVolItem.accessibilityTitle = [NSString stringWithFormat:@"%@", [app localizedName]];
+#pragma clang diagnostic pop
         }
 #endif
 
@@ -365,7 +368,12 @@ static CGFloat const kAppVolumeViewInitialHeight = 20;
     //       when they have non-default values.
     [ctx showHideExtraControls:self];
 
-    self.accessibilityTitle = @"More options";
+    if ([self respondsToSelector:@selector(setAccessibilityTitle:)]) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpartial-availability"
+        self.accessibilityTitle = @"More options";
+#pragma clang diagnostic pop
+    }
 }
 
 @end
@@ -391,7 +399,12 @@ static CGFloat const kAppVolumeViewInitialHeight = 20;
     self.maxValue = kAppRelativeVolumeMaxRawValue;
     self.minValue = kAppRelativeVolumeMinRawValue;
 
-    self.accessibilityTitle = [NSString stringWithFormat:@"Volume for %@", [app localizedName]];
+    if ([self respondsToSelector:@selector(setAccessibilityTitle:)]) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpartial-availability"
+        self.accessibilityTitle = [NSString stringWithFormat:@"Volume for %@", [app localizedName]];
+#pragma clang diagnostic pop
+    }
 }
 
 // We have to handle snapping for volume sliders ourselves because adding a tick mark (snap point) in Interface Builder
@@ -442,7 +455,12 @@ static CGFloat const kAppVolumeViewInitialHeight = 20;
     self.minValue = kAppPanLeftRawValue;
     self.maxValue = kAppPanRightRawValue;
 
-    self.accessibilityTitle = [NSString stringWithFormat:@"Pan for %@", [app localizedName]];
+    if ([self respondsToSelector:@selector(setAccessibilityTitle:)]) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpartial-availability"
+        self.accessibilityTitle = [NSString stringWithFormat:@"Pan for %@", [app localizedName]];
+#pragma clang diagnostic pop
+    }
 }
 
 - (void) setPanPosition:(NSNumber *)panPosition {

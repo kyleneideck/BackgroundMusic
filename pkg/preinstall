@@ -1,0 +1,55 @@
+#!/bin/sh
+# vim: tw=100:
+
+# This file is part of Background Music.
+#
+# Background Music is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation, either version 2 of the
+# License, or (at your option) any later version.
+#
+# Background Music is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Background Music. If not, see <http://www.gnu.org/licenses/>.
+
+#
+# preinstall
+#
+# Copyright © 2017 Kyle Neideck
+#
+
+PATH=/bin:/sbin:/usr/bin:/usr/sbin; export PATH
+
+# Show a warning if we can't find a safe dir to install BGMXPCHelper in. Should be very unlikely.
+xpc_helper_path="$(bash safe_install_dir.sh -y)"
+
+if [ "$(bash safe_install_dir.sh "$xpc_helper_path")" != "1" ]; then
+    # TODO: This message could be more user friendly.
+    msg="We need to install a helper app called BGMXPCHelper to ${xpc_helper_path}, but it may not "
+    msg+="be secure to do so.\n\n"
+    msg+="${xpc_helper_path} and all of its parent directories should be owned by 'root', with the "
+    msg+="group 'wheel', and have permissions 755 (rwxr-xr-x).\n\n"
+    msg+="Background Music will still work if you decide to continue."
+
+    if ! osascript <<EOT
+        tell application id "com.apple.systemuiserver"
+            display alert "Warning" \
+                message "$msg" \
+                buttons {"Cancel", "Install Anyway"} \
+                default button "Cancel" \
+                cancel button "Cancel" \
+                as warning
+        end tell
+EOT
+    then
+        exit 1
+    fi
+fi
+
+exit 0
+
+

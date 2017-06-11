@@ -20,7 +20,7 @@
 # safe_install_dir.sh
 # BGMXPCHelper
 #
-# Copyright © 2016 Kyle Neideck
+# Copyright © 2016, 2017 Kyle Neideck
 #
 # Prints the path to a directory the BGMXPCHelper bundle can safely be installed to. Intended to be
 # used as the INSTALL_DIR environment variable for xcodebuild commands. For example,
@@ -55,6 +55,8 @@
 # If given a directory as an argument, this script will print "1" if the directory meets the
 # recommendation above, or "0" otherwise.
 #
+
+PATH=/bin:/sbin:/usr/bin:/usr/sbin; export PATH
 
 # Safe mode.
 set -euo pipefail
@@ -96,13 +98,17 @@ check_dir() {
 # Used when we can't find a suitable installation directory. Prints an error message and exits.
 # (Reaching this point should be very uncommon.)
 fail() {
-    echo "$(tput setaf 11)WARNING$(tput sgr0): Installing BGMXPCHelper to its default location" \
-         "(${INSTALL_DIR} or, as a backup, ${BACKUP_INSTALL_DIR}) might not be secure on this" \
-         "system. It's recommended that each directory from the installation directory up to the" \
-         "root directory should be owned by root and not writable by any other user. See" \
-         "safe_install_dir.sh for more details." >&2
+    if [[ $ALLOW_UNSAFE_FALLBACK -eq 1 ]]; then
+        CONTINUE_ANYWAY="y"
+    else
+        echo "$(tput setaf 11)WARNING$(tput sgr0): Installing BGMXPCHelper to its default" \
+             "location (${INSTALL_DIR} or, as a backup, ${BACKUP_INSTALL_DIR}) might not be" \
+             "secure on this system. It's recommended that each directory from the installation" \
+             "directory up to the root directory should be owned by root and not writable by any" \
+             "other user. See safe_install_dir.sh for more details." >&2
 
-    read -e -p "Continue anyway? [y/N]" CONTINUE_ANYWAY
+        read -e -p "Continue anyway? [y/N]" CONTINUE_ANYWAY
+    fi
 
     if [[ "${CONTINUE_ANYWAY}" == "y" ]] || [[ "${CONTINUE_ANYWAY}" == "Y" ]]; then
         echo "${INSTALL_DIR}"
@@ -114,16 +120,26 @@ fail() {
     fi
 }
 
-# This script can be given a directory to check as an argument.
-# (Uses "${1+x}" instead of "$1" because having our "safe mode" enabled makes the script fail if you
-# reference an unset variable, even to check whether it's set or not.)
-if [[ ! -z "${1+x}" ]]; then
-    # Check the given path exists and is a directory.
-    if [[ ! -d "$1" ]]; then echo "$1 is not a directory." >&2; exit 1; fi
+ALLOW_UNSAFE_FALLBACK=0
 
-    check_dir "$1"
-    echo ${DIR_IS_SAFE}
-    exit 0
+# This script can be given a directory to check as an argument, or the -y option, which tells this
+# script to print the default dir if neither of the dirs are safe. The pkg installer uses -y so it
+# can install anyway and show the user instructions to fix the permissions, rather than just
+# failing.
+#
+# (This line uses "${1+x}" instead of "$1" because having our "safe mode" enabled makes the script
+# fail if you reference an unset variable, even to check whether it's set or not.)
+if [[ ! -z "${1+x}" ]]; then
+    if [[ "$1" == "-y" ]]; then
+        ALLOW_UNSAFE_FALLBACK=1
+    else
+        # Check the given path exists and is a directory.
+        if [[ ! -d "$1" ]]; then echo "$1 is not a directory." >&2; exit 1; fi
+
+        check_dir "$1"
+        echo ${DIR_IS_SAFE}
+        exit 0
+    fi
 fi
 
 # These are just for readability and to save keystrokes. If you change them, you'll have to change
@@ -143,7 +159,7 @@ if [[ ! -e "${INSTALL_DIR}" ]]; then
     sudo chmod go-w "${INSTALL_DIR}" 
 fi
 
-# Check the directory Xcode installed the build to.
+# Check the directory the build was installed to.
 check_dir "${INSTALL_DIR}"
 
 if [[ ${DIR_IS_SAFE} -eq 1 ]]; then

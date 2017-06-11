@@ -1,0 +1,55 @@
+#!/bin/sh
+# vim: tw=100:
+
+# This file is part of Background Music.
+#
+# Background Music is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation, either version 2 of the
+# License, or (at your option) any later version.
+#
+# Background Music is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Background Music. If not, see <http://www.gnu.org/licenses/>.
+
+#
+# preinstall
+#
+# Copyright © 2017 Kyle Neideck
+#
+
+PATH=/bin:/sbin:/usr/bin:/usr/sbin; export PATH
+
+dest_volume="$3"
+xpc_helper_path="$(bash safe_install_dir.sh -y)"
+
+logger "Installing BGMXPCHelper to $xpc_helper_path"
+cp -Rf "BGMXPCHelper.xpc" "$xpc_helper_path"
+
+# TODO: Fail the install and show an error message if this fails.
+bash "post_install.sh" "$xpc_helper_path" "BGMXPCHelper.xpc/Contents/MacOS/BGMXPCHelper" "."
+
+# TODO: Verify the installed files, their permissions, the _BGMXPCHelper user/group, etc.
+
+# The extra or-clauses are fallback versions of the command that restarts coreaudiod. Apparently
+# some of these commands don't work with older versions of launchctl, so I figure there's no
+# harm in trying a bunch of different ways (which should all work).
+(launchctl kill SIGTERM system/com.apple.audio.coreaudiod &>/dev/null || \
+    launchctl kill TERM system/com.apple.audio.coreaudiod &>/dev/null || \
+    launchctl kill 15 system/com.apple.audio.coreaudiod &>/dev/null || \
+    launchctl kill -15 system/com.apple.audio.coreaudiod &>/dev/null || \
+    (launchctl unload "$coreaudiod_plist" &>/dev/null && \
+        launchctl load "$coreaudiod_plist" &>/dev/null) || \
+    killall coreaudiod &>/dev/null) && \
+    sleep 5
+
+open "${dest_volume}/Applications/Background Music.app"
+
+# The installer plays a sound when it finishes, so give BGMApp a second to launch.
+sleep 1
+
+

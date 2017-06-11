@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<installer-gui-script minSpecVersion="1">
+    <title>Background Music {{VERSION}}</title>
+
+    <volume-check>
+        <allowed-os-versions>
+            <!-- TODO: Get this from the Xcode project files instead of hardcoding it. -->
+            <os-version min="10.9" />
+        </allowed-os-versions>
+    </volume-check>
+
+    <!--
+      Do not specify <domains>.
+      Installer does not show "OS X version X.Y.Z or later is required" message when <domains> exists.
+      <domains enable_anywhere="false" enable_currentUserHome="false" enable_localSystem="true" />
+      -->
+
+    <pkg-ref id="com.bearisdriving.BGM"/>
+
+    <options customize="never" require-scripts="false" />
+
+    <choices-outline>
+        <line choice="default">
+            <line choice="com.bearisdriving.BGM" />
+        </line>
+    </choices-outline>
+
+    <choice id="default"/>
+
+    <choice id="com.bearisdriving.BGM" visible="false">
+        <pkg-ref id="com.bearisdriving.BGM" />
+    </choice>
+
+    <pkg-ref id="com.bearisdriving.BGM" version="{{VERSION}}">Installer.pkg</pkg-ref>
+
+    <pkg-ref id="com.bearisdriving.BGM">
+        <must-close>
+            <app id="com.bearisdriving.BGM.App" />
+        </must-close>
+    </pkg-ref>
+
+    <background file="FermataIcon.pdf" alignment="bottomleft" />
+</installer-gui-script>
+
+

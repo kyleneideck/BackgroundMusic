@@ -64,22 +64,58 @@ static float const kStatusBarIconPadding = 0.25;
     }
     
     haveShownXPCHelperErrorMessage = NO;
-    
-    // Set up the status bar item
+
+    [self initStatusBarItem];
+}
+
+// Set up the status bar item. (The thing you click to show BGMApp's UI.)
+- (void) initStatusBarItem {
     statusBarItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSSquareStatusItemLength];
     
     // Set the icon
     NSImage* icon = [NSImage imageNamed:@"FermataIcon"];
+
+    // NSStatusItem doesn't have the "button" property on OS X 10.9.
+    BOOL buttonAvailable = (floor(NSAppKitVersionNumber) >= NSAppKitVersionNumber10_10);
+
     if (icon != nil) {
-        CGFloat lengthMinusPadding = [[statusBarItem button] frame].size.height * (1 - kStatusBarIconPadding);
+        NSRect statusBarItemFrame;
+
+        if (buttonAvailable) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpartial-availability"
+            statusBarItemFrame = statusBarItem.button.frame;
+#pragma clang diagnostic pop
+        } else {
+            // OS X 10.9 fallback. I haven't tested this (or anything else on 10.9).
+            statusBarItemFrame = statusBarItem.view.frame;
+        }
+
+        CGFloat lengthMinusPadding = statusBarItemFrame.size.height * (1 - kStatusBarIconPadding);
         [icon setSize:NSMakeSize(lengthMinusPadding, lengthMinusPadding)];
+
         // Make the icon a "template image" so it gets drawn colour-inverted when it's highlighted or the status
         // bar's in dark mode
         [icon setTemplate:YES];
-        statusBarItem.button.image = icon;
+
+        if (buttonAvailable) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpartial-availability"
+            statusBarItem.button.image = icon;
+#pragma clang diagnostic pop
+        } else {
+            statusBarItem.image = icon;
+        }
     } else {
         // If our icon is missing for some reason, fallback to a fermata character (1D110)
-        statusBarItem.button.title = @"𝄐";
+        if (buttonAvailable) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpartial-availability"
+            statusBarItem.button.title = @"𝄐";
+#pragma clang diagnostic pop
+        } else {
+            statusBarItem.title = @"𝄐";
+        }
     }
     
     // Set the main menu

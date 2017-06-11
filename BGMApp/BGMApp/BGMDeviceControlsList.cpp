@@ -50,11 +50,24 @@ BGMDeviceControlsList::BGMDeviceControlsList(AudioObjectID inBGMDevice,
     BGMAssert((mBGMDevice.GetObjectID() == mAudioSystem.GetAudioDeviceForUID(CFSTR(kBGMDeviceUID)) ||
                     mBGMDevice.GetObjectID() == kAudioObjectUnknown),
               "BGMDeviceControlsList::BGMDeviceControlsList: Given device is not BGMDevice");
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpartial-availability"
+    mCanToggleDeviceOnSystem = (&dispatch_block_wait &&
+                                &dispatch_block_cancel &&
+                                &dispatch_block_testcancel &&
+                                &dispatch_queue_attr_make_with_qos_class);
+#pragma clang diagnostic pop
 }
 
 BGMDeviceControlsList::~BGMDeviceControlsList()
 {
     CAMutex::Locker locker(mMutex);
+
+    if(!mDeviceTogglingInitialised)
+    {
+        return;
+    }
 
     BGMLogAndSwallowExceptions("BGMDeviceControlsList::~BGMDeviceControlsList", [&] {
         mAudioSystem.RemovePropertyListenerBlock(CAPropertyAddress(kAudioHardwarePropertyDevices),
@@ -75,7 +88,10 @@ BGMDeviceControlsList::~BGMDeviceControlsList()
         // Note that if mDisableNullDeviceBlock is currently running this will return after it
         // finishes and if it's already run this will return immediately. So we don't have to
         // worry about ending up waiting for mDisableNullDeviceBlock when it isn't queued.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpartial-availability"
         bool timedOut = dispatch_block_wait(disableNullDeviceBlock, kDisableNullDeviceTimeout);
+#pragma clang diagnostic pop
 
         if(timedOut)
         {
@@ -111,10 +127,9 @@ bool    BGMDeviceControlsList::MatchControlsListOf(AudioObjectID inDeviceID)
 {
     CAMutex::Locker locker(mMutex);
 
-    LazyInit();
-
-    if(mBGMDevice == kAudioObjectUnknown)
+    if(mBGMDevice.GetObjectID() != mAudioSystem.GetAudioDeviceForUID(CFSTR(kBGMDeviceUID)))
     {
+        LogWarning("BGMDeviceControlsList::MatchControlsListOf: BGMDevice ID not set");
         return false;
     }
 
@@ -228,12 +243,12 @@ void    BGMDeviceControlsList::PropagateControlListChange()
 {
     CAMutex::Locker locker(mMutex);
 
-    LazyInit();
-
-    if(mBGMDevice == kAudioObjectUnknown)
+    if((mBGMDevice == kAudioObjectUnknown) || !mCanToggleDeviceOnSystem)
     {
         return;
     }
+
+    InitDeviceToggling();
 
     // Leave the default device alone if the user has changed it since launching BGMApp.
     bool bgmDeviceIsDefault = true;
@@ -267,17 +282,18 @@ void    BGMDeviceControlsList::PropagateControlListChange()
 
 #pragma mark Implementation
 
-void    BGMDeviceControlsList::LazyInit()
+void    BGMDeviceControlsList::InitDeviceToggling()
 {
     CAMutex::Locker locker(mMutex);
 
-    if(mInitialised)
+    if(mDeviceTogglingInitialised || !mCanToggleDeviceOnSystem)
     {
         return;
     }
 
     BGMAssert(mBGMDevice.GetObjectID() == mAudioSystem.GetAudioDeviceForUID(CFSTR(kBGMDeviceUID)),
-              "BGMDeviceControlsList::LazyInit: mBGMDevice device is not set to BGMDevice's ID");
+              "BGMDeviceControlsList::InitDeviceToggling: mBGMDevice device is not set to "
+              "BGMDevice's ID");
 
     mDeviceToggleBlock = CreateDeviceToggleBlock();
     mDeviceToggleBackBlock = CreateDeviceToggleBackBlock();
@@ -285,8 +301,11 @@ void    BGMDeviceControlsList::LazyInit()
 
     // Register a listener to find out when the Null Device becomes available/unavailable. See
     // ToggleDefaultDevice.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpartial-availability"
     dispatch_queue_attr_t attr =
         dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_DEFAULT, 0);
+#pragma clang diagnostic pop
     mListenerQueue = dispatch_queue_create("com.bearisdriving.BGM.BGMDeviceControlsList", attr);
 
     mListenerBlock = ^(UInt32 inNumberAddresses, const AudioObjectPropertyAddress* inAddresses) {
@@ -302,35 +321,35 @@ void    BGMDeviceControlsList::LazyInit()
             switch(inAddresses[i].mSelector)
             {
                 case kAudioHardwarePropertyDevices:
-                {
-                    CAMutex::Locker innerLocker(mMutex);
+                    {
+                        CAMutex::Locker innerLocker(mMutex);
 
-                    DebugMsg("BGMDeviceControlsList::LazyInit: Got "
-                             "kAudioHardwarePropertyDevices");
+                        DebugMsg("BGMDeviceControlsList::InitDeviceToggling: Got "
+                                 "kAudioHardwarePropertyDevices");
 
-                    // Cancel the previous block in case it hasn't run yet.
-                    DestroyBlock(mDeviceToggleBlock);
+                        // Cancel the previous block in case it hasn't run yet.
+                        DestroyBlock(mDeviceToggleBlock);
 
-                    mDeviceToggleBlock = CreateDeviceToggleBlock();
+                        mDeviceToggleBlock = CreateDeviceToggleBlock();
 
-                    // Changing the default device too quickly after enabling the Null Device
-                    // seems to cause problems with some programs. Not sure why.
-                    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kToggleDeviceInitialDelay),
-                                   dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0),
-                                   mDeviceToggleBlock);
-                }
+                        // Changing the default device too quickly after enabling the Null Device
+                        // seems to cause problems with some programs. Not sure why.
+                        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kToggleDeviceInitialDelay),
+                                       dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0),
+                                       mDeviceToggleBlock);
+                    }
                     break;
             }
         }
     };
 
-    BGMLogAndSwallowExceptions("BGMDeviceControlsList::LazyInit", [&] {
+    BGMLogAndSwallowExceptions("BGMDeviceControlsList::InitDeviceToggling", [&] {
         mAudioSystem.AddPropertyListenerBlock(CAPropertyAddress(kAudioHardwarePropertyDevices),
                                               mListenerQueue,
                                               mListenerBlock);
     });
 
-    mInitialised = true;
+    mDeviceTogglingInitialised = true;
 }
 
 void    BGMDeviceControlsList::ToggleDefaultDevice()
@@ -385,6 +404,9 @@ void    BGMDeviceControlsList::SetNullDeviceEnabled(bool inEnabled)
     bgmDriver.SetPropertyData_CFType(CAPropertyAddress(kAudioPlugInCustomPropertyNullDeviceActive),
                                      (inEnabled ? kCFBooleanTrue : kCFBooleanFalse));
 }
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpartial-availability"
 
 dispatch_block_t    BGMDeviceControlsList::CreateDeviceToggleBlock()
 {
@@ -478,6 +500,8 @@ void    BGMDeviceControlsList::DestroyBlock(dispatch_block_t __nullable & block)
         block = nullptr;
     }
 }
+
+#pragma clang diagnostic pop /* -Wpartial-availability */
 
 #pragma clang assume_nonnull end
 

@@ -62,6 +62,15 @@ script:
   - if ls -la "/usr/local/libexec/BGMXPCHelper.xpc"; then false; fi
   - if ls -la "/Library/Application Support/Background Music/BGMXPCHelper.xpc"; then false; fi
   - if ls -la "/Library/LaunchDaemons/com.bearisdriving.BGM.XPCHelper.plist"; then false; fi
+# Build the .pkg installer.
+  - ./package.sh
+# Install the .pkg.
+  - sudo installer -pkg Background-Music-*/BackgroundMusic-*.pkg -target / -verbose -dumplog
+# Check the BGM dirs and files were installed again.
+  - ls -la "/Applications/Background Music.app"
+  - ls -la "/Library/Audio/Plug-Ins/HAL/Background Music Device.driver"
+  - ls -la "/usr/local/libexec/BGMXPCHelper.xpc" || ls -la "/Library/Application Support/Background Music/BGMXPCHelper.xpc"
+  - ls -la "/Library/LaunchDaemons/com.bearisdriving.BGM.XPCHelper.plist"
 # Post on IRC when Travis builds finish.
 notifications:
   irc: "irc.freenode.org#backgroundmusic"

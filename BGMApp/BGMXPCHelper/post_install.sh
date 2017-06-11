@@ -20,7 +20,7 @@
 # post_install.sh
 # BGMXPCHelper
 #
-# Copyright © 2016 Kyle Neideck
+# Copyright © 2016, 2017 Kyle Neideck
 #
 # Installs BGMXPCHelper's launchd plist file and "bootstraps" (registers/enables) it with launchd.
 #
@@ -28,29 +28,46 @@
 # runs as the final build phase.
 #
 
-# Check the environment variables we need from Xcode.
-if [[ -z ${EXECUTABLE_PATH} ]]; then
-    echo "Environment variable EXECUTABLE_PATH was not set." >&2
-    exit 1
+PATH=/bin:/sbin:/usr/bin:/usr/sbin; export PATH
+
+# Check we have the paths we need, either in environment variables from Xcode or from the args.
+if [[ -z $1 ]]; then
+    if [[ -z ${INSTALL_DIR} ]]; then
+        echo "Environment variable INSTALL_DIR was not set." >&2
+        exit 1
+    fi
+else
+    INSTALL_DIR="$1"
 fi
-if [[ -z ${INSTALL_DIR} ]]; then
-    echo "Environment variable INSTALL_DIR was not set." >&2
-    exit 1
+
+if [[ -z $2 ]]; then
+    if [[ -z ${EXECUTABLE_PATH} ]]; then
+        echo "Environment variable EXECUTABLE_PATH was not set." >&2
+        exit 1
+    fi
+else
+    EXECUTABLE_PATH="$2"
 fi
-if [[ -z ${TARGET_BUILD_DIR} ]]; then
-    echo "Environment variable TARGET_BUILD_DIR was not set." >&2
-    exit 1
-fi
-if [[ -z ${UNLOCALIZED_RESOURCES_FOLDER_PATH} ]]; then
-    echo "Environment variable UNLOCALIZED_RESOURCES_FOLDER_PATH was not set." >&2
-    exit 1
+
+if [[ -z $3 ]]; then
+    if [[ -z ${TARGET_BUILD_DIR} ]]; then
+        echo "Environment variable TARGET_BUILD_DIR was not set." >&2
+        exit 1
+    fi
+
+    if [[ -z ${UNLOCALIZED_RESOURCES_FOLDER_PATH} ]]; then
+        echo "Environment variable UNLOCALIZED_RESOURCES_FOLDER_PATH was not set." >&2
+        exit 1
+    fi
+
+    RESOURCES_PATH="${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}"
+else
+    RESOURCES_PATH="$3"
 fi
 
 # Safe mode.
 set -euo pipefail
 IFS=$'\n\t'
-
-RESOURCES_PATH="${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}"
 
 # Show a warning if INSTALL_DIR isn't set to a safe installation directory.
 if [[ $(bash "${RESOURCES_PATH}/safe_install_dir.sh" "${INSTALL_DIR}") != 1 ]]; then
