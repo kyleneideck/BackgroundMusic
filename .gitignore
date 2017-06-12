@@ -5,6 +5,7 @@
 .idea/
 tags
 cmake-build-debug/
+/Background-Music-*/
 
 # Everything below is from https://github.com/github/gitignore/blob/master/Objective-C.gitignore
 

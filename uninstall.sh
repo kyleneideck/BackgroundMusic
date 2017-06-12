@@ -33,6 +33,8 @@
 # Halt on errors.
 set -e
 
+PATH=/bin:/sbin:/usr/bin:/usr/sbin; export PATH
+
 bold=$(tput bold)
 normal=$(tput sgr0)
 
