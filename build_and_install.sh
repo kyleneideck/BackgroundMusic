@@ -123,7 +123,6 @@ APP_PATH="/Applications"
 APP_DIR="Background Music.app"
 DRIVER_PATH="/Library/Audio/Plug-Ins/HAL"
 DRIVER_DIR="Background Music Device.driver"
-XPC_HELPER_PATH="$(BGMApp/BGMXPCHelper/safe_install_dir.sh)"
 XPC_HELPER_DIR="BGMXPCHelper.xpc"
 
 GENERAL_ERROR_MSG="Internal script error. Probably a bug in this script."
@@ -252,7 +251,6 @@ parse_options() {
                 # The dirs xcodebuild will build in.
                 APP_PATH="./BGMApp/build"
                 DRIVER_PATH="./BGMDriver/build"
-                XPC_HELPER_PATH="${APP_PATH}"
                 ;;
             w)
                 # TODO: What if they also pass their own OTHER_CFLAGS with -x?
@@ -540,6 +538,8 @@ fi
 
 # Print initial message.
 if [[ "${XCODEBUILD_ACTION}" == "install" ]]; then
+    XPC_HELPER_PATH="$(BGMApp/BGMXPCHelper/safe_install_dir.sh)"
+
     echo "$(bold_face About to install Background Music). Please pause all audio, if you can."
     [[ "${CONFIGURATION}" == "Debug" ]] && echo "Debug build."
     echo
@@ -550,6 +550,8 @@ if [[ "${XCODEBUILD_ACTION}" == "install" ]]; then
     echo " - /Library/LaunchDaemons/com.bearisdriving.BGM.XPCHelper.plist"
     echo
 elif [[ "${XCODEBUILD_ACTION}" == "build" ]]; then
+    XPC_HELPER_PATH="${APP_PATH}"
+
     echo "$(bold_face Building Background Music...)"
     echo
 fi

@@ -35,18 +35,24 @@ if [ "$(bash safe_install_dir.sh "$xpc_helper_path")" != "1" ]; then
     msg+="group 'wheel', and have permissions 755 (rwxr-xr-x).\n\n"
     msg+="Background Music will still work if you decide to continue."
 
-    if ! osascript <<EOT
-        tell application id "com.apple.systemuiserver"
-            display alert "Warning" \
-                message "$msg" \
-                buttons {"Cancel", "Install Anyway"} \
-                default button "Cancel" \
-                cancel button "Cancel" \
-                as warning
-        end tell
-EOT
-    then
+    if [ "$COMMAND_LINE_INSTALL" == "1" ]; then
+        # As far as I can tell, we can't print anything the user is likely to see.
+        logger "WARNING: $msg"
         exit 1
+    else
+        if ! osascript <<EOT
+            tell application id "com.apple.systemuiserver"
+                display alert "Warning" \
+                    message "$msg" \
+                    buttons {"Cancel", "Install Anyway"} \
+                    default button "Cancel" \
+                    cancel button "Cancel" \
+                    as warning
+            end tell
+EOT
+        then
+            exit 1
+        fi
     fi
 fi
 

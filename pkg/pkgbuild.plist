@@ -5,6 +5,13 @@
     <dict>
       <key>RootRelativeBundlePath</key>      <string>Applications/Background Music.app</string>
       <key>BundleHasStrictIdentifier</key>   <false/>
+      <key>BundleIsRelocatable</key>         <true/>
+      <key>BundleIsVersionChecked</key>      <false/>
+      <key>BundleOverwriteAction</key>       <string>upgrade</string>
+    </dict>
+    <dict>
+      <key>RootRelativeBundlePath</key>      <string>Library/Audio/Plug-Ins/HAL/Background Music Device.driver</string>
+      <key>BundleHasStrictIdentifier</key>   <false/>
       <key>BundleIsRelocatable</key>         <false/>
       <key>BundleIsVersionChecked</key>      <false/>
       <key>BundleOverwriteAction</key>       <string>upgrade</string>
