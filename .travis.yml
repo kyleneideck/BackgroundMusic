@@ -85,6 +85,8 @@ deploy:
   skip_cleanup: true
   on:
     repo: kyleneideck/BackgroundMusic
+    tags: true
+    # TODO: Use "condition" to build master and tags?
     condition: $DEPLOY = true
 
 
