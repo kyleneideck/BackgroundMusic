@@ -90,6 +90,8 @@ cp -R "BGMApp/build/Release/BGMXPCHelper.xpc" "$scripts_dir"
 
 set_permissions "pkgroot"
 chmod 755 "pkgroot/Applications/Background Music.app/Contents/MacOS/Background Music"
+chmod 755 "pkgroot/Applications/Background Music.app/Contents/Resources/uninstall.sh"
+chmod 755 "pkgroot/Applications/Background Music.app/Contents/Resources/_uninstall-non-interactive.sh"
 chmod 755 "pkgroot/Library/Audio/Plug-Ins/HAL/Background Music Device.driver/Contents/MacOS/Background Music Device"
 
 set_permissions "$scripts_dir"

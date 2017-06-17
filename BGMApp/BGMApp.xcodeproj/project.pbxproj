@@ -39,6 +39,7 @@
 		1C533C7A1EED28B700270802 /* uninstall.sh in Resources */ = {isa = PBXBuildFile; fileRef = 1C533C791EED28B700270802 /* uninstall.sh */; };
 		1C533C7B1EED2F6200270802 /* safe_install_dir.sh in Resources */ = {isa = PBXBuildFile; fileRef = 276972901CB16008007A2F7C /* safe_install_dir.sh */; };
 		1C533C7C1EED2F8A00270802 /* com.bearisdriving.BGM.XPCHelper.plist.template in Resources */ = {isa = PBXBuildFile; fileRef = 2769728D1CAFCEFD007A2F7C /* com.bearisdriving.BGM.XPCHelper.plist.template */; };
+		1C533C801EF532CA00270802 /* _uninstall-non-interactive.sh in Resources */ = {isa = PBXBuildFile; fileRef = 1C533C7F1EF532CA00270802 /* _uninstall-non-interactive.sh */; };
 		1CB8B33D1BBA75EF000E2DD1 /* BGMAppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1CB8B33C1BBA75EF000E2DD1 /* BGMAppDelegate.mm */; };
 		1CB8B33F1BBA75EF000E2DD1 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 1CB8B33E1BBA75EF000E2DD1 /* main.m */; };
 		1CC1DF811BE5068A00FB8FE4 /* CACFArray.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CC1DF7D1BE5068A00FB8FE4 /* CACFArray.cpp */; };
@@ -216,6 +217,7 @@
 		1C46994D1BD7694C00F78043 /* BGMDeviceControlSync.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BGMDeviceControlSync.h; sourceTree = "<group>"; };
 		1C50FF641EC9F4500031A6EA /* libPublicUtility.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libPublicUtility.a; path = "../../../Library/Developer/Xcode/DerivedData/BGM-cgeucfvbrkmtbnhewbqjwrqspirp/Build/Products/Debug/libPublicUtility.a"; sourceTree = "<group>"; };
 		1C533C791EED28B700270802 /* uninstall.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = uninstall.sh; path = ../../uninstall.sh; sourceTree = "<group>"; };
+		1C533C7F1EF532CA00270802 /* _uninstall-non-interactive.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = "_uninstall-non-interactive.sh"; sourceTree = "<group>"; };
 		1C8034C21BDAFD5700668E00 /* CAPThread.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CAPThread.cpp; path = PublicUtility/CAPThread.cpp; sourceTree = "<group>"; };
 		1C8034C31BDAFD5700668E00 /* CAPThread.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CAPThread.h; path = PublicUtility/CAPThread.h; sourceTree = "<group>"; };
 		1CB8B3361BBA75EF000E2DD1 /* Background Music.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Background Music.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -520,6 +522,7 @@
 				1CED61681C3081C2002CAFCF /* LICENSE */,
 				1CC1DF951BE8607700FB8FE4 /* Images.xcassets */,
 				1CB8B33A1BBA75EF000E2DD1 /* Info.plist */,
+				1C533C7F1EF532CA00270802 /* _uninstall-non-interactive.sh */,
 				1C533C791EED28B700270802 /* uninstall.sh */,
 				1CB8B33E1BBA75EF000E2DD1 /* main.m */,
 			);
@@ -799,6 +802,7 @@
 			files = (
 				274827951E11052500B31D8D /* MainMenu.xib in Resources */,
 				1C533C7A1EED28B700270802 /* uninstall.sh in Resources */,
+				1C533C801EF532CA00270802 /* _uninstall-non-interactive.sh in Resources */,
 				1CED61691C3081C2002CAFCF /* LICENSE in Resources */,
 				1C2FC3041EB4D6E700A76592 /* BGMApp.sdef in Resources */,
 				1CC1DF961BE8607700FB8FE4 /* Images.xcassets in Resources */,

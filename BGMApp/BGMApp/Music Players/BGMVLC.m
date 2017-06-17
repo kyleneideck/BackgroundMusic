@@ -101,7 +101,7 @@
 //
 // VLC's Scripting Bridge interface doesn't seem to have a cleaner way to do this.
 + (void) togglePlay {
-    NSString* src = @"tell application \"VLC\" to play";
+    NSString* src = @"tell application id \"org.videolan.vlc\" to play";
     NSAppleScript* script = [[NSAppleScript alloc] initWithSource:src];
     [script executeAndReturnError:nil];
 }
