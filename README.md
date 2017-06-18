@@ -13,9 +13,23 @@
 - No restart required to install
 - Runs entirely in userspace
 
-**Version 0.1.0**, first release. Probably very buggy. Not very polished or well tested.
+## Download
 
-**Requires OS X 10.10+**. Might work on 10.9, but I haven't tried it. Currently unable to build in Xcode 6.
+**Version 0.1.1**:
+[BackgroundMusic-0.1.1.pkg](https://github.com/kyleneideck/BackgroundMusic/releases/download/v0.1.1/BackgroundMusic-0.1.1.pkg)
+![](Images/README/pkg-icon.png) (473 KB)
+
+Still very much in alpha. Not code signed, so you'll have to **right-click it and choose "Open"**. (It is [PGP
+signed](https://github.com/kyleneideck/BackgroundMusic/releases/download/v0.1.1/BackgroundMusic-0.1.1.pkg.asc), though.)
+
+**Requires OS X 10.10+**. Should work on 10.9, but I haven't tried it. Currently unable to build in Xcode 6.
+
+<small>
+- MD5: e02988e6b32eafa88b99c4da33e7fe56
+- SHA256: 7ce875bb00fdeb2b5b363aa92367b3fa096d18cb02a02c461d5df66307ab1088
+- PGP: [sig](https://github.com/kyleneideck/BackgroundMusic/releases/download/v0.1.1/BackgroundMusic-0.1.1.pkg.asc),
+  [key (0595DF814E41A6F69334C5E2CAA8D9B8E39EC18C)](https://bearisdriving.com/kyle-neideck.gpg)
+</small>
 
 ## Auto-pause music
 
@@ -44,14 +58,9 @@ device](https://support.apple.com/en-us/HT202000) that combines your input devic
 Background Music Device. You can create the aggregate device using the Audio MIDI Setup utility from
 `/Applications/Utilities`.
 
-## Install
+## Install from source
 
-No binaries yet (working on it) but building should take less than a minute.
-
-<table>
-<tr><td>⚠️</td>
-<td>Unfortunately, <strong>it won't build if you don't have Xcode installed</strong> because xcodebuild doesn't work on its own anymore. If you don't mind a 4GB download, you can <a href="https://developer.apple.com/xcode/download/">get Xcode here</a>.</td>
-</tr></table>
+Building should take less than a minute, but you need [Xcode](https://developer.apple.com/xcode/download/) unfortunately.
 
 If you're comfortable with it, you can just paste the following at a Terminal prompt.
 
@@ -69,7 +78,7 @@ include a checksum), which makes sure we can't run a half-downloaded copy of bui
     /bin/bash BackgroundMusic-master/build_and_install.sh -w && rm -rf BackgroundMusic-master)
 ```
 
-Otherwise, to build and install:
+Otherwise, to build from source and install:
 
 - Clone or [download](https://github.com/kyleneideck/BackgroundMusic/archive/master.zip) the project.
 - If the project is in a zip, unzip it.
@@ -85,7 +94,9 @@ Wiki](https://github.com/kyleneideck/BackgroundMusic/wiki/Installation).
 
 ## Uninstall
 
-- Run the `uninstall.sh` script to remove Background Music from your system.
+- Run the `uninstall.sh` script (using `Terminal.app`) to remove Background Music from your system. You should be able
+  to find it in `/Applications/Background Music.app/Contents/Resources/uninstall.sh`, but if not you can [download the
+  project](https://github.com/kyleneideck/BackgroundMusic/archive/master.zip) again.
 - Go to the Sound section in System Preferences and change your default output device at least once. (If you only have
   one device now, either use `Audio MIDI Setup.app` to create a temporary aggregate device, restart any audio apps that
   have stopped working or just restart your system.)
