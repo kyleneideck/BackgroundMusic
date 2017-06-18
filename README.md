@@ -23,7 +23,7 @@ BackgroundMusic-0.1.1.pkg</a> (473 KB)
 
 Still very much in alpha. Not code signed, so you'll have to **right-click it and choose "Open"**.
 
-**Requires OS X 10.10+**. Should work on 10.9, but I haven't tried it. Currently unable to build in Xcode 6.
+**Requires OS X 10.10+**. Should work on 10.9, but I haven't tried it.
 
 > <sub>MD5: e02988e6b32eafa88b99c4da33e7fe56</sub><br/>
 > <sub>SHA256: 7ce875bb00fdeb2b5b363aa92367b3fa096d18cb02a02c461d5df66307ab1088</sub><br/>
@@ -60,7 +60,8 @@ Background Music Device. You can create the aggregate device using the Audio MID
 
 ## Install from source
 
-Building should take less than a minute, but you need [Xcode](https://developer.apple.com/xcode/download/) unfortunately.
+Building should take less than a minute, but you'll need [Xcode](https://developer.apple.com/xcode/download/) version 
+7 or higher.
 
 If you're comfortable with it, you can just paste the following at a Terminal prompt.
 
@@ -78,7 +79,7 @@ include a checksum), which makes sure we can't run a half-downloaded copy of bui
     /bin/bash BackgroundMusic-master/build_and_install.sh -w && rm -rf BackgroundMusic-master)
 ```
 
-Otherwise, to build from source and install:
+Otherwise, to build and install from source:
 
 - Clone or [download](https://github.com/kyleneideck/BackgroundMusic/archive/master.zip) the project.
 - If the project is in a zip, unzip it.
