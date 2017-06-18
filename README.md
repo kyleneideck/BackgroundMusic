@@ -15,21 +15,21 @@
 
 ## Download
 
-**Version 0.1.1**:
-[BackgroundMusic-0.1.1.pkg](https://github.com/kyleneideck/BackgroundMusic/releases/download/v0.1.1/BackgroundMusic-0.1.1.pkg)
-![](Images/README/pkg-icon.png) (473 KB)
+### Version 0.1.1
 
-Still very much in alpha. Not code signed, so you'll have to **right-click it and choose "Open"**. (It is [PGP
-signed](https://github.com/kyleneideck/BackgroundMusic/releases/download/v0.1.1/BackgroundMusic-0.1.1.pkg.asc), though.)
+<a href="https://github.com/kyleneideck/BackgroundMusic/releases/download/v0.1.1/BackgroundMusic-0.1.1.pkg"><img 
+src="Images/README/pkg-icon.png" width="32" height="32" align="absmiddle" />
+BackgroundMusic-0.1.1.pkg</a> (473 KB)
+
+Still very much in alpha. Not code signed, so you'll have to **right-click it and choose "Open"**.
 
 **Requires OS X 10.10+**. Should work on 10.9, but I haven't tried it. Currently unable to build in Xcode 6.
 
-<small>
-- MD5: e02988e6b32eafa88b99c4da33e7fe56
-- SHA256: 7ce875bb00fdeb2b5b363aa92367b3fa096d18cb02a02c461d5df66307ab1088
-- PGP: [sig](https://github.com/kyleneideck/BackgroundMusic/releases/download/v0.1.1/BackgroundMusic-0.1.1.pkg.asc),
-  [key (0595DF814E41A6F69334C5E2CAA8D9B8E39EC18C)](https://bearisdriving.com/kyle-neideck.gpg)
-</small>
+> <sub>MD5: e02988e6b32eafa88b99c4da33e7fe56</sub><br/>
+> <sub>SHA256: 7ce875bb00fdeb2b5b363aa92367b3fa096d18cb02a02c461d5df66307ab1088</sub><br/>
+> <sub>PGP:
+> [sig](https://github.com/kyleneideck/BackgroundMusic/releases/download/v0.1.1/BackgroundMusic-0.1.1.pkg.asc),
+> [key (0595DF814E41A6F69334C5E2CAA8D9B8E39EC18C)](https://bearisdriving.com/kyle-neideck.gpg)</sub>
 
 ## Auto-pause music
 
