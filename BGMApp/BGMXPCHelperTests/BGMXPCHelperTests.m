@@ -61,7 +61,7 @@
     // Unregister BGMXPCHelper's connection to BGMApp in case BGMApp didn't shutdown cleanly the last time it ran.
     [[connection remoteObjectProxy] unregisterAsBGMApp];
         
-    [[connection remoteObjectProxy] waitForBGMAppToStartOutputDeviceWithReply:^(NSError* reply) {
+    [[connection remoteObjectProxy] startBGMAppPlayThroughSyncWithReply:^(NSError* reply) {
         XCTAssertEqual([reply code],
                        kBGMXPC_MessageFailure,
                        @"Check that BGMApp isn't running, which would cause this failure");

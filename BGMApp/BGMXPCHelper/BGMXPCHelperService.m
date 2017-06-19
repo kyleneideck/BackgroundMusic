@@ -155,22 +155,22 @@ static NSXPCConnection* __nullable sBGMAppConnection = nil;
     }
 }
 
-- (void) waitForBGMAppToStartOutputDeviceWithReply:(void (^)(NSError*))reply {
+- (void) startBGMAppPlayThroughSyncWithReply:(void (^)(NSError*))reply {
     [self debugWarnIfCalledByBGMApp];
     
     // If this reply string isn't set before the end of this method, it's a bug
     __block NSError* replyToBGMDriver = [BGMXPCHelperService errorWithCode:kBGMXPC_InternalError
-                                                               description:@"Reply not set in waitForBGMAppToStartOutputDeviceWithReply"];
+                                                               description:@"Reply not set in startBGMAppPlayThroughSyncWithReply"];
     
     // I couldn't find the Obj-C equivalent of xpc_connection_send_message_with_reply_sync so just wait on this
-    // semaphore until we get a reply from BGMApp (or timeout)
+    // semaphore until we get a reply from BGMApp (or timeout). Note that ARC handles dispatch semaphores.
     dispatch_semaphore_t bgmAppReplySemaphore = dispatch_semaphore_create(0);
     
-    DebugMsg("BGMXPCHelperService::waitForBGMAppToStartOutputDeviceWithReply: Waiting for BGMApp to start IO on the output device");
+    DebugMsg("BGMXPCHelperService::startBGMAppPlayThroughSyncWithReply: Waiting for BGMApp to start IO on the output device");
     
     // Send the message to BGMApp
     [BGMXPCHelperService withBGMAppRemoteProxy:^(id remoteObjectProxy) {
-        [remoteObjectProxy waitForOutputDeviceToStartWithReply:^(NSError* bgmAppReply) {
+        [remoteObjectProxy startPlayThroughSyncWithReply:^(NSError* bgmAppReply) {
             replyToBGMDriver = bgmAppReply;
             dispatch_semaphore_signal(bgmAppReplySemaphore);
         }];
@@ -190,7 +190,7 @@ static NSXPCConnection* __nullable sBGMAppConnection = nil;
     }
 
     // Return the reply to BGMDriver
-    DebugMsg("BGMXPCHelperService::waitForBGMAppToStartOutputDeviceWithReply: Reply to BGMDriver: %s",
+    DebugMsg("BGMXPCHelperService::startBGMAppPlayThroughSyncWithReply: Reply to BGMDriver: %s",
              [[replyToBGMDriver localizedDescription] UTF8String]);
     reply(replyToBGMDriver);
 }

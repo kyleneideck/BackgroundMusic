@@ -20,8 +20,8 @@
 //  Copyright © 2016 Kyle Neideck
 //
 
-#ifndef __BGMDriver__BGM_XPCHelper__
-#define __BGMDriver__BGM_XPCHelper__
+#ifndef BGMDriver__BGM_XPCHelper
+#define BGMDriver__BGM_XPCHelper
 
 // System Includes
 #include <MacTypes.h>
@@ -31,11 +31,11 @@ extern "C" {
 #endif
 
 // On failure, returns one of the kBGMXPC_* error codes, or the error code received from BGMXPCHelper. Returns kBGMXPC_Success otherwise.
-UInt64 WaitForBGMAppToStartOutputDevice(void);
+UInt64 StartBGMAppPlayThroughSync(void);
 
 #if defined(__cplusplus)
 }
 #endif
 
-#endif /* __BGMDriver__BGM_XPCHelper__ */
+#endif /* BGMDriver__BGM_XPCHelper */
 

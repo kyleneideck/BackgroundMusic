@@ -36,8 +36,9 @@
 
 #pragma clang assume_nonnull begin
 
-extern int const kBGMErrorCode_BGMDeviceNotFound;
-extern int const kBGMErrorCode_OutputDeviceNotFound;
+const int kBGMErrorCode_BGMDeviceNotFound    = 1;
+const int kBGMErrorCode_OutputDeviceNotFound = 2;
+const int kBGMErrorCode_ReturningEarly       = 3;
 
 @interface BGMAudioDeviceManager : NSObject
 
@@ -79,8 +80,12 @@ extern int const kBGMErrorCode_OutputDeviceNotFound;
                                  dataSourceID:(UInt32)dataSourceID
                               revertOnFailure:(BOOL)revertOnFailure;
 
-// Blocks until IO has started running on the output device (for playthrough).
-- (OSStatus) waitForOutputDeviceToStart;
+// Start playthrough synchronously. Blocks until IO has started on the output device and playthrough
+// is running. See BGMPlayThrough.
+//
+// Returns one of the error codes defined by this class or BGMPlayThrough, or an AudioHardware error
+// code received from the HAL.
+- (OSStatus) startPlayThroughSync;
 
 @end
 

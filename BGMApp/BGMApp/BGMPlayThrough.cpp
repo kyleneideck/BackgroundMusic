@@ -423,7 +423,12 @@ void    BGMPlayThrough::Start()
     if(mPlayingThrough)
     {
         DebugMsg("BGMPlayThrough::Start: Already started/starting.");
-        ReleaseThreadsWaitingForOutputToStart();
+
+        if(mOutputDeviceIOProcState == IOState::Running)
+        {
+            ReleaseThreadsWaitingForOutputToStart();
+        }
+
         return;
     }
     
@@ -842,7 +847,7 @@ void    BGMPlayThrough::HandleBGMDeviceIsRunning(BGMPlayThrough* refCon)
     
     // This is dispatched because it can block and
     //   - we might be on a real-time thread, or
-    //   - BGMXPCListener::waitForOutputDeviceToStartWithReply might get called on the same thread just
+    //   - BGMXPCListener::startPlayThroughSyncWithReply might get called on the same thread just
     //     before this and time out waiting for this to run.
     //
     // TODO: We should find a way to do this without dispatching because dispatching isn't actually
@@ -855,7 +860,6 @@ void    BGMPlayThrough::HandleBGMDeviceIsRunning(BGMPlayThrough* refCon)
             // Set to true initially because if we fail to get this property from BGMDevice we want to
             // try to start playthrough anyway.
             bool isRunningSomewhereOtherThanBGMApp = true;
-            
             
             BGMLogAndSwallowExceptions("HandleBGMDeviceIsRunning", [&]() {
                 // IsRunning doesn't always return true when IO is starting. Using

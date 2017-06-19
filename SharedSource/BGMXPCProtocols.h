@@ -45,7 +45,7 @@ static NSString* kBGMXPCHelperMachServiceName = @kBGMXPCHelperBundleID;
 //
 // If BGMApp can be reached, the error it returns will be passed the reply block. Otherwise, the reply block will be passed an error with
 // one of the kBGMXPC_* error codes. It may have an underlying error using one of the NSXPCConnection* error codes from FoundationErrors.h.
-- (void) waitForBGMAppToStartOutputDeviceWithReply:(void (^)(NSError*))reply;
+- (void) startBGMAppPlayThroughSyncWithReply:(void (^)(NSError*))reply;
     
 @end
 
@@ -53,7 +53,7 @@ static NSString* kBGMXPCHelperMachServiceName = @kBGMXPCHelperBundleID;
 // The protocol that BGMApp will vend as its XPC API.
 @protocol BGMAppXPCProtocol
 
-- (void) waitForOutputDeviceToStartWithReply:(void (^)(NSError*))reply;
+- (void) startPlayThroughSyncWithReply:(void (^)(NSError*))reply;
 
 @end
 

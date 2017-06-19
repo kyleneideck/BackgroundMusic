@@ -1432,7 +1432,7 @@ void	BGM_Device::StartIO(UInt32 inClientID)
     // frames or increase latency.
     if(!clientIsBGMApp && bgmAppHasClientRegistered)
     {
-        UInt64 theXPCError = WaitForBGMAppToStartOutputDevice();
+        UInt64 theXPCError = StartBGMAppPlayThroughSync();
         
         switch(theXPCError)
         {
@@ -1446,11 +1446,10 @@ void	BGM_Device::StartIO(UInt32 inClientID)
                 LogError("BGM_Device::StartIO: Couldn't reach BGMApp via XPC. Attempting to start IO anyway.");
                 break;
                 
-            case kBGMXPC_HardwareNotStartingError:
+            case kBGMXPC_ReturningEarlyError:
                 // This can (and might always) happen when the user changes output device in BGMApp while IO is running.
-                // See BGMAudioDeviceManager::waitForOutputDeviceToStart and BGMPlayThrough::WaitForOutputDeviceToStart.
-                LogWarning("BGM_Device::StartIO: BGMApp hadn't been told to start IO, so BGMDriver has to return early "
-                           "from StartIO. Attempting to start IO anyway.");
+                // See BGMAudioDeviceManager::startPlayThroughSync and BGMPlayThrough::WaitForOutputDeviceToStart.
+                LogWarning("BGM_Device::StartIO: BGMApp was busy, so BGMDriver has to return from StartIO early.");
                 break;
                 
             default:

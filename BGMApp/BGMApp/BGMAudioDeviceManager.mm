@@ -35,9 +35,6 @@
 #include "CAAutoDisposer.h"
 
 
-int const kBGMErrorCode_BGMDeviceNotFound = 0;
-int const kBGMErrorCode_OutputDeviceNotFound = 1;
-
 @implementation BGMAudioDeviceManager {
     BGMAudioDevice bgmDevice;
     BGMAudioDevice outputDevice;
@@ -429,9 +426,9 @@ int const kBGMErrorCode_OutputDeviceNotFound = 1;
     return [NSError errorWithDomain:@kBGMAppBundleID code:errorCode userInfo:info];
 }
 
-- (OSStatus) waitForOutputDeviceToStart {
+- (OSStatus) startPlayThroughSync {
     // We can only try for stateLock because setOutputDeviceWithID might have already taken it, then made a
-    // HAL request to BGMDevice and is now waiting for the response. Some of the requests setOutputDeviceWithID
+    // HAL request to BGMDevice and be waiting for the response. Some of the requests setOutputDeviceWithID
     // makes to BGMDevice block in the HAL if another thread is in BGM_Device::StartIO.
     //
     // Since BGM_Device::StartIO calls this method (via XPC), waiting for setOutputDeviceWithID to release
@@ -445,26 +442,35 @@ int const kBGMErrorCode_OutputDeviceNotFound = 1;
         gotLock = [stateLock tryLock];
         
         if (gotLock) {
+            // Playthrough might not have been notified that BGMDevice is starting yet, so make sure
+            // playthrough is starting. This way we won't drop any frames while waiting for the HAL to send
+            // that notification. We can't be completely sure this is safe from deadlocking, though, since
+            // CoreAudio is closed-source.
+            //
+            // TODO: Test this on older OS X versions. Differences in the CoreAudio implementations could
+            //       cause deadlocks.
+            BGMLogAndSwallowExceptionsMsg("BGMAudioDeviceManager::startPlayThroughSync",
+                                          "Starting playthrough", [&] {
+                playThrough.Start();
+            });
+
             err = playThrough.WaitForOutputDeviceToStart();
+            BGMAssert(err != BGMPlayThrough::kDeviceNotStarting, "Playthrough didn't start");
         } else {
-            LogWarning("BGMAudioDeviceManager::waitForOutputDeviceToStart: Didn't get state lock. Returning "
-                       "early with kDeviceNotStarting.");
-            err = BGMPlayThrough::kDeviceNotStarting;
-        }
-        
-        if (err == BGMPlayThrough::kDeviceNotStarting) {
-            // I'm not sure if this block is currently reachable, but BGMDriver only starts waiting on the
-            // output device when IO is starting, so we should start playthrough even if BGMApp hasn't been
-            // notified by the HAL yet.
-            LogWarning("BGMAudioDeviceManager::waitForOutputDeviceToStart: Playthrough wasn't starting the "
-                       "output device. Will tell it to and then return early with kDeviceNotStarting.");
+            LogWarning("BGMAudioDeviceManager::startPlayThroughSync: Didn't get state lock. Returning "
+                       "early with kBGMErrorCode_ReturningEarly.");
+            err = kBGMErrorCode_ReturningEarly;
 
             dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^{
                 @try {
                     [stateLock lock];
                     
-                    BGMLogAndSwallowExceptions("BGMAudioDeviceManager::waitForOutputDeviceToStart", [&]() {
+                    BGMLogAndSwallowExceptionsMsg("BGMAudioDeviceManager::startPlayThroughSync",
+                                                  "Starting playthrough (dispatched)", [&] {
                         playThrough.Start();
+                    });
+
+                    BGMLogAndSwallowExceptions("BGMAudioDeviceManager::startPlayThroughSync", [&] {
                         playThrough.StopIfIdle();
                     });
                 } @finally {

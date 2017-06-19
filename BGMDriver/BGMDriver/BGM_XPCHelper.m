@@ -17,7 +17,7 @@
 //  BGM_XPCHelper.cpp
 //  BGMDriver
 //
-//  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016, 2017 Kyle Neideck
 //
 
 // Self Include
@@ -52,13 +52,13 @@ static NSXPCConnection* CreateXPCHelperConnection()
         theConnection.remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(BGMXPCHelperXPCProtocol)];
         [theConnection resume];
     } else {
-        @throw(@"BGM_XPCHelper::WaitForBGMAppToStartOutputDevice: initWithMachServiceName returned nil");
+        @throw(@"BGM_XPCHelper::CreateXPCHelperConnection: initWithMachServiceName returned nil");
     }
     
     return theConnection;
 }
 
-UInt64 WaitForBGMAppToStartOutputDevice()
+UInt64 StartBGMAppPlayThroughSync()
 {
     __block UInt64 theAnswer = kBGMXPC_Success;
     
@@ -76,7 +76,7 @@ UInt64 WaitForBGMAppToStartOutputDevice()
     // Set the failure callbacks to signal the reply semaphore so we can return immediately if BGMXPCHelper can't be reached. (It
     // doesn't matter how many times we signal the reply semaphore because we create a new one each time.)
     void (^failureHandler)(void) = ^{
-        DebugMsg("BGM_XPCHelper::WaitForBGMAppToStartOutputDevice: Connection to BGMXPCHelper failed");
+        DebugMsg("BGM_XPCHelper::StartBGMAppPlayThroughSync: Connection to BGMXPCHelper failed");
         
         theAnswer = kBGMXPC_MessageFailure;
         dispatch_semaphore_signal(theReplySemaphore);
@@ -87,18 +87,25 @@ UInt64 WaitForBGMAppToStartOutputDevice()
     // This remote call to BGMXPCHelper will send a reply when the output device is ready to receive IO. Note that, for security
     // reasons, we shouldn't trust the reply object.
     [[theConnection remoteObjectProxyWithErrorHandler:^(NSError* error) {
-#if !DEBUG
-    #pragma unused (error)
-#endif
-        DebugMsg("BGM_XPCHelper::WaitForBGMAppToStartOutputDevice: Remote call error: %s",
+        (void)error;
+        DebugMsg("BGM_XPCHelper::StartBGMAppPlayThroughSync: Remote call error: %s",
                  [[error debugDescription] UTF8String]);
         
         failureHandler();
-    }] waitForBGMAppToStartOutputDeviceWithReply:^(NSError* reply) {
-        DebugMsg("BGM_XPCHelper::WaitForBGMAppToStartOutputDevice: Got reply from BGMXPCHelper: \"%s\"",
+    }] startBGMAppPlayThroughSyncWithReply:^(NSError* reply) {
+        DebugMsg("BGM_XPCHelper::StartBGMAppPlayThroughSync: Got reply from BGMXPCHelper: \"%s\"",
                  [[reply localizedDescription] UTF8String]);
         
-        theAnswer = (UInt64)[reply code];
+        theAnswer = kBGMXPC_MessageFailure;
+
+        @try {
+            if (reply)
+            {
+                theAnswer = (UInt64)[reply code];
+            }
+        } @catch(...) {
+            NSLog(@"BGM_XPCHelper::StartBGMAppPlayThroughSync: Exception while reading reply code");
+        }
         
         // We only need the connection for one call, which was successful, so the losing the connection is no longer a problem.
         theConnection.interruptionHandler = nil;
@@ -108,7 +115,7 @@ UInt64 WaitForBGMAppToStartOutputDevice()
         dispatch_semaphore_signal(theReplySemaphore);
     }];
     
-    DebugMsg("BGM_XPCHelper::WaitForBGMAppToStartOutputDevice: Waiting for BGMApp to tell us the output device is ready for IO");
+    DebugMsg("BGM_XPCHelper::StartBGMAppPlayThroughSync: Waiting for BGMApp to tell us the output device is ready for IO");
     
     // Wait on the reply semaphore until we get the reply (or a connection failure).
     if (0 != dispatch_semaphore_wait(theReplySemaphore,
@@ -117,7 +124,7 @@ UInt64 WaitForBGMAppToStartOutputDevice()
         //
         // TODO: It's possible that the output device is just taking a really long time to start. Is there some way we could check for
         //       that, rather than timing out?
-        NSLog(@"BGM_XPCHelper::WaitForBGMAppToStartOutputDevice: Timed out waiting for the Background Music app to start the output device");
+        NSLog(@"BGM_XPCHelper::StartBGMAppPlayThroughSync: Timed out waiting for the Background Music app to start the output device");
         
         theAnswer = kBGMXPC_Timeout;
     }

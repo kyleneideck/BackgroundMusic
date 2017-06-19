@@ -201,7 +201,7 @@ enum {
     kBGMXPC_Timeout,
     kBGMXPC_BGMAppStateError,
     kBGMXPC_HardwareError,
-    kBGMXPC_HardwareNotStartingError,
+    kBGMXPC_ReturningEarlyError,
     kBGMXPC_InternalError
 };
 
