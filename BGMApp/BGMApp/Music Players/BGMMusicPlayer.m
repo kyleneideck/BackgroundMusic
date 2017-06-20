@@ -107,7 +107,7 @@ static BGMMusicPlayer* sSelectedMusicPlayer;
     return self;
 }
 
-- (id) eventDidFail:(const AppleEvent*)event withError:(NSError*)error {
+- (id __nullable) eventDidFail:(const AppleEvent*)event withError:(NSError*)error {
     // SBApplicationDelegate method. So far, this just logs the error.
     
 #if DEBUG

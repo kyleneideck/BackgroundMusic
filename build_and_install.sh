@@ -445,6 +445,7 @@ echo "[2/3] Installing $(bold_face ${XPC_HELPER_DIR}) to $(bold_face ${XPC_HELPE
     sudo "${XCODEBUILD}" -project BGMApp/BGMApp.xcodeproj \
                          -target BGMXPCHelper \
                          -configuration ${CONFIGURATION} \
+                         OTHER_CFLAGS="-Wno-everything" \
                          RUN_CLANG_STATIC_ANALYZER=0 \
                          DSTROOT="/" \
                          INSTALL_PATH="${XPC_HELPER_PATH}" \
@@ -461,6 +462,7 @@ echo "[3/3] Installing $(bold_face ${APP_DIR}) to $(bold_face ${APP_PATH})." \
     sudo "${XCODEBUILD}" -project BGMApp/BGMApp.xcodeproj \
                          -target "Background Music" \
                          -configuration ${CONFIGURATION} \
+                         OTHER_CFLAGS="-Wno-everything" \
                          RUN_CLANG_STATIC_ANALYZER=0 \
                          DSTROOT="/" \
                          ${CLEAN} install >> ${LOG_FILE} 2>&1) &
