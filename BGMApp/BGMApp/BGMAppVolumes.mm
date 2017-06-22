@@ -324,6 +324,33 @@ static CGFloat const kAppVolumeViewInitialHeight = 20;
     [audioDevices bgmDevice].SetPropertyData_CFType(kBGMAppVolumesAddress, appVolumeChanges.AsPropertyList());
 }
 
+// This is a temporary solution that lets us control the volumes of some multiprocess apps, i.e.
+// apps that play their audio from a process with a different bundle ID.
+//
+// We can't just check the child processes of the apps' main processes because they're usually
+// created with launchd rather than being actual child processes. There's a private API to get the
+// processes that an app is "responsible for", so we'll try to use it in the proper fix and only use
+// this list if the API doesn't work.
+//
+// TODO: Consider moving the logic to a new class when we fix this issue properly so this class is
+//       only responsible for UI.
++ (NSArray<NSString*>*) responsibleBundleIDsOf:(NSString*)parentBundleID {
+    NSDictionary<NSString*, NSArray<NSString*>*>* bundleIDMap = @{
+        // Safari
+        @"com.apple.Safari": @[@"com.apple.WebKit.WebContent"],
+        // Firefox
+        @"org.mozilla.firefox": @[@"org.mozilla.plugincontainer"],
+        // Firefox Nightly
+        @"org.mozilla.nightly": @[@"org.mozilla.plugincontainer"],
+        // VMWare Fusion
+        @"com.vmware.fusion": @[@"com.vmware.vmware-vmx"],
+        // MPlayer OSX Extended
+        @"hu.mplayerhq.mplayerosx.extended": @[@"ch.sttz.mplayerosx.extended.binaries.officialsvn"]
+    };
+
+    return bundleIDMap[parentBundleID];
+}
+
 @end
 
 #pragma mark Custom Classes (IB)
@@ -428,8 +455,12 @@ static CGFloat const kAppVolumeViewInitialHeight = 20;
     DebugMsg("BGMAppVolumes::appVolumeChanged: App volume for %s changed to %d", appBundleID.UTF8String, self.intValue);
     
     [self snap];
-    
+
     [context sendVolumeChangeToBGMDevice:self.intValue appProcessID:appProcessID appBundleID:appBundleID];
+
+    for (NSString* bundleID : [BGMAppVolumes responsibleBundleIDsOf:appBundleID]) {
+        [context sendVolumeChangeToBGMDevice:self.intValue appProcessID:-1 appBundleID:bundleID];
+    }
 }
 
 @end
@@ -471,8 +502,12 @@ static CGFloat const kAppVolumeViewInitialHeight = 20;
     // TODO: This (sending updates to the driver) should probably be rate-limited. It uses a fair bit of CPU for me.
     
     DebugMsg("BGMAppVolumes::appPanPositionChanged: App pan position for %s changed to %d", appBundleID.UTF8String, self.intValue);
-    
+
     [context sendPanPositionChangeToBGMDevice:self.intValue appProcessID:appProcessID appBundleID:appBundleID];
+
+    for (NSString* bundleID : [BGMAppVolumes responsibleBundleIDsOf:appBundleID]) {
+        [context sendPanPositionChangeToBGMDevice:self.intValue appProcessID:-1 appBundleID:bundleID];
+    }
 }
 
 @end

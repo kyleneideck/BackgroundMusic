@@ -29,7 +29,9 @@
 
 @interface BGMAppVolumes : NSObject
 
-- (id) initWithMenu:(NSMenu*)menu appVolumeView:(NSView*)view audioDevices:(BGMAudioDeviceManager*)audioDevices;
+- (id) initWithMenu:(NSMenu*)menu
+      appVolumeView:(NSView*)view
+       audioDevices:(BGMAudioDeviceManager*)audioDevices;
 
 @end
 
@@ -37,7 +39,9 @@
 
 @protocol BGMAppVolumeMenuItemSubview <NSObject>
 
-- (void) setUpWithApp:(NSRunningApplication*)app context:(BGMAppVolumes*)ctx menuItem:(NSMenuItem*)item;
+- (void) setUpWithApp:(NSRunningApplication*)app
+              context:(BGMAppVolumes*)ctx
+             menuItem:(NSMenuItem*)item;
 
 @end
 
