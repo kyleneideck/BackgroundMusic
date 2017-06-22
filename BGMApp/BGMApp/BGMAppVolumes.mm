@@ -344,9 +344,17 @@ static CGFloat const kAppVolumeViewInitialHeight = 20;
         @"org.mozilla.nightly": @[@"org.mozilla.plugincontainer"],
         // VMWare Fusion
         @"com.vmware.fusion": @[@"com.vmware.vmware-vmx"],
+        // Parallels
+        @"com.parallels.desktop.console": @[@"com.parallels.vm"],
         // MPlayer OSX Extended
         @"hu.mplayerhq.mplayerosx.extended": @[@"ch.sttz.mplayerosx.extended.binaries.officialsvn"]
     };
+
+    // Parallels' VM "dock helper" apps have bundle IDs like
+    // com.parallels.winapp.87f6bfc236d64d70a81c47f6243add4c.f5a25fdede514f7aa0a475a1873d3287.fs
+    if ([parentBundleID hasPrefix:@"com.parallels.winapp."]) {
+        return @[@"com.parallels.vm"];
+    }
 
     return bundleIDMap[parentBundleID];
 }
