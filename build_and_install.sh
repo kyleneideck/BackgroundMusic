@@ -621,8 +621,7 @@ echo "[1/3] ${ACTIONING} the virtual audio device $(bold_face ${DRIVER_DIR}) to"
 # Disable the -e shell option and error trap for build commands so we can handle errors differently.
 (disable_error_handling
     # Build Apple's PublicUtility classes as a static library.
-    ${SUDO} "${XCODEBUILD}" -project BGMDriver/BGMDriver.xcodeproj \
-                            -target "PublicUtility" \
+    ${SUDO} "${XCODEBUILD}" -scheme "PublicUtility" \
                             -configuration ${CONFIGURATION} \
                             RUN_CLANG_STATIC_ANALYZER=0 \
                             ${XCODEBUILD_OPTIONS} \
@@ -630,9 +629,7 @@ echo "[1/3] ${ACTIONING} the virtual audio device $(bold_face ${DRIVER_DIR}) to"
 
 (disable_error_handling
     # Build and install BGMDriver
-    # TODO: Should these use -scheme instead?
-    ${SUDO} "${XCODEBUILD}" -project BGMDriver/BGMDriver.xcodeproj \
-                            -target "Background Music Device" \
+    ${SUDO} "${XCODEBUILD}" -scheme "Background Music Device" \
                             -configuration ${CONFIGURATION} \
                             RUN_CLANG_STATIC_ANALYZER=0 \
                             DSTROOT="/" \
@@ -647,8 +644,7 @@ echo "[2/3] ${ACTIONING} $(bold_face ${XPC_HELPER_DIR}) to $(bold_face ${XPC_HEL
      | tee -a ${LOG_FILE}
 
 (disable_error_handling
-    ${SUDO} "${XCODEBUILD}" -project BGMApp/BGMApp.xcodeproj \
-                            -target BGMXPCHelper \
+    ${SUDO} "${XCODEBUILD}" -scheme BGMXPCHelper \
                             -configuration ${CONFIGURATION} \
                             RUN_CLANG_STATIC_ANALYZER=0 \
                             DSTROOT="/" \
@@ -664,8 +660,7 @@ echo "[3/3] ${ACTIONING} $(bold_face ${APP_DIR}) to $(bold_face ${APP_PATH})" \
      | tee -a ${LOG_FILE}
 
 (disable_error_handling
-    ${SUDO} "${XCODEBUILD}" -project BGMApp/BGMApp.xcodeproj \
-                            -target "Background Music" \
+    ${SUDO} "${XCODEBUILD}" -scheme "Background Music" \
                             -configuration ${CONFIGURATION} \
                             RUN_CLANG_STATIC_ANALYZER=0 \
                             DSTROOT="/" \
