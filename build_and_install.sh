@@ -604,8 +604,6 @@ done
 
 log_debug_info $*
 
-# BGMDriver
-
 if [[ "${XCODEBUILD_ACTION}" == "install" ]]; then
     SUDO="sudo"
     ACTIONING="Installing"
@@ -613,6 +611,8 @@ else
     SUDO=""
     ACTIONING="Building"
 fi
+
+# BGMDriver
 
 echo "[1/3] ${ACTIONING} the virtual audio device $(bold_face ${DRIVER_DIR}) to" \
      "$(bold_face ${DRIVER_PATH})" \
@@ -623,6 +623,7 @@ echo "[1/3] ${ACTIONING} the virtual audio device $(bold_face ${DRIVER_DIR}) to"
     # Build Apple's PublicUtility classes as a static library.
     ${SUDO} "${XCODEBUILD}" -scheme "PublicUtility" \
                             -configuration ${CONFIGURATION} \
+                            BUILD_DIR=./build \
                             RUN_CLANG_STATIC_ANALYZER=0 \
                             ${XCODEBUILD_OPTIONS} \
                             ${CLEAN} build >> ${LOG_FILE} 2>&1) &
@@ -631,6 +632,7 @@ echo "[1/3] ${ACTIONING} the virtual audio device $(bold_face ${DRIVER_DIR}) to"
     # Build and install BGMDriver
     ${SUDO} "${XCODEBUILD}" -scheme "Background Music Device" \
                             -configuration ${CONFIGURATION} \
+                            BUILD_DIR=./build \
                             RUN_CLANG_STATIC_ANALYZER=0 \
                             DSTROOT="/" \
                             ${XCODEBUILD_OPTIONS} \
@@ -646,6 +648,7 @@ echo "[2/3] ${ACTIONING} $(bold_face ${XPC_HELPER_DIR}) to $(bold_face ${XPC_HEL
 (disable_error_handling
     ${SUDO} "${XCODEBUILD}" -scheme BGMXPCHelper \
                             -configuration ${CONFIGURATION} \
+                            BUILD_DIR=./build \
                             RUN_CLANG_STATIC_ANALYZER=0 \
                             DSTROOT="/" \
                             INSTALL_PATH="${XPC_HELPER_PATH}" \
@@ -662,6 +665,7 @@ echo "[3/3] ${ACTIONING} $(bold_face ${APP_DIR}) to $(bold_face ${APP_PATH})" \
 (disable_error_handling
     ${SUDO} "${XCODEBUILD}" -scheme "Background Music" \
                             -configuration ${CONFIGURATION} \
+                            BUILD_DIR=./build \
                             RUN_CLANG_STATIC_ANALYZER=0 \
                             DSTROOT="/" \
                             ${XCODEBUILD_OPTIONS} \
