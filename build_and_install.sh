@@ -612,6 +612,12 @@ else
     ACTIONING="Building"
 fi
 
+if [[ "${CONFIGURATION}" == "Debug" ]]; then
+    ENABLE_ASAN=YES
+else
+    ENABLE_ASAN=NO
+fi
+
 # BGMDriver
 
 echo "[1/3] ${ACTIONING} the virtual audio device $(bold_face ${DRIVER_DIR}) to" \
@@ -623,6 +629,7 @@ echo "[1/3] ${ACTIONING} the virtual audio device $(bold_face ${DRIVER_DIR}) to"
     # Build Apple's PublicUtility classes as a static library.
     ${SUDO} "${XCODEBUILD}" -scheme "PublicUtility" \
                             -configuration ${CONFIGURATION} \
+                            -enableAddressSanitizer ${ENABLE_ASAN} \
                             BUILD_DIR=./build \
                             RUN_CLANG_STATIC_ANALYZER=0 \
                             ${XCODEBUILD_OPTIONS} \
@@ -632,6 +639,7 @@ echo "[1/3] ${ACTIONING} the virtual audio device $(bold_face ${DRIVER_DIR}) to"
     # Build and install BGMDriver
     ${SUDO} "${XCODEBUILD}" -scheme "Background Music Device" \
                             -configuration ${CONFIGURATION} \
+                            -enableAddressSanitizer ${ENABLE_ASAN} \
                             BUILD_DIR=./build \
                             RUN_CLANG_STATIC_ANALYZER=0 \
                             DSTROOT="/" \
@@ -648,6 +656,7 @@ echo "[2/3] ${ACTIONING} $(bold_face ${XPC_HELPER_DIR}) to $(bold_face ${XPC_HEL
 (disable_error_handling
     ${SUDO} "${XCODEBUILD}" -scheme BGMXPCHelper \
                             -configuration ${CONFIGURATION} \
+                            -enableAddressSanitizer ${ENABLE_ASAN} \
                             BUILD_DIR=./build \
                             RUN_CLANG_STATIC_ANALYZER=0 \
                             DSTROOT="/" \
@@ -665,6 +674,7 @@ echo "[3/3] ${ACTIONING} $(bold_face ${APP_DIR}) to $(bold_face ${APP_PATH})" \
 (disable_error_handling
     ${SUDO} "${XCODEBUILD}" -scheme "Background Music" \
                             -configuration ${CONFIGURATION} \
+                            -enableAddressSanitizer ${ENABLE_ASAN} \
                             BUILD_DIR=./build \
                             RUN_CLANG_STATIC_ANALYZER=0 \
                             DSTROOT="/" \
