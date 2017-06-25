@@ -150,7 +150,7 @@ static float const kStatusBarIconPadding = 0.25;
         NSError* error = [audioDevices setBGMDeviceAsOSDefault];
         if (error) {
             [self showSetDeviceAsDefaultError:error
-                                      message:@"Could not set Background Music Device as your default audio device."
+                                      message:@"Could not set the Background Music device as your default audio device."
                               informativeText:@"You might be able to set it yourself."];
         }
     }
@@ -224,7 +224,7 @@ static float const kStatusBarIconPadding = 0.25;
             // TODO: Check whether the driver files are in /Library/Audio/Plug-Ins/HAL and offer to install them if not. Also,
             //       it would be nice if we could restart coreaudiod automatically (using launchd).
             [alert setMessageText:@"Could not find the Background Music virtual audio device."];
-            [alert setInformativeText:@"Make sure you've installed Background Music.driver to /Library/Audio/Plug-Ins/HAL and restarted coreaudiod (e.g. \"sudo killall coreaudiod\")."];
+            [alert setInformativeText:@"Make sure you've installed Background Music Device.driver to /Library/Audio/Plug-Ins/HAL and restarted coreaudiod (e.g. \"sudo killall coreaudiod\")."];
         } else if (code == kBGMErrorCode_OutputDeviceNotFound) {
             [alert setMessageText:@"Could not find an audio output device."];
             [alert setInformativeText:@"If you do have one installed, this is probably a bug. Sorry about that. Feel free to file an issue on GitHub."];

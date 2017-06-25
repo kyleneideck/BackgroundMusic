@@ -195,7 +195,7 @@ private:
     static pthread_once_t		sStaticInitializer;
     static BGM_Device* __nonnull    sInstance;
     
-    #define kDeviceName                 "Background Music Device"
+    #define kDeviceName                 "Background Music"
     #define kDeviceManufacturerName     "Background Music contributors"
     
 	enum

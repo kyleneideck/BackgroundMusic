@@ -51,11 +51,11 @@ their normal maximum volume.
 ## Recording system audio
 
 With Background Music running, open QuickTime Player and go `File > New Audio Recording...` (or movie/screen). Then
-click the arrow next to the record button that looks like `⌄` and select `Background Music Device` as the input device.
+click the arrow next to the record button that looks like `⌄` and select `Background Music` as the input device.
 
 You should be able to record system audio and a microphone together by creating an [aggregate
 device](https://support.apple.com/en-us/HT202000) that combines your input device (usually Built-in Input) with
-Background Music Device. You can create the aggregate device using the Audio MIDI Setup utility from
+the Background Music device. You can create the aggregate device using the Audio MIDI Setup utility from
 `/Applications/Utilities`.
 
 ## Install from source
@@ -109,9 +109,11 @@ consider submitting a bug report, too.)
 
 ## Troubleshooting
 
-If Background Music crashes and system audio stops working, open the Sound panel in System Preferences and change your
-system's default output device to something other than Background Music Device. If it already is, it might help to
-change the default device and then change it back again. Failing that, you might have to uninstall.
+If Background Music crashes and your audio stops working, open the Sound panel in System Preferences and change your
+system's default output device to something other than the Background Music device. If it already is, it might help to
+change the default device and then change it back again.
+
+Failing that, you might have to uninstall. Consider filing a bug report if you do.
 
 ## Known issues
 
@@ -124,13 +126,13 @@ change the default device and then change it back again. Failing that, you might
   General tab of Skype's preferences.
 - Plugging in or unplugging headphones when Background Music isn't running can silence system audio. To fix it, go to
   the Sound section in System Preferences, click the Output tab and change your default output device to something other
-  than Background Music Device. Alternatively, you may Option+Click on the Sound icon in the menu bar to select a
+  than the Background Music device. Alternatively, you may Option+Click on the Sound icon in the menu bar to select a
   different output device.
 
-  This happens when macOS remembers that Background Music Device was your default audio device the last time you last
-  used (or didn't use) headphones.
-- [A recent Chrome bug](https://bugs.chromium.org/p/chromium/issues/detail?id=557620) can stop Chrome from switching to
-  Background Music Device after you open Background Music. Chrome's audio will still play, but Background Music won't be
+  This happens when macOS remembers that the Background Music device was your default audio device the last time you
+  last used (or didn't use) headphones.
+- [A Chrome bug](https://bugs.chromium.org/p/chromium/issues/detail?id=557620) can stop Chrome from switching to the
+  Background Music device after you open Background Music. Chrome's audio will still play, but Background Music won't be
   aware of it.
 - Some apps play notification sounds that are only just long enough to trigger an auto-pause. The only workaround right
   now is to increase the `kPauseDelayNSec` constant in [BGMAutoPauseMusic.mm](/BGMApp/BGMApp/BGMAutoPauseMusic.mm).

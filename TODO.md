@@ -70,7 +70,7 @@ There are also lots of other TODOs commented around the code.
 
 - Should we hide the BGM device when BGMApp isn't running? This would fix the problem of our device being left as the
   default device if BGMApp doesn't shutdown properly (because of a crash, hard reset, etc.), which stops the system from
-  playing audio. The problem with that is Background Music Device can still be used without BGMApp, to record
+  playing audio. The problem with that is the Background Music device can still be used without BGMApp, to record
   system/apps' audio, so ideally the BGM device would be able to just unset itself as the default device when BGMApp
   isn't running.  For now, I think we should just have `kAudioDevicePropertyDeviceCanBeDefaultDevice` become false.
 

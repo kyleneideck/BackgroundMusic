@@ -17,7 +17,7 @@ Device". They're shown in `System Preferences > Sound` along with the real audio
 
 When you start BGMApp, it sets BGMDevice as your system's default output device so the system (i.e. Core Audio) will
 start sending all<sup id="a1">[1](#f1)</sup> your audio data to BGMDriver. BGMDriver plays that audio on BGMDevice's
-input stream, and the user can record it by selecting "Background Music Device" in QuickTime the same way they'd select
+input stream, and the user can record it by selecting the Background Music device in QuickTime the same way they'd select
 a microphone.
 
 So that you can still hear the audio, BGMApp starts listening to BGMDevice's input stream and playing the audio out of
@@ -50,10 +50,10 @@ Nothing](http://www.rossbencina.com/code/real-time-audio-programming-101-time-wa
 
 ## BGMDriver
 
-The BGMDriver project is an audio driver for a virtual audio device called Background Music Device, which we use to
-intercept the audio playing on the user's system. The driver processes the audio data to apply per-app volumes, see if
-the music player is playing, etc. and then writes the audio to BGMDevice's input stream. It's essentially a loopback
-device with a few extra features.
+The BGMDriver project is an audio driver for a virtual audio device named "Background Music", which we use to intercept
+the audio playing on the user's system. The driver processes the audio data to apply per-app volumes, see if the music
+player is playing, etc. and then writes the audio to BGMDevice's input stream. It's essentially a loopback device with a
+few extra features.
 
 There are quite a few other open-source projects with drivers that do the same
 thing--[Soundflower](https://github.com/mattingalls/Soundflower) is probably the most well known--but as far as I know
