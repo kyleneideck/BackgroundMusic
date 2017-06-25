@@ -22,6 +22,7 @@ matrix:
       osx_image: xcode7.3
       xcode_sdk: macosx10.11
       sudo: required
+      env: PACKAGE=false
 # branches:
 #   only:
 #     - master
@@ -63,6 +64,8 @@ script:
   - if ls -la "/usr/local/libexec/BGMXPCHelper.xpc"; then false; fi
   - if ls -la "/Library/Application Support/Background Music/BGMXPCHelper.xpc"; then false; fi
   - if ls -la "/Library/LaunchDaemons/com.bearisdriving.BGM.XPCHelper.plist"; then false; fi
+# Return early if we're not testing packaging on this OS X version.
+  - if [[ "$PACKAGE" == "false" ]]; then exit 0; fi
 # Build the .pkg installer.
   - ./package.sh
 # Install the .pkg.
