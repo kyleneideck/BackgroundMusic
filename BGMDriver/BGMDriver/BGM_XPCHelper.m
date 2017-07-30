@@ -58,7 +58,7 @@ static NSXPCConnection* CreateXPCHelperConnection()
     return theConnection;
 }
 
-UInt64 StartBGMAppPlayThroughSync()
+UInt64 StartBGMAppPlayThroughSync(bool inIsForUISoundsDevice)
 {
     __block UInt64 theAnswer = kBGMXPC_Success;
     
@@ -113,7 +113,7 @@ UInt64 StartBGMAppPlayThroughSync()
         
         // Tell the enclosing function it can return now.
         dispatch_semaphore_signal(theReplySemaphore);
-    }];
+    } forUISoundsDevice:inIsForUISoundsDevice];
     
     DebugMsg("BGM_XPCHelper::StartBGMAppPlayThroughSync: Waiting for BGMApp to tell us the output device is ready for IO");
     

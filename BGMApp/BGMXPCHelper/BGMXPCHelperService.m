@@ -155,7 +155,7 @@ static NSXPCConnection* __nullable sBGMAppConnection = nil;
     }
 }
 
-- (void) startBGMAppPlayThroughSyncWithReply:(void (^)(NSError*))reply {
+- (void) startBGMAppPlayThroughSyncWithReply:(void (^)(NSError*))reply forUISoundsDevice:(BOOL)isUI {
     [self debugWarnIfCalledByBGMApp];
     
     // If this reply string isn't set before the end of this method, it's a bug
@@ -173,7 +173,7 @@ static NSXPCConnection* __nullable sBGMAppConnection = nil;
         [remoteObjectProxy startPlayThroughSyncWithReply:^(NSError* bgmAppReply) {
             replyToBGMDriver = bgmAppReply;
             dispatch_semaphore_signal(bgmAppReplySemaphore);
-        }];
+        } forUISoundsDevice:isUI];
     } errorHandler:^(NSError* error) {
         replyToBGMDriver = [BGMXPCHelperService errorWithCode:kBGMXPC_MessageFailure
                                                   description:[error localizedDescription]

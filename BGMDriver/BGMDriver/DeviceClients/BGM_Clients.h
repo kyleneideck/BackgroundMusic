@@ -58,7 +58,7 @@ class BGM_Clients
     friend class BGM_ClientTasks;
     
 public:
-                                        BGM_Clients(BGM_TaskQueue* inTaskQueue);
+                                        BGM_Clients(AudioObjectID inOwnerDeviceID, BGM_TaskQueue* inTaskQueue);
                                         ~BGM_Clients() = default;
     // Disallow copying. (It could make sense to implement these in future, but we don't need them currently.)
                                         BGM_Clients(const BGM_Clients&) = delete;
@@ -111,6 +111,7 @@ public:
     bool                                SetClientsRelativeVolumes(const CACFArray inAppVolumes);
     
 private:
+    AudioObjectID                       mOwnerDeviceID;
     BGM_ClientMap                       mClientMap;
     
     // Counters for the number of clients that are doing IO. These are used to tell whether any clients

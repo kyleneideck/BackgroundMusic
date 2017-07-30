@@ -140,7 +140,9 @@ UInt32	BGM_PlugIn::GetPropertyDataSize(AudioObjectID inObjectID, pid_t inClientP
 			
 		case kAudioObjectPropertyOwnedObjects:
 		case kAudioPlugInPropertyDeviceList:
-            theAnswer = (BGM_NullDevice::GetInstance().IsActive() ? 2 : 1) * sizeof(AudioObjectID);
+            // The plug-in owns the main BGM_Device, the instance of BGM_Device that handles UI
+            // sounds and, if it's enabled, the null device.
+            theAnswer = (BGM_NullDevice::GetInstance().IsActive() ? 3 : 2) * sizeof(AudioObjectID);
 			break;
 			
 		case kAudioPlugInPropertyTranslateUIDToDevice:
@@ -181,12 +183,32 @@ void	BGM_PlugIn::GetPropertyData(AudioObjectID inObjectID, pid_t inClientPID, co
 		case kAudioPlugInPropertyDeviceList:
             {
     			AudioObjectID* theReturnedDeviceList = reinterpret_cast<AudioObjectID*>(outData);
-                if((inDataSize >= 2 * sizeof(AudioObjectID)) && BGM_NullDevice::GetInstance().IsActive())
+                if(inDataSize >= 3 * sizeof(AudioObjectID))
+                {
+                    if(BGM_NullDevice::GetInstance().IsActive())
+                    {
+                        theReturnedDeviceList[0] = kObjectID_Device;
+                        theReturnedDeviceList[1] = kObjectID_Device_UI_Sounds;
+                        theReturnedDeviceList[2] = kObjectID_Device_Null;
+                        
+                        //	say how much we returned
+                        outDataSize = 3 * sizeof(AudioObjectID);
+                    }
+                    else
+                    {
+                        theReturnedDeviceList[0] = kObjectID_Device;
+                        theReturnedDeviceList[1] = kObjectID_Device_UI_Sounds;
+
+                        //	say how much we returned
+                        outDataSize = 2 * sizeof(AudioObjectID);
+                    }
+                }
+                else if(inDataSize >= 2 * sizeof(AudioObjectID))
                 {
                     theReturnedDeviceList[0] = kObjectID_Device;
-                    theReturnedDeviceList[1] = kObjectID_Device_Null;
-                    
-    				//	say how much we returned
+                    theReturnedDeviceList[1] = kObjectID_Device_UI_Sounds;
+
+                    //	say how much we returned
                     outDataSize = 2 * sizeof(AudioObjectID);
                 }
                 else if(inDataSize >= sizeof(AudioObjectID))
@@ -217,6 +239,12 @@ void	BGM_PlugIn::GetPropertyData(AudioObjectID inObjectID, pid_t inClientPID, co
                     DebugMsg("BGM_PlugIn::GetPropertyData: Returning BGMDevice for "
                              "kAudioPlugInPropertyTranslateUIDToDevice");
                     *outID = kObjectID_Device;
+                }
+                else if(CFEqual(theUID, BGM_Device::GetUISoundsInstance().CopyDeviceUID()))
+                {
+                    DebugMsg("BGM_PlugIn::GetPropertyData: Returning BGMUISoundsDevice for "
+                             "kAudioPlugInPropertyTranslateUIDToDevice");
+                    *outID = kObjectID_Device_UI_Sounds;
                 }
                 else if(BGM_NullDevice::GetInstance().IsActive() &&
                         CFEqual(theUID, BGM_NullDevice::GetInstance().CopyDeviceUID()))

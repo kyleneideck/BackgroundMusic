@@ -57,7 +57,7 @@ static const AudioServerPlugInClientInfo client2Info = {
 - (void)setUp {
     [super setUp];
     
-    clients = new BGM_Clients(&taskQueue);
+    clients = new BGM_Clients(kAudioObjectUnknown, &taskQueue);
 }
 
 - (void)tearDown {

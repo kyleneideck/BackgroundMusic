@@ -75,6 +75,12 @@ static CGFloat const kAppVolumeViewInitialHeight = 20;
     [[NSWorkspace sharedWorkspace] removeObserver:self forKeyPath:@"runningApplications" context:nil];
 }
 
+// This method allows the Interface Builder Custom Classes for controls (below) to send their values
+// directly to BGMDevice. Not public to other classes.
+- (BGMAudioDeviceManager*) audioDevices {
+    return audioDevices;
+}
+
 #pragma mark UI Modifications
 
 - (void) insertMenuItemsForApps:(NSArray<NSRunningApplication*>*)apps {
@@ -176,7 +182,7 @@ static CGFloat const kAppVolumeViewInitialHeight = 20;
     }
 }
 
-- (void) setVolumeOfMenuItem:(NSMenuItem*)menuItem fromAppVolumes:(CACFArray&)appVolumes {
+- (void) setVolumeOfMenuItem:(NSMenuItem*)menuItem fromAppVolumes:(const CACFArray&)appVolumes {
     // Set menuItem's volume slider to the volume of the app in appVolumes that menuItem represents
     // Leaves menuItem unchanged if it doesn't match any of the apps in appVolumes
     NSRunningApplication* representedApp = menuItem.representedObject;
@@ -269,8 +275,8 @@ static CGFloat const kAppVolumeViewInitialHeight = 20;
     
     // KVO callback for the apps currently running on the system. Adds/removes the associated menu items.
     if ([keyPath isEqualToString:@"runningApplications"]) {
-        NSArray<NSRunningApplication*>* newApps = [change objectForKey:NSKeyValueChangeNewKey];
-        NSArray<NSRunningApplication*>* oldApps = [change objectForKey:NSKeyValueChangeOldKey];
+        NSArray<NSRunningApplication*>* newApps = change[NSKeyValueChangeNewKey];
+        NSArray<NSRunningApplication*>* oldApps = change[NSKeyValueChangeOldKey];
         
         int changeKind = [[change valueForKey:NSKeyValueChangeKindKey] intValue];
         switch (changeKind) {
@@ -293,70 +299,6 @@ static CGFloat const kAppVolumeViewInitialHeight = 20;
                 break;
         }
     }
-}
-
-#pragma mark BGMDevice Communication
-
-- (void) sendVolumeChangeToBGMDevice:(SInt32)newVolume appProcessID:(pid_t)appProcessID appBundleID:(NSString*)appBundleID {
-    CACFDictionary appVolumeChange(true);
-    appVolumeChange.AddSInt32(CFSTR(kBGMAppVolumesKey_ProcessID), appProcessID);
-    appVolumeChange.AddString(CFSTR(kBGMAppVolumesKey_BundleID), (__bridge CFStringRef)appBundleID);
-    // The values from our sliders are in [kAppRelativeVolumeMinRawValue, kAppRelativeVolumeMaxRawValue] already
-    appVolumeChange.AddSInt32(CFSTR(kBGMAppVolumesKey_RelativeVolume), newVolume);
-    
-    CACFArray appVolumeChanges(true);
-    appVolumeChanges.AppendDictionary(appVolumeChange.GetDict());
-
-    [audioDevices bgmDevice].SetPropertyData_CFType(kBGMAppVolumesAddress, appVolumeChanges.AsPropertyList());
-}
-
-- (void) sendPanPositionChangeToBGMDevice:(SInt32)newPanPosition appProcessID:(pid_t)appProcessID appBundleID:(NSString*)appBundleID {
-    CACFDictionary appVolumeChange(true);
-    appVolumeChange.AddSInt32(CFSTR(kBGMAppVolumesKey_ProcessID), appProcessID);
-    appVolumeChange.AddString(CFSTR(kBGMAppVolumesKey_BundleID), (__bridge CFStringRef)appBundleID);
-    
-    // The values from our sliders are in [kAppPanLeftRawValue, kAppPanRightRawValue] already
-    appVolumeChange.AddSInt32(CFSTR(kBGMAppVolumesKey_PanPosition), newPanPosition);
-    
-    CACFArray appVolumeChanges(true);
-    appVolumeChanges.AppendDictionary(appVolumeChange.GetDict());
-    
-    [audioDevices bgmDevice].SetPropertyData_CFType(kBGMAppVolumesAddress, appVolumeChanges.AsPropertyList());
-}
-
-// This is a temporary solution that lets us control the volumes of some multiprocess apps, i.e.
-// apps that play their audio from a process with a different bundle ID.
-//
-// We can't just check the child processes of the apps' main processes because they're usually
-// created with launchd rather than being actual child processes. There's a private API to get the
-// processes that an app is "responsible for", so we'll try to use it in the proper fix and only use
-// this list if the API doesn't work.
-//
-// TODO: Consider moving the logic to a new class when we fix this issue properly so this class is
-//       only responsible for UI.
-+ (NSArray<NSString*>*) responsibleBundleIDsOf:(NSString*)parentBundleID {
-    NSDictionary<NSString*, NSArray<NSString*>*>* bundleIDMap = @{
-        // Safari
-        @"com.apple.Safari": @[@"com.apple.WebKit.WebContent"],
-        // Firefox
-        @"org.mozilla.firefox": @[@"org.mozilla.plugincontainer"],
-        // Firefox Nightly
-        @"org.mozilla.nightly": @[@"org.mozilla.plugincontainer"],
-        // VMWare Fusion
-        @"com.vmware.fusion": @[@"com.vmware.vmware-vmx"],
-        // Parallels
-        @"com.parallels.desktop.console": @[@"com.parallels.vm"],
-        // MPlayer OSX Extended
-        @"hu.mplayerhq.mplayerosx.extended": @[@"ch.sttz.mplayerosx.extended.binaries.officialsvn"]
-    };
-
-    // Parallels' VM "dock helper" apps have bundle IDs like
-    // com.parallels.winapp.87f6bfc236d64d70a81c47f6243add4c.f5a25fdede514f7aa0a475a1873d3287.fs
-    if ([parentBundleID hasPrefix:@"com.parallels.winapp."]) {
-        return @[@"com.parallels.vm"];
-    }
-
-    return bundleIDMap[parentBundleID];
 }
 
 @end
@@ -464,11 +406,11 @@ static CGFloat const kAppVolumeViewInitialHeight = 20;
     
     [self snap];
 
-    [context sendVolumeChangeToBGMDevice:self.intValue appProcessID:appProcessID appBundleID:appBundleID];
-
-    for (NSString* bundleID : [BGMAppVolumes responsibleBundleIDsOf:appBundleID]) {
-        [context sendVolumeChangeToBGMDevice:self.intValue appProcessID:-1 appBundleID:bundleID];
-    }
+    // The values from our sliders are in
+    // [kAppRelativeVolumeMinRawValue, kAppRelativeVolumeMaxRawValue] already.
+    [context.audioDevices sendAppVolumeToBGMDevice:self.intValue
+                                      appProcessID:appProcessID
+                                       appBundleID:appBundleID];
 }
 
 @end
@@ -511,11 +453,10 @@ static CGFloat const kAppVolumeViewInitialHeight = 20;
     
     DebugMsg("BGMAppVolumes::appPanPositionChanged: App pan position for %s changed to %d", appBundleID.UTF8String, self.intValue);
 
-    [context sendPanPositionChangeToBGMDevice:self.intValue appProcessID:appProcessID appBundleID:appBundleID];
-
-    for (NSString* bundleID : [BGMAppVolumes responsibleBundleIDsOf:appBundleID]) {
-        [context sendPanPositionChangeToBGMDevice:self.intValue appProcessID:-1 appBundleID:bundleID];
-    }
+    // The values from our sliders are in [kAppPanLeftRawValue, kAppPanRightRawValue] already.
+    [context.audioDevices sendAppPanPositionToBGMDevice:self.intValue
+                                           appProcessID:appProcessID
+                                            appBundleID:appBundleID];
 }
 
 @end

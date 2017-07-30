@@ -17,11 +17,10 @@
 //  BGMAudioDeviceManager.h
 //  BGMApp
 //
-//  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016, 2017 Kyle Neideck
 //
-//  Manages the BGMDevice and the output device. Sets the system's current default device as the
-//  output device on init, then starts playthrough and mirroring the devices' controls. The output
-//  device can be changed but the BGMDevice is fixed.
+//  Manages BGMDevice and the output device. Sets the system's current default device as the output
+//  device on init, then starts playthrough and mirroring the devices' controls.
 //
 
 // PublicUtility Includes
@@ -61,6 +60,13 @@ const int kBGMErrorCode_ReturningEarly       = 3;
 - (BOOL) isOutputDevice:(AudioObjectID)deviceID;
 - (BOOL) isOutputDataSource:(UInt32)dataSourceID;
 
+- (void) sendAppVolumeToBGMDevice:(SInt32)newVolume
+                     appProcessID:(pid_t)appProcessID
+                      appBundleID:(NSString*)appBundleID;
+- (void) sendAppPanPositionToBGMDevice:(SInt32)newPanPosition
+                          appProcessID:(pid_t)appProcessID
+                           appBundleID:(NSString*)appBundleID;
+
 // Set the audio output device that BGMApp uses.
 //
 // Returns an error if the output device couldn't be changed. If revertOnFailure is true in that case,
@@ -85,7 +91,7 @@ const int kBGMErrorCode_ReturningEarly       = 3;
 //
 // Returns one of the error codes defined by this class or BGMPlayThrough, or an AudioHardware error
 // code received from the HAL.
-- (OSStatus) startPlayThroughSync;
+- (OSStatus) startPlayThroughSync:(BOOL)forUISoundsDevice;
 
 @end
 

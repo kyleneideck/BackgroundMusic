@@ -40,23 +40,32 @@ static const char* const kBGMIssueTrackerURL = "https://github.com/kyleneideck/B
 
 #define kBGMDeviceUID                "BGMDevice"
 #define kBGMDeviceModelUID           "BGMDeviceModelUID"
+#define kBGMDeviceUID_UISounds       "BGMDevice_UISounds"
+#define kBGMDeviceModelUID_UISounds  "BGMDeviceModelUID_UISounds"
 #define kBGMNullDeviceUID            "BGMNullDevice"
 #define kBGMNullDeviceModelUID       "BGMNullDeviceModelUID"
 
 // The object IDs for the audio objects this driver implements.
 //
-// BGMDevice always publishes this fixed set of objects (regardless of the wrapped device). We might need to
-// change that at some point, but so far it hasn't caused any problems and it makes the driver much simpler.
+// BGMDevice always publishes this fixed set of objects (except when BGMDevice's volume or mute
+// controls are disabled). We might need to change that at some point, but so far it hasn't caused
+// any problems and it makes the driver much simpler.
 enum
 {
-	kObjectID_PlugIn					= kAudioObjectPlugInObject,
-	kObjectID_Device					= 2,  // Belongs to kObjectID_PlugIn
-	kObjectID_Stream_Input				= 3,  // Belongs to kObjectID_Device
-	kObjectID_Stream_Output				= 4,  // Belongs to kObjectID_Device
-	kObjectID_Volume_Output_Master		= 5,  // Belongs to kObjectID_Device
-	kObjectID_Mute_Output_Master		= 6,  // Belongs to kObjectID_Device
-    kObjectID_Device_Null				= 7,  // Belongs to kObjectID_PlugIn
-    kObjectID_Stream_Null				= 8,  // Belongs to kObjectID_Device_Null
+	kObjectID_PlugIn                            = kAudioObjectPlugInObject,
+    // BGMDevice
+	kObjectID_Device                            = 2,   // Belongs to kObjectID_PlugIn
+	kObjectID_Stream_Input                      = 3,   // Belongs to kObjectID_Device
+	kObjectID_Stream_Output                     = 4,   // Belongs to kObjectID_Device
+	kObjectID_Volume_Output_Master              = 5,   // Belongs to kObjectID_Device
+	kObjectID_Mute_Output_Master                = 6,   // Belongs to kObjectID_Device
+    // Null Device
+    kObjectID_Device_Null                       = 7,   // Belongs to kObjectID_PlugIn
+    kObjectID_Stream_Null                       = 8,   // Belongs to kObjectID_Device_Null
+    // BGMDevice for UI sounds
+    kObjectID_Device_UI_Sounds                  = 9,   // Belongs to kObjectID_PlugIn
+    kObjectID_Stream_Input_UI_Sounds            = 10,  // Belongs to kObjectID_Device_UI_Sounds
+    kObjectID_Stream_Output_UI_Sounds           = 11,  // Belongs to kObjectID_Device_UI_Sounds
 };
 
 #pragma BGM Plug-in Custom Properties
@@ -104,9 +113,9 @@ enum
 };
 
 // The number of silent/audible frames before BGMDriver will change kAudioDeviceCustomPropertyDeviceAudibleState
-#define kDeviceAudibleStateMinChangedFramesForUpdate (2 << 12)
+#define kDeviceAudibleStateMinChangedFramesForUpdate (2 << 11)
 
-enum
+enum BGMDeviceAudibleState : SInt32
 {
     // kAudioDeviceCustomPropertyDeviceAudibleState values
     //

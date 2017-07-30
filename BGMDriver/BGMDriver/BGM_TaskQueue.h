@@ -118,7 +118,7 @@ public:
     
     // Sends a property changed notification to the BGMDevice host. Assumes the scope and element are kAudioObjectPropertyScopeGlobal and
     // kAudioObjectPropertyElementMaster because currently those are the only ones we use.
-    void                                QueueAsync_SendPropertyNotification(AudioObjectPropertySelector inProperty);
+    void                                QueueAsync_SendPropertyNotification(AudioObjectPropertySelector inProperty, AudioObjectID inDeviceID);
     
     // Set/unset a client's is-doing-IO flag
     

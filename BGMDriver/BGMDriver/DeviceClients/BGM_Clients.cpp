@@ -36,8 +36,9 @@
 
 #pragma mark Construction/Destruction
 
-BGM_Clients::BGM_Clients(BGM_TaskQueue* inTaskQueue)
+BGM_Clients::BGM_Clients(AudioObjectID inOwnerDeviceID, BGM_TaskQueue* inTaskQueue)
 :
+    mOwnerDeviceID(inOwnerDeviceID),
     mClientMap(inTaskQueue)
 {
     mRelativeVolumeCurve.AddRange(kAppRelativeVolumeMinRawValue,
@@ -110,9 +111,10 @@ bool    BGM_Clients::StartIONonRT(UInt32 inClientID)
         // Make sure we can start
         ThrowIf(mStartCount == UINT64_MAX, CAException(kAudioHardwareIllegalOperationError), "BGM_Clients::StartIO: failed to start because the ref count was maxxed out already");
         
-        DebugMsg("BGM_Clients::StartIO: Client %u (%s) starting IO",
+        DebugMsg("BGM_Clients::StartIO: Client %u (%s, %d) starting IO",
                  inClientID,
-                 CFStringGetCStringPtr(theClient.mBundleID.GetCFString(), kCFStringEncodingUTF8));
+                 CFStringGetCStringPtr(theClient.mBundleID.GetCFString(), kCFStringEncodingUTF8),
+                 theClient.mProcessID);
         
         mClientMap.StartIONonRT(inClientID);
         
@@ -160,9 +162,10 @@ bool    BGM_Clients::StopIONonRT(UInt32 inClientID)
     
     if(theClient.mDoingIO)
     {
-        DebugMsg("BGM_Clients::StopIO: Client %u (%s) stopping IO",
+        DebugMsg("BGM_Clients::StopIO: Client %u (%s, %d) stopping IO",
                  inClientID,
-                 CFStringGetCStringPtr(theClient.mBundleID.GetCFString(), kCFStringEncodingUTF8));
+                 CFStringGetCStringPtr(theClient.mBundleID.GetCFString(), kCFStringEncodingUTF8),
+                 theClient.mProcessID);
         
         mClientMap.StopIONonRT(inClientID);
         
@@ -228,7 +231,7 @@ void    BGM_Clients::SendIORunningNotifications(bool sendIsRunningNotification, 
                 theNotificationCount++;
             }
 
-            BGM_PlugIn::Host_PropertiesChanged(kObjectID_Device, theNotificationCount, theChangedProperties);
+            BGM_PlugIn::Host_PropertiesChanged(mOwnerDeviceID, theNotificationCount, theChangedProperties);
         });
     }
 }

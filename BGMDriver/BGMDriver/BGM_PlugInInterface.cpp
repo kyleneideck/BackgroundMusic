@@ -98,6 +98,7 @@ static AudioServerPlugInDriverInterface*	gAudioServerPlugInDriverInterfacePtr	= 
 static AudioServerPlugInDriverRef			gAudioServerPlugInDriverRef				= &gAudioServerPlugInDriverInterfacePtr;
 static UInt32								gAudioServerPlugInDriverRefCount		= 1;
 
+// TODO: This name is a bit misleading because the devices are actually owned by the plug-in.
 static BGM_Object& BGM_LookUpOwnerObject(AudioObjectID inObjectID)
 {
     switch(inObjectID)
@@ -111,6 +112,11 @@ static BGM_Object& BGM_LookUpOwnerObject(AudioObjectID inObjectID)
         case kObjectID_Volume_Output_Master:
         case kObjectID_Mute_Output_Master:
             return BGM_Device::GetInstance();
+
+        case kObjectID_Device_UI_Sounds:
+        case kObjectID_Stream_Input_UI_Sounds:
+        case kObjectID_Stream_Output_UI_Sounds:
+            return BGM_Device::GetUISoundsInstance();
 
         case kObjectID_Device_Null:
         case kObjectID_Stream_Null:
@@ -127,6 +133,9 @@ static BGM_AbstractDevice& BGM_LookUpDevice(AudioObjectID inObjectID)
     {
         case kObjectID_Device:
             return BGM_Device::GetInstance();
+
+        case kObjectID_Device_UI_Sounds:
+            return BGM_Device::GetUISoundsInstance();
 
         case kObjectID_Device_Null:
             return BGM_NullDevice::GetInstance();
@@ -276,6 +285,7 @@ static OSStatus	BGM_Initialize(AudioServerPlugInDriverRef inDriver, AudioServerP
         
         // Init/activate the devices.
         BGM_Device::GetInstance();
+        BGM_Device::GetUISoundsInstance();
         BGM_NullDevice::GetInstance();
 	}
 	catch(const CAException& inException)
@@ -325,7 +335,7 @@ static OSStatus	BGM_AddDeviceClient(AudioServerPlugInDriverRef inDriver, AudioOb
 		ThrowIf(inDriver != gAudioServerPlugInDriverRef,
                 CAException(kAudioHardwareBadObjectError),
                 "BGM_AddDeviceClient: bad driver reference");
-		ThrowIf(inDeviceObjectID != kObjectID_Device && inDeviceObjectID != kObjectID_Device_Null,
+		ThrowIf(inDeviceObjectID != kObjectID_Device && inDeviceObjectID != kObjectID_Device_UI_Sounds && inDeviceObjectID != kObjectID_Device_Null,
                 CAException(kAudioHardwareBadObjectError),
                 "BGM_AddDeviceClient: unknown device");
 		
@@ -361,7 +371,7 @@ static OSStatus	BGM_RemoveDeviceClient(AudioServerPlugInDriverRef inDriver, Audi
 		ThrowIf(inDriver != gAudioServerPlugInDriverRef,
                 CAException(kAudioHardwareBadObjectError),
                 "BGM_RemoveDeviceClient: bad driver reference");
-		ThrowIf(inDeviceObjectID != kObjectID_Device && inDeviceObjectID != kObjectID_Device_Null,
+		ThrowIf(inDeviceObjectID != kObjectID_Device && inDeviceObjectID != kObjectID_Device_UI_Sounds && inDeviceObjectID != kObjectID_Device_Null,
                 CAException(kAudioHardwareBadObjectError),
                 "BGM_RemoveDeviceClient: unknown device");
 		
@@ -404,7 +414,7 @@ static OSStatus	BGM_PerformDeviceConfigurationChange(AudioServerPlugInDriverRef 
 		ThrowIf(inDriver != gAudioServerPlugInDriverRef,
                 CAException(kAudioHardwareBadObjectError),
                 "BGM_PerformDeviceConfigurationChange: bad driver reference");
-		ThrowIf(inDeviceObjectID != kObjectID_Device && inDeviceObjectID != kObjectID_Device_Null,
+		ThrowIf(inDeviceObjectID != kObjectID_Device && inDeviceObjectID != kObjectID_Device_UI_Sounds && inDeviceObjectID != kObjectID_Device_Null,
                 CAException(kAudioHardwareBadDeviceError),
                 "BGM_PerformDeviceConfigurationChange: unknown device");
 		
@@ -436,7 +446,7 @@ static OSStatus	BGM_AbortDeviceConfigurationChange(AudioServerPlugInDriverRef in
 		ThrowIf(inDriver != gAudioServerPlugInDriverRef,
                 CAException(kAudioHardwareBadObjectError),
                 "BGM_PerformDeviceConfigurationChange: bad driver reference");
-		ThrowIf(inDeviceObjectID != kObjectID_Device && inDeviceObjectID != kObjectID_Device_Null,
+		ThrowIf(inDeviceObjectID != kObjectID_Device && inDeviceObjectID != kObjectID_Device_UI_Sounds && inDeviceObjectID != kObjectID_Device_Null,
                 CAException(kAudioHardwareBadDeviceError),
                 "BGM_PerformDeviceConfigurationChange: unknown device");
 		
@@ -667,7 +677,7 @@ static OSStatus	BGM_StartIO(AudioServerPlugInDriverRef inDriver,
 		ThrowIf(inDriver != gAudioServerPlugInDriverRef,
                 CAException(kAudioHardwareBadObjectError),
                 "BGM_StartIO: bad driver reference");
-		ThrowIf(inDeviceObjectID != kObjectID_Device && inDeviceObjectID != kObjectID_Device_Null,
+		ThrowIf(inDeviceObjectID != kObjectID_Device && inDeviceObjectID != kObjectID_Device_UI_Sounds && inDeviceObjectID != kObjectID_Device_Null,
                 CAException(kAudioHardwareBadDeviceError),
                 "BGM_StartIO: unknown device");
 		
@@ -701,7 +711,7 @@ static OSStatus	BGM_StopIO(AudioServerPlugInDriverRef inDriver,
 		ThrowIf(inDriver != gAudioServerPlugInDriverRef,
                 CAException(kAudioHardwareBadObjectError),
                 "BGM_StopIO: bad driver reference");
-		ThrowIf(inDeviceObjectID != kObjectID_Device && inDeviceObjectID != kObjectID_Device_Null,
+		ThrowIf(inDeviceObjectID != kObjectID_Device && inDeviceObjectID != kObjectID_Device_UI_Sounds && inDeviceObjectID != kObjectID_Device_Null,
                 CAException(kAudioHardwareBadDeviceError),
                 "BGM_StopIO: unknown device");
 		
@@ -751,7 +761,7 @@ static OSStatus	BGM_GetZeroTimeStamp(AudioServerPlugInDriverRef inDriver,
 		ThrowIfNULL(outSeed,
                     CAException(kAudioHardwareIllegalOperationError),
                     "BGM_GetZeroTimeStamp: no place to put the seed");
-		ThrowIf(inDeviceObjectID != kObjectID_Device && inDeviceObjectID != kObjectID_Device_Null,
+		ThrowIf(inDeviceObjectID != kObjectID_Device && inDeviceObjectID != kObjectID_Device_UI_Sounds && inDeviceObjectID != kObjectID_Device_Null,
                 CAException(kAudioHardwareBadDeviceError),
                 "BGM_GetZeroTimeStamp: unknown device");
 		
@@ -794,7 +804,7 @@ static OSStatus	BGM_WillDoIOOperation(AudioServerPlugInDriverRef inDriver,
 		ThrowIfNULL(outWillDoInPlace,
                     CAException(kAudioHardwareIllegalOperationError),
                     "BGM_WillDoIOOperation: no place to put the in-place return value");
-		ThrowIf(inDeviceObjectID != kObjectID_Device && inDeviceObjectID != kObjectID_Device_Null,
+		ThrowIf(inDeviceObjectID != kObjectID_Device && inDeviceObjectID != kObjectID_Device_UI_Sounds && inDeviceObjectID != kObjectID_Device_Null,
                 CAException(kAudioHardwareBadDeviceError),
                 "BGM_WillDoIOOperation: unknown device");
 		
@@ -839,7 +849,7 @@ static OSStatus	BGM_BeginIOOperation(AudioServerPlugInDriverRef inDriver,
 		ThrowIfNULL(inIOCycleInfo,
                     CAException(kAudioHardwareIllegalOperationError),
                     "BGM_BeginIOOperation: no cycle info");
-		ThrowIf(inDeviceObjectID != kObjectID_Device && inDeviceObjectID != kObjectID_Device_Null,
+		ThrowIf(inDeviceObjectID != kObjectID_Device && inDeviceObjectID != kObjectID_Device_UI_Sounds && inDeviceObjectID != kObjectID_Device_Null,
                 CAException(kAudioHardwareBadDeviceError),
                 "BGM_BeginIOOperation: unknown device");
 		
@@ -887,7 +897,7 @@ static OSStatus	BGM_DoIOOperation(AudioServerPlugInDriverRef inDriver,
 		ThrowIfNULL(inIOCycleInfo,
                     CAException(kAudioHardwareIllegalOperationError),
                     "BGM_EndIOOperation: no cycle info");
-		ThrowIf(inDeviceObjectID != kObjectID_Device && inDeviceObjectID != kObjectID_Device_Null,
+		ThrowIf(inDeviceObjectID != kObjectID_Device && inDeviceObjectID != kObjectID_Device_UI_Sounds && inDeviceObjectID != kObjectID_Device_Null,
                 CAException(kAudioHardwareBadDeviceError),
                 "BGM_EndIOOperation: unknown device");
 		
@@ -935,7 +945,7 @@ static OSStatus	BGM_EndIOOperation(AudioServerPlugInDriverRef inDriver,
 		ThrowIfNULL(inIOCycleInfo,
                     CAException(kAudioHardwareIllegalOperationError),
                     "BGM_EndIOOperation: no cycle info");
-		ThrowIf(inDeviceObjectID != kObjectID_Device && inDeviceObjectID != kObjectID_Device_Null,
+		ThrowIf(inDeviceObjectID != kObjectID_Device && inDeviceObjectID != kObjectID_Device_UI_Sounds && inDeviceObjectID != kObjectID_Device_Null,
                 CAException(kAudioHardwareBadDeviceError),
                 "BGM_EndIOOperation: unknown device");
 		

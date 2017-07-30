@@ -35,7 +35,10 @@
 #include "BGM_WrappedAudioEngine.h"
 #include "BGM_Clients.h"
 #include "BGM_TaskQueue.h"
+#include "BGM_AudibleState.h"
 #include "BGM_Stream.h"
+#include "BGM_VolumeControl.h"
+#include "BGM_MuteControl.h"
 
 // PublicUtility Includes
 #include "CAMutex.h"
@@ -55,12 +58,26 @@ class BGM_Device
     
 public:
     static BGM_Device&			GetInstance();
+    static BGM_Device&			GetUISoundsInstance();
     
 private:
     static void					StaticInitializer();
 
 protected:
-                                BGM_Device();
+                                BGM_Device(AudioObjectID inObjectID,
+										   const CFStringRef __nonnull inDeviceName,
+                                           const CFStringRef __nonnull inDeviceUID,
+										   const CFStringRef __nonnull inDeviceModelUID,
+                                           AudioObjectID inInputStreamID,
+                                           AudioObjectID inOutputStreamID);
+                                BGM_Device(AudioObjectID inObjectID,
+                                           const CFStringRef __nonnull inDeviceName,
+										   const CFStringRef __nonnull inDeviceUID,
+										   const CFStringRef __nonnull inDeviceModelUID,
+                                           AudioObjectID inInputStreamID,
+                                           AudioObjectID inOutputStreamID,
+                                           AudioObjectID inOutputVolumeControlID,
+										   AudioObjectID inOutputMuteControlID);
     virtual						~BGM_Device();
     
     virtual void				Activate();
@@ -87,15 +104,6 @@ private:
 	void						Device_GetPropertyData(AudioObjectID inObjectID, pid_t inClientPID, const AudioObjectPropertyAddress& inAddress, UInt32 inQualifierDataSize, const void* __nullable inQualifierData, UInt32 inDataSize, UInt32& outDataSize, void* __nonnull outData) const;
 	void						Device_SetPropertyData(AudioObjectID inObjectID, pid_t inClientPID, const AudioObjectPropertyAddress& inAddress, UInt32 inQualifierDataSize, const void* __nullable inQualifierData, UInt32 inDataSize, const void* __nonnull inData);
 
-#pragma mark Control Property Operations
-    
-private:
-	bool						Control_HasProperty(AudioObjectID inObjectID, pid_t inClientPID, const AudioObjectPropertyAddress& inAddress) const;
-	bool						Control_IsPropertySettable(AudioObjectID inObjectID, pid_t inClientPID, const AudioObjectPropertyAddress& inAddress) const;
-	UInt32						Control_GetPropertyDataSize(AudioObjectID inObjectID, pid_t inClientPID, const AudioObjectPropertyAddress& inAddress, UInt32 inQualifierDataSize, const void* __nullable inQualifierData) const;
-	void						Control_GetPropertyData(AudioObjectID inObjectID, pid_t inClientPID, const AudioObjectPropertyAddress& inAddress, UInt32 inQualifierDataSize, const void* __nullable inQualifierData, UInt32 inDataSize, UInt32& outDataSize, void* __nonnull outData) const;
-	void						Control_SetPropertyData(AudioObjectID inObjectID, pid_t inClientPID, const AudioObjectPropertyAddress& inAddress, UInt32 inQualifierDataSize, const void* __nullable inQualifierData, UInt32 inDataSize, const void* __nonnull inData);
-
 #pragma mark IO Operations
     
 public:
@@ -113,10 +121,6 @@ private:
 	void						ReadInputData(UInt32 inIOBufferFrameSize, Float64 inSampleTime, void* __nonnull outBuffer);
     void						WriteOutputData(UInt32 inIOBufferFrameSize, Float64 inSampleTime, const void* __nonnull inBuffer);
     void                        ApplyClientRelativeVolume(UInt32 inClientID, UInt32 inIOBufferFrameSize, void* __nonnull inBuffer) const;
-    bool                        BufferIsAudible(UInt32 inIOBufferFrameSize, const void* __nonnull inBuffer);
-    void                        UpdateAudibleStateSampleTimes_PreMix(UInt32 inClientID, UInt32 inIOBufferFrameSize, Float64 inOutputSampleTime, const void* __nonnull inBuffer);
-    void                        UpdateAudibleStateSampleTimes_PostMix(UInt32 inIOBufferFrameSize, Float64 inOutputSampleTime, const void* __nonnull inBuffer);
-    void                        UpdateDeviceAudibleState(UInt32 inIOBufferFrameSize, Float64 inOutputSampleTime);
 
 #pragma mark Accessors
 
@@ -133,6 +137,22 @@ public:
     void                        RequestSampleRate(Float64 inRequestedSampleRate);
 
 private:
+	/*!
+     @return The Audio Object that has the ID inObjectID and belongs to this device.
+     @throws CAException if there is no such Audio Object.
+     */
+	const BGM_Object&		    GetOwnedObjectByID(AudioObjectID inObjectID) const;
+	BGM_Object&                 GetOwnedObjectByID(AudioObjectID inObjectID);
+
+	/*! @return The number of Audio Objects belonging to this device, e.g. streams and controls. */
+	UInt32 						GetNumberOfSubObjects() const;
+	/*! @return The number of Audio Objects with output scope belonging to this device. */
+    UInt32 						GetNumberOfOutputSubObjects() const;
+	/*!
+	 @return The number of control Audio Objects with output scope belonging to this device, e.g.
+	         output volume and mute controls.
+	 */
+    UInt32 						GetNumberOfOutputControls() const;
     /*!
      Enable or disable the device's volume and/or mute controls.
 
@@ -154,13 +174,7 @@ private:
     void                        SetSampleRate(Float64 inNewSampleRate);
 
     /*! @return True if inObjectID is the ID of one of this device's streams. */
-    bool                        IsStreamID(AudioObjectID inObjectID) const noexcept;
-    /*! 
-     @return The stream that has the ID inObjectID and belongs to this device.
-     @throws CAException if there is no such stream (i.e. if inObjectID is neither
-             kObjectID_Stream_Input nor kObjectID_Stream_Output.)
-     */
-    const BGM_Stream&           GetStreamByID(AudioObjectID inObjectID) const;
+    inline bool                 IsStreamID(AudioObjectID inObjectID) const noexcept;
 
 #pragma mark Hardware Accessors
     
@@ -172,15 +186,11 @@ private:
 	Float64						_HW_GetSampleRate() const;
 	kern_return_t				_HW_SetSampleRate(Float64 inNewSampleRate);
 	UInt32						_HW_GetRingBufferFrameSize() const;
-	SInt32						_HW_GetVolumeControlValue(AudioObjectID inObjectID) const;
-	kern_return_t				_HW_SetVolumeControlValue(AudioObjectID inObjectID, SInt32 inNewControlValue);
-    UInt32                      _HW_GetMuteControlValue(AudioObjectID inObjectID) const;
-    kern_return_t               _HW_SetMuteControlValue(AudioObjectID inObjectID, UInt32 inValue);
 
 #pragma mark Implementation
     
 public:
-	CFStringRef __nonnull		CopyDeviceUID() const { return CFSTR(kBGMDeviceUID); }
+    CFStringRef __nonnull		CopyDeviceUID() const { return mDeviceUID; }
     void                        AddClient(const AudioServerPlugInClientInfo* __nonnull inClientInfo);
     void                        RemoveClient(const AudioServerPlugInClientInfo* __nonnull inClientInfo);
     /*!
@@ -194,25 +204,29 @@ public:
 private:
     static pthread_once_t		sStaticInitializer;
     static BGM_Device* __nonnull    sInstance;
+    static BGM_Device* __nonnull    sUISoundsInstance;
     
     #define kDeviceName                 "Background Music"
+    #define kDeviceName_UISounds        "Background Music (UI Sounds)"
     #define kDeviceManufacturerName     "Background Music contributors"
-    
+
+	const CFStringRef __nonnull	mDeviceName;
+	const CFStringRef __nonnull mDeviceUID;
+	const CFStringRef __nonnull mDeviceModelUID;
+
 	enum
 	{
-								kNumberOfSubObjects					= 4,
+		// The number of global/output sub-objects varies because the controls can be disabled.
 								kNumberOfInputSubObjects			= 1,
-								kNumberOfOutputSubObjects			= 3,
-								
+
 								kNumberOfStreams					= 2,
 								kNumberOfInputStreams				= 1,
 								kNumberOfOutputStreams				= 1
 	};
-    
+
     CAMutex                     mStateMutex;
     CAMutex						mIOMutex;
     
-    UInt64 __unused				mSampleRateShadow;  // Currently unused.
     const Float64               kSampleRateDefault = 44100.0;
     // Before we can change sample rate, the host has to stop the device. The new sample rate is
     // stored here while it does.
@@ -236,15 +250,8 @@ private:
 	
     BGM_Stream                  mInputStream;
     BGM_Stream                  mOutputStream;
-    
-    SInt32                      mDeviceAudibleState;
-    struct
-    {
-        Float64                 latestAudibleNonMusic;
-        Float64                 latestSilent;
-        Float64                 latestAudibleMusic;
-        Float64                 latestSilentMusic;
-    }                           mAudibleStateSampleTimes;
+
+    BGM_AudibleState            mAudibleState;
 
     enum class ChangeAction : UInt64
     {
@@ -252,25 +259,10 @@ private:
         SetEnabledControls
     };
 
-    // This volume range will be used when the BGMDevice isn't wrapping another device (or we fail to
-    // get the range of the wrapped device for some reason).
-    #define kDefaultMinRawVolumeValue   0
-    #define kDefaultMaxRawVolumeValue	96
-    #define kDefaultMinDbVolumeValue	-96.0f
-    #define kDefaultMaxDbVolumeValue	0.0f
-
-    bool                        mOutputVolumeControlEnabled        = true;
-    bool                        mOutputMuteControlEnabled          = true;
+    BGM_VolumeControl			mVolumeControl;
+	BGM_MuteControl				mMuteControl;
     bool                        mPendingOutputVolumeControlEnabled = true;
     bool                        mPendingOutputMuteControlEnabled   = true;
-	
-	SInt32						mOutputMasterVolumeControlRawValueShadow;
-    SInt32                      mOutputMasterMinRawVolumeShadow;
-    SInt32                      mOutputMasterMaxRawVolumeShadow;
-    Float32                     mOutputMasterMinDbVolumeShadow;
-    Float32                     mOutputMasterMaxDbVolumeShadow;
-	CAVolumeCurve				mVolumeCurve;
-    UInt32                      mOutputMuteValueShadow;
 
 };
 

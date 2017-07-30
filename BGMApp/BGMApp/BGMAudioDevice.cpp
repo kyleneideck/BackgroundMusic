@@ -61,14 +61,17 @@ BGMAudioDevice::~BGMAudioDevice()
 bool    BGMAudioDevice::CanBeOutputDeviceInBGMApp() const
 {
     CFStringRef uid = CopyDeviceUID();
-    bool isBGMDevice = CFEqual(uid, CFSTR(kBGMDeviceUID));
     bool isNullDevice = CFEqual(uid, CFSTR(kBGMNullDeviceUID));
     CFRelease(uid);
 
     bool hasOutputChannels = GetTotalNumberChannels(/* inIsInput = */ false) > 0;
     bool canBeDefault = CanBeDefaultDevice(/* inIsInput = */ false, /* inIsSystem = */ false);
 
-    return !isBGMDevice && !isNullDevice && !IsHidden() && hasOutputChannels && canBeDefault;
+    return !IsBGMDeviceInstance() &&
+            !isNullDevice &&
+            !IsHidden() &&
+            hasOutputChannels &&
+            canBeDefault;
 }
 
 #pragma mark Available Controls
@@ -329,6 +332,27 @@ bool    BGMAudioDevice::GetVirtualMasterBalance(AudioObjectPropertyScope inScope
                                                        &virtualMasterBalanceAddress,
                                                        &virtualMasterVolumePropertySize,
                                                        &outVirtualMasterBalance);
+}
+
+#pragma mark Implementation
+
+bool    BGMAudioDevice::IsBGMDevice(bool inIncludeUISoundsInstance) const
+{
+    bool isBGMDevice = false;
+
+    if(GetObjectID() != kAudioObjectUnknown)
+    {
+        // Check the device's UID to see whether it's BGMDevice.
+        CFStringRef uid = CopyDeviceUID();
+
+        isBGMDevice =
+            CFEqual(uid, CFSTR(kBGMDeviceUID)) ||
+                    (inIncludeUISoundsInstance && CFEqual(uid, CFSTR(kBGMDeviceUID_UISounds)));
+
+        CFRelease(uid);
+    }
+
+    return isBGMDevice;
 }
 
 // static

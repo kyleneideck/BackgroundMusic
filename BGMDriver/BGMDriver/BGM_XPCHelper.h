@@ -31,7 +31,7 @@ extern "C" {
 #endif
 
 // On failure, returns one of the kBGMXPC_* error codes, or the error code received from BGMXPCHelper. Returns kBGMXPC_Success otherwise.
-UInt64 StartBGMAppPlayThroughSync(void);
+UInt64 StartBGMAppPlayThroughSync(bool inIsForUISoundsDevice);
 
 #if defined(__cplusplus)
 }

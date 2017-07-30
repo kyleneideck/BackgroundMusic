@@ -187,7 +187,7 @@ static NSInteger const kOutputDeviceMenuItemTag = 2;
     item.toolTip = toolTip;
     item.target = self;
     item.indentationLevel = 1;
-    item.representedObject = @{ @"deviceID": [NSNumber numberWithUnsignedInt:device.GetObjectID()],
+    item.representedObject = @{ @"deviceID": @(device.GetObjectID()),
                                 @"dataSourceID": dataSourceID ? BGMNN(dataSourceID) : [NSNull null] };
     
     return item;

@@ -50,10 +50,10 @@ static UInt64 const kPauseDelayNSec = 1500 * NSEC_PER_MSEC;
 //       immediately if we haven't been paused for long and the non-music-player client stops IO? That would usually indicate that
 //       it doesn't intend to start playing audio again soon. We'd also have to deal with music players that don't stop IO when
 //       they're paused.
-static UInt64 const kMaxUnpauseDelayNSec = 3000 * NSEC_PER_MSEC;
+static UInt64 const kMaxUnpauseDelayNSec = 3500 * NSEC_PER_MSEC;
 static UInt64 const kMinUnpauseDelayNSec = kMaxUnpauseDelayNSec / 10;
 // We multiply the time spent paused by this factor to calculate the delay before we consider unpausing.
-static Float32 const kUnpauseDelayWeightingFactor = 0.25f;
+static Float32 const kUnpauseDelayWeightingFactor = 0.1f;
 
 @implementation BGMAutoPauseMusic {
     BOOL enabled;
@@ -118,7 +118,7 @@ static Float32 const kUnpauseDelayWeightingFactor = 0.25f;
         // so we have to check them all
         for (int i = 0; i < inNumberAddresses; i++) {
             if (inAddresses[i].mSelector == kAudioDeviceCustomPropertyDeviceAudibleState) {
-                SInt32 audibleState = [weakSelf deviceAudibleState];
+                BGMDeviceAudibleState audibleState = [weakSelf deviceAudibleState];
                 
 #if DEBUG
                 const char audibleStateStr[5] = CA4CCToCString(audibleState);
@@ -144,8 +144,8 @@ static Float32 const kUnpauseDelayWeightingFactor = 0.25f;
     };
 }
 
-- (SInt32) deviceAudibleState {
-    SInt32 audibleState;
+- (BGMDeviceAudibleState) deviceAudibleState {
+    BGMDeviceAudibleState audibleState;
     CFNumberRef audibleStateRef =
         static_cast<CFNumberRef>([audioDevices bgmDevice].GetPropertyData_CFType(kBGMAudibleStateAddress));
     
@@ -188,8 +188,8 @@ static Float32 const kUnpauseDelayWeightingFactor = 0.25f;
     // Unpause sooner if we've only been paused for a short time. This is so a notification sound causing an auto-pause is
     // less of an interruption.
     //
-    // TODO: Would it help much if we ignored all audio played on the "system default" device rather than the "default"
-    //       device? IIRC apps are supposed to use the former for UI sounds.
+    // TODO: Fading in and out would make short pauses a lot less jarring because, if they were short enough, we wouldn't
+    //       actually pause the music player. So you'd hear a dip in the music's volume rather than a gap.
     UInt64 unpauseDelayNsec =
         static_cast<UInt64>((wentSilent - wentAudible) * kUnpauseDelayWeightingFactor);
     

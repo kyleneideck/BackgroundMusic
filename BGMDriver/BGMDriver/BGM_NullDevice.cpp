@@ -381,6 +381,20 @@ void    BGM_NullDevice::SetPropertyData(AudioObjectID inObjectID,
                                 inDataSize,
                                 inData);
     }
+    else if(inObjectID == GetObjectID())
+    {
+        BGM_AbstractDevice::SetPropertyData(inObjectID,
+                                            inClientPID,
+                                            inAddress,
+                                            inQualifierDataSize,
+                                            inQualifierData,
+                                            inDataSize,
+                                            inData);
+    }
+    else
+    {
+        Throw(CAException(kAudioHardwareBadObjectError));
+    }
 }
 
 #pragma mark IO Operations

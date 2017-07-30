@@ -51,7 +51,23 @@ public:
 
                        operator AudioObjectID() const { return GetObjectID(); }
 
-    /*! @throws CAException */
+    /*!
+     @return True if this device is BGMDevice. (Specifically, the main instance of BGMDevice.)
+     @throws CAException If the HAL returns an error when queried.
+     */
+    bool               IsBGMDevice() const { return IsBGMDevice(false); };
+    /*!
+     @return True if this device is either the main instance of BGMDevice (the device named
+             "Background Music") or the instance used for UI sounds (the device named "Background
+             Music (UI Sounds)").
+     @throws CAException If the HAL returns an error when queried.
+     */
+    bool               IsBGMDeviceInstance() const { return IsBGMDevice(true); };
+
+    /*!
+     @return True if this device can be set as the output device in BGMApp.
+     @throws CAException If the HAL returns an error when queried.
+     */
     bool               CanBeOutputDeviceInBGMApp() const;
 
 #pragma mark Available Controls
@@ -77,7 +93,11 @@ public:
     bool               GetVirtualMasterBalance(AudioObjectPropertyScope inScope,
                                                Float32& outVirtualMasterBalance) const;
 
+#pragma mark Implementation
+
 private:
+    bool               IsBGMDevice(bool inIncludingUISoundsInstance) const;
+
     static OSStatus    AHSGetPropertyData(AudioObjectID inObjectID,
                                           const AudioObjectPropertyAddress* inAddress,
                                           UInt32* ioDataSize,

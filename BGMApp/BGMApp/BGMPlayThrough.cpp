@@ -47,7 +47,7 @@ static const UInt32 kStopIOProcTimeoutInIOCycles = 600;
 
 #pragma mark Construction/Destruction
 
-BGMPlayThrough::BGMPlayThrough(CAHALAudioDevice inInputDevice, CAHALAudioDevice inOutputDevice)
+BGMPlayThrough::BGMPlayThrough(BGMAudioDevice inInputDevice, BGMAudioDevice inOutputDevice)
 :
     mInputDevice(inInputDevice),
     mOutputDevice(inOutputDevice)
@@ -68,7 +68,7 @@ BGMPlayThrough::~BGMPlayThrough()
     }
 }
 
-void    BGMPlayThrough::Init(CAHALAudioDevice inInputDevice, CAHALAudioDevice inOutputDevice)
+void    BGMPlayThrough::Init(BGMAudioDevice inInputDevice, BGMAudioDevice inOutputDevice)
 {
     BGMAssert(mInputDeviceIOProcState.is_lock_free(),
               "BGMPlayThrough::BGMPlayThrough: !mInputDeviceIOProcState.is_lock_free()");
@@ -151,7 +151,7 @@ void    BGMPlayThrough::Activate()
         
         bool isBGMDevice = true;
         CATry
-        isBGMDevice = IsBGMDevice(mInputDevice);
+        isBGMDevice = mInputDevice.IsBGMDeviceInstance();
         CACatch
         
         if(isBGMDevice)
@@ -164,7 +164,7 @@ void    BGMPlayThrough::Activate()
         {
             LogWarning("BGMPlayThrough::Activate: Playthrough activated with an output device other "
                        "than BGMDevice. This hasn't been tested and is almost definitely a bug.");
-            BGMAssert(false, "BGMPlayThrough::Activate: !IsBGMDevice(mInputDevice)");
+            BGMAssert(false, "BGMPlayThrough::Activate: !mInputDevice.IsBGMDeviceInstance()");
         }
     }
 }
@@ -180,7 +180,7 @@ void    BGMPlayThrough::Deactivate()
         bool inputDeviceIsBGMDevice = true;
         
         CATry
-        inputDeviceIsBGMDevice = IsBGMDevice(mInputDevice);
+        inputDeviceIsBGMDevice = mInputDevice.IsBGMDeviceInstance();
         CACatch
         
         // Unregister notification listeners.
@@ -188,30 +188,30 @@ void    BGMPlayThrough::Deactivate()
         {
             // There's not much we can do if these calls throw. The docs for AudioObjectRemovePropertyListener
             // just say that means it failed.
-            BGMLogAndSwallowExceptions("BGMPlayThrough::Deactivate", [&]() {
+            BGMLogAndSwallowExceptions("BGMPlayThrough::Deactivate", [&] {
                 mInputDevice.RemovePropertyListener(CAPropertyAddress(kAudioDevicePropertyDeviceIsRunning),
                                                     &BGMPlayThrough::BGMDeviceListenerProc,
                                                     this);
             });
             
-            BGMLogAndSwallowExceptions("BGMPlayThrough::Deactivate", [&]() {
+            BGMLogAndSwallowExceptions("BGMPlayThrough::Deactivate", [&] {
                 mInputDevice.RemovePropertyListener(CAPropertyAddress(kAudioDeviceProcessorOverload),
                                                     &BGMPlayThrough::BGMDeviceListenerProc,
                                                     this);
             });
             
-            BGMLogAndSwallowExceptions("BGMPlayThrough::Deactivate", [&]() {
+            BGMLogAndSwallowExceptions("BGMPlayThrough::Deactivate", [&] {
                 mInputDevice.RemovePropertyListener(kBGMRunningSomewhereOtherThanBGMAppAddress,
                                                     &BGMPlayThrough::BGMDeviceListenerProc,
                                                     this);
             });
         }
 
-        BGMLogAndSwallowExceptions("BGMPlayThrough::Deactivate", [&]() {
+        BGMLogAndSwallowExceptions("BGMPlayThrough::Deactivate", [&] {
             Stop();
         });
         
-        BGMLogAndSwallowExceptions("BGMPlayThrough::Deactivate", [&]() {
+        BGMLogAndSwallowExceptions("BGMPlayThrough::Deactivate", [&] {
             DestroyIOProcIDs();
         });
         
@@ -238,15 +238,6 @@ void    BGMPlayThrough::AllocateBuffer()
     mBuffer.Allocate(outputFormat[0].mChannelsPerFrame,
                      outputFormat[0].mBytesPerFrame,
                      mOutputDevice.GetIOBufferSize() * 20);
-}
-
-// static
-bool    BGMPlayThrough::IsBGMDevice(CAHALAudioDevice inDevice)
-{
-    CFStringRef uid = inDevice.CopyDeviceUID();
-    bool isBGMDevice = CFEqual(uid, CFSTR(kBGMDeviceUID));
-    CFRelease(uid);
-    return isBGMDevice;
 }
 
 void    BGMPlayThrough::CreateIOProcIDs()
@@ -326,7 +317,7 @@ void    BGMPlayThrough::DestroyIOProcIDs()
 
     DebugMsg("BGMPlayThrough::DestroyIOProcIDs: Destroying IOProcs");
 
-    auto destroy = [](CAHALAudioDevice& device, const char* deviceName, AudioDeviceIOProcID& ioProcID) {
+    auto destroy = [](BGMAudioDevice& device, const char* deviceName, AudioDeviceIOProcID& ioProcID) {
 #if !DEBUG
     #pragma unused (deviceName)
 #endif
@@ -382,8 +373,8 @@ bool    BGMPlayThrough::CheckIOProcsAreStopped() const noexcept
     return statesOK;
 }
 
-void    BGMPlayThrough::SetDevices(CAHALAudioDevice* __nullable inInputDevice,
-                                   CAHALAudioDevice* __nullable inOutputDevice)
+void    BGMPlayThrough::SetDevices(BGMAudioDevice* __nullable inInputDevice,
+                                   BGMAudioDevice* __nullable inOutputDevice)
 {
     CAMutex::Locker stateLocker(mStateMutex);
     
@@ -734,7 +725,7 @@ void    BGMPlayThrough::StopIfIdle()
     
     CAMutex::Locker stateLocker(mStateMutex);
     
-    BGMAssert(IsBGMDevice(mInputDevice),
+    BGMAssert(mInputDevice.IsBGMDeviceInstance(),
               "BGMDevice not set as input device. StopIfIdle can't tell if other devices are idle.");
     
     if(!IsRunningSomewhereOtherThanBGMApp(mInputDevice))
@@ -904,7 +895,7 @@ void    BGMPlayThrough::HandleBGMDeviceIsRunningSomewhereOtherThanBGMApp(BGMPlay
 }
 
 // static
-bool    BGMPlayThrough::IsRunningSomewhereOtherThanBGMApp(const CAHALAudioDevice& inBGMDevice)
+bool    BGMPlayThrough::IsRunningSomewhereOtherThanBGMApp(const BGMAudioDevice& inBGMDevice)
 {
     return CFBooleanGetValue(
         static_cast<CFBooleanRef>(
@@ -1078,7 +1069,7 @@ OSStatus    BGMPlayThrough::OutputDeviceIOProc(AudioObjectID           inDevice,
 bool    BGMPlayThrough::UpdateIOProcState(const char* __nullable callerName,
                                           std::atomic<IOState>& inState,
                                           AudioDeviceIOProcID __nullable inIOProcID,
-                                          CAHALAudioDevice& inDevice,
+                                          BGMAudioDevice& inDevice,
                                           IOState& outNewState)
 {
     BGMAssert(inIOProcID != nullptr, "BGMPlayThrough::UpdateIOProcState: !inIOProcID");

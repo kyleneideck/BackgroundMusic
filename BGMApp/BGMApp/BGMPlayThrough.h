@@ -39,9 +39,11 @@
 #ifndef BGMApp__BGMPlayThrough
 #define BGMApp__BGMPlayThrough
 
+// Local Includes
+#include "BGMAudioDevice.h"
+
 // PublicUtility Includes
 #include "CARingBuffer.h"
-#include "CAHALAudioDevice.h"
 #include "CAMutex.h"
 
 // STL Includes
@@ -62,7 +64,7 @@ public:
     static const OSStatus kDeviceNotStarting = 100;
 
 public:
-                        BGMPlayThrough(CAHALAudioDevice inInputDevice, CAHALAudioDevice inOutputDevice);
+                        BGMPlayThrough(BGMAudioDevice inInputDevice, BGMAudioDevice inOutputDevice);
                         ~BGMPlayThrough();
                         // Disallow copying
                         BGMPlayThrough(const BGMPlayThrough&) = delete;
@@ -76,7 +78,7 @@ public:
     
 private:
     /*! @throws CAException */
-    void                Init(CAHALAudioDevice inInputDevice, CAHALAudioDevice inOutputDevice);
+    void                Init(BGMAudioDevice inInputDevice, BGMAudioDevice inOutputDevice);
 
 public:
     /*! @throws CAException */
@@ -86,8 +88,6 @@ public:
 
 private:
     void                AllocateBuffer();
-    
-    static bool         IsBGMDevice(CAHALAudioDevice inDevice);
 
     /*! @throws CAException */
     void                CreateIOProcIDs();
@@ -104,8 +104,8 @@ public:
      Pass null for either param to only change one of the devices.
      @throws CAException
      */
-    void                SetDevices(CAHALAudioDevice* __nullable inInputDevice,
-                                   CAHALAudioDevice* __nullable inOutputDevice);
+    void                SetDevices(BGMAudioDevice* __nullable inInputDevice,
+                                   BGMAudioDevice* __nullable inOutputDevice);
     
     /*! @throws CAException */
     void                Start();
@@ -130,7 +130,7 @@ private:
     static void         HandleBGMDeviceIsRunning(BGMPlayThrough* refCon);
     static void         HandleBGMDeviceIsRunningSomewhereOtherThanBGMApp(BGMPlayThrough* refCon);
     
-    static bool         IsRunningSomewhereOtherThanBGMApp(const CAHALAudioDevice& inBGMDevice);
+    static bool         IsRunningSomewhereOtherThanBGMApp(const BGMAudioDevice& inBGMDevice);
 
     static OSStatus     InputDeviceIOProc(AudioObjectID           inDevice,
                                           const AudioTimeStamp*   inNow,
@@ -159,7 +159,7 @@ private:
     static bool         UpdateIOProcState(const char* __nullable callerName,
                                           std::atomic<IOState>& inState,
                                           AudioDeviceIOProcID __nullable inIOProcID,
-                                          CAHALAudioDevice& inDevice,
+                                          BGMAudioDevice& inDevice,
                                           IOState& outNewState);
     
     static void         HandleRingBufferError(CARingBufferError err,
@@ -172,8 +172,8 @@ private:
     AudioDeviceIOProcID __nullable mInputDeviceIOProcID;
     AudioDeviceIOProcID __nullable mOutputDeviceIOProcID;
     
-    CAHALAudioDevice    mInputDevice { kAudioObjectUnknown };
-    CAHALAudioDevice    mOutputDevice { kAudioObjectUnknown };
+    BGMAudioDevice      mInputDevice { kAudioObjectUnknown };
+    BGMAudioDevice      mOutputDevice { kAudioObjectUnknown };
     
     CAMutex             mStateMutex { "Playthrough state" };
     

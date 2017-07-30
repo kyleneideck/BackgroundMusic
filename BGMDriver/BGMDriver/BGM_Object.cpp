@@ -101,7 +101,6 @@ bool	BGM_Object::IsPropertySettable(AudioObjectID inObjectID, pid_t inClientPID,
 		
 		default:
 			Throw(CAException(kAudioHardwareUnknownPropertyError));
-			break;
 	};
 	return theAnswer;
 }
@@ -128,7 +127,6 @@ UInt32	BGM_Object::GetPropertyDataSize(AudioObjectID inObjectID, pid_t inClientP
 		
 		default:
 			Throw(CAException(kAudioHardwareUnknownPropertyError));
-			break;
 	};
 	return theAnswer;
 }
@@ -170,7 +168,6 @@ void	BGM_Object::GetPropertyData(AudioObjectID inObjectID, pid_t inClientPID, co
 		
 		default:
 			Throw(CAException(kAudioHardwareUnknownPropertyError));
-			break;
 	};
 }
 
@@ -182,7 +179,6 @@ void	BGM_Object::SetPropertyData(AudioObjectID inObjectID, pid_t inClientPID, co
 	{
 		default:
 			Throw(CAException(kAudioHardwareUnknownPropertyError));
-			break;
 	};
 }
 

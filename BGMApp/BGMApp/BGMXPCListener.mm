@@ -177,12 +177,12 @@
     return YES;
 }
 
-- (void) startPlayThroughSyncWithReply:(void (^)(NSError*))reply {
+- (void) startPlayThroughSyncWithReply:(void (^)(NSError*))reply forUISoundsDevice:(BOOL)isUI {
     NSString* description;
     OSStatus err;
     
     try {
-        err = [audioDevices startPlayThroughSync];
+        err = [audioDevices startPlayThroughSync:isUI];
     } catch (CAException e) {
         // startPlayThroughSync should never throw a CAException, but check anyway in case we change that at some point.
         LogError("BGMXPCListener::startPlayThroughSyncWithReply: Caught CAException (%d). Replying kBGMXPC_HardwareError.",

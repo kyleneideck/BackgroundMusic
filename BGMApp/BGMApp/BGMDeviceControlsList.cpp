@@ -47,8 +47,7 @@ BGMDeviceControlsList::BGMDeviceControlsList(AudioObjectID inBGMDevice,
     mBGMDevice(inBGMDevice),
     mAudioSystem(inAudioSystem)
 {
-    BGMAssert((mBGMDevice.GetObjectID() == mAudioSystem.GetAudioDeviceForUID(CFSTR(kBGMDeviceUID)) ||
-                    mBGMDevice.GetObjectID() == kAudioObjectUnknown),
+    BGMAssert((mBGMDevice.IsBGMDevice() || mBGMDevice.GetObjectID() == kAudioObjectUnknown),
               "BGMDeviceControlsList::BGMDeviceControlsList: Given device is not BGMDevice");
 
 #pragma clang diagnostic push
@@ -117,7 +116,7 @@ void    BGMDeviceControlsList::SetBGMDevice(AudioObjectID inBGMDeviceID)
 
     mBGMDevice = inBGMDeviceID;
 
-    BGMAssert(mBGMDevice.GetObjectID() == mAudioSystem.GetAudioDeviceForUID(CFSTR(kBGMDeviceUID)),
+    BGMAssert(mBGMDevice.IsBGMDevice(),
               "BGMDeviceControlsList::SetBGMDevice: Given device is not BGMDevice");
 }
 
@@ -127,7 +126,7 @@ bool    BGMDeviceControlsList::MatchControlsListOf(AudioObjectID inDeviceID)
 {
     CAMutex::Locker locker(mMutex);
 
-    if(mBGMDevice.GetObjectID() != mAudioSystem.GetAudioDeviceForUID(CFSTR(kBGMDeviceUID)))
+    if(!mBGMDevice.IsBGMDevice())
     {
         LogWarning("BGMDeviceControlsList::MatchControlsListOf: BGMDevice ID not set");
         return false;
@@ -291,7 +290,7 @@ void    BGMDeviceControlsList::InitDeviceToggling()
         return;
     }
 
-    BGMAssert(mBGMDevice.GetObjectID() == mAudioSystem.GetAudioDeviceForUID(CFSTR(kBGMDeviceUID)),
+    BGMAssert(mBGMDevice.IsBGMDevice(),
               "BGMDeviceControlsList::InitDeviceToggling: mBGMDevice device is not set to "
               "BGMDevice's ID");
 
@@ -308,7 +307,7 @@ void    BGMDeviceControlsList::InitDeviceToggling()
 #pragma clang diagnostic pop
     mListenerQueue = dispatch_queue_create("com.bearisdriving.BGM.BGMDeviceControlsList", attr);
 
-    mListenerBlock = ^(UInt32 inNumberAddresses, const AudioObjectPropertyAddress* inAddresses) {
+    auto listenerBlock = ^(UInt32 inNumberAddresses, const AudioObjectPropertyAddress* inAddresses) {
         // Ignore the notification if we're not toggling the default device, which would just mean
         // the default device has been changed for an unrelated reason.
         if(mDeviceToggleState == ToggleState::NotToggling)
@@ -339,9 +338,14 @@ void    BGMDeviceControlsList::InitDeviceToggling()
                                        mDeviceToggleBlock);
                     }
                     break;
+
+                default:
+                    break;
             }
         }
     };
+
+    mListenerBlock = Block_copy(listenerBlock);
 
     BGMLogAndSwallowExceptions("BGMDeviceControlsList::InitDeviceToggling", [&] {
         mAudioSystem.AddPropertyListenerBlock(CAPropertyAddress(kAudioHardwarePropertyDevices),
@@ -471,8 +475,7 @@ dispatch_block_t    BGMDeviceControlsList::CreateDisableNullDeviceBlock()
             SetNullDeviceEnabled(false);
         }));
 
-        BGMAssert(mBGMDevice.GetObjectID() == mAudioSystem.GetAudioDeviceForUID(CFSTR(kBGMDeviceUID)),
-                  "BGMDevice's AudioObjectID changed");
+        BGMAssert(mBGMDevice.IsBGMDevice(), "BGMDevice's AudioObjectID changed");
     });
 }
 
