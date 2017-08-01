@@ -408,6 +408,8 @@
 // this list if the API doesn't work.
 + (NSArray<NSString*>*) responsibleBundleIDsOf:(NSString*)parentBundleID {
     NSDictionary<NSString*, NSArray<NSString*>*>* bundleIDMap = @{
+            // Finder
+            @"com.apple.finder": @[@"com.apple.quicklook.ui.helper"],
             // Safari
             @"com.apple.Safari": @[@"com.apple.WebKit.WebContent"],
             // Firefox
