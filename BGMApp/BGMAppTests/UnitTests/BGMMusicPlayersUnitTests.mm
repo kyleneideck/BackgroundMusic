@@ -17,7 +17,7 @@
 //  BGMMusicPlayersUnitTests.mm
 //  BGMAppUnitTests
 //
-//  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016, 2017 Kyle Neideck
 //
 
 // Unit include
@@ -33,26 +33,13 @@
 #import "BGMDecibel.h"
 #import "BGMSpotify.h"
 
-// PublicUtility includes
-#import "CAHALAudioDevice.h"  // Mocked
-
 // System includes
 #import <Foundation/Foundation.h>
 
 
-@interface BGMMockAudioDeviceManager : BGMAudioDeviceManager
-@end
-
-@implementation BGMMockAudioDeviceManager
-
-+ (CAHALAudioDevice) bgmDevice {
-    static CAHALAudioDevice device(CFSTR("MockBGMDevice"));
-    return device;
-}
-
-@end
-
-// ----
+// Note that the PublicUtility classes that we use to communicate with the HAL, CAHALAudioObject and
+// CAHALAudioSystemObject, are also mocked. The unit tests are compiled with mock implementations:
+// Mock_CAHALAudioObject.cpp and Mock_CAHALAudioSystemObject.cpp.
 
 @interface BGMMockUserDefaults : BGMUserDefaults
 
@@ -83,13 +70,13 @@
 
 @end
 
-// ----
+// -------------------------------------------------------------------------------------------------
 
 @interface BGMMusicPlayersUnitTests : XCTestCase
 @end
 
 @implementation BGMMusicPlayersUnitTests {
-    BGMMockAudioDeviceManager* devices;
+    BGMAudioDeviceManager* devices;
     BGMMockUserDefaults* defaults;
     
     NSUUID* spotifyID;
@@ -99,7 +86,7 @@
 - (void) setUp {
     [super setUp];
     
-    devices = [BGMMockAudioDeviceManager new];
+    devices = [BGMAudioDeviceManager new];
     defaults = [BGMMockUserDefaults new];
     
     // These are the IDs hardcoded in BGMSpotify and BGMVLC.

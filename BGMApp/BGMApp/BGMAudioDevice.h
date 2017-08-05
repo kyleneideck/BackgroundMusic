@@ -37,6 +37,13 @@ class BGMAudioDevice
 
 public:
                        BGMAudioDevice(AudioObjectID inAudioDevice);
+    /*!
+     Creates a BGMAudioDevice with the Audio Object ID of the device whose UID is inUID or, if no
+     such device is found, kAudioObjectUnknown.
+
+     @throws CAException If the HAL returns an error when queried for the device's ID.
+     @see kAudioPlugInPropertyTranslateUIDToDevice in AudioHardwareBase.h.
+     */
                        BGMAudioDevice(CFStringRef inUID);
                        BGMAudioDevice(const CAHALAudioDevice& inDevice);
     virtual            ~BGMAudioDevice();

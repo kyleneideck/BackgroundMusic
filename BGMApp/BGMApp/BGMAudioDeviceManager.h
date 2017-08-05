@@ -23,10 +23,15 @@
 //  device on init, then starts playthrough and mirroring the devices' controls.
 //
 
+#if defined(__cplusplus)
+
+// Local Includes
+#include "BGMBackgroundMusicDevice.h"
+
 // PublicUtility Includes
-#ifdef __cplusplus
 #import "CAHALAudioDevice.h"
-#endif
+
+#endif /* defined(__cplusplus) */
 
 // System Includes
 #import <Foundation/Foundation.h>
@@ -50,7 +55,7 @@ const int kBGMErrorCode_ReturningEarly       = 3;
 
 #ifdef __cplusplus
 // The virtual device published by BGMDriver.
-- (CAHALAudioDevice) bgmDevice;
+- (BGMBackgroundMusicDevice) bgmDevice;
 
 // The device BGMApp will play audio through, making it, from the user's perspective, the system's
 // default output device.
@@ -59,13 +64,6 @@ const int kBGMErrorCode_ReturningEarly       = 3;
 
 - (BOOL) isOutputDevice:(AudioObjectID)deviceID;
 - (BOOL) isOutputDataSource:(UInt32)dataSourceID;
-
-- (void) sendAppVolumeToBGMDevice:(SInt32)newVolume
-                     appProcessID:(pid_t)appProcessID
-                      appBundleID:(NSString*)appBundleID;
-- (void) sendAppPanPositionToBGMDevice:(SInt32)newPanPosition
-                          appProcessID:(pid_t)appProcessID
-                           appBundleID:(NSString*)appBundleID;
 
 // Set the audio output device that BGMApp uses.
 //

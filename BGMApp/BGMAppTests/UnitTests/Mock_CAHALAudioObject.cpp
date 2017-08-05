@@ -46,6 +46,11 @@ CAHALAudioObject::~CAHALAudioObject()
 {
 }
 
+AudioObjectID	CAHALAudioObject::GetObjectID() const
+{
+    return mObjectID;
+}
+
 void	CAHALAudioObject::GetPropertyData(const AudioObjectPropertyAddress& inAddress, UInt32 inQualifierDataSize, const void* inQualifierData, UInt32& ioDataSize, void* outData) const
 {
     if(inAddress.mSelector == kAudioDeviceCustomPropertyMusicPlayerBundleID)
@@ -63,11 +68,6 @@ void	CAHALAudioObject::SetPropertyData(const AudioObjectPropertyAddress& inAddre
 }
 
 #pragma mark Unimplemented methods
-
-AudioObjectID	CAHALAudioObject::GetObjectID() const
-{
-    return kAudioObjectUnknown;
-}
 
 void	CAHALAudioObject::SetObjectID(AudioObjectID inObjectID)
 {

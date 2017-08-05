@@ -408,9 +408,9 @@ static CGFloat const kAppVolumeViewInitialHeight = 20;
 
     // The values from our sliders are in
     // [kAppRelativeVolumeMinRawValue, kAppRelativeVolumeMaxRawValue] already.
-    [context.audioDevices sendAppVolumeToBGMDevice:self.intValue
-                                      appProcessID:appProcessID
-                                       appBundleID:appBundleID];
+    context.audioDevices.bgmDevice.SetAppVolume(self.intValue,
+                                                appProcessID,
+                                                (__bridge CFStringRef)appBundleID);
 }
 
 @end
@@ -454,9 +454,9 @@ static CGFloat const kAppVolumeViewInitialHeight = 20;
     DebugMsg("BGMAppVolumes::appPanPositionChanged: App pan position for %s changed to %d", appBundleID.UTF8String, self.intValue);
 
     // The values from our sliders are in [kAppPanLeftRawValue, kAppPanRightRawValue] already.
-    [context.audioDevices sendAppPanPositionToBGMDevice:self.intValue
-                                           appProcessID:appProcessID
-                                            appBundleID:appBundleID];
+    context.audioDevices.bgmDevice.SetAppPanPosition(self.intValue,
+                                                     appProcessID,
+                                                     (__bridge CFStringRef)appBundleID);
 }
 
 @end
