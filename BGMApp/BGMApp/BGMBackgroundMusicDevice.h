@@ -37,6 +37,9 @@
 // Superclass Includes
 #include "BGMAudioDevice.h"
 
+// Local Includes
+#include "BGM_Types.h"
+
 // STL Includes
 #include <vector>
 
@@ -60,6 +63,7 @@ public:
 
 #pragma mark Systemwide Default Device
 
+public:
     /*!
      Set BGMDevice as the default audio device for all processes.
 
@@ -75,6 +79,14 @@ public:
 
 #pragma mark App Volumes
 
+public:
+    /*!
+     @return The current value of BGMDevice's kAudioDeviceCustomPropertyAppVolumes property. See
+             BGM_Types.h.
+     @throws CAException If the HAL returns an error or a non-array type. Callers are responsible
+                         for validating and type-checking the values contained in the array.
+     */
+    CFArrayRef          GetAppVolumes() const;
     /*!
      @param inVolume A value between kAppRelativeVolumeMinRawValue and kAppRelativeVolumeMaxRawValue
                      from BGM_Types.h. See kBGMAppVolumesKey_RelativeVolume in BGM_Types.h.
@@ -114,11 +126,60 @@ private:
     static std::vector<CFStringRef>
                         ResponsibleBundleIDsOf(CFStringRef inParentBundleID);
 
+#pragma mark Audible State
+
+public:
+    /*!
+     @return BGMDevice's current "audible state", which can be either silent, silent except for the
+             user's music player or audible, meaning a program other than the music player is
+             playing audio.
+     @throws CAException If the HAL returns an error or invalid data when queried.
+     @see kAudioDeviceCustomPropertyDeviceAudibleState in BGM_Types.h.
+     */
+    BGMDeviceAudibleState GetAudibleState() const;
+
+#pragma mark Music Player
+
+public:
+    /*!
+     @return The value of BGMDevice's property for the selected music player's process ID. Zero if
+             the property is unset. (We assume kernel_task will never be the user's music player.)
+     @throws CAException If the HAL returns an error or an invalid PID when queried.
+     @see kAudioDeviceCustomPropertyMusicPlayerProcessID in BGM_Types.h.
+     */
+    pid_t               GetMusicPlayerProcessID() const;
+    /*!
+     Set the value of BGMDevice's property for the selected music player's process ID. Pass zero to
+     unset the property. Setting this property will unset the bundle ID version of the property.
+
+     @throws CAException If the HAL returns an error.
+     @see kAudioDeviceCustomPropertyMusicPlayerProcessID in BGM_Types.h.
+     */
+    void                SetMusicPlayerProcessID(CFNumberRef inProcessID) {
+                            SetPropertyData_CFType(kBGMMusicPlayerProcessIDAddress, inProcessID); }
+    /*!
+     @return The value of BGMDevice's property for the selected music player's bundle ID. The empty
+             string if the property is unset.
+     @throws CAException If the HAL returns an error or an invalid bundle ID when queried.
+     @see kAudioDeviceCustomPropertyMusicPlayerBundleID in BGM_Types.h.
+     */
+    CFStringRef         GetMusicPlayerBundleID() const;
+    /*!
+     Set the value of BGMDevice's property for the selected music player's bundle ID. Pass the empty
+     string to unset the property. Setting this property will unset the process ID version of the
+     property.
+
+     @throws CAException If the HAL returns an error.
+     @see kAudioDeviceCustomPropertyMusicPlayerBundleID in BGM_Types.h.
+     */
+    void                SetMusicPlayerBundleID(CFStringRef inBundleID) {
+                            SetPropertyData_CFString(kBGMMusicPlayerBundleIDAddress, inBundleID); }
+
 #pragma mark UI Sounds Instance
 
 public:
     /*! @return The instance of BGMDevice that handles UI sounds. */
-    BGMAudioDevice      GetUISoundsBGMDeviceInstance() const { return mUISoundsBGMDevice; }
+    BGMAudioDevice      GetUISoundsBGMDeviceInstance() { return mUISoundsBGMDevice; }
 
 private:
     /*! The instance of BGMDevice that handles UI sounds. */

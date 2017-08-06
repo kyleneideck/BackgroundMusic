@@ -98,7 +98,7 @@ static CGFloat const kAppVolumeViewInitialHeight = 20;
 #endif
     
     // Get the app volumes currently set on the device
-    CACFArray appVolumesOnDevice((CFArrayRef)[audioDevices bgmDevice].GetPropertyData_CFType(kBGMAppVolumesAddress), false);
+    CACFArray appVolumesOnDevice((CFArrayRef)[audioDevices bgmDevice].GetAppVolumes(), false);
     
     NSInteger index = [bgmMenu indexOfItemWithTag:kAppVolumesHeadingMenuItemTag] + 1;
     

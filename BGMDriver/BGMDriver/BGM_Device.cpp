@@ -946,7 +946,7 @@ void	BGM_Device::Device_GetPropertyData(AudioObjectID inObjectID, pid_t inClient
                 ThrowIf(inDataSize < sizeof(CFNumberRef), CAException(kAudioHardwareBadPropertySizeError), "BGM_Device::Device_GetPropertyData: not enough space for the return value of kAudioDeviceCustomPropertyMusicPlayerProcessID for the device");
                 CAMutex::Locker theStateLocker(mStateMutex);
                 pid_t pid = mClients.GetMusicPlayerProcessIDProperty();
-                *reinterpret_cast<CFNumberRef*>(outData) = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt32Type, &pid);
+                *reinterpret_cast<CFNumberRef*>(outData) = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &pid);
                 outDataSize = sizeof(CFNumberRef);
             }
             break;
@@ -1022,7 +1022,7 @@ void	BGM_Device::Device_SetPropertyData(AudioObjectID inObjectID, pid_t inClient
                 // pid variable, and we want that to be an error.)
                 pid_t pid = INT_MIN;
                 // CFNumberGetValue docs: "If the conversion is lossy, or the value is out of range, false is returned."
-                Boolean success = CFNumberGetValue(pidRef, kCFNumberSInt32Type, &pid);
+                Boolean success = CFNumberGetValue(pidRef, kCFNumberIntType, &pid);
                 
                 ThrowIf(!success, CAException(kAudioHardwareIllegalOperationError), "BGM_Device::Device_SetPropertyData: probable error from CFNumberGetValue when reading pid for kAudioDeviceCustomPropertyMusicPlayerProcessID");
                 

@@ -174,8 +174,7 @@
     // When it doesn't find a selected music player in user defaults, it should check BGMDevice's music
     // player properties.
     
-    [devices bgmDevice].SetPropertyData_CFString(kBGMMusicPlayerBundleIDAddress,
-                                                 CFSTR("org.videolan.vlc"));
+    [devices bgmDevice].SetMusicPlayerBundleID(CFSTR("org.videolan.vlc"));
     
     BGMMusicPlayers* players = [[BGMMusicPlayers alloc] initWithAudioDevices:devices
                                                                 userDefaults:defaults];
@@ -190,7 +189,7 @@
 
 - (void) resetDevice {
     // Reset the mock BGMDevice.
-    [devices bgmDevice].SetPropertyData_CFString(kBGMMusicPlayerBundleIDAddress, NULL);
+    [devices bgmDevice].SetMusicPlayerBundleID(CFSTR(""));
 }
 
 @end

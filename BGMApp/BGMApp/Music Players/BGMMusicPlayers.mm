@@ -133,8 +133,8 @@
     // backwards compatability.
     
     NSString* __nullable bundleID =
-        (__bridge_transfer NSString* __nullable)[audioDevices bgmDevice].GetPropertyData_CFString(kBGMMusicPlayerBundleIDAddress);
-    
+        (__bridge_transfer NSString* __nullable)[audioDevices bgmDevice].GetMusicPlayerBundleID();
+
     DebugMsg("BGMMusicPlayers::initSelectedMusicPlayerFromBGMDevice: "
              "Trying to set selected music player by bundle ID (from BGMDriver). bundleID=%s",
              (bundleID ? bundleID.UTF8String : "(null)"));
@@ -224,13 +224,11 @@
              @"BGMMusicPlayers::updateBGMDeviceMusicPlayerProperties: Music player has neither bundle ID nor PID");
 
     if (self.selectedMusicPlayer.pid) {
-        [audioDevices bgmDevice].SetPropertyData_CFType(kBGMMusicPlayerProcessIDAddress,
-                                                        (__bridge CFNumberRef)self.selectedMusicPlayer.pid);
+        [audioDevices bgmDevice].SetMusicPlayerProcessID((__bridge CFNumberRef)self.selectedMusicPlayer.pid);
     }
     
     if (self.selectedMusicPlayer.bundleID) {
-        [audioDevices bgmDevice].SetPropertyData_CFString(kBGMMusicPlayerBundleIDAddress,
-                                                          (__bridge CFStringRef)self.selectedMusicPlayer.bundleID);
+        [audioDevices bgmDevice].SetMusicPlayerBundleID((__bridge CFStringRef)self.selectedMusicPlayer.bundleID);
     }
 }
 

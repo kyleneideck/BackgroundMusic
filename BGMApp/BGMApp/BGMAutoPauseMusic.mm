@@ -145,14 +145,7 @@ static Float32 const kUnpauseDelayWeightingFactor = 0.1f;
 }
 
 - (BGMDeviceAudibleState) deviceAudibleState {
-    BGMDeviceAudibleState audibleState;
-    CFNumberRef audibleStateRef =
-        static_cast<CFNumberRef>([audioDevices bgmDevice].GetPropertyData_CFType(kBGMAudibleStateAddress));
-    
-    CFNumberGetValue(audibleStateRef, kCFNumberSInt32Type, &audibleState);
-    CFRelease(audibleStateRef);
-    
-    return audibleState;
+    return [audioDevices bgmDevice].GetAudibleState();
 }
 
 - (void) queuePauseBlock {

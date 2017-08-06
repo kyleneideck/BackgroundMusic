@@ -32,9 +32,9 @@
 
 #pragma clang diagnostic ignored "-Wunused-parameter"
 
-// The value of the music player bundle ID property. Tests should set this back to NULL when they finish. (Has
+// The value of the music player bundle ID property. Tests should set this back to "" when they finish. (Has
 // to be static because we can't add to the real class's interface.)
-static CFStringRef __nullable playerBundleID = NULL;
+static CFStringRef playerBundleID = CFSTR("");
 
 CAHALAudioObject::CAHALAudioObject(AudioObjectID inObjectID)
 :

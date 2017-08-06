@@ -115,6 +115,20 @@ void BGMBackgroundMusicDevice::UnsetAsOSDefault(AudioDeviceID inOutputDeviceID)
 
 #pragma mark App Volumes
 
+CFArrayRef BGMBackgroundMusicDevice::GetAppVolumes() const
+{
+    CFTypeRef appVolumes = GetPropertyData_CFType(kBGMAppVolumesAddress);
+
+    ThrowIfNULL(appVolumes,
+                CAException(kAudioHardwareIllegalOperationError),
+                "BGMBackgroundMusicDevice::GetAppVolumes: !appVolumes");
+    ThrowIf(CFGetTypeID(appVolumes) != CFArrayGetTypeID(),
+            CAException(kAudioHardwareIllegalOperationError),
+            "BGMBackgroundMusicDevice::GetAppVolumes: Expected CFArray value");
+
+    return static_cast<CFArrayRef>(appVolumes);
+}
+
 void BGMBackgroundMusicDevice::SetAppVolume(SInt32 inVolume,
                                             pid_t inAppProcessID,
                                             CFStringRef inAppBundleID)
@@ -224,6 +238,71 @@ BGMBackgroundMusicDevice::ResponsibleBundleIDsOf(CFStringRef inParentBundleID)
     }
 
     return bundleIDMap[inParentBundleID];
+}
+
+#pragma mark Audible State
+
+BGMDeviceAudibleState BGMBackgroundMusicDevice::GetAudibleState() const
+{
+    CFTypeRef propertyDataRef = GetPropertyData_CFType(kBGMAudibleStateAddress);
+
+    ThrowIfNULL(propertyDataRef,
+                CAException(kAudioHardwareIllegalOperationError),
+                "BGMBackgroundMusicDevice::GetAudibleState: !propertyDataRef");
+
+    ThrowIf(CFGetTypeID(propertyDataRef) != CFNumberGetTypeID(),
+            CAException(kAudioHardwareIllegalOperationError),
+            "BGMBackgroundMusicDevice::GetAudibleState: Property was not a CFNumber");
+
+    CFNumberRef audibleStateRef = static_cast<CFNumberRef>(propertyDataRef);
+
+    BGMDeviceAudibleState audibleState;
+    Boolean success = CFNumberGetValue(audibleStateRef, kCFNumberSInt32Type, &audibleState);
+    CFRelease(audibleStateRef);
+
+    ThrowIf(!success,
+            CAException(kAudioHardwareIllegalOperationError),
+            "BGMBackgroundMusicDevice::GetMusicPlayerProcessID: CFNumberGetValue failed");
+
+    return audibleState;
+}
+
+#pragma mark Music Player
+
+pid_t BGMBackgroundMusicDevice::GetMusicPlayerProcessID() const
+{
+    CFTypeRef propertyDataRef = GetPropertyData_CFType(kBGMMusicPlayerProcessIDAddress);
+
+    ThrowIfNULL(propertyDataRef,
+                CAException(kAudioHardwareIllegalOperationError),
+                "BGMBackgroundMusicDevice::GetMusicPlayerProcessID: !propertyDataRef");
+
+    ThrowIf(CFGetTypeID(propertyDataRef) != CFNumberGetTypeID(),
+            CAException(kAudioHardwareIllegalOperationError),
+            "BGMBackgroundMusicDevice::GetMusicPlayerProcessID: Property was not a CFNumber");
+
+    CFNumberRef pidRef = static_cast<CFNumberRef>(propertyDataRef);
+
+    pid_t pid;
+    Boolean success = CFNumberGetValue(pidRef, kCFNumberIntType, &pid);
+    CFRelease(pidRef);
+
+    ThrowIf(!success,
+            CAException(kAudioHardwareIllegalOperationError),
+            "BGMBackgroundMusicDevice::GetMusicPlayerProcessID: CFNumberGetValue failed");
+
+    return pid;
+}
+
+CFStringRef BGMBackgroundMusicDevice::GetMusicPlayerBundleID() const
+{
+    CFStringRef bundleID = GetPropertyData_CFString(kBGMMusicPlayerBundleIDAddress);
+
+    ThrowIfNULL(bundleID,
+                CAException(kAudioHardwareIllegalOperationError),
+                "BGMBackgroundMusicDevice::GetMusicPlayerBundleID: !bundleID");
+
+    return bundleID;
 }
 
 #pragma clang assume_nonnull end
