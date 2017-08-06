@@ -185,10 +185,10 @@ void BGMBackgroundMusicDevice::SendAppVolumeOrPanToBGMDevice(SInt32 inNewValue,
     addVolumeChange(inAppProcessID, inAppBundleID);
 
     // Add the same change for each process the app is responsible for.
-    for(CFStringRef responsibleBundleID : ResponsibleBundleIDsOf(inAppBundleID))
+    for(CACFString responsibleBundleID : ResponsibleBundleIDsOf(CACFString(inAppBundleID)))
     {
         // Send -1 as the PID so this volume will only ever be matched by bundle ID.
-        addVolumeChange(-1, responsibleBundleID);
+        addVolumeChange(-1, responsibleBundleID.GetCFString());
     }
 
     CFPropertyListRef changesPList = appVolumeChanges.AsPropertyList();
@@ -209,32 +209,32 @@ void BGMBackgroundMusicDevice::SendAppVolumeOrPanToBGMDevice(SInt32 inNewValue,
 // this list if the API doesn't work.
 //
 // static
-std::vector<CFStringRef>
-BGMBackgroundMusicDevice::ResponsibleBundleIDsOf(CFStringRef inParentBundleID)
+std::vector<CACFString>
+BGMBackgroundMusicDevice::ResponsibleBundleIDsOf(CACFString inParentBundleID)
 {
-    std::map<CFStringRef, std::vector<CFStringRef>> bundleIDMap = {
+    std::map<CACFString, std::vector<CACFString>> bundleIDMap = {
             // Finder
-            { CFSTR("com.apple.finder"), { CFSTR("com.apple.quicklook.ui.helper") } },
+            { "com.apple.finder", { "com.apple.quicklook.ui.helper" } },
             // Safari
-            { CFSTR("com.apple.Safari"), { CFSTR("com.apple.WebKit.WebContent") } },
+            { "com.apple.Safari", { "com.apple.WebKit.WebContent" } },
             // Firefox
-            { CFSTR("org.mozilla.firefox"), { CFSTR("org.mozilla.plugincontainer") } },
+            { "org.mozilla.firefox", { "org.mozilla.plugincontainer" } },
             // Firefox Nightly
-            { CFSTR("org.mozilla.nightly"), { CFSTR("org.mozilla.plugincontainer") } },
+            { "org.mozilla.nightly", { "org.mozilla.plugincontainer" } },
             // VMWare Fusion
-            { CFSTR("com.vmware.fusion"), { CFSTR("com.vmware.vmware-vmx") } },
+            { "com.vmware.fusion", { "com.vmware.vmware-vmx" } },
             // Parallels
-            { CFSTR("com.parallels.desktop.console"), { CFSTR("com.parallels.vm") } },
+            { "com.parallels.desktop.console", { "com.parallels.vm" } },
             // MPlayer OSX Extended
-            { CFSTR("hu.mplayerhq.mplayerosx.extended"),
-                    { CFSTR("ch.sttz.mplayerosx.extended.binaries.officialsvn") } }
+            { "hu.mplayerhq.mplayerosx.extended",
+                    { "ch.sttz.mplayerosx.extended.binaries.officialsvn" } }
     };
 
     // Parallels' VM "dock helper" apps have bundle IDs like
     // com.parallels.winapp.87f6bfc236d64d70a81c47f6243add4c.f5a25fdede514f7aa0a475a1873d3287.fs
-    if(CFStringHasPrefix(inParentBundleID, CFSTR("com.parallels.winapp.")))
+    if(inParentBundleID.StartsWith(CFSTR("com.parallels.winapp.")))
     {
-        return { CFSTR("com.parallels.vm") };
+        return { "com.parallels.vm" };
     }
 
     return bundleIDMap[inParentBundleID];

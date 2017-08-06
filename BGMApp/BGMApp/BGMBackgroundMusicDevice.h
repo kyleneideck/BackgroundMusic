@@ -40,6 +40,9 @@
 // Local Includes
 #include "BGM_Types.h"
 
+// PublicUtility Includes
+#include "CACFString.h"
+
 // STL Includes
 #include <vector>
 
@@ -123,8 +126,8 @@ private:
                                                       pid_t inAppProcessID,
                                                       CFStringRef inAppBundleID);
 
-    static std::vector<CFStringRef>
-                        ResponsibleBundleIDsOf(CFStringRef inParentBundleID);
+    static std::vector<CACFString>
+                        ResponsibleBundleIDsOf(CACFString inParentBundleID);
 
 #pragma mark Audible State
 

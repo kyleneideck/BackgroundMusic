@@ -410,7 +410,7 @@ static CGFloat const kAppVolumeViewInitialHeight = 20;
     // [kAppRelativeVolumeMinRawValue, kAppRelativeVolumeMaxRawValue] already.
     context.audioDevices.bgmDevice.SetAppVolume(self.intValue,
                                                 appProcessID,
-                                                (__bridge CFStringRef)appBundleID);
+                                                (__bridge_retained CFStringRef)appBundleID);
 }
 
 @end
@@ -456,7 +456,7 @@ static CGFloat const kAppVolumeViewInitialHeight = 20;
     // The values from our sliders are in [kAppPanLeftRawValue, kAppPanRightRawValue] already.
     context.audioDevices.bgmDevice.SetAppPanPosition(self.intValue,
                                                      appProcessID,
-                                                     (__bridge CFStringRef)appBundleID);
+                                                     (__bridge_retained CFStringRef)appBundleID);
 }
 
 @end
