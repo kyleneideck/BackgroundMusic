@@ -20,6 +20,9 @@
                 <outlet property="appVolumeView" destination="MWB-XH-kFI" id="eFA-RN-VMC"/>
                 <outlet property="autoPauseMenuItemUnwrapped" destination="nHv-T8-1nb" id="Lie-Cx-jw6"/>
                 <outlet property="bgmMenu" destination="8AN-nh-rEe" id="UWn-BX-eLy"/>
+                <outlet property="outputVolumeLabel" destination="wfC-C6-SLv" id="Nuf-mo-osG"/>
+                <outlet property="outputVolumeSlider" destination="9Ru-Sc-dqC" id="wv0-Md-BwF"/>
+                <outlet property="outputVolumeView" destination="JOz-H1-mj9" id="xeJ-fk-NMI"/>
             </connections>
         </customObject>
         <customObject id="YLy-65-1bz" customClass="NSFontManager"/>
@@ -30,7 +33,7 @@
                     <accessibility description="Enable to automatically pause your selected music player when a different app starts playing audio." identifier="Auto-pause enabled"/>
                 </menuItem>
                 <menuItem isSeparatorItem="YES" id="ZGd-Pq-YeA"/>
-                <menuItem title="App Volumes" tag="3" enabled="NO" id="8PP-wA-Pae">
+                <menuItem title="Volumes" tag="3" enabled="NO" id="8PP-wA-Pae">
                     <modifierMask key="keyEquivalentModifierMask"/>
                 </menuItem>
                 <menuItem isSeparatorItem="YES" tag="4" id="rkf-nx-H2J"/>
@@ -210,7 +213,7 @@
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <clipView key="contentView" ambiguous="YES" id="Cdb-RA-YK0">
                             <rect key="frame" x="1" y="1" width="565" height="243"/>
-                            <autoresizingMask key="autoresizingMask"/>
+                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
                                 <textView ambiguous="YES" editable="NO" importsGraphics="NO" richText="NO" id="LSG-PF-cl8">
                                     <rect key="frame" x="-6" y="0.0" width="576.5" height="243"/>
@@ -231,7 +234,7 @@
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
                         <scroller key="verticalScroller" verticalHuggingPriority="750" horizontal="NO" id="qCC-lY-zQ6">
-                            <rect key="frame" x="-15" y="1" width="16" height="0.0"/>
+                            <rect key="frame" x="550" y="1" width="16" height="243"/>
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
                     </scrollView>
@@ -260,6 +263,30 @@
             </textFieldCell>
             <point key="canvasLocation" x="-559" y="-118"/>
         </textField>
+        <customView id="JOz-H1-mj9" userLabel="Output Volume View">
+            <rect key="frame" x="0.0" y="0.0" width="269" height="47"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+            <subviews>
+                <slider verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="9Ru-Sc-dqC" userLabel="Output Volume Slider">
+                    <rect key="frame" x="20" y="4" width="220" height="19"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <sliderCell key="cell" continuous="YES" state="on" alignment="left" maxValue="1" tickMarkPosition="above" sliderType="linear" id="MzM-fe-nKb"/>
+                    <connections>
+                        <action selector="outputVolumeSliderChanged:" target="Voe-Tx-rLC" id="Cyt-IC-fXE"/>
+                    </connections>
+                </slider>
+                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" allowsCharacterPickerTouchBarItem="NO" translatesAutoresizingMaskIntoConstraints="NO" id="wfC-C6-SLv">
+                    <rect key="frame" x="20" y="25" width="226" height="17"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Volume" id="60O-ju-B5C">
+                        <font key="font" metaFont="system"/>
+                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+            </subviews>
+            <point key="canvasLocation" x="117.5" y="-216.5"/>
+        </customView>
     </objects>
     <resources>
         <image name="FermataIcon" width="284" height="284"/>

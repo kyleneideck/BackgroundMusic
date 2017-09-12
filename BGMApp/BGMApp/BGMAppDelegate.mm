@@ -34,6 +34,9 @@
 #import "BGMXPCListener.h"
 #import "SystemPreferences.h"
 
+// PublicUtility Includes
+#import "CAPropertyAddress.h"
+
 
 #pragma clang assume_nonnull begin
 
@@ -139,7 +142,9 @@ static float const kStatusBarIconPadding = 0.25;
     // audioDevices coordinates BGMDevice and the output device. It manages playthrough, volume/mute controls, etc.
     {
         NSError* error;
+
         audioDevices = [[BGMAudioDeviceManager alloc] initWithError:&error];
+
         if (audioDevices == nil) {
             [self showDeviceNotFoundErrorMessageAndExit:error.code];
             return;
@@ -148,6 +153,7 @@ static float const kStatusBarIconPadding = 0.25;
 
     {
         NSError* error = [audioDevices setBGMDeviceAsOSDefault];
+
         if (error) {
             [self showSetDeviceAsDefaultError:error
                                       message:@"Could not set the Background Music device as your default audio device."
@@ -176,7 +182,9 @@ static float const kStatusBarIconPadding = 0.25;
                                       
                                       [self showXPCHelperErrorMessage:error];
                                   }];
-    
+
+    [self initOutputDeviceVolume];
+
     appVolumes = [[BGMAppVolumes alloc] initWithMenu:self.bgmMenu
                                        appVolumeView:self.appVolumeView
                                         audioDevices:audioDevices];
@@ -189,6 +197,94 @@ static float const kStatusBarIconPadding = 0.25;
     
     // Handle events about the main menu. (See the NSMenuDelegate methods below.)
     self.bgmMenu.delegate = self;
+}
+
+// TODO: Make a class for this stuff.
+// TODO: Update the UI when the output device is changed.
+// TODO: Disable the slider if the output device doesn't have a volume control.
+// TODO: The menu (bgmMenu) should hide after you change the output volume slider, like the normal
+//       menu bar volume slider does.
+// TODO: The output volume slider should be set to 0 when the output device is muted.
+// TODO: Move the output devices from Preferences to the main menu so they're slightly easier to
+//       access?
+- (void) initOutputDeviceVolume {
+    NSMenuItem* menuItem = [[NSMenuItem alloc] initWithTitle:@"" action:nil keyEquivalent:@""];
+    menuItem.view = self.outputVolumeView;
+
+    NSInteger index = [self.bgmMenu indexOfItemWithTag:kVolumesHeadingMenuItemTag] + 1;
+    [self.bgmMenu insertItem:menuItem atIndex:index];
+
+    BGMAudioDevice bgmDevice = [audioDevices bgmDevice];
+
+    auto updateSlider = [=] {
+        try {
+            // The slider values and volume values are both from 0 to 1, so we can use the volume as is.
+            _outputVolumeSlider.doubleValue =
+                bgmDevice.GetVolumeControlScalarValue(kAudioDevicePropertyScopeOutput, kMasterChannel);
+        } catch (const CAException& e) {
+            NSLog(@"BGMAppDelegate::initOutputDeviceVolume: Failed to update volume slider. (%d)",
+                  e.GetError());
+        }
+    };
+
+    updateSlider();
+
+    try {
+        // Register a listener that will update the slider when the user changes the volume from
+        // somewhere else.
+        [audioDevices bgmDevice].AddPropertyListenerBlock(
+            CAPropertyAddress(kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeOutput),
+            dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0),
+            ^(UInt32 inNumberAddresses, const AudioObjectPropertyAddress* inAddresses) {
+                // The docs for AudioObjectPropertyListenerBlock say inAddresses will always contain
+                // at least one property the block is listening to, so there's no need to check
+                // inAddresses.
+                #pragma unused (inNumberAddresses, inAddresses)
+
+                updateSlider();
+            });
+
+        [self setOutputVolumeLabel];
+    } catch (const CAException& e) {
+        NSLog(@"BGMAppDelegate::initOutputDeviceVolume: Failed to init volume slider. (%d)",
+              e.GetError());
+    }
+}
+
+- (void) setOutputVolumeLabel {
+    BGMAudioDevice device = [audioDevices outputDevice];
+    AudioObjectPropertyScope scope = kAudioDevicePropertyScopeOutput;
+    UInt32 channel = kMasterChannel;
+
+    if (device.HasDataSourceControl(scope, channel)) {
+        UInt32 dataSourceID = device.GetCurrentDataSourceID(scope, channel);
+
+        self.outputVolumeLabel.stringValue =
+            (__bridge_transfer NSString*)device.CopyDataSourceNameForID(scope, channel, dataSourceID);
+
+        self.outputVolumeLabel.toolTip = (__bridge_transfer NSString*)device.CopyName();
+    } else {
+        self.outputVolumeLabel.stringValue = (__bridge_transfer NSString*)device.CopyName();
+    }
+}
+
+- (IBAction) outputVolumeSliderChanged:(NSSlider*)sender {
+    float newVolume = sender.floatValue;
+    AudioObjectPropertyScope scope = kAudioDevicePropertyScopeOutput;
+    UInt32 channel = kMasterChannel;
+
+    DebugMsg("BGMAppDelegate::outputVolumeSliderChanged: New volume: %f", newVolume);
+
+    try {
+        self.audioDevices.bgmDevice.SetVolumeControlScalarValue(scope, channel, newVolume);
+
+        if (self.audioDevices.bgmDevice.HasMuteControl(scope, channel)) {
+            self.audioDevices.bgmDevice.SetMuteControlValue(scope, channel, (newVolume < 1e-10f));
+        }
+    } catch (const CAException& e) {
+        NSLog(@"BGMAppDelegate::outputVolumeSliderChanged: Failed to set volume on BGMDevice. (%d)",
+              e.GetError());
+    }
 }
 
 - (BGMUserDefaults*) createUserDefaults {
@@ -328,7 +424,6 @@ static float const kStatusBarIconPadding = 0.25;
         DebugMsg("BGMAppDelegate::menu: Warning: unexpected menu. menu=%s", menu.description.UTF8String);
     }
 }
-
 @end
 
 #pragma clang assume_nonnull end

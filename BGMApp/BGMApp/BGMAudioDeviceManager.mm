@@ -42,13 +42,13 @@
     BGMDeviceControlSync deviceControlSync;
     BGMPlayThrough playThrough;
     BGMPlayThrough playThrough_UISounds;
-    
+
     NSRecursiveLock* stateLock;
 }
 
 #pragma mark Construction/Destruction
 
-- (id) initWithError:(NSError**)error {
+- (instancetype) initWithError:(NSError**)error {
     if ((self = [super init])) {
         stateLock = [NSRecursiveLock new];
 

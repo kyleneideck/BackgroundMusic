@@ -17,7 +17,7 @@
 //  BGMAppDelegate.h
 //  BGMApp
 //
-//  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016, 2017 Kyle Neideck
 //
 //  Sets up and tears down the app.
 //
@@ -29,9 +29,17 @@
 #import <Cocoa/Cocoa.h>
 
 
+// Tags for UI elements in MainMenu.xib
+static NSInteger const kVolumesHeadingMenuItemTag = 3;
+static NSInteger const kSeparatorBelowVolumesMenuItemTag = 4;
+
 @interface BGMAppDelegate : NSObject <NSApplicationDelegate, NSMenuDelegate>
 
 @property (weak) IBOutlet NSMenu* bgmMenu;
+@property (weak) IBOutlet NSView* outputVolumeView;
+@property (weak) IBOutlet NSTextField* outputVolumeLabel;
+@property (weak) IBOutlet NSSlider* outputVolumeSlider;
+- (IBAction) outputVolumeSliderChanged:(NSSlider*)sender;
 @property (weak) IBOutlet NSView* appVolumeView;
 @property (weak) IBOutlet NSPanel* aboutPanel;
 @property (unsafe_unretained) IBOutlet NSTextView* aboutPanelLicenseView;

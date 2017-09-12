@@ -24,19 +24,16 @@
 // Self Include
 #import "BGMAppVolumes.h"
 
-// BGM Includes
-#include "BGM_Types.h"
-#include "BGM_Utils.h"
+// Local Includes
+#import "BGM_Types.h"
+#import "BGM_Utils.h"
+#import "BGMAppDelegate.h"
 
 // PublicUtility Includes
-#include "CACFDictionary.h"
-#include "CACFArray.h"
-#include "CACFString.h"
+#import "CACFDictionary.h"
+#import "CACFArray.h"
+#import "CACFString.h"
 
-
-// Tags for UI elements in MainMenu.xib
-static NSInteger const kAppVolumesHeadingMenuItemTag = 3;
-static NSInteger const kSeparatorBelowAppVolumesMenuItemTag = 4;
 
 static float const kSlidersSnapWithin = 5;
 
@@ -49,6 +46,8 @@ static CGFloat const kAppVolumeViewInitialHeight = 20;
     CGFloat appVolumeViewFullHeight;
     
     BGMAudioDeviceManager* audioDevices;
+
+    NSInteger numMenuItems;
 }
 
 - (id) initWithMenu:(NSMenu*)menu appVolumeView:(NSView*)view audioDevices:(BGMAudioDeviceManager*)devices {
@@ -57,6 +56,7 @@ static CGFloat const kAppVolumeViewInitialHeight = 20;
         appVolumeView = view;
         appVolumeViewFullHeight = appVolumeView.frame.size.height;
         audioDevices = devices;
+        numMenuItems = 0;
         
         // Create the menu items for controlling app volumes
         [self insertMenuItemsForApps:[[NSWorkspace sharedWorkspace] runningApplications]];
@@ -83,35 +83,17 @@ static CGFloat const kAppVolumeViewInitialHeight = 20;
 
 #pragma mark UI Modifications
 
+// Adds a volume control menu item for each given app.
 - (void) insertMenuItemsForApps:(NSArray<NSRunningApplication*>*)apps {
     NSAssert([NSThread isMainThread], @"insertMenuItemsForApps is not thread safe");
     
-#ifndef NS_BLOCK_ASSERTIONS  // If assertions are enabled
-    auto numMenuItems = [&self]() {
-        NSInteger headingIdx = [bgmMenu indexOfItemWithTag:kAppVolumesHeadingMenuItemTag];
-        NSInteger separatorIdx = [bgmMenu indexOfItemWithTag:kSeparatorBelowAppVolumesMenuItemTag];
-        return separatorIdx - headingIdx - 1;
-    };
-    
-    NSInteger numMenuItemsBeforeInsert = numMenuItems();
-    NSUInteger numApps = 0;
-#endif
-    
     // Get the app volumes currently set on the device
-    CACFArray appVolumesOnDevice((CFArrayRef)[audioDevices bgmDevice].GetAppVolumes(), false);
-    
-    NSInteger index = [bgmMenu indexOfItemWithTag:kAppVolumesHeadingMenuItemTag] + 1;
-    
-    // Add a volume-control menu item for each app
+    CACFArray appVolumesOnDevice([audioDevices bgmDevice].GetAppVolumes(), false);
+
     for (NSRunningApplication* app in apps) {
         // Only show apps that appear in the dock (at first)
         // TODO: Would it be better to only show apps that are registered as HAL clients?
         if (app.activationPolicy != NSApplicationActivationPolicyRegular) continue;
-        
-#ifndef NS_BLOCK_ASSERTIONS  // If assertions are enabled
-        // Count how many apps we should add menu items for so we can check it at the end of the method
-        numApps++;
-#endif
         
         NSMenuItem* appVolItem = [self createBlankAppVolumeMenuItem];
         
@@ -139,14 +121,9 @@ static CGFloat const kAppVolumeViewInitialHeight = 20;
         }
 #endif
 
-        [bgmMenu insertItem:appVolItem atIndex:index];
+        [bgmMenu insertItem:appVolItem atIndex:[self firstMenuItemIndex]];
+        numMenuItems++;
     }
-    
-    NSAssert3(numMenuItems() == (numMenuItemsBeforeInsert + numApps),
-              @"Added more/fewer menu items than there were apps. Items before: %ld, items after: %ld, apps: %lu",
-              (long)numMenuItemsBeforeInsert,
-              (long)numMenuItems(),
-              (unsigned long)numApps);
 }
 
 // Create a blank menu item to copy as a template.
@@ -159,24 +136,27 @@ static CGFloat const kAppVolumeViewInitialHeight = 20;
     return menuItem;
 }
 
+- (NSInteger) firstMenuItemIndex {
+    return [self lastMenuItemIndex] - numMenuItems + 1;
+}
+
+- (NSInteger) lastMenuItemIndex {
+    return [bgmMenu indexOfItemWithTag:kSeparatorBelowVolumesMenuItemTag] - 1;
+}
+
 - (void) removeMenuItemsForApps:(NSArray<NSRunningApplication*>*)apps {
     NSAssert([NSThread isMainThread], @"removeMenuItemsForApps is not thread safe");
     
-    NSInteger firstItemIndex = [bgmMenu indexOfItemWithTag:kAppVolumesHeadingMenuItemTag] + 1;
-    NSInteger lastItemIndex = [bgmMenu indexOfItemWithTag:kSeparatorBelowAppVolumesMenuItemTag] - 1;
-    
     // Check each app volume menu item, removing the items that control one of the given apps
-    for (NSInteger i = firstItemIndex; i <= lastItemIndex; i++) {
-        NSMenuItem* item = [bgmMenu itemAtIndex:i];
-        
-        for (NSRunningApplication* appToBeRemoved in apps) {
+    for (NSRunningApplication* appToBeRemoved in apps) {
+        for (NSInteger i = [self firstMenuItemIndex]; i <= [self lastMenuItemIndex]; i++) {
+            NSMenuItem* item = [bgmMenu itemAtIndex:i];
             NSRunningApplication* itemApp = item.representedObject;
-            
+
             if ([itemApp isEqual:appToBeRemoved]) {
                 [bgmMenu removeItem:item];
-                // Correct i to account for the item we removed, since we're editing the menu in place
-                i--;
-                continue;
+                numMenuItems--;
+                break;
             }
         }
     }

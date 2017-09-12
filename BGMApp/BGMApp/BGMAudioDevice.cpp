@@ -30,10 +30,6 @@
 #include <AudioToolbox/AudioServices.h>
 
 
-// AudioObjectPropertyElement docs: "Elements are numbered sequentially where 0 represents the
-// master element."
-static const AudioObjectPropertyElement kMasterChannel = 0;
-
 #pragma mark Construction/Destruction
 
 BGMAudioDevice::BGMAudioDevice(AudioObjectID inAudioDevice)

@@ -68,6 +68,10 @@ enum
     kObjectID_Stream_Output_UI_Sounds           = 11,  // Belongs to kObjectID_Device_UI_Sounds
 };
 
+// AudioObjectPropertyElement docs: "Elements are numbered sequentially where 0 represents the
+// master element."
+static const AudioObjectPropertyElement kMasterChannel = 0;
+
 #pragma BGM Plug-in Custom Properties
 
 enum
