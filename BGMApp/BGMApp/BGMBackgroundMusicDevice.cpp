@@ -212,6 +212,11 @@ void BGMBackgroundMusicDevice::SendAppVolumeOrPanToBGMDevice(SInt32 inNewValue,
 std::vector<CACFString>
 BGMBackgroundMusicDevice::ResponsibleBundleIDsOf(CACFString inParentBundleID)
 {
+    if(!inParentBundleID.IsValid())
+    {
+        return {};
+    }
+
     std::map<CACFString, std::vector<CACFString>> bundleIDMap = {
             // Finder
             { "com.apple.finder", { "com.apple.quicklook.ui.helper" } },
