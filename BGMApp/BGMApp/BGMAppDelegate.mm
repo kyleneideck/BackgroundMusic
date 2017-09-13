@@ -204,45 +204,61 @@ static float const kStatusBarIconPadding = 0.25;
 // TODO: Disable the slider if the output device doesn't have a volume control.
 // TODO: The menu (bgmMenu) should hide after you change the output volume slider, like the normal
 //       menu bar volume slider does.
-// TODO: The output volume slider should be set to 0 when the output device is muted.
 // TODO: Move the output devices from Preferences to the main menu so they're slightly easier to
 //       access?
 - (void) initOutputDeviceVolume {
+    // Put the volume slider into a menu item.
     NSMenuItem* menuItem = [[NSMenuItem alloc] initWithTitle:@"" action:nil keyEquivalent:@""];
     menuItem.view = self.outputVolumeView;
 
+    // Add the menu item to the main menu.
     NSInteger index = [self.bgmMenu indexOfItemWithTag:kVolumesHeadingMenuItemTag] + 1;
     [self.bgmMenu insertItem:menuItem atIndex:index];
 
     BGMAudioDevice bgmDevice = [audioDevices bgmDevice];
+    NSSlider* slider = _outputVolumeSlider;
+    AudioObjectPropertyScope scope = kAudioDevicePropertyScopeOutput;
 
-    auto updateSlider = [=] {
-        try {
-            // The slider values and volume values are both from 0 to 1, so we can use the volume as is.
-            _outputVolumeSlider.doubleValue =
-                bgmDevice.GetVolumeControlScalarValue(kAudioDevicePropertyScopeOutput, kMasterChannel);
-        } catch (const CAException& e) {
-            NSLog(@"BGMAppDelegate::initOutputDeviceVolume: Failed to update volume slider. (%d)",
-                  e.GetError());
-        }
-    };
+    // This block updates the value of the output volume slider.
+    AudioObjectPropertyListenerBlock updateSlider =
+        ^(UInt32 inNumberAddresses, const AudioObjectPropertyAddress* inAddresses) {
+            // The docs for AudioObjectPropertyListenerBlock say inAddresses will always contain
+            // at least one property the block is listening to, so there's no need to check
+            // inAddresses.
+            #pragma unused (inNumberAddresses, inAddresses)
 
-    updateSlider();
+            try {
+                if (bgmDevice.GetMuteControlValue(scope, kMasterChannel)) {
+                    // The output device is muted, so show the volume as 0 on the slider.
+                    slider.doubleValue = 0.0;
+                } else {
+                    // The slider values and volume values are both from 0 to 1, so we can use the
+                    // volume as is.
+                    slider.doubleValue =
+                        bgmDevice.GetVolumeControlScalarValue(scope, kMasterChannel);
+                }
+            } catch (const CAException& e) {
+                NSLog(@"BGMAppDelegate::initOutputDeviceVolume: Volume slider update failed. (%d)",
+                      e.GetError());
+            }
+        };
+
+    // Initialise the slider. (The args are ignored.)
+    updateSlider(0, {});
 
     try {
         // Register a listener that will update the slider when the user changes the volume from
         // somewhere else.
         [audioDevices bgmDevice].AddPropertyListenerBlock(
-            CAPropertyAddress(kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeOutput),
+            CAPropertyAddress(kAudioDevicePropertyVolumeScalar, scope),
             dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0),
-            ^(UInt32 inNumberAddresses, const AudioObjectPropertyAddress* inAddresses) {
-                // The docs for AudioObjectPropertyListenerBlock say inAddresses will always contain
-                // at least one property the block is listening to, so there's no need to check
-                // inAddresses.
-                #pragma unused (inNumberAddresses, inAddresses)
+            updateSlider);
 
-                updateSlider();
-            });
+        // Register the same listener for mute/unmute.
+        [audioDevices bgmDevice].AddPropertyListenerBlock(
+            CAPropertyAddress(kAudioDevicePropertyMute, scope),
+            dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0),
+            updateSlider);
 
         [self setOutputVolumeLabel];
     } catch (const CAException& e) {
