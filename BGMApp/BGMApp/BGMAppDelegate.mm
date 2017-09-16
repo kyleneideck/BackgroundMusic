@@ -32,6 +32,7 @@
 #import "BGMAppVolumes.h"
 #import "BGMPreferencesMenu.h"
 #import "BGMXPCListener.h"
+#import "BGMOutputVolumeMenuItem.h"
 #import "SystemPreferences.h"
 
 // PublicUtility Includes
@@ -183,7 +184,17 @@ static float const kStatusBarIconPadding = 0.25;
                                       [self showXPCHelperErrorMessage:error];
                                   }];
 
-    [self initOutputDeviceVolume];
+    // Create the menu item with the (main) output volume slider.
+    BGMOutputVolumeMenuItem* outputVolume =
+        [[BGMOutputVolumeMenuItem alloc] initWithAudioDevices:audioDevices
+                                                         view:self.outputVolumeView
+                                                       slider:self.outputVolumeSlider
+                                                  deviceLabel:self.outputVolumeLabel];
+
+    // Add it to the main menu below the "Volumes" heading.
+    [self.bgmMenu insertItem:outputVolume
+                     atIndex:([self.bgmMenu indexOfItemWithTag:kVolumesHeadingMenuItemTag] + 1)];
+
 
     appVolumes = [[BGMAppVolumes alloc] initWithMenu:self.bgmMenu
                                        appVolumeView:self.appVolumeView
@@ -197,110 +208,6 @@ static float const kStatusBarIconPadding = 0.25;
     
     // Handle events about the main menu. (See the NSMenuDelegate methods below.)
     self.bgmMenu.delegate = self;
-}
-
-// TODO: Make a class for this stuff.
-// TODO: Update the UI when the output device is changed.
-// TODO: Disable the slider if the output device doesn't have a volume control.
-// TODO: The menu (bgmMenu) should hide after you change the output volume slider, like the normal
-//       menu bar volume slider does.
-// TODO: Move the output devices from Preferences to the main menu so they're slightly easier to
-//       access?
-- (void) initOutputDeviceVolume {
-    // Put the volume slider into a menu item.
-    NSMenuItem* menuItem = [[NSMenuItem alloc] initWithTitle:@"" action:nil keyEquivalent:@""];
-    menuItem.view = self.outputVolumeView;
-
-    // Add the menu item to the main menu.
-    NSInteger index = [self.bgmMenu indexOfItemWithTag:kVolumesHeadingMenuItemTag] + 1;
-    [self.bgmMenu insertItem:menuItem atIndex:index];
-
-    BGMAudioDevice bgmDevice = [audioDevices bgmDevice];
-    NSSlider* slider = _outputVolumeSlider;
-    AudioObjectPropertyScope scope = kAudioDevicePropertyScopeOutput;
-
-    // This block updates the value of the output volume slider.
-    AudioObjectPropertyListenerBlock updateSlider =
-        ^(UInt32 inNumberAddresses, const AudioObjectPropertyAddress* inAddresses) {
-            // The docs for AudioObjectPropertyListenerBlock say inAddresses will always contain
-            // at least one property the block is listening to, so there's no need to check
-            // inAddresses.
-            #pragma unused (inNumberAddresses, inAddresses)
-
-            try {
-                if (bgmDevice.GetMuteControlValue(scope, kMasterChannel)) {
-                    // The output device is muted, so show the volume as 0 on the slider.
-                    slider.doubleValue = 0.0;
-                } else {
-                    // The slider values and volume values are both from 0 to 1, so we can use the
-                    // volume as is.
-                    slider.doubleValue =
-                        bgmDevice.GetVolumeControlScalarValue(scope, kMasterChannel);
-                }
-            } catch (const CAException& e) {
-                NSLog(@"BGMAppDelegate::initOutputDeviceVolume: Volume slider update failed. (%d)",
-                      e.GetError());
-            }
-        };
-
-    // Initialise the slider. (The args are ignored.)
-    updateSlider(0, {});
-
-    try {
-        // Register a listener that will update the slider when the user changes the volume from
-        // somewhere else.
-        [audioDevices bgmDevice].AddPropertyListenerBlock(
-            CAPropertyAddress(kAudioDevicePropertyVolumeScalar, scope),
-            dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0),
-            updateSlider);
-
-        // Register the same listener for mute/unmute.
-        [audioDevices bgmDevice].AddPropertyListenerBlock(
-            CAPropertyAddress(kAudioDevicePropertyMute, scope),
-            dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0),
-            updateSlider);
-
-        [self setOutputVolumeLabel];
-    } catch (const CAException& e) {
-        NSLog(@"BGMAppDelegate::initOutputDeviceVolume: Failed to init volume slider. (%d)",
-              e.GetError());
-    }
-}
-
-- (void) setOutputVolumeLabel {
-    BGMAudioDevice device = [audioDevices outputDevice];
-    AudioObjectPropertyScope scope = kAudioDevicePropertyScopeOutput;
-    UInt32 channel = kMasterChannel;
-
-    if (device.HasDataSourceControl(scope, channel)) {
-        UInt32 dataSourceID = device.GetCurrentDataSourceID(scope, channel);
-
-        self.outputVolumeLabel.stringValue =
-            (__bridge_transfer NSString*)device.CopyDataSourceNameForID(scope, channel, dataSourceID);
-
-        self.outputVolumeLabel.toolTip = (__bridge_transfer NSString*)device.CopyName();
-    } else {
-        self.outputVolumeLabel.stringValue = (__bridge_transfer NSString*)device.CopyName();
-    }
-}
-
-- (IBAction) outputVolumeSliderChanged:(NSSlider*)sender {
-    float newVolume = sender.floatValue;
-    AudioObjectPropertyScope scope = kAudioDevicePropertyScopeOutput;
-    UInt32 channel = kMasterChannel;
-
-    DebugMsg("BGMAppDelegate::outputVolumeSliderChanged: New volume: %f", newVolume);
-
-    try {
-        self.audioDevices.bgmDevice.SetVolumeControlScalarValue(scope, channel, newVolume);
-
-        if (self.audioDevices.bgmDevice.HasMuteControl(scope, channel)) {
-            self.audioDevices.bgmDevice.SetMuteControlValue(scope, channel, (newVolume < 1e-10f));
-        }
-    } catch (const CAException& e) {
-        NSLog(@"BGMAppDelegate::outputVolumeSliderChanged: Failed to set volume on BGMDevice. (%d)",
-              e.GetError());
-    }
 }
 
 - (BGMUserDefaults*) createUserDefaults {

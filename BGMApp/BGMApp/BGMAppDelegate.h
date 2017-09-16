@@ -39,7 +39,6 @@ static NSInteger const kSeparatorBelowVolumesMenuItemTag = 4;
 @property (weak) IBOutlet NSView* outputVolumeView;
 @property (weak) IBOutlet NSTextField* outputVolumeLabel;
 @property (weak) IBOutlet NSSlider* outputVolumeSlider;
-- (IBAction) outputVolumeSliderChanged:(NSSlider*)sender;
 @property (weak) IBOutlet NSView* appVolumeView;
 @property (weak) IBOutlet NSPanel* aboutPanel;
 @property (unsafe_unretained) IBOutlet NSTextView* aboutPanelLicenseView;

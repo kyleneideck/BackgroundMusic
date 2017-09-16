@@ -40,6 +40,9 @@
 		1C533C7B1EED2F6200270802 /* safe_install_dir.sh in Resources */ = {isa = PBXBuildFile; fileRef = 276972901CB16008007A2F7C /* safe_install_dir.sh */; };
 		1C533C7C1EED2F8A00270802 /* com.bearisdriving.BGM.XPCHelper.plist.template in Resources */ = {isa = PBXBuildFile; fileRef = 2769728D1CAFCEFD007A2F7C /* com.bearisdriving.BGM.XPCHelper.plist.template */; };
 		1C533C801EF532CA00270802 /* _uninstall-non-interactive.sh in Resources */ = {isa = PBXBuildFile; fileRef = 1C533C7F1EF532CA00270802 /* _uninstall-non-interactive.sh */; };
+		1C837DD81F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C837DD71F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm */; };
+		1C837DD91F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C837DD71F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm */; };
+		1C837DDA1F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C837DD71F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm */; };
 		1CACCF391F3175AD007F86CA /* BGMBackgroundMusicDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CACCF371F3175AD007F86CA /* BGMBackgroundMusicDevice.cpp */; };
 		1CACCF3A1F334447007F86CA /* BGMBackgroundMusicDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CACCF371F3175AD007F86CA /* BGMBackgroundMusicDevice.cpp */; };
 		1CACCF3B1F334450007F86CA /* BGMBackgroundMusicDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CACCF371F3175AD007F86CA /* BGMBackgroundMusicDevice.cpp */; };
@@ -222,6 +225,8 @@
 		1C533C7F1EF532CA00270802 /* _uninstall-non-interactive.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = "_uninstall-non-interactive.sh"; sourceTree = "<group>"; };
 		1C8034C21BDAFD5700668E00 /* CAPThread.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CAPThread.cpp; path = PublicUtility/CAPThread.cpp; sourceTree = "<group>"; };
 		1C8034C31BDAFD5700668E00 /* CAPThread.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CAPThread.h; path = PublicUtility/CAPThread.h; sourceTree = "<group>"; };
+		1C837DD61F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BGMOutputVolumeMenuItem.h; sourceTree = "<group>"; };
+		1C837DD71F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = BGMOutputVolumeMenuItem.mm; sourceTree = "<group>"; };
 		1CACCF371F3175AD007F86CA /* BGMBackgroundMusicDevice.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BGMBackgroundMusicDevice.cpp; sourceTree = "<group>"; };
 		1CACCF381F3175AD007F86CA /* BGMBackgroundMusicDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BGMBackgroundMusicDevice.h; sourceTree = "<group>"; };
 		1CB8B3361BBA75EF000E2DD1 /* Background Music.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Background Music.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -491,6 +496,8 @@
 			children = (
 				1CB8B33B1BBA75EF000E2DD1 /* BGMAppDelegate.h */,
 				1CB8B33C1BBA75EF000E2DD1 /* BGMAppDelegate.mm */,
+				1C837DD61F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.h */,
+				1C837DD71F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm */,
 				1C3DB48A1BE0888500EC8160 /* BGMAppVolumes.h */,
 				1C3DB4881BE0885A00EC8160 /* BGMAppVolumes.mm */,
 				1CED616A1C316E1A002CAFCF /* BGMAudioDeviceManager.h */,
@@ -914,6 +921,7 @@
 				2743C9F11D853FBB0089613B /* BGMUserDefaults.m in Sources */,
 				1C1962FD1BCAC0C3008A4DF7 /* CADebugPrintf.cpp in Sources */,
 				2743C9EC1D852B360089613B /* BGMScriptingBridge.m in Sources */,
+				1C837DD81F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm in Sources */,
 				1C1963011BCAC0F6008A4DF7 /* CACFString.cpp in Sources */,
 				1C1962E71BC94E91008A4DF7 /* BGMPlayThrough.cpp in Sources */,
 				1C1962FA1BCAC061008A4DF7 /* CADebugMacros.cpp in Sources */,
@@ -941,6 +949,7 @@
 				1CD989431ECFFCFC0014BBBF /* BGMAudioDeviceManager.mm in Sources */,
 				1CD989441ECFFCFC0014BBBF /* BGMAutoPauseMenuItem.m in Sources */,
 				1CD989451ECFFCFC0014BBBF /* BGMAutoPauseMusic.mm in Sources */,
+				1C837DD91F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm in Sources */,
 				1CD989461ECFFCFC0014BBBF /* BGMMusicPlayers.mm in Sources */,
 				1CD989471ECFFCFC0014BBBF /* BGMScriptingBridge.m in Sources */,
 				1CD989481ECFFCFC0014BBBF /* BGMMusicPlayer.m in Sources */,
@@ -1001,6 +1010,7 @@
 				27FB8C071DD75D0A0084DB9D /* BGMHermes.m in Sources */,
 				2743CA211D86DE780089613B /* BGMDeviceControlSync.cpp in Sources */,
 				2743CA0C1D86D7FA0089613B /* CACFArray.cpp in Sources */,
+				1C837DDA1F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm in Sources */,
 				2743CA0D1D86D7FA0089613B /* CACFDictionary.cpp in Sources */,
 				2743CA0E1D86D7FA0089613B /* CACFNumber.cpp in Sources */,
 				2743CA0F1D86D7FA0089613B /* CACFString.cpp in Sources */,

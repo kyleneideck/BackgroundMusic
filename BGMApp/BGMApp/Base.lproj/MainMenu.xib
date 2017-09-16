@@ -30,7 +30,7 @@
             <items>
                 <menuItem title="Auto-pause Music" tag="2" id="nHv-T8-1nb">
                     <modifierMask key="keyEquivalentModifierMask"/>
-                    <accessibility description="Enable to automatically pause your selected music player when a different app starts playing audio." identifier="Auto-pause enabled"/>
+                    <accessibility description="Toggle Auto-pause" help="Enable to automatically pause your selected music player when a different app starts playing audio." identifier="Auto-pause enabled"/>
                 </menuItem>
                 <menuItem isSeparatorItem="YES" id="ZGd-Pq-YeA"/>
                 <menuItem title="Volumes" tag="3" enabled="NO" id="8PP-wA-Pae">
@@ -271,9 +271,7 @@
                     <rect key="frame" x="20" y="4" width="220" height="19"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <sliderCell key="cell" continuous="YES" state="on" alignment="left" maxValue="1" tickMarkPosition="above" sliderType="linear" id="MzM-fe-nKb"/>
-                    <connections>
-                        <action selector="outputVolumeSliderChanged:" target="Voe-Tx-rLC" id="Cyt-IC-fXE"/>
-                    </connections>
+                    <accessibility description="Output Volume" help="Sets the volume of your audio output device."/>
                 </slider>
                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" allowsCharacterPickerTouchBarItem="NO" translatesAutoresizingMaskIntoConstraints="NO" id="wfC-C6-SLv">
                     <rect key="frame" x="20" y="25" width="226" height="17"/>
