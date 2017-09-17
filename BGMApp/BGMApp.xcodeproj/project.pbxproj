@@ -55,7 +55,7 @@
 		1CCC4F3E1E58196C008053E4 /* BGMXPCHelperTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 1CCC4F3C1E58196C008053E4 /* BGMXPCHelperTests.m */; };
 		1CCC4F4D1E581C40008053E4 /* BGMMusicPlayersUnitTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1CCC4F4B1E581C40008053E4 /* BGMMusicPlayersUnitTests.mm */; };
 		1CCC4F4E1E581C40008053E4 /* Mock_CAHALAudioObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CCC4F4C1E581C40008053E4 /* Mock_CAHALAudioObject.cpp */; };
-		1CCC4F621E584100008053E4 /* BGMAppUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 1CCC4F611E584100008053E4 /* BGMAppUITests.m */; };
+		1CCC4F621E584100008053E4 /* BGMAppUITests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1CCC4F611E584100008053E4 /* BGMAppUITests.mm */; };
 		1CD1FD301BDDEAF2004F7E1B /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1CD1FD2F1BDDEAF2004F7E1B /* AudioToolbox.framework */; };
 		1CD989341ECFFC9E0014BBBF /* BGM_Utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27FB8C2E1DE468320084DB9D /* BGM_Utils.cpp */; };
 		1CD989351ECFFC9E0014BBBF /* CACFArray.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CC1DF7D1BE5068A00FB8FE4 /* CACFArray.cpp */; };
@@ -249,7 +249,7 @@
 		1CCC4F4C1E581C40008053E4 /* Mock_CAHALAudioObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Mock_CAHALAudioObject.cpp; path = UnitTests/Mock_CAHALAudioObject.cpp; sourceTree = "<group>"; };
 		1CCC4F541E584081008053E4 /* BGMAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BGMAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1CCC4F5F1E5840EF008053E4 /* BGMAppUITests-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "BGMAppUITests-Info.plist"; path = "UITests/BGMAppUITests-Info.plist"; sourceTree = "<group>"; };
-		1CCC4F611E584100008053E4 /* BGMAppUITests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BGMAppUITests.m; path = BGMAppTests/UITests/BGMAppUITests.m; sourceTree = SOURCE_ROOT; };
+		1CCC4F611E584100008053E4 /* BGMAppUITests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = BGMAppUITests.mm; path = BGMAppTests/UITests/BGMAppUITests.mm; sourceTree = SOURCE_ROOT; };
 		1CD1FD2F1BDDEAF2004F7E1B /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		1CE7064A1BF1EC0600BFC06D /* BGMOutputDevicePrefs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGMOutputDevicePrefs.h; path = Preferences/BGMOutputDevicePrefs.h; sourceTree = "<group>"; };
 		1CE7064B1BF1EC0600BFC06D /* BGMOutputDevicePrefs.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = BGMOutputDevicePrefs.mm; path = Preferences/BGMOutputDevicePrefs.mm; sourceTree = "<group>"; };
@@ -595,7 +595,7 @@
 			isa = PBXGroup;
 			children = (
 				1C2FC30D1EBC97DA00A76592 /* BGMApp.h */,
-				1CCC4F611E584100008053E4 /* BGMAppUITests.m */,
+				1CCC4F611E584100008053E4 /* BGMAppUITests.mm */,
 			);
 			name = "UI Tests";
 			path = ../BGMAppUITests;
@@ -982,7 +982,7 @@
 				1CD9893E1ECFFC9E0014BBBF /* CAHALAudioStream.cpp in Sources */,
 				1CD9893F1ECFFC9E0014BBBF /* CAHALAudioSystemObject.cpp in Sources */,
 				1C50FF631EC9F4490031A6EA /* BGMAudioDevice.cpp in Sources */,
-				1CCC4F621E584100008053E4 /* BGMAppUITests.m in Sources */,
+				1CCC4F621E584100008053E4 /* BGMAppUITests.mm in Sources */,
 				1C2FC31C1EC7238A00A76592 /* BGMASOutputDevice.mm in Sources */,
 				1C2FC3151EC706E000A76592 /* BGMAppDelegate+AppleScript.mm in Sources */,
 			);

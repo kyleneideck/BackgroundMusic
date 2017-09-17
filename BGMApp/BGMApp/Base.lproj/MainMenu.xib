@@ -267,11 +267,11 @@
             <rect key="frame" x="0.0" y="0.0" width="269" height="47"/>
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
             <subviews>
-                <slider verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="9Ru-Sc-dqC" userLabel="Output Volume Slider">
+                <slider identifier="Output Volume" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="9Ru-Sc-dqC" userLabel="Output Volume Slider">
                     <rect key="frame" x="20" y="4" width="220" height="19"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <sliderCell key="cell" continuous="YES" state="on" alignment="left" maxValue="1" tickMarkPosition="above" sliderType="linear" id="MzM-fe-nKb"/>
-                    <accessibility description="Output Volume" help="Sets the volume of your audio output device."/>
+                    <accessibility description="Output Volume" help="Sets the volume of your audio output device." identifier="Output Volume"/>
                 </slider>
                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" allowsCharacterPickerTouchBarItem="NO" translatesAutoresizingMaskIntoConstraints="NO" id="wfC-C6-SLv">
                     <rect key="frame" x="20" y="25" width="226" height="17"/>
