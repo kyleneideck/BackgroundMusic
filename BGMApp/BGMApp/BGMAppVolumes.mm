@@ -86,7 +86,10 @@ static CGFloat const kAppVolumeViewInitialHeight = 20;
 // Adds a volume control menu item for each given app.
 - (void) insertMenuItemsForApps:(NSArray<NSRunningApplication*>*)apps {
     NSAssert([NSThread isMainThread], @"insertMenuItemsForApps is not thread safe");
-    
+
+    // TODO: Handle the C++ exceptions this method can throw. They can cause crashes because this
+    //       method is called in a KVO handler.
+
     // Get the app volumes currently set on the device
     CACFArray appVolumesOnDevice([audioDevices bgmDevice].GetAppVolumes(), false);
 
@@ -231,6 +234,15 @@ static CGFloat const kAppVolumeViewInitialHeight = 20;
         button.frameCenterRotation = 180.0;
         // Move the button up slightly so it aligns with the volume slider.
         [button setFrameOrigin:NSMakePoint(button.frame.origin.x, button.frame.origin.y - 1)];
+
+        // Set the extra controls, and anything else below the fold, to hidden so accessibility
+        // clients can skip over them.
+        for (NSView* subview in menuItem.view.subviews) {
+            CGFloat top = subview.frame.origin.y + subview.frame.size.height;
+            if (top <= 0.0) {
+                subview.hidden = YES;
+            }
+        }
     } else {
         // Show extra controls
         DebugMsg("BGMAppVolumes::showHideExtraControls: Showing extra controls (%s)", appName);
@@ -244,6 +256,11 @@ static CGFloat const kAppVolumeViewInitialHeight = 20;
         button.frameCenterRotation = 0.0;
         // Move the button down slightly, back to it's original position.
         [button setFrameOrigin:NSMakePoint(button.frame.origin.x, button.frame.origin.y + 1)];
+
+        // Set all of the UI elements in the menu item to "not hidden" for accessibility clients.
+        for (NSView* subview in menuItem.view.subviews) {
+            subview.hidden = NO;
+        }
     }
 }
 
@@ -293,6 +310,16 @@ static CGFloat const kAppVolumeViewInitialHeight = 20;
     #pragma unused (ctx, menuItem)
     
     self.image = app.icon;
+
+    // Remove the icon from the accessibility hierarchy.
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000  // MAC_OS_X_VERSION_10_10
+    if ([self.cell respondsToSelector:@selector(setAccessibilityElement:)]) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpartial-availability"
+        self.cell.accessibilityElement = NO;
+#pragma clang diagnostic pop
+    }
+#endif
 }
 
 @end

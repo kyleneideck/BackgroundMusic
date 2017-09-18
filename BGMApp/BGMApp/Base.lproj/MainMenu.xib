@@ -30,7 +30,7 @@
             <items>
                 <menuItem title="Auto-pause Music" tag="2" id="nHv-T8-1nb">
                     <modifierMask key="keyEquivalentModifierMask"/>
-                    <accessibility description="Toggle Auto-pause" help="Enable to automatically pause your selected music player when a different app starts playing audio." identifier="Auto-pause enabled"/>
+                    <accessibility help="Enable to automatically pause your selected music player when a different app starts playing audio." identifier="Auto-pause enabled"/>
                 </menuItem>
                 <menuItem isSeparatorItem="YES" id="ZGd-Pq-YeA"/>
                 <menuItem title="Volumes" tag="3" enabled="NO" id="8PP-wA-Pae">
@@ -111,7 +111,7 @@
                         <font key="font" metaFont="system"/>
                     </buttonCell>
                 </button>
-                <textField toolTip="Pan" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" allowsCharacterPickerTouchBarItem="NO" translatesAutoresizingMaskIntoConstraints="NO" id="9jc-9i-jw2">
+                <textField identifier="PanLeft" toolTip="Pan" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" allowsCharacterPickerTouchBarItem="NO" translatesAutoresizingMaskIntoConstraints="NO" id="9jc-9i-jw2">
                     <rect key="frame" x="162" y="-1" width="12" height="17"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="L" id="hgE-7A-bez">
@@ -119,9 +119,8 @@
                         <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                     </textFieldCell>
-                    <accessibility description="Pan left"/>
                 </textField>
-                <textField toolTip="Pan" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" allowsCharacterPickerTouchBarItem="NO" translatesAutoresizingMaskIntoConstraints="NO" id="1lZ-hX-6Kl">
+                <textField identifier="PanRight" toolTip="Pan" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" allowsCharacterPickerTouchBarItem="NO" translatesAutoresizingMaskIntoConstraints="NO" id="1lZ-hX-6Kl">
                     <rect key="frame" x="228" y="-1" width="12" height="17"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="R" id="lzr-NO-0Na">
@@ -129,7 +128,6 @@
                         <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                     </textFieldCell>
-                    <accessibility description="Pan right"/>
                 </textField>
             </subviews>
             <point key="canvasLocation" x="117.5" y="-117.5"/>
@@ -213,7 +211,7 @@
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <clipView key="contentView" ambiguous="YES" id="Cdb-RA-YK0">
                             <rect key="frame" x="1" y="1" width="565" height="243"/>
-                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                            <autoresizingMask key="autoresizingMask"/>
                             <subviews>
                                 <textView ambiguous="YES" editable="NO" importsGraphics="NO" richText="NO" id="LSG-PF-cl8">
                                     <rect key="frame" x="-6" y="0.0" width="576.5" height="243"/>
@@ -234,7 +232,7 @@
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
                         <scroller key="verticalScroller" verticalHuggingPriority="750" horizontal="NO" id="qCC-lY-zQ6">
-                            <rect key="frame" x="550" y="1" width="16" height="243"/>
+                            <rect key="frame" x="-15" y="1" width="16" height="0.0"/>
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
                     </scrollView>

@@ -64,9 +64,9 @@ const UInt32                   CHANNEL        = kMasterChannel;
 
         try {
             [self initSlider:slider];
+            [self setOutputVolumeLabel];
         } catch (const CAException& e) {
-            NSLog(@"BGMOutputVolumeMenuItem::initWithBGMMenu: Failed to init slider. (%d)",
-                  e.GetError());
+            NSLog(@"BGMOutputVolumeMenuItem::initWithBGMMenu: Exception: %d", e.GetError());
         }
     }
 
@@ -118,8 +118,6 @@ const UInt32                   CHANNEL        = kMasterChannel;
         CAPropertyAddress(kAudioDevicePropertyMute, SCOPE),
         dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0),
         updateSlider);
-
-    [self setOutputVolumeLabel];
 }
 
 // Sets the label to the name of the output device.
@@ -138,6 +136,16 @@ const UInt32                   CHANNEL        = kMasterChannel;
     } else {
         outputVolumeLabel.stringValue = (__bridge_transfer NSString*)device.CopyName();
     }
+
+    // Take the label out of the accessibility hierarchy, which also moves the slider up a level.
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000  // MAC_OS_X_VERSION_10_10
+    if ([outputVolumeLabel.cell respondsToSelector:@selector(setAccessibilityElement:)]) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpartial-availability"
+        outputVolumeLabel.cell.accessibilityElement = NO;
+#pragma clang diagnostic pop
+    }
+#endif
 }
 
 // Called when the user slides the slider.
