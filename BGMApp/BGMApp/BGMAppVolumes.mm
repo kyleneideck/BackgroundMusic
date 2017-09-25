@@ -35,24 +35,27 @@
 #import "CACFString.h"
 
 
-static float const kSlidersSnapWithin = 5;
-
-static CGFloat const kAppVolumeViewInitialHeight = 20;
+static float const     kSlidersSnapWithin          = 5;
+static CGFloat const   kAppVolumeViewInitialHeight = 20;
+static NSString* const kMoreAppsMenuTitle          = @"More Apps";
 
 @implementation BGMAppVolumes {
     NSMenu* bgmMenu;
+    NSMenu* moreAppsMenu;
     
     NSView* appVolumeView;
     CGFloat appVolumeViewFullHeight;
     
     BGMAudioDeviceManager* audioDevices;
 
+    // The number of menu items this class has added to bgmMenu. Doesn't include the More Apps menu.
     NSInteger numMenuItems;
 }
 
 - (id) initWithMenu:(NSMenu*)menu appVolumeView:(NSView*)view audioDevices:(BGMAudioDeviceManager*)devices {
     if ((self = [super init])) {
         bgmMenu = menu;
+        moreAppsMenu = [[NSMenu alloc] initWithTitle:kMoreAppsMenuTitle];
         appVolumeView = view;
         appVolumeViewFullHeight = appVolumeView.frame.size.height;
         audioDevices = devices;
@@ -60,7 +63,23 @@ static CGFloat const kAppVolumeViewInitialHeight = 20;
         
         // Create the menu items for controlling app volumes
         [self insertMenuItemsForApps:[[NSWorkspace sharedWorkspace] runningApplications]];
-        
+
+        // Add the More Apps menu to the main menu.
+        NSMenuItem* moreAppsMenuItem =
+            [[NSMenuItem alloc] initWithTitle:kMoreAppsMenuTitle action:nil keyEquivalent:@""];
+        moreAppsMenuItem.submenu = moreAppsMenu;
+
+        [bgmMenu insertItem:moreAppsMenuItem atIndex:([self lastMenuItemIndex] + 1)];
+        numMenuItems++;
+
+        // Put an empty menu item above the More Apps menu item to fix its top margin.
+        NSMenuItem* spacer = [[NSMenuItem alloc] initWithTitle:@"" action:nil keyEquivalent:@""];
+        spacer.view = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 0, 4)];
+        spacer.hidden = YES;  // Tells accessibility clients to ignore this menu item.
+
+        [bgmMenu insertItem:spacer atIndex:[self lastMenuItemIndex]];
+        numMenuItems++;
+
         // Register for notifications when the user opens or closes apps, so we can update the menu
         [[NSWorkspace sharedWorkspace] addObserver:self
                                         forKeyPath:@"runningApplications"
@@ -91,41 +110,63 @@ static CGFloat const kAppVolumeViewInitialHeight = 20;
     //       method is called in a KVO handler.
 
     // Get the app volumes currently set on the device
-    CACFArray appVolumesOnDevice([audioDevices bgmDevice].GetAppVolumes(), false);
+    CACFArray appVols([audioDevices bgmDevice].GetAppVolumes(), false);
 
     for (NSRunningApplication* app in apps) {
-        // Only show apps that appear in the dock (at first)
-        // TODO: Would it be better to only show apps that are registered as HAL clients?
-        if (app.activationPolicy != NSApplicationActivationPolicyRegular) continue;
-        
-        NSMenuItem* appVolItem = [self createBlankAppVolumeMenuItem];
-        
-        // Look through the menu item's subviews for the ones we want to set up
-        for (NSView* subview in appVolItem.view.subviews) {
-            if ([subview conformsToProtocol:@protocol(BGMAppVolumeMenuItemSubview)]) {
-                [(NSView<BGMAppVolumeMenuItemSubview>*)subview setUpWithApp:app context:self menuItem:appVolItem];
-            }
+        if ([self shouldBeIncludedInMenu:app]) {
+            [self insertMenuItemForApp:app appVolumesOnDevice:appVols];
         }
-        
-        // Store the NSRunningApplication object with the menu item so when the app closes we can find the item to remove it
-        appVolItem.representedObject = app;
-        
-        // Set the slider to the volume for this app if we got one from the driver
-        [self setVolumeOfMenuItem:appVolItem fromAppVolumes:appVolumesOnDevice];
+    }
+}
 
-        // NSMenuItem didn't implement NSAccessibility before OS X SDK 10.12.
+- (BOOL) shouldBeIncludedInMenu:(NSRunningApplication*)app {
+    // Ignore hidden apps and Background Music itself.
+    // TODO: Would it be better to only show apps that are registered as HAL clients?
+    BOOL isHidden = app.activationPolicy != NSApplicationActivationPolicyRegular &&
+                    app.activationPolicy != NSApplicationActivationPolicyAccessory;
+
+    NSString* bundleID = app.bundleIdentifier;
+    BOOL isBGMApp = bundleID && [@kBGMAppBundleID isEqualToString:BGMNN(bundleID)];
+
+    return !isHidden && !isBGMApp;
+}
+
+- (void) insertMenuItemForApp:(NSRunningApplication*)app
+           appVolumesOnDevice:(const CACFArray&)appVols {
+    NSMenuItem* appVolItem = [self createBlankAppVolumeMenuItem];
+
+    // Look through the menu item's subviews for the ones we want to set up
+    for (NSView* subview in appVolItem.view.subviews) {
+        if ([subview conformsToProtocol:@protocol(BGMAppVolumeMenuItemSubview)]) {
+            [(NSView<BGMAppVolumeMenuItemSubview>*)subview setUpWithApp:app
+                                                                context:self
+                                                               menuItem:appVolItem];
+        }
+    }
+
+    // Store the NSRunningApplication object with the menu item so when the app closes we can find the item to remove it
+    appVolItem.representedObject = app;
+
+    // Set the slider to the volume for this app if we got one from the driver
+    [self setVolumeOfMenuItem:appVolItem fromAppVolumes:appVols];
+
+    // NSMenuItem didn't implement NSAccessibility before OS X SDK 10.12.
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101200  // MAC_OS_X_VERSION_10_12
-        if ([appVolItem respondsToSelector:@selector(setAccessibilityTitle:)]) {
-            // TODO: This doesn't show up in Accessibility Inspector for me. Not sure why.
+    if ([appVolItem respondsToSelector:@selector(setAccessibilityTitle:)]) {
+        // TODO: This doesn't show up in Accessibility Inspector for me. Not sure why.
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wpartial-availability"
-            appVolItem.accessibilityTitle = [NSString stringWithFormat:@"%@", [app localizedName]];
+        appVolItem.accessibilityTitle = [NSString stringWithFormat:@"%@", [app localizedName]];
 #pragma clang diagnostic pop
-        }
+    }
 #endif
 
+    // Add the menu item to its menu.
+    if (app.activationPolicy == NSApplicationActivationPolicyRegular) {
         [bgmMenu insertItem:appVolItem atIndex:[self firstMenuItemIndex]];
         numMenuItems++;
+    } else if (app.activationPolicy == NSApplicationActivationPolicyAccessory) {
+        [moreAppsMenu insertItem:appVolItem atIndex:0];
     }
 }
 
@@ -149,17 +190,40 @@ static CGFloat const kAppVolumeViewInitialHeight = 20;
 
 - (void) removeMenuItemsForApps:(NSArray<NSRunningApplication*>*)apps {
     NSAssert([NSThread isMainThread], @"removeMenuItemsForApps is not thread safe");
-    
+
+    // Subtract two extra positions to skip the More Apps menu and the spacer menu item above it.
+    NSInteger lastAppVolumeMenuItemIndex = [self lastMenuItemIndex] - 2;
+
     // Check each app volume menu item, removing the items that control one of the given apps
     for (NSRunningApplication* appToBeRemoved in apps) {
-        for (NSInteger i = [self firstMenuItemIndex]; i <= [self lastMenuItemIndex]; i++) {
+        BOOL didRemoveItem = NO;
+
+        // Look through the main menu.
+        for (NSInteger i = [self firstMenuItemIndex]; i <= lastAppVolumeMenuItemIndex; i++) {
             NSMenuItem* item = [bgmMenu itemAtIndex:i];
             NSRunningApplication* itemApp = item.representedObject;
+            BGMAssert(itemApp, "!itemApp for %s", item.title.UTF8String);
 
             if ([itemApp isEqual:appToBeRemoved]) {
                 [bgmMenu removeItem:item];
                 numMenuItems--;
+
+                didRemoveItem = YES;
                 break;
+            }
+        }
+
+        // Look through the More Apps menu.
+        if (!didRemoveItem) {
+            for (NSInteger i = 0; i < [moreAppsMenu numberOfItems]; i++) {
+                NSMenuItem* item = [moreAppsMenu itemAtIndex:i];
+                NSRunningApplication* itemApp = item.representedObject;
+                BGMAssert(itemApp, "!itemApp for %s", item.title.UTF8String);
+
+                if ([itemApp isEqual:appToBeRemoved]) {
+                    [moreAppsMenu removeItem:item];
+                    break;
+                }
             }
         }
     }
