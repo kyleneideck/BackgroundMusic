@@ -440,8 +440,7 @@
                        "early with kBGMErrorCode_ReturningEarly.");
             err = kBGMErrorCode_ReturningEarly;
 
-            // TODO: The QOS_CLASS_USER_INTERACTIVE constant isn't available on OS X 10.9.
-            dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^{
+            dispatch_async(BGMGetDispatchQueue_PriorityUserInteractive(), ^{
                 @try {
                     [stateLock lock];
 

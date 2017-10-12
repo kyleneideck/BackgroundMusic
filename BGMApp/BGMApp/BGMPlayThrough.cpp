@@ -748,7 +748,7 @@ void    BGMPlayThrough::StopIfIdle()
                  "queuedAt=", queuedAt);
         
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, waitNsec),
-                       dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0),
+                       dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0),
                        ^{
                            // Check the BGMPlayThrough instance hasn't been destructed since it queued this block
                            if(mActive)
@@ -843,7 +843,7 @@ void    BGMPlayThrough::HandleBGMDeviceIsRunning(BGMPlayThrough* refCon)
     //
     // TODO: We should find a way to do this without dispatching because dispatching isn't actually
     //       real-time safe.
-    dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0), ^{
+    dispatch_async(BGMGetDispatchQueue_PriorityUserInteractive(), ^{
         if(refCon->mActive)
         {
             CAMutex::Locker stateLocker(refCon->mStateMutex);
@@ -883,7 +883,7 @@ void    BGMPlayThrough::HandleBGMDeviceIsRunningSomewhereOtherThanBGMApp(BGMPlay
     DebugMsg("BGMPlayThrough::HandleBGMDeviceIsRunningSomewhereOtherThanBGMApp: Got notification");
     
     // These notifications don't need to be handled quickly, so we can always dispatch.
-    dispatch_async(dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         // TODO: Handle expected exceptions (mostly CAExceptions from PublicUtility classes) in StopIfIdle.
         BGMLogUnexpectedExceptions("HandleBGMDeviceIsRunningSomewhereOtherThanBGMApp", [&refCon]() {
             if(refCon->mActive)

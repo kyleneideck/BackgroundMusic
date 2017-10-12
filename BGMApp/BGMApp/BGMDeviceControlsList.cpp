@@ -333,9 +333,12 @@ void    BGMDeviceControlsList::InitDeviceToggling()
 
                         // Changing the default device too quickly after enabling the Null Device
                         // seems to cause problems with some programs. Not sure why.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpartial-availability"
                         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kToggleDeviceInitialDelay),
                                        dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0),
                                        mDeviceToggleBlock);
+#pragma clang diagnostic pop
                     }
                     break;
 
@@ -384,9 +387,12 @@ void    BGMDeviceControlsList::ToggleDefaultDevice()
 
     mDeviceToggleBackBlock = CreateDeviceToggleBackBlock();
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpartial-availability"
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kToggleDeviceBackDelay),
                    dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0),
                    mDeviceToggleBackBlock);
+#pragma clang diagnostic pop
 }
 
 void    BGMDeviceControlsList::SetNullDeviceEnabled(bool inEnabled)
@@ -409,12 +415,12 @@ void    BGMDeviceControlsList::SetNullDeviceEnabled(bool inEnabled)
                                      (inEnabled ? kCFBooleanTrue : kCFBooleanFalse));
 }
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wpartial-availability"
-
 dispatch_block_t    BGMDeviceControlsList::CreateDeviceToggleBlock()
 {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpartial-availability"
     return dispatch_block_create((dispatch_block_flags_t)0, ^{
+#pragma clang diagnostic pop
         CAMutex::Locker locker(mMutex);
 
         if(mDeviceToggleState == ToggleState::SettingNullDeviceAsDefault)
@@ -429,7 +435,10 @@ dispatch_block_t    BGMDeviceControlsList::CreateDeviceToggleBlock()
 
 dispatch_block_t    BGMDeviceControlsList::CreateDeviceToggleBackBlock()
 {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpartial-availability"
     return dispatch_block_create((dispatch_block_flags_t)0, ^{
+#pragma clang diagnostic pop
         CAMutex::Locker locker(mMutex);
 
         if(mDeviceToggleState != ToggleState::SettingBGMDeviceAsDefault)
@@ -450,15 +459,21 @@ dispatch_block_t    BGMDeviceControlsList::CreateDeviceToggleBackBlock()
 
         mDisableNullDeviceBlock = CreateDisableNullDeviceBlock();
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpartial-availability"
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kDisableNullDeviceDelay),
                        dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0),
                        mDisableNullDeviceBlock);
+#pragma clang diagnostic pop
     });
 }
 
 dispatch_block_t    BGMDeviceControlsList::CreateDisableNullDeviceBlock()
 {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpartial-availability"
     return dispatch_block_create((dispatch_block_flags_t)0, ^{
+#pragma clang diagnostic pop
         CAMutex::Locker locker(mMutex);
 
         if(mDeviceToggleState != ToggleState::DisablingNullDevice)
@@ -486,6 +501,8 @@ void    BGMDeviceControlsList::DestroyBlock(dispatch_block_t __nullable & block)
         return;
     }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpartial-availability"
     dispatch_block_t& blockNN = (dispatch_block_t&)block;
     if(!dispatch_block_testcancel(blockNN))
     {
@@ -502,9 +519,8 @@ void    BGMDeviceControlsList::DestroyBlock(dispatch_block_t __nullable & block)
         Block_release(block);
         block = nullptr;
     }
+#pragma clang diagnostic pop
 }
-
-#pragma clang diagnostic pop /* -Wpartial-availability */
 
 #pragma clang assume_nonnull end
 

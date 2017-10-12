@@ -25,9 +25,10 @@
 
 // PublicUtility Includes
 #include "CADebugMacros.h"
-#include "CAException.h"
 
 #if defined(__cplusplus)
+
+#include "CAException.h"
 
 // STL Includes
 #include <functional>
@@ -36,6 +37,7 @@
 
 // System Includes
 #include <mach/error.h>
+#include <dispatch/dispatch.h>
 
 #pragma mark Macros
 
@@ -126,6 +128,10 @@
 
 
 #pragma clang assume_nonnull begin
+
+#pragma mark C Utility Functions
+
+dispatch_queue_t BGMGetDispatchQueue_PriorityUserInteractive();
 
 #if defined(__cplusplus)
 

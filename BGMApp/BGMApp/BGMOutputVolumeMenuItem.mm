@@ -110,13 +110,13 @@ const UInt32                   CHANNEL        = kMasterChannel;
     // somewhere else.
     audioDevices.bgmDevice.AddPropertyListenerBlock(
         CAPropertyAddress(kAudioDevicePropertyVolumeScalar, SCOPE),
-        dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0),
+        dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0),
         updateSlider);
 
     // Register the same listener for mute/unmute.
     audioDevices.bgmDevice.AddPropertyListenerBlock(
         CAPropertyAddress(kAudioDevicePropertyMute, SCOPE),
-        dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0),
+        dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0),
         updateSlider);
 }
 

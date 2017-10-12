@@ -17,7 +17,7 @@
 //  BGMOutputDevicePrefs.mm
 //  BGMApp
 //
-//  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016, 2017 Kyle Neideck
 //
 
 // Self Include
@@ -216,10 +216,10 @@ static NSInteger const kOutputDeviceMenuItemTag = 2;
             menuItem.toolTip ?
                 [NSString stringWithFormat:@"%@ (%@)", menuItem.title, menuItem.toolTip] :
                 menuItem.title;
-        
-        // Dispatched because it usually blocks. (Note that we're using QOS_CLASS_USER_INITIATED
-        // rather than QOS_CLASS_USER_INTERACTIVE.)
-        dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+
+        // Dispatched because it usually blocks. (Note that we're using
+        // DISPATCH_QUEUE_PRIORITY_HIGH, which is the second highest priority.)
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
             [self changeToOutputDevice:newDeviceID
                          newDataSource:newDataSourceID
                             deviceName:deviceName];

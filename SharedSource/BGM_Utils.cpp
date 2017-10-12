@@ -17,7 +17,7 @@
 //  BGM_Utils.cpp
 //  SharedSource
 //
-//  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016, 2017 Kyle Neideck
 //
 
 // Self Include
@@ -29,9 +29,34 @@
 // System Includes
 #include <MacTypes.h>
 #include <mach/mach_error.h>
+#include <CoreFoundation/CoreFoundation.h>  // For kCFCoreFoundationVersionNumber
 
 
 #pragma clang assume_nonnull begin
+
+dispatch_queue_t BGMGetDispatchQueue_PriorityUserInteractive()
+{
+    long queueClass;
+
+    // Compile-time check that QOS_CLASS_USER_INTERACTIVE can be used. It was added in 10.10.
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000  // MAC_OS_X_VERSION_10_10
+    // Runtime check for the same.
+    if(floor(kCFCoreFoundationVersionNumber) > kCFCoreFoundationVersionNumber10_9)
+    {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpartial-availability"
+        queueClass = QOS_CLASS_USER_INTERACTIVE;
+#pragma clang diagnostic pop
+    }
+    else
+#endif
+    {
+        // Fallback for older versions.
+        queueClass = DISPATCH_QUEUE_PRIORITY_HIGH;
+    }
+
+    return dispatch_get_global_queue(queueClass, 0);
+}
 
 namespace BGM_Utils
 {
