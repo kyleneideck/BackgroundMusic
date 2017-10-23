@@ -37,7 +37,11 @@
 
 - (BOOL) application:(NSApplication*)sender delegateHandlesKey:(NSString*)key {
     #pragma unused (sender)
-    DebugMsg("BGMAppDelegate:application:delegateHandlesKey: Key queried: '%s'", [key UTF8String]);
+
+    if (![key isEqual:@"_keyWindow"]) {
+        DebugMsg("BGMAppDelegate:application:delegateHandlesKey: Key queried: '%s'",
+                 [key UTF8String]);
+    }
 
     return [@[@"selectedOutputDevice", @"outputDevices"] containsObject:key];
 }

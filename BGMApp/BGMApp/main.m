@@ -20,10 +20,12 @@
 //  Copyright © 2016 Kyle Neideck
 //
 
+// System Includes
 #import <Cocoa/Cocoa.h>
 
 
 int main(int argc, const char * argv[]) {
+    // Start BGMApp.
     return NSApplicationMain(argc, argv);
 }
 

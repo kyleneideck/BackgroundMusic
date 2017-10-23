@@ -17,7 +17,7 @@
 //  BGMXPCListener.mm
 //  BGMApp
 //
-//  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016, 2017 Kyle Neideck
 //
 
 // Self Include
@@ -54,6 +54,9 @@
         
         // Set up the connection to BGMXPCHelper.
         [self initHelperConnectionWithErrorHandler:errorHandler];
+
+        // Pass the connection to the audio device manager so it can tell BGMXPCHelper the output device's ID.
+        [audioDevices setBGMXPCHelperConnection:helperConnection];
     }
     
     return self;
@@ -144,6 +147,9 @@
             retryAfterTimeout(nil);
         };
     }];
+
+    // Pass the new connection to the audio device manager.
+    [audioDevices setBGMXPCHelperConnection:helperConnection];
 }
 
 - (void) dealloc {

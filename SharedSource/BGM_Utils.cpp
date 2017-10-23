@@ -118,13 +118,17 @@ namespace BGM_Utils
     void LogException(const char* __nullable fileName,
                       int lineNumber,
                       const char* callerName,
-                      CAException e)
+                      const CAException& e)
     {
-        LogError("%s:%d:%s: CAException, error code: %d.",
+        OSStatus err = e.GetError();
+        const char err4CC[5] = CA4CCToCString(err);
+
+        LogError("%s:%d:%s: CAException, code: '%s' (%d).",
                  (fileName ? fileName : ""),
                  lineNumber,
                  callerName,
-                 e.GetError());
+                 err4CC,
+                 err);
     }
     
     void LogUnexpectedException(const char* __nullable fileName,
@@ -173,17 +177,21 @@ namespace BGM_Utils
         {
             function();
         }
-        catch(CAException e)
+        catch(const CAException& e)
         {
             // TODO: Can/should we log a stack trace somewhere? (If so, also in the following catch
             //       block.)
             // TODO: Log a warning instead of an error for expected exceptions?
-            LogError("%s:%d:%s: %sCAException, error code: %d. %s%s %s %s ",
+            OSStatus err = e.GetError();
+            const char err4CC[5] = CA4CCToCString(err);
+
+            LogError("%s:%d:%s: %sCAException, code: '%s' (%d). %s%s %s %s ",
                      (fileName ? fileName : ""),
                      lineNumber,
                      callerName,
                      (expected ? "" : "Unexpected "),
-                     e.GetError(),
+                     err4CC,
+                     err,
                      (message ? message : ""),
                      (message ? "." : ""),
                      (expected ? "If you think this might be a bug:"

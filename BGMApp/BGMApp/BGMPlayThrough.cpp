@@ -511,7 +511,7 @@ OSStatus    BGMPlayThrough::WaitForOutputDeviceToStart() noexcept
             return kAudioHardwareBadDeviceError;
         }
     }
-    catch(CAException e)
+    catch(const CAException& e)
     {
         BGMLogException(e);
         return e.GetError();

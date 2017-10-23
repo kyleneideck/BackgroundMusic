@@ -29,6 +29,7 @@
 #include "BGMDeviceControlSync.h"
 #include "BGMPlayThrough.h"
 #include "BGMAudioDevice.h"
+#include "BGMXPCProtocols.h"
 
 // PublicUtility Includes
 #include "CAHALAudioSystemObject.h"
@@ -43,6 +44,9 @@
     BGMPlayThrough playThrough;
     BGMPlayThrough playThrough_UISounds;
 
+    // A connection to BGMXPCHelper so we can send it the ID of the output device.
+    NSXPCConnection* __nullable bgmXPCHelperConnection;
+
     NSRecursiveLock* stateLock;
 }
 
@@ -51,6 +55,7 @@
 - (instancetype) initWithError:(NSError**)error {
     if ((self = [super init])) {
         stateLock = [NSRecursiveLock new];
+        bgmXPCHelperConnection = nil;
 
         try {
             bgmDevice = BGMBackgroundMusicDevice();
@@ -196,24 +201,24 @@
 
 - (NSError* __nullable) unsetBGMDeviceAsOSDefault {
     // Copy the devices so we can call the HAL without holding stateLock. See startPlayThroughSync.
-    BGMBackgroundMusicDevice bgmDev;
-    AudioDeviceID outputDeviceID;
-    
-    @try {
-        [stateLock lock];
-        bgmDev = bgmDevice;
-        outputDeviceID = outputDevice.GetObjectID();
-    } @finally {
-        [stateLock unlock];
-    }
-
-    if (outputDeviceID == kAudioObjectUnknown) {
-        return [NSError errorWithDomain:@kBGMAppBundleID
-                                   code:kBGMErrorCode_OutputDeviceNotFound
-                               userInfo:nil];
-    }
-
     try {
+        BGMBackgroundMusicDevice bgmDev;
+        AudioDeviceID outputDeviceID;
+        
+        @try {
+            [stateLock lock];
+            bgmDev = bgmDevice;
+            outputDeviceID = outputDevice.GetObjectID();
+        } @finally {
+            [stateLock unlock];
+        }
+
+        if (outputDeviceID == kAudioObjectUnknown) {
+            return [NSError errorWithDomain:@kBGMAppBundleID
+                                       code:kBGMErrorCode_OutputDeviceNotFound
+                                   userInfo:nil];
+        }
+
         bgmDev.UnsetAsOSDefault(outputDeviceID);
     } catch (const CAException& e) {
         BGMLogExceptionIn("BGMAudioDeviceManager::unsetBGMDeviceAsOSDefault", e);
@@ -255,7 +260,7 @@
             isOutputDataSource =
                     outputDevice.HasDataSourceControl(scope, channel) &&
                             (dataSourceID == outputDevice.GetCurrentDataSourceID(scope, channel));
-        } catch (CAException e) {
+        } catch (const CAException& e) {
             BGMLogException(e);
         }
     } @finally {
@@ -353,6 +358,9 @@
                                        errorCode:kAudioHardwareUnspecifiedError
                                         revertTo:(revertOnFailure ? &currentDeviceID : nullptr)];
         }
+
+        // Tell BGMXPCHelper about the new output device.
+        [self sendOutputDeviceToBGMXPCHelper];
     } @finally {
         [stateLock unlock];
     }
@@ -361,7 +369,7 @@
 }
 
 - (void) setDataSource:(UInt32)dataSourceID device:(BGMAudioDevice)device {
-    BGMLogAndSwallowExceptions("BGMAudioDeviceManager::setDataSource", [&]() {
+    BGMLogAndSwallowExceptions("BGMAudioDeviceManager::setDataSource", [&] {
         AudioObjectPropertyScope scope = kAudioObjectPropertyScopeOutput;
         UInt32 channel = 0;
 
@@ -466,6 +474,31 @@
     }
     
     return err;
+}
+
+#pragma mark BGMXPCHelper Communication
+
+- (void) setBGMXPCHelperConnection:(NSXPCConnection* __nullable)connection {
+    bgmXPCHelperConnection = connection;
+
+    // Tell BGMXPCHelper which device is the output device, since it might not be up-to-date.
+    [self sendOutputDeviceToBGMXPCHelper];
+}
+
+- (void) sendOutputDeviceToBGMXPCHelper {
+    NSXPCConnection* __nullable connection = bgmXPCHelperConnection;
+
+    if (connection)
+    {
+        id<BGMXPCHelperXPCProtocol> helperProxy =
+                [connection remoteObjectProxyWithErrorHandler:^(NSError* error) {
+                    // We could wait a bit and try again, but it isn't that important.
+                    NSLog(@"BGMAudioDeviceManager::sendOutputDeviceToBGMXPCHelper: Connection"
+                           "error: %@", error);
+                }];
+
+        [helperProxy setOutputDeviceToMakeDefaultOnAbnormalTermination:outputDevice.GetObjectID()];
+    }
 }
 
 @end

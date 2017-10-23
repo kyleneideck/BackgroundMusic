@@ -23,6 +23,12 @@
 #ifndef SharedSource__BGM_Types
 #define SharedSource__BGM_Types
 
+// STL Includes
+#if defined(__cplusplus)
+#include <stdexcept>
+#endif
+
+// System Includes
 #include <CoreAudio/AudioServerPlugIn.h>
 
 
@@ -222,12 +228,30 @@ enum {
 
 #if defined(__cplusplus)
 
-class BGM_InvalidClientException { };
-class BGM_InvalidClientPIDException { };
-class BGM_InvalidClientRelativeVolumeException { };
-class BGM_InvalidClientPanPositionException { };
-class BGM_DeviceNotSetException { };
-class BGM_RuntimeException { };
+class BGM_InvalidClientException : public std::runtime_error {
+public:
+    BGM_InvalidClientException() : std::runtime_error("InvalidClient") { }
+};
+
+class BGM_InvalidClientPIDException : public std::runtime_error {
+public:
+    BGM_InvalidClientPIDException() : std::runtime_error("InvalidClientPID") { }
+};
+
+class BGM_InvalidClientRelativeVolumeException : public std::runtime_error {
+public:
+    BGM_InvalidClientRelativeVolumeException() : std::runtime_error("InvalidClientRelativeVolume") { }
+};
+
+class BGM_InvalidClientPanPositionException : public std::runtime_error {
+public:
+    BGM_InvalidClientPanPositionException() : std::runtime_error("InvalidClientPanPosition") { }
+};
+
+class BGM_DeviceNotSetException : public std::runtime_error {
+public:
+    BGM_DeviceNotSetException() : std::runtime_error("DeviceNotSet") { }
+};
 
 #endif
 

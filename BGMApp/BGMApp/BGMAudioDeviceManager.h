@@ -91,6 +91,10 @@ const int kBGMErrorCode_ReturningEarly       = 3;
 // code received from the HAL.
 - (OSStatus) startPlayThroughSync:(BOOL)forUISoundsDevice;
 
+// When the output device is changed, BGMAudioDeviceManager will send the ID of the new output
+// device to BGMXPCHelper through this connection.
+- (void) setBGMXPCHelperConnection:(NSXPCConnection* __nullable)connection;
+
 @end
 
 #pragma clang assume_nonnull end

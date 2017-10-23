@@ -14,36 +14,40 @@
 // along with Background Music. If not, see <http://www.gnu.org/licenses/>.
 
 //
-//  BGMXPCHelperService.m
+//  BGMXPCHelperService.mm
 //  BGMXPCHelper
 //
-//  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016, 2017 Kyle Neideck
 //
 
 // Self Include
 #import "BGMXPCHelperService.h"
 
 // Local Includes
+#import "BGM_Utils.h"
 #import "BGMXPCListenerDelegate.h"
+#import "BGMBackgroundMusicDevice.h"
 
 // PublicUtility Includes
-#undef CoreAudio_ThreadStampMessages
-#define CoreAudio_ThreadStampMessages 0  // Requires C++
-#include "CADebugMacros.h"
+#import "CADebugMacros.h"
 
 
 #pragma clang assume_nonnull begin
+
+static const int DELAY_BEFORE_CLEANING_UP_FOR_BGMAPP_SECS = 1;
 
 static NSXPCListenerEndpoint* __nullable sBGMAppEndpoint = nil;
 static NSXPCConnection* __nullable sBGMAppConnection = nil;
 
 @implementation BGMXPCHelperService {
     NSXPCConnection* connection;
+    AudioObjectID outputDeviceToMakeDefaultOnAbnormalTermination;
 }
 
 - (id) initWithConnection:_connection {
     if ((self = [super init])) {
         connection = _connection;
+        outputDeviceToMakeDefaultOnAbnormalTermination = kAudioObjectUnknown;
     }
     
     return self;
@@ -113,6 +117,45 @@ static NSXPCConnection* __nullable sBGMAppConnection = nil;
     }
 }
 
+// Called after the connection from BGMApp is invalidated. (If it's only been interrupted, launchd
+// might restore it, so we wait for it to be invalidated.)
+- (void) cleanUpForBGMApp {
+    // Wait a bit to see if BGMApp reconnects. Then, if it doesn't, check to see if BGMDevice has
+    // been left as the default output device. That would probably mean BGMApp crashed or was force
+    // quit or something like that, so we try to restore the user's output device from BGMXPCHelper.
+    int64_t delay = DELAY_BEFORE_CLEANING_UP_FOR_BGMAPP_SECS * NSEC_PER_SEC;
+
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, delay),
+                   dispatch_get_main_queue(),
+                   ^{
+                       [self unsetBGMDeviceAsDefault];
+                   });
+}
+
+- (void) unsetBGMDeviceAsDefault {
+    // Check that BGMApp hasn't reconnected.
+    if (sBGMAppConnection) {
+        DebugMsg("BGMXPCHelperService::unsetBGMDeviceAsDefault: BGMApp connected. Doing nothing.");
+        return;
+    }
+
+    AudioObjectID outputDevice = outputDeviceToMakeDefaultOnAbnormalTermination;
+
+    if (outputDevice == kAudioObjectUnknown) {
+        // We could set the default device arbitrarily, but it's probably not worth the effort.
+        DebugMsg("BGMXPCHelperService::unsetBGMDeviceAsDefault: No device to set. Doing nothing.");
+        return;
+    }
+
+    // If BGMDevice has been left as the default device, change it to the real output device.
+    BGMLogAndSwallowExceptions("BGMXPCHelperService::unsetBGMDeviceAsDefault", ([&] {
+        NSLog(@"BGMXPCHelperService::unsetBGMDeviceAsDefault: Changing default device to %u",
+              outputDevice);
+
+        BGMBackgroundMusicDevice().UnsetAsOSDefault(outputDevice);
+    }));
+}
+
 #pragma mark Exported Methods
 
 - (void) registerAsBGMAppWithListenerEndpoint:(NSXPCListenerEndpoint*)endpoint reply:(void (^)(void))reply {
@@ -128,13 +171,18 @@ static NSXPCConnection* __nullable sBGMAppConnection = nil;
         [sBGMAppConnection setRemoteObjectInterface:[NSXPCInterface interfaceWithProtocol:@protocol(BGMAppXPCProtocol)]];
         
         // Set the stored connection back to nil when BGMApp closes, dies or invalidates the connection.
-        void(^cleanUp)(void) = ^{
+        sBGMAppConnection.interruptionHandler = ^{
             @synchronized([self class]) {
                 sBGMAppConnection = nil;
             }
         };
-        sBGMAppConnection.interruptionHandler = cleanUp;
-        sBGMAppConnection.invalidationHandler = cleanUp;
+
+        sBGMAppConnection.invalidationHandler = ^{
+            @synchronized([self class]) {
+                sBGMAppConnection = nil;
+                [self cleanUpForBGMApp];
+            }
+        };
     }
     
     reply();
@@ -193,6 +241,12 @@ static NSXPCConnection* __nullable sBGMAppConnection = nil;
     DebugMsg("BGMXPCHelperService::startBGMAppPlayThroughSyncWithReply: Reply to BGMDriver: %s",
              [[replyToBGMDriver localizedDescription] UTF8String]);
     reply(replyToBGMDriver);
+}
+
+- (void) setOutputDeviceToMakeDefaultOnAbnormalTermination:(AudioObjectID)deviceID {
+    outputDeviceToMakeDefaultOnAbnormalTermination = deviceID;
+    DebugMsg("BGMXPCHelperService::setOutputDeviceToMakeDefaultOnAbnormalTermination: ID set to %u",
+             deviceID);
 }
 
 #pragma mark Debug Utils

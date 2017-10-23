@@ -41,6 +41,9 @@
 #include "CACFString.h"
 #include "CADebugMacros.h"
 
+// STL Includes
+#include <stdexcept>
+
 // System Includes
 #include <mach/mach_time.h>
 #include <CoreAudio/AudioHardwareBase.h>
@@ -261,7 +264,7 @@ UInt32	BGM_Device::GetPropertyDataSize(AudioObjectID inObjectID, pid_t inClientP
 
 void	BGM_Device::GetPropertyData(AudioObjectID inObjectID, pid_t inClientPID, const AudioObjectPropertyAddress& inAddress, UInt32 inQualifierDataSize, const void* inQualifierData, UInt32 inDataSize, UInt32& outDataSize, void* outData) const
 {
-    ThrowIfNULL(outData, BGM_RuntimeException(), "BGM_Device::GetPropertyData: !outData");
+    ThrowIfNULL(outData, std::runtime_error("!outData"), "BGM_Device::GetPropertyData: !outData");
     
 	if(inObjectID == mObjectID)
 	{
@@ -275,7 +278,7 @@ void	BGM_Device::GetPropertyData(AudioObjectID inObjectID, pid_t inClientPID, co
 
 void	BGM_Device::SetPropertyData(AudioObjectID inObjectID, pid_t inClientPID, const AudioObjectPropertyAddress& inAddress, UInt32 inQualifierDataSize, const void* inQualifierData, UInt32 inDataSize, const void* inData)
 {
-    ThrowIfNULL(inData, BGM_RuntimeException(), "BGM_Device::SetPropertyData: no data");
+    ThrowIfNULL(inData, std::runtime_error("no data"), "BGM_Device::SetPropertyData: no data");
     
 	if(inObjectID == mObjectID)
 	{

@@ -17,7 +17,7 @@
 //  BGMXPCProtocols.h
 //  SharedSource
 //
-//  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016, 2017 Kyle Neideck
 //
 
 // Local Includes
@@ -46,6 +46,14 @@ static NSString* kBGMXPCHelperMachServiceName = @kBGMXPCHelperBundleID;
 // If BGMApp can be reached, the error it returns will be passed the reply block. Otherwise, the reply block will be passed an error with
 // one of the kBGMXPC_* error codes. It may have an underlying error using one of the NSXPCConnection* error codes from FoundationErrors.h.
 - (void) startBGMAppPlayThroughSyncWithReply:(void (^)(NSError*))reply forUISoundsDevice:(BOOL)isUI;
+
+// BGMXPCHelper will set the system's default output device to deviceID if it loses its connection
+// to BGMApp and BGMApp has left BGMDevice as the default device. It waits for a short time first to
+// give BGMApp a chance to fix the connection.
+//
+// This is so BGMDevice isn't left as the default device if BGMApp crashes or otherwise terminates
+// abnormally. If audio is played to BGMDevice and BGMApp isn't running, the user won't hear it.
+- (void) setOutputDeviceToMakeDefaultOnAbnormalTermination:(AudioObjectID)deviceID;
     
 @end
 

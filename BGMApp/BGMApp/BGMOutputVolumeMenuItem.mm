@@ -24,6 +24,7 @@
 #import "BGMOutputVolumeMenuItem.h"
 
 // Local Includes
+#import "BGM_Utils.h"
 #import "BGMAudioDevice.h"
 
 // PublicUtility Includes
@@ -74,12 +75,16 @@ const UInt32                   CHANNEL        = kMasterChannel;
 }
 
 - (void) initSlider:(NSSlider*)slider {
+    BGMAssert([NSThread isMainThread],
+              "initSlider must be called from the main thread because it calls UI functions.");
+
     slider.target = self;
     slider.action = @selector(sliderChanged:);
 
     BGMAudioDevice bgmDevice = [audioDevices bgmDevice];
 
-    // This block updates the value of the output volume slider.
+    // This block updates the value of the output volume slider. Note that it can only run on the
+    // main thread/queue because it calls UI functions
     AudioObjectPropertyListenerBlock updateSlider =
         ^(UInt32 inNumberAddresses, const AudioObjectPropertyAddress* inAddresses) {
             // The docs for AudioObjectPropertyListenerBlock say inAddresses will always contain
@@ -110,13 +115,13 @@ const UInt32                   CHANNEL        = kMasterChannel;
     // somewhere else.
     audioDevices.bgmDevice.AddPropertyListenerBlock(
         CAPropertyAddress(kAudioDevicePropertyVolumeScalar, SCOPE),
-        dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0),
+        dispatch_get_main_queue(),
         updateSlider);
 
     // Register the same listener for mute/unmute.
     audioDevices.bgmDevice.AddPropertyListenerBlock(
         CAPropertyAddress(kAudioDevicePropertyMute, SCOPE),
-        dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0),
+        dispatch_get_main_queue(),
         updateSlider);
 }
 

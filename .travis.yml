@@ -57,7 +57,10 @@ script:
   - ls -la "/usr/local/libexec/BGMXPCHelper.xpc" || ls -la "/Library/Application Support/Background Music/BGMXPCHelper.xpc"
   - ls -la "/Library/LaunchDaemons/com.bearisdriving.BGM.XPCHelper.plist"
 # Close BGMApp (which the install script opened).
-  - osascript -e 'tell application "Background Music" to quit'
+#
+# The killall fallback command is necessary because the AppleScript gets "user canceled" on Travis'
+# Xcode 9 images for some reason.
+  - osascript -e 'tell application "Background Music" to quit' || killall "Background Music"
 # Skip the UI tests until Travis has support for them.
   - BGMApp/BGMAppTests/UITests/travis-skip.py
 # Run the tests.

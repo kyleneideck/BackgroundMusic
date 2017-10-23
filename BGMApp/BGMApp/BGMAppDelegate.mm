@@ -33,6 +33,7 @@
 #import "BGMPreferencesMenu.h"
 #import "BGMXPCListener.h"
 #import "BGMOutputVolumeMenuItem.h"
+#import "BGMTermination.h"
 #import "SystemPreferences.h"
 
 // PublicUtility Includes
@@ -138,29 +139,14 @@ static float const kStatusBarIconPadding = 0.25;
           NSBundle.mainBundle.infoDictionary[@"CFBundleShortVersionString"],
           NSBundle.mainBundle.infoDictionary[@"CFBundleVersion"]);
 
+    // Set up audioDevices, which coordinates BGMDevice and the output device. It manages
+    // playthrough, volume/mute controls, etc.
+    [self initAudioDeviceManager];
+
+    // Handle some of the unusual reasons BGMApp might have to exit, mostly crashes.
+    BGMTermination::SetUpTerminationCleanUp(audioDevices);
+
     // Set up the rest of the UI and other external interfaces.
-
-    // audioDevices coordinates BGMDevice and the output device. It manages playthrough, volume/mute controls, etc.
-    {
-        NSError* error;
-
-        audioDevices = [[BGMAudioDeviceManager alloc] initWithError:&error];
-
-        if (audioDevices == nil) {
-            [self showDeviceNotFoundErrorMessageAndExit:error.code];
-            return;
-        }
-    }
-
-    {
-        NSError* error = [audioDevices setBGMDeviceAsOSDefault];
-
-        if (error) {
-            [self showSetDeviceAsDefaultError:error
-                                      message:@"Could not set the Background Music device as your default audio device."
-                              informativeText:@"You might be able to set it yourself."];
-        }
-    }
 
     BGMUserDefaults* userDefaults = [self createUserDefaults];
 
@@ -214,6 +200,26 @@ static float const kStatusBarIconPadding = 0.25;
     BOOL persistentDefaults = [NSProcessInfo.processInfo.arguments indexOfObject:@"--no-persistent-data"] == NSNotFound;
     NSUserDefaults* wrappedDefaults = persistentDefaults ? [NSUserDefaults standardUserDefaults] : nil;
     return [[BGMUserDefaults alloc] initWithDefaults:wrappedDefaults];
+}
+
+- (void) initAudioDeviceManager {
+    NSError* error;
+
+    audioDevices = [[BGMAudioDeviceManager alloc] initWithError:&error];
+
+    if (audioDevices == nil) {
+        [self showDeviceNotFoundErrorMessageAndExit:error.code];
+        return;
+    }
+
+    error = [audioDevices setBGMDeviceAsOSDefault];
+
+    if (error) {
+        [self showSetDeviceAsDefaultError:error
+                                  message:@"Could not set the Background Music device as your"
+                                           "default audio device."
+                          informativeText:@"You might be able to set it yourself."];
+    }
 }
 
 - (void) applicationWillTerminate:(NSNotification*)aNotification {

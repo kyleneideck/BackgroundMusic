@@ -32,6 +32,9 @@
 // PublicUtility Includes
 #include "CAException.h"
 
+// STL Includes
+#include <stdexcept>
+
 
 @interface BGM_DeviceTests : XCTestCase
 
@@ -98,12 +101,12 @@
     XCTAssertEqualObjects(getBundleID(), @"");
     
     // Arguments should be null-checked.
-    BGMShouldThrow<BGM_RuntimeException>(self, [&](){
+    BGMShouldThrow<std::runtime_error>(self, [&](){
         UInt32 outDataSize;
         device.GetPropertyData(kObjectID_Device, 0, kBGMMusicPlayerBundleIDAddress, 0, NULL, sizeof(CFStringRef),
                                outDataSize, /* outData = */ reinterpret_cast<void* __nonnull>(NULL));
     });
-    BGMShouldThrow<BGM_RuntimeException>(self, [&](){
+    BGMShouldThrow<std::runtime_error>(self, [&](){
         setBundleID(NULL);
     });
     

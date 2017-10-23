@@ -17,7 +17,7 @@
 //  BGM_Utils.h
 //  SharedSource
 //
-//  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016, 2017 Kyle Neideck
 //
 
 #ifndef SharedSource__BGM_Utils
@@ -177,7 +177,7 @@ namespace BGM_Utils
     void     LogException(const char* __nullable fileName,
                           int lineNumber,
                           const char* callerName,
-                          CAException e);
+                          const CAException& e);
     
     void     LogUnexpectedException(const char* __nullable fileName,
                                     int lineNumber,
