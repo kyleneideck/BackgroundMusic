@@ -26,7 +26,7 @@
 #if defined(__cplusplus)
 
 // Local Includes
-#include "BGMBackgroundMusicDevice.h"
+#import "BGMBackgroundMusicDevice.h"
 
 // PublicUtility Includes
 #import "CAHALAudioDevice.h"
@@ -40,9 +40,9 @@
 
 #pragma clang assume_nonnull begin
 
-const int kBGMErrorCode_BGMDeviceNotFound    = 1;
-const int kBGMErrorCode_OutputDeviceNotFound = 2;
-const int kBGMErrorCode_ReturningEarly       = 3;
+static const int kBGMErrorCode_BGMDeviceNotFound    = 1;
+static const int kBGMErrorCode_OutputDeviceNotFound = 2;
+static const int kBGMErrorCode_ReturningEarly       = 3;
 
 @interface BGMAudioDeviceManager : NSObject
 
@@ -61,6 +61,13 @@ const int kBGMErrorCode_ReturningEarly       = 3;
 // default output device.
 - (CAHALAudioDevice) outputDevice;
 #endif
+
+- (void)  setVolume:(SInt32)volume
+forAppWithProcessID:(pid_t)processID
+           bundleID:(NSString* __nullable)bundleID;
+- (void) setPanPosition:(SInt32)pan
+    forAppWithProcessID:(pid_t)processID
+               bundleID:(NSString* __nullable)bundleID;
 
 - (BOOL) isOutputDevice:(AudioObjectID)deviceID;
 - (BOOL) isOutputDataSource:(UInt32)dataSourceID;

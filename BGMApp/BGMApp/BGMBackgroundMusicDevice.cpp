@@ -149,7 +149,7 @@ void BGMBackgroundMusicDevice::SetAppVolume(SInt32 inVolume,
 
 void BGMBackgroundMusicDevice::SetAppPanPosition(SInt32 inPanPosition,
                                                  pid_t inAppProcessID,
-                                                 CFStringRef inAppBundleID)
+                                                 CFStringRef __nullable inAppBundleID)
 {
     BGMAssert((kAppPanLeftRawValue <= inPanPosition) && (inPanPosition <= kAppPanRightRawValue),
               "BGMBackgroundMusicDevice::SetAppPanPosition: Pan position out of bounds");
@@ -167,7 +167,7 @@ void BGMBackgroundMusicDevice::SetAppPanPosition(SInt32 inPanPosition,
 void BGMBackgroundMusicDevice::SendAppVolumeOrPanToBGMDevice(SInt32 inNewValue,
                                                              CFStringRef inVolumeTypeKey,
                                                              pid_t inAppProcessID,
-                                                             CFStringRef inAppBundleID)
+                                                             CFStringRef __nullable inAppBundleID)
 {
     CACFArray appVolumeChanges(true);
 

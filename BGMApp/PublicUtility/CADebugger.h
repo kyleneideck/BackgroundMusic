@@ -61,9 +61,18 @@
 //	CADebugger
 //=============================================================================
 
+// BGM edit: Added extern "C" so CADebugger (and headers that include it) can be used in Obj-C.
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #if	TARGET_API_MAC_OSX
 	extern bool CAIsDebuggerAttached(void);
 #endif
-extern void	CADebuggerStop(void);
+extern void    CADebuggerStop(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

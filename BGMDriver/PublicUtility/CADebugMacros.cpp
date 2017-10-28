@@ -68,7 +68,7 @@ void	LogError(const char *fmt, ...)
 	va_list args;
     va_start(args, fmt);
     // BGM edit: vprintf leaves args in an undefined state, which can cause a crash in
-    //           vsyslog. Also added CADebuggerStop(). Original code commented out below.
+    //           vsyslog. Also added __ASSERT_STOP. Original code commented out below.
 //#if DEBUG
 //	vprintf(fmt, args);
 //#endif
@@ -83,7 +83,7 @@ void	LogError(const char *fmt, ...)
     vsyslog(LOG_ERR, fmt, args);
 #endif
 #if DEBUG
-    CADebuggerStop();
+    __ASSERT_STOP;
 #endif
     // BGM edit end
 	va_end(args);
@@ -94,7 +94,7 @@ void	LogWarning(const char *fmt, ...)
 	va_list args;
 	va_start(args, fmt);
     // BGM edit: vprintf leaves args in an undefined state, which can cause a crash in
-    //           vsyslog. Also added CADebuggerStop(). Original code commented out below.
+    //           vsyslog. Also added __ASSERT_STOP. Original code commented out below.
 //#if DEBUG
 //	vprintf(fmt, args);
 //#endif
@@ -109,7 +109,7 @@ void	LogWarning(const char *fmt, ...)
     vsyslog(LOG_WARNING, fmt, args);
 #endif
 #if DEBUG
-    //CADebuggerStop(); // TODO: Add a toggle for this to the project file (under "Preprocessor Macros"). Default to off.
+    //__ASSERT_STOP; // TODO: Add a toggle for this to the project file (under "Preprocessor Macros"). Default to off.
 #endif
     // BGM edit end
 	va_end(args);

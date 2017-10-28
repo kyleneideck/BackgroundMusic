@@ -118,13 +118,13 @@ public:
      */
     void                SetAppPanPosition(SInt32 inPanPosition,
                                           pid_t inAppProcessID,
-                                          CFStringRef inAppBundleID);
+                                          CFStringRef __nullable inAppBundleID);
 
 private:
     void                SendAppVolumeOrPanToBGMDevice(SInt32 inNewValue,
                                                       CFStringRef inVolumeTypeKey,
                                                       pid_t inAppProcessID,
-                                                      CFStringRef inAppBundleID);
+                                                      CFStringRef __nullable inAppBundleID);
 
     static std::vector<CACFString>
                         ResponsibleBundleIDsOf(CACFString inParentBundleID);

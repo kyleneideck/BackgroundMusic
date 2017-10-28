@@ -29,7 +29,7 @@
 #import "BGMMusicPlayers.h"
 #import "BGMAutoPauseMusic.h"
 #import "BGMAutoPauseMenuItem.h"
-#import "BGMAppVolumes.h"
+#import "BGMAppVolumesController.h"
 #import "BGMPreferencesMenu.h"
 #import "BGMXPCListener.h"
 #import "BGMOutputVolumeMenuItem.h"
@@ -55,7 +55,7 @@ static float const kStatusBarIconPadding = 0.25;
     BGMAutoPauseMusic* autoPauseMusic;
     BGMAutoPauseMenuItem* autoPauseMenuItem;
     BGMMusicPlayers* musicPlayers;
-    BGMAppVolumes* appVolumes;
+    BGMAppVolumesController* appVolumes;
     BGMPreferencesMenu* prefsMenu;
     BGMXPCListener* xpcListener;
 }
@@ -182,9 +182,9 @@ static float const kStatusBarIconPadding = 0.25;
                      atIndex:([self.bgmMenu indexOfItemWithTag:kVolumesHeadingMenuItemTag] + 1)];
 
 
-    appVolumes = [[BGMAppVolumes alloc] initWithMenu:self.bgmMenu
-                                       appVolumeView:self.appVolumeView
-                                        audioDevices:audioDevices];
+    appVolumes = [[BGMAppVolumesController alloc] initWithMenu:self.bgmMenu
+                                                 appVolumeView:self.appVolumeView
+                                                  audioDevices:audioDevices];
     
     prefsMenu = [[BGMPreferencesMenu alloc] initWithBGMMenu:self.bgmMenu
                                                audioDevices:audioDevices

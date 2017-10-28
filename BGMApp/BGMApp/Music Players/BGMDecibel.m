@@ -31,8 +31,6 @@
 #import "BGMScriptingBridge.h"
 
 // PublicUtility Includes
-#undef CoreAudio_ThreadStampMessages
-#define CoreAudio_ThreadStampMessages 0  // Requires C++
 #include "CADebugMacros.h"
 
 

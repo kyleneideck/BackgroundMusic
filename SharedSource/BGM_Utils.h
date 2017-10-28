@@ -131,7 +131,7 @@
 
 #pragma mark C Utility Functions
 
-dispatch_queue_t BGMGetDispatchQueue_PriorityUserInteractive();
+dispatch_queue_t BGMGetDispatchQueue_PriorityUserInteractive(void);
 
 #if defined(__cplusplus)
 

@@ -36,6 +36,8 @@
 #include "CAAutoDisposer.h"
 
 
+#pragma clang assume_nonnull begin
+
 @implementation BGMAudioDeviceManager {
     BGMBackgroundMusicDevice bgmDevice;
     BGMAudioDevice outputDevice;
@@ -52,7 +54,7 @@
 
 #pragma mark Construction/Destruction
 
-- (instancetype) initWithError:(NSError**)error {
+- (instancetype) initWithError:(NSError** __nullable)error {
     if ((self = [super init])) {
         stateLock = [NSRecursiveLock new];
         bgmXPCHelperConnection = nil;
@@ -236,6 +238,18 @@
 
 - (CAHALAudioDevice) outputDevice {
     return outputDevice;
+}
+
+- (void)  setVolume:(SInt32)volume
+forAppWithProcessID:(pid_t)processID
+           bundleID:(NSString* __nullable)bundleID {
+    bgmDevice.SetAppVolume(volume, processID, (__bridge_retained CFStringRef)bundleID);
+}
+
+- (void) setPanPosition:(SInt32)pan
+    forAppWithProcessID:(pid_t)processID
+               bundleID:(NSString* __nullable)bundleID {
+    bgmDevice.SetAppPanPosition(pan, processID, (__bridge_retained CFStringRef)bundleID);
 }
 
 - (BOOL) isOutputDevice:(AudioObjectID)deviceID {
@@ -502,4 +516,7 @@
 }
 
 @end
+
+#pragma clang assume_nonnull end
+
 

@@ -30,9 +30,7 @@
 #import "BGMAppDelegate.h"
 
 // PublicUtility Includes
-#import "CACFDictionary.h"
-#import "CACFArray.h"
-#import "CACFString.h"
+#import "CADebugMacros.h"
 
 
 static float const     kSlidersSnapWithin          = 5;
@@ -52,7 +50,9 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
     NSInteger numMenuItems;
 }
 
-- (id) initWithMenu:(NSMenu*)menu appVolumeView:(NSView*)view audioDevices:(BGMAudioDeviceManager*)devices {
+- (id) initWithMenu:(NSMenu*)menu
+      appVolumeView:(NSView*)view
+       audioDevices:(BGMAudioDeviceManager*)devices {
     if ((self = [super init])) {
         bgmMenu = menu;
         moreAppsMenu = [[NSMenu alloc] initWithTitle:kMoreAppsMenuTitle];
@@ -60,9 +60,6 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
         appVolumeViewFullHeight = appVolumeView.frame.size.height;
         audioDevices = devices;
         numMenuItems = 0;
-        
-        // Create the menu items for controlling app volumes
-        [self insertMenuItemsForApps:[[NSWorkspace sharedWorkspace] runningApplications]];
 
         // Add the More Apps menu to the main menu.
         NSMenuItem* moreAppsMenuItem =
@@ -79,19 +76,9 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
 
         [bgmMenu insertItem:spacer atIndex:[self lastMenuItemIndex]];
         numMenuItems++;
-
-        // Register for notifications when the user opens or closes apps, so we can update the menu
-        [[NSWorkspace sharedWorkspace] addObserver:self
-                                        forKeyPath:@"runningApplications"
-                                           options:NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld
-                                           context:nil];
     }
     
     return self;
-}
-
-- (void) dealloc {
-    [[NSWorkspace sharedWorkspace] removeObserver:self forKeyPath:@"runningApplications" context:nil];
 }
 
 // This method allows the Interface Builder Custom Classes for controls (below) to send their values
@@ -102,37 +89,9 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
 
 #pragma mark UI Modifications
 
-// Adds a volume control menu item for each given app.
-- (void) insertMenuItemsForApps:(NSArray<NSRunningApplication*>*)apps {
-    NSAssert([NSThread isMainThread], @"insertMenuItemsForApps is not thread safe");
-
-    // TODO: Handle the C++ exceptions this method can throw. They can cause crashes because this
-    //       method is called in a KVO handler.
-
-    // Get the app volumes currently set on the device
-    CACFArray appVols([audioDevices bgmDevice].GetAppVolumes(), false);
-
-    for (NSRunningApplication* app in apps) {
-        if ([self shouldBeIncludedInMenu:app]) {
-            [self insertMenuItemForApp:app appVolumesOnDevice:appVols];
-        }
-    }
-}
-
-- (BOOL) shouldBeIncludedInMenu:(NSRunningApplication*)app {
-    // Ignore hidden apps and Background Music itself.
-    // TODO: Would it be better to only show apps that are registered as HAL clients?
-    BOOL isHidden = app.activationPolicy != NSApplicationActivationPolicyRegular &&
-                    app.activationPolicy != NSApplicationActivationPolicyAccessory;
-
-    NSString* bundleID = app.bundleIdentifier;
-    BOOL isBGMApp = bundleID && [@kBGMAppBundleID isEqualToString:BGMNN(bundleID)];
-
-    return !isHidden && !isBGMApp;
-}
-
 - (void) insertMenuItemForApp:(NSRunningApplication*)app
-           appVolumesOnDevice:(const CACFArray&)appVols {
+                initialVolume:(int)volume
+                   initialPan:(int)pan {
     NSMenuItem* appVolItem = [self createBlankAppVolumeMenuItem];
 
     // Look through the menu item's subviews for the ones we want to set up
@@ -148,7 +107,7 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
     appVolItem.representedObject = app;
 
     // Set the slider to the volume for this app if we got one from the driver
-    [self setVolumeOfMenuItem:appVolItem fromAppVolumes:appVols];
+    [self setVolumeOfMenuItem:appVolItem relativeVolume:volume panPosition:pan];
 
     // NSMenuItem didn't implement NSAccessibility before OS X SDK 10.12.
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101200  // MAC_OS_X_VERSION_10_12
@@ -180,6 +139,19 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
     return menuItem;
 }
 
+- (void) setVolumeOfMenuItem:(NSMenuItem*)menuItem relativeVolume:(int)volume panPosition:(int)pan {
+    // Update the sliders.
+    for (NSView* subview in menuItem.view.subviews) {
+        if (volume != -1 && [subview isKindOfClass:[BGMAVM_VolumeSlider class]]) {
+            [(BGMAVM_VolumeSlider*)subview setRelativeVolume:volume];
+        }
+
+        if (pan != -1 && [subview isKindOfClass:[BGMAVM_PanSlider class]]) {
+            [(BGMAVM_PanSlider*)subview setPanPosition:pan];
+        }
+    }
+}
+
 - (NSInteger) firstMenuItemIndex {
     return [self lastMenuItemIndex] - numMenuItems + 1;
 }
@@ -188,81 +160,34 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
     return [bgmMenu indexOfItemWithTag:kSeparatorBelowVolumesMenuItemTag] - 1;
 }
 
-- (void) removeMenuItemsForApps:(NSArray<NSRunningApplication*>*)apps {
-    NSAssert([NSThread isMainThread], @"removeMenuItemsForApps is not thread safe");
-
+- (void) removeMenuItemForApp:(NSRunningApplication*)app {
     // Subtract two extra positions to skip the More Apps menu and the spacer menu item above it.
     NSInteger lastAppVolumeMenuItemIndex = [self lastMenuItemIndex] - 2;
 
-    // Check each app volume menu item, removing the items that control one of the given apps
-    for (NSRunningApplication* appToBeRemoved in apps) {
-        BOOL didRemoveItem = NO;
+    // Check each app volume menu item and remove the item that controls the given app.
 
-        // Look through the main menu.
-        for (NSInteger i = [self firstMenuItemIndex]; i <= lastAppVolumeMenuItemIndex; i++) {
-            NSMenuItem* item = [bgmMenu itemAtIndex:i];
-            NSRunningApplication* itemApp = item.representedObject;
-            BGMAssert(itemApp, "!itemApp for %s", item.title.UTF8String);
+    // Look through the main menu.
+    for (NSInteger i = [self firstMenuItemIndex]; i <= lastAppVolumeMenuItemIndex; i++) {
+        NSMenuItem* item = [bgmMenu itemAtIndex:i];
+        NSRunningApplication* itemApp = item.representedObject;
+        BGMAssert(itemApp, "!itemApp for %s", item.title.UTF8String);
 
-            if ([itemApp isEqual:appToBeRemoved]) {
-                [bgmMenu removeItem:item];
-                numMenuItems--;
-
-                didRemoveItem = YES;
-                break;
-            }
-        }
-
-        // Look through the More Apps menu.
-        if (!didRemoveItem) {
-            for (NSInteger i = 0; i < [moreAppsMenu numberOfItems]; i++) {
-                NSMenuItem* item = [moreAppsMenu itemAtIndex:i];
-                NSRunningApplication* itemApp = item.representedObject;
-                BGMAssert(itemApp, "!itemApp for %s", item.title.UTF8String);
-
-                if ([itemApp isEqual:appToBeRemoved]) {
-                    [moreAppsMenu removeItem:item];
-                    break;
-                }
-            }
+        if ([itemApp isEqual:app]) {
+            [bgmMenu removeItem:item];
+            numMenuItems--;
+            return;
         }
     }
-}
 
-- (void) setVolumeOfMenuItem:(NSMenuItem*)menuItem fromAppVolumes:(const CACFArray&)appVolumes {
-    // Set menuItem's volume slider to the volume of the app in appVolumes that menuItem represents
-    // Leaves menuItem unchanged if it doesn't match any of the apps in appVolumes
-    NSRunningApplication* representedApp = menuItem.representedObject;
-    
-    for (UInt32 i = 0; i < appVolumes.GetNumberItems(); i++) {
-        CACFDictionary appVolume(false);
-        appVolumes.GetCACFDictionary(i, appVolume);
-        
-        // Match the app to the menu item by pid or bundle id
-        CACFString bundleID;
-        bundleID.DontAllowRelease();
-        appVolume.GetCACFString(CFSTR(kBGMAppVolumesKey_BundleID), bundleID);
-        
-        pid_t pid;
-        appVolume.GetSInt32(CFSTR(kBGMAppVolumesKey_ProcessID), pid);
-        
-        if ((representedApp.processIdentifier == pid) ||
-            [representedApp.bundleIdentifier isEqualToString:(__bridge NSString*)bundleID.GetCFString()]) {
-            CFTypeRef relativeVolume;
-            appVolume.GetCFType(CFSTR(kBGMAppVolumesKey_RelativeVolume), relativeVolume);
-            
-            CFTypeRef panPosition;
-            appVolume.GetCFType(CFSTR(kBGMAppVolumesKey_PanPosition), panPosition);
-            
-            // Update the slider
-            for (NSView* subview in menuItem.view.subviews) {
-                if ([subview respondsToSelector:@selector(setRelativeVolume:)]) {
-                    [subview performSelector:@selector(setRelativeVolume:) withObject:(__bridge NSNumber*)relativeVolume];
-                }
-                if ([subview respondsToSelector:@selector(setPanPosition:)]) {
-                    [subview performSelector:@selector(setPanPosition:) withObject:(__bridge NSNumber*)panPosition];
-                }
-            }
+    // Look through the More Apps menu.
+    for (NSInteger i = 0; i < [moreAppsMenu numberOfItems]; i++) {
+        NSMenuItem* item = [moreAppsMenu itemAtIndex:i];
+        NSRunningApplication* itemApp = item.representedObject;
+        BGMAssert(itemApp, "!itemApp for %s", item.title.UTF8String);
+
+        if ([itemApp isEqual:app]) {
+            [moreAppsMenu removeItem:item];
+            return;
         }
     }
 }
@@ -281,8 +206,9 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
 #if DEBUG
     const char* appName = [((NSRunningApplication*)menuItem.representedObject).localizedName UTF8String];
 #endif
-    
-    auto nearEnough = [](CGFloat x, CGFloat y) {  // Shouldn't be necessary, but just in case.
+
+    // Using this function (instead of just ==) shouldn't be necessary, but just in case.
+    BOOL(^nearEnough)(CGFloat x, CGFloat y) = ^BOOL(CGFloat x, CGFloat y) {
         return fabs(x - y) < 0.01;  // We don't need much precision.
     };
     
@@ -293,7 +219,7 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
         BGMAssert(nearEnough(height, appVolumeViewFullHeight), "Extra controls were already hidden");
         
         // Make the menu item shorter to hide the extra controls. Keep the width unchanged.
-        menuItem.view.frameSize = { width, kAppVolumeViewInitialHeight };
+        menuItem.view.frameSize = NSMakeSize(width, kAppVolumeViewInitialHeight);
         // Turn the button upside down so the arrowhead points down.
         button.frameCenterRotation = 180.0;
         // Move the button up slightly so it aligns with the volume slider.
@@ -315,7 +241,7 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
         BGMAssert(nearEnough(height, kAppVolumeViewInitialHeight), "Extra controls were already shown");
         
         // Make the menu item taller to show the extra controls. Keep the width unchanged.
-        menuItem.view.frameSize = { width, appVolumeViewFullHeight };
+        menuItem.view.frameSize = NSMakeSize(width, appVolumeViewFullHeight);
         // Turn the button rightside up so the arrowhead points up.
         button.frameCenterRotation = 0.0;
         // Move the button down slightly, back to it's original position.
@@ -328,38 +254,16 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
     }
 }
 
-#pragma mark KVO
-
-- (void) observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
-{
-    #pragma unused (object, context)
-    
-    // KVO callback for the apps currently running on the system. Adds/removes the associated menu items.
-    if ([keyPath isEqualToString:@"runningApplications"]) {
-        NSArray<NSRunningApplication*>* newApps = change[NSKeyValueChangeNewKey];
-        NSArray<NSRunningApplication*>* oldApps = change[NSKeyValueChangeOldKey];
-        
-        int changeKind = [[change valueForKey:NSKeyValueChangeKindKey] intValue];
-        switch (changeKind) {
-            case NSKeyValueChangeInsertion:
-                [self insertMenuItemsForApps:newApps];
-                break;
-                
-            case NSKeyValueChangeRemoval:
-                [self removeMenuItemsForApps:oldApps];
-                break;
-                
-            case NSKeyValueChangeReplacement:
-                [self removeMenuItemsForApps:oldApps];
-                [self insertMenuItemsForApps:newApps];
-                break;
-                
-            case NSKeyValueChangeSetting:
-                [bgmMenu removeAllItems];
-                [self insertMenuItemsForApps:newApps];
-                break;
-        }
+- (void) removeAllAppVolumeMenuItems {
+    // Remove all of the menu items this class adds to the menu except for the last two, which are
+    // the More Apps menu item and the invisible spacer above it.
+    while (numMenuItems > 2) {
+        [bgmMenu removeItemAtIndex:[self firstMenuItemIndex]];
+        numMenuItems--;
     }
+
+    // The More Apps menu only contains app volume menu items, so we can just remove everything.
+    [moreAppsMenu removeAllItems];
 }
 
 @end
@@ -429,7 +333,7 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
 @implementation BGMAVM_VolumeSlider {
     // Will be set to -1 for apps without a pid
     pid_t appProcessID;
-    NSString* appBundleID;
+    NSString* __nullable appBundleID;
     BGMAppVolumes* context;
 }
 
@@ -459,14 +363,14 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
 // changes how the slider looks.
 - (void) snap {
     // Snap to the 50% point.
-    float midPoint = static_cast<float>((self.maxValue + self.minValue) / 2);
+    float midPoint = (float)((self.maxValue + self.minValue) / 2);
     if (self.floatValue > (midPoint - kSlidersSnapWithin) && self.floatValue < (midPoint + kSlidersSnapWithin)) {
         self.floatValue = midPoint;
     }
 }
 
-- (void) setRelativeVolume:(NSNumber*)relativeVolume {
-    self.intValue = relativeVolume.intValue;
+- (void) setRelativeVolume:(int)relativeVolume {
+    self.intValue = relativeVolume;
     [self snap];
 }
 
@@ -479,9 +383,9 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
 
     // The values from our sliders are in
     // [kAppRelativeVolumeMinRawValue, kAppRelativeVolumeMaxRawValue] already.
-    context.audioDevices.bgmDevice.SetAppVolume(self.intValue,
-                                                appProcessID,
-                                                (__bridge_retained CFStringRef)appBundleID);
+    [context.audioDevices setVolume:self.intValue
+                forAppWithProcessID:appProcessID
+                           bundleID:appBundleID];
 }
 
 @end
@@ -489,7 +393,7 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
 @implementation BGMAVM_PanSlider {
     // Will be set to -1 for apps without a pid
     pid_t appProcessID;
-    NSString* appBundleID;
+    NSString* __nullable appBundleID;
     BGMAppVolumes* context;
 }
 
@@ -515,8 +419,8 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
     }
 }
 
-- (void) setPanPosition:(NSNumber *)panPosition {
-    self.intValue = panPosition.intValue;
+- (void) setPanPosition:(int)panPosition {
+    self.intValue = panPosition;
 }
 
 - (void) appPanPositionChanged {
@@ -525,9 +429,9 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
     DebugMsg("BGMAppVolumes::appPanPositionChanged: App pan position for %s changed to %d", appBundleID.UTF8String, self.intValue);
 
     // The values from our sliders are in [kAppPanLeftRawValue, kAppPanRightRawValue] already.
-    context.audioDevices.bgmDevice.SetAppPanPosition(self.intValue,
-                                                     appProcessID,
-                                                     (__bridge_retained CFStringRef)appBundleID);
+    [context.audioDevices setPanPosition:self.intValue
+                     forAppWithProcessID:appProcessID
+                                bundleID:appBundleID];
 }
 
 @end

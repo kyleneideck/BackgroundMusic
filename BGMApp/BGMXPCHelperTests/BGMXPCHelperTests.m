@@ -57,7 +57,7 @@
 
 - (void) testStartOutputDeviceWithoutBGMAppConnected {
     dispatch_semaphore_t replySemaphore = dispatch_semaphore_create(0);
-    
+
     // Unregister BGMXPCHelper's connection to BGMApp in case BGMApp didn't shutdown cleanly the last time it ran.
     [[connection remoteObjectProxy] unregisterAsBGMApp];
         
@@ -68,8 +68,9 @@
         
         dispatch_semaphore_signal(replySemaphore);
     } forUISoundsDevice:NO];
-    
-    if (0 != dispatch_semaphore_wait(replySemaphore, dispatch_time(DISPATCH_TIME_NOW, kStartIOTimeoutNsec))) {
+
+    // Very long timeout to make it less likely to fail on Travis CI when there's high contention.
+    if (0 != dispatch_semaphore_wait(replySemaphore, dispatch_time(DISPATCH_TIME_NOW, 5 * 60 * NSEC_PER_SEC))) {
         XCTFail(@"Timed out waiting for BGMXPCHelper");
     }
 }
