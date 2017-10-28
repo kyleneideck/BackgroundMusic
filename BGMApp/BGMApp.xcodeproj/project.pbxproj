@@ -26,6 +26,7 @@
 		1C1AA4B11F9DE3B700BCFB22 /* BGMAudioDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CF5423A1EAAEE4300445AD8 /* BGMAudioDevice.cpp */; };
 		1C1AA4B21F9DE3B700BCFB22 /* BGMBackgroundMusicDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CACCF371F3175AD007F86CA /* BGMBackgroundMusicDevice.cpp */; };
 		1C1AA4B31F9DE40000BCFB22 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1CD1FD2F1BDDEAF2004F7E1B /* AudioToolbox.framework */; };
+		1C227C0B1FA4C48200A95B6D /* BGMAppVolumes.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C3DB4881BE0885A00EC8160 /* BGMAppVolumes.m */; };
 		1C2336DA1BEAB6E7004C1C4E /* BGMMusicPlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C2336D91BEAB6E7004C1C4E /* BGMMusicPlayer.m */; };
 		1C2336DF1BEAE10C004C1C4E /* BGMSpotify.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C2336DE1BEAE10C004C1C4E /* BGMSpotify.m */; };
 		1C2FC3041EB4D6E700A76592 /* BGMApp.sdef in Resources */ = {isa = PBXBuildFile; fileRef = 1C2FC2FF1EB4D6E700A76592 /* BGMApp.sdef */; };
@@ -1062,6 +1063,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1C227C0B1FA4C48200A95B6D /* BGMAppVolumes.m in Sources */,
 				1CEACF4D1F34793700FEC143 /* CAHALAudioDevice.cpp in Sources */,
 				1CACCF3B1F334450007F86CA /* BGMBackgroundMusicDevice.cpp in Sources */,
 				1C3D36741ED90E8600F98E66 /* BGMDeviceControlsList.cpp in Sources */,
