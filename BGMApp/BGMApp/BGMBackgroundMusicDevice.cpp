@@ -218,21 +218,23 @@ BGMBackgroundMusicDevice::ResponsibleBundleIDsOf(CACFString inParentBundleID)
     }
 
     std::map<CACFString, std::vector<CACFString>> bundleIDMap = {
-            // Finder
-            { "com.apple.finder", { "com.apple.quicklook.ui.helper" } },
-            // Safari
-            { "com.apple.Safari", { "com.apple.WebKit.WebContent" } },
-            // Firefox
-            { "org.mozilla.firefox", { "org.mozilla.plugincontainer" } },
-            // Firefox Nightly
-            { "org.mozilla.nightly", { "org.mozilla.plugincontainer" } },
-            // VMWare Fusion
-            { "com.vmware.fusion", { "com.vmware.vmware-vmx" } },
-            // Parallels
-            { "com.parallels.desktop.console", { "com.parallels.vm" } },
-            // MPlayer OSX Extended
-            { "hu.mplayerhq.mplayerosx.extended",
-                    { "ch.sttz.mplayerosx.extended.binaries.officialsvn" } }
+        // Finder
+        { "com.apple.finder",
+            { "com.apple.quicklook.ui.helper",
+              "com.apple.quicklook.QuickLookUIService" } },
+        // Safari
+        { "com.apple.Safari", { "com.apple.WebKit.WebContent" } },
+        // Firefox
+        { "org.mozilla.firefox", { "org.mozilla.plugincontainer" } },
+        // Firefox Nightly
+        { "org.mozilla.nightly", { "org.mozilla.plugincontainer" } },
+        // VMWare Fusion
+        { "com.vmware.fusion", { "com.vmware.vmware-vmx" } },
+        // Parallels
+        { "com.parallels.desktop.console", { "com.parallels.vm" } },
+        // MPlayer OSX Extended
+        { "hu.mplayerhq.mplayerosx.extended",
+                { "ch.sttz.mplayerosx.extended.binaries.officialsvn" } }
     };
 
     // Parallels' VM "dock helper" apps have bundle IDs like

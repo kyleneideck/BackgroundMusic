@@ -377,7 +377,10 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
 - (void) appVolumeChanged {
     // TODO: This (sending updates to the driver) should probably be rate-limited. It uses a fair bit of CPU for me.
     
-    DebugMsg("BGMAppVolumes::appVolumeChanged: App volume for %s changed to %d", appBundleID.UTF8String, self.intValue);
+    DebugMsg("BGMAppVolumes::appVolumeChanged: App volume for %s (%d) changed to %d",
+             appBundleID.UTF8String,
+             appProcessID,
+             self.intValue);
     
     [self snap];
 
