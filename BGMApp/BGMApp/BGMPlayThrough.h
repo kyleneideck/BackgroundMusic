@@ -104,8 +104,8 @@ public:
      Pass null for either param to only change one of the devices.
      @throws CAException
      */
-    void                SetDevices(BGMAudioDevice* __nullable inInputDevice,
-                                   BGMAudioDevice* __nullable inOutputDevice);
+    void                SetDevices(const BGMAudioDevice* __nullable inInputDevice,
+                                   const BGMAudioDevice* __nullable inOutputDevice);
     
     /*! @throws CAException */
     void                Start();

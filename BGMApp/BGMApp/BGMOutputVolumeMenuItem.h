@@ -38,5 +38,7 @@
                                slider:(NSSlider*)slider
                           deviceLabel:(NSTextField*)label;
 
+- (void) outputDeviceDidChange;
+
 @end
 

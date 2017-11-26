@@ -35,13 +35,14 @@
 #import <CoreAudio/AudioHardware.h>
 
 
-const float                    SLIDER_EPSILON = 1e-10f;
-const AudioObjectPropertyScope SCOPE          = kAudioDevicePropertyScopeOutput;
-const UInt32                   CHANNEL        = kMasterChannel;
+const float                    kSliderEpsilon           = 1e-10f;
+const AudioObjectPropertyScope kScope                   = kAudioDevicePropertyScopeOutput;
+NSString* const __nonnull      kGenericOutputDeviceName = @"Output Device";
 
 @implementation BGMOutputVolumeMenuItem {
     BGMAudioDeviceManager* audioDevices;
     NSTextField* outputVolumeLabel;
+    NSSlider* volumeSlider;
 }
 
 // TODO: Update the UI when the output device is changed.
@@ -59,32 +60,30 @@ const UInt32                   CHANNEL        = kMasterChannel;
     if ((self = [super initWithTitle:@"" action:nil keyEquivalent:@""])) {
         audioDevices = devices;
         outputVolumeLabel = label;
+        volumeSlider = slider;
 
         // Apply our custom view from MainMenu.xib.
         self.view = view;
 
-        try {
-            [self initSlider:slider];
-            [self setOutputVolumeLabel];
-        } catch (const CAException& e) {
-            NSLog(@"BGMOutputVolumeMenuItem::initWithBGMMenu: Exception: %d", e.GetError());
-        }
+        [self initSlider];
+        [self setOutputVolumeLabel];
     }
 
     return self;
 }
 
-- (void) initSlider:(NSSlider*)slider {
+- (void) initSlider {
     BGMAssert([NSThread isMainThread],
               "initSlider must be called from the main thread because it calls UI functions.");
 
-    slider.target = self;
-    slider.action = @selector(sliderChanged:);
+    volumeSlider.target = self;
+    volumeSlider.action = @selector(sliderChanged:);
 
-    BGMAudioDevice bgmDevice = [audioDevices bgmDevice];
+    // Initialise the slider.
+    [self updateVolumeSlider];
 
-    // This block updates the value of the output volume slider. Note that it can only run on the
-    // main thread/queue because it calls UI functions
+    // Register a listener that will update the slider when the user changes the volume or
+    // mutes/unmutes their audio.
     AudioObjectPropertyListenerBlock updateSlider =
         ^(UInt32 inNumberAddresses, const AudioObjectPropertyAddress* inAddresses) {
             // The docs for AudioObjectPropertyListenerBlock say inAddresses will always contain
@@ -92,54 +91,102 @@ const UInt32                   CHANNEL        = kMasterChannel;
             // inAddresses.
             #pragma unused (inNumberAddresses, inAddresses)
 
-            try {
-                if (bgmDevice.GetMuteControlValue(SCOPE, kMasterChannel)) {
-                    // The output device is muted, so show the volume as 0 on the slider.
-                    slider.doubleValue = 0.0;
-                } else {
-                    // The slider values and volume values are both from 0 to 1, so we can use the
-                    // volume as is.
-                    slider.doubleValue =
-                        bgmDevice.GetVolumeControlScalarValue(SCOPE, kMasterChannel);
-                }
-            } catch (const CAException& e) {
-                NSLog(@"BGMOutputVolumeMenuItem::initSlider: Failed to update slider. (%d)",
-                      e.GetError());
-            }
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self updateVolumeSlider];
+            });
         };
 
-    // Initialise the slider. (The args are ignored.)
-    updateSlider(0, {});
+    // Instead of swallowing exceptions, we could try again later, but I doubt it would be worth the
+    // effort. And the documentation doesn't actually explain what could cause this to fail.
+    BGMLogAndSwallowExceptions("BGMOutputVolumeMenuItem::initSlider", ([&] {
+        // Register the listener to receive volume notifications.
+        audioDevices.bgmDevice.AddPropertyListenerBlock(
+            CAPropertyAddress(kAudioDevicePropertyVolumeScalar, kScope),
+            dispatch_get_main_queue(),
+            updateSlider);
 
-    // Register a listener that will update the slider when the user changes the volume from
-    // somewhere else.
-    audioDevices.bgmDevice.AddPropertyListenerBlock(
-        CAPropertyAddress(kAudioDevicePropertyVolumeScalar, SCOPE),
-        dispatch_get_main_queue(),
-        updateSlider);
-
-    // Register the same listener for mute/unmute.
-    audioDevices.bgmDevice.AddPropertyListenerBlock(
-        CAPropertyAddress(kAudioDevicePropertyMute, SCOPE),
-        dispatch_get_main_queue(),
-        updateSlider);
+        // Register the same listener for mute/unmute notifications.
+        audioDevices.bgmDevice.AddPropertyListenerBlock(
+            CAPropertyAddress(kAudioDevicePropertyMute, kScope),
+            dispatch_get_main_queue(),
+            updateSlider);
+    }));
 }
 
-// Sets the label to the name of the output device.
+// Updates the value of the output volume slider. Should only be called on the main thread because
+// it calls UI functions.
+- (void) updateVolumeSlider {
+    BGMAssert([[NSThread currentThread] isMainThread], "updateVolumeSlider on non-main thread.");
+
+    BGMAudioDevice bgmDevice = [audioDevices bgmDevice];
+
+    // BGMDevice should never return an error for these calls, so we just swallow any exceptions and
+    // give up. (That said, we do check mute last so that, if it did throw, it wouldn't affect the
+    // more important calls.)
+    BGMLogAndSwallowExceptions("BGMOutputVolumeMenuItem::updateVolumeSlider", ([&] {
+        BOOL hasVolume = bgmDevice.HasSettableMasterVolume(kScope);
+
+        // If the device doesn't have a master volume control, we disable the slider and set it to
+        // full (or to zero, if muted).
+        volumeSlider.enabled = hasVolume;
+
+        if (hasVolume) {
+            // Set the slider to the current output volume. The slider values and volume values are
+            // both from 0 to 1, so we can use the volume as is.
+            volumeSlider.doubleValue =
+                bgmDevice.GetVolumeControlScalarValue(kScope, kMasterChannel);
+        } else {
+            volumeSlider.doubleValue = 1.0;
+        }
+
+        // Set the slider to zero if the device is muted.
+        if (bgmDevice.HasSettableMasterMute(kScope) &&
+            bgmDevice.GetMuteControlValue(kScope, kMasterChannel)) {
+            volumeSlider.doubleValue = 0.0;
+        }
+    }));
+};
+
+- (void) outputDeviceDidChange {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        // Update the label to use the name of the new output device.
+        [self setOutputVolumeLabel];
+        // Set the slider to the volume of the new device.
+        [self updateVolumeSlider];
+    });
+}
+
+// Sets the label to the name of the output device. Falls back to a generic name if the device
+// returns an error when queried.
 - (void) setOutputVolumeLabel {
     BGMAudioDevice device = audioDevices.outputDevice;
+    BOOL didSetLabel = NO;
 
-    if (device.HasDataSourceControl(SCOPE, CHANNEL)) {
-        UInt32 dataSourceID = device.GetCurrentDataSourceID(SCOPE, CHANNEL);
+    try {
+        if (device.HasDataSourceControl(kScope, kMasterChannel)) {
+            // The device has datasources, so use the current datasource's name like macOS does.
+            UInt32 dataSourceID = device.GetCurrentDataSourceID(kScope, kMasterChannel);
 
-        outputVolumeLabel.stringValue =
-            (__bridge_transfer NSString*)device.CopyDataSourceNameForID(SCOPE,
-                                                                        CHANNEL,
-                                                                        dataSourceID);
-        
-        outputVolumeLabel.toolTip = (__bridge_transfer NSString*)device.CopyName();
-    } else {
-        outputVolumeLabel.stringValue = (__bridge_transfer NSString*)device.CopyName();
+            outputVolumeLabel.stringValue =
+                (__bridge_transfer NSString*)device.CopyDataSourceNameForID(kScope,
+                                                                            kMasterChannel,
+                                                                            dataSourceID);
+            didSetLabel = YES;  // So we know not to change the text if setting the tooltip fails.
+
+            outputVolumeLabel.toolTip = (__bridge_transfer NSString*)device.CopyName();
+        } else {
+            outputVolumeLabel.stringValue = (__bridge_transfer NSString*)device.CopyName();
+        }
+    } catch (const CAException& e) {
+        BGMLogException(e);
+
+        // The device returned an error, so set the label to a generic device name, since we don't
+        // want to leave it set to the previous device's name.
+        outputVolumeLabel.toolTip = nil;
+
+        if (!didSetLabel) {
+            outputVolumeLabel.stringValue = kGenericOutputDeviceName;
+        }
     }
 
     // Take the label out of the accessibility hierarchy, which also moves the slider up a level.
@@ -163,13 +210,15 @@ const UInt32                   CHANNEL        = kMasterChannel;
     try {
         // The slider values and volume values are both from 0.0f to 1.0f, so we can use the slider
         // value as is.
-        audioDevices.bgmDevice.SetVolumeControlScalarValue(SCOPE, CHANNEL, newValue);
+        audioDevices.bgmDevice.SetVolumeControlScalarValue(kScope, kMasterChannel, newValue);
 
         // Mute BGMDevice if they set the slider to zero, and unmute it for non-zero. Muting makes
         // sure the audio doesn't play very quietly instead being completely silent. This matches
         // the behaviour of the Volume menu built-in to macOS.
-        if (audioDevices.bgmDevice.HasMuteControl(SCOPE, CHANNEL)) {
-            audioDevices.bgmDevice.SetMuteControlValue(SCOPE, CHANNEL, (newValue < SLIDER_EPSILON));
+        if (audioDevices.bgmDevice.HasMuteControl(kScope, kMasterChannel)) {
+            audioDevices.bgmDevice.SetMuteControlValue(kScope,
+                                                       kMasterChannel,
+                                                       (newValue < kSliderEpsilon));
         }
     } catch (const CAException& e) {
         NSLog(@"BGMOutputVolumeMenuItem::sliderChanged: Failed to set volume (%d)", e.GetError());

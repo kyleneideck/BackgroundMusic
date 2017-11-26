@@ -24,16 +24,17 @@
 #import "BGMAudioDeviceManager.h"
 
 // Local Includes
-#include "BGM_Types.h"
-#include "BGM_Utils.h"
-#include "BGMDeviceControlSync.h"
-#include "BGMPlayThrough.h"
-#include "BGMAudioDevice.h"
-#include "BGMXPCProtocols.h"
+#import "BGM_Types.h"
+#import "BGM_Utils.h"
+#import "BGMDeviceControlSync.h"
+#import "BGMPlayThrough.h"
+#import "BGMAudioDevice.h"
+#import "BGMXPCProtocols.h"
+#import "BGMOutputVolumeMenuItem.h"
 
 // PublicUtility Includes
-#include "CAHALAudioSystemObject.h"
-#include "CAAutoDisposer.h"
+#import "CAHALAudioSystemObject.h"
+#import "CAAutoDisposer.h"
 
 
 #pragma clang assume_nonnull begin
@@ -49,6 +50,8 @@
     // A connection to BGMXPCHelper so we can send it the ID of the output device.
     NSXPCConnection* __nullable bgmXPCHelperConnection;
 
+    BGMOutputVolumeMenuItem* __nullable outputVolumeMenuItem;
+
     NSRecursiveLock* stateLock;
 }
 
@@ -58,6 +61,7 @@
     if ((self = [super init])) {
         stateLock = [NSRecursiveLock new];
         bgmXPCHelperConnection = nil;
+        outputVolumeMenuItem = nil;
 
         try {
             bgmDevice = BGMBackgroundMusicDevice();
@@ -173,6 +177,10 @@
             [self setOutputDeviceWithID:minLatencyDevice revertOnFailure:NO];
         }
     }
+}
+
+- (void) setOutputVolumeMenuItem:(BGMOutputVolumeMenuItem*)item {
+    outputVolumeMenuItem = item;
 }
 
 #pragma mark Systemwide Default Device
@@ -308,10 +316,7 @@ forAppWithProcessID:(pid_t)processID
              newDeviceID);
     
     AudioDeviceID currentDeviceID = outputDevice.GetObjectID();  // (GetObjectID doesn't throw.)
-    
-    // Set up playthrough and control sync
-    BGMAudioDevice newOutputDevice(newDeviceID);
-    
+
     @try {
         [stateLock lock];
         
@@ -321,25 +326,8 @@ forAppWithProcessID:(pid_t)processID
             currentDeviceID = outputDevice.GetObjectID();
             
             if (newDeviceID != currentDeviceID) {
-                // Deactivate playthrough rather than stopping it so it can't be started by HAL
-                // notifications while we're updating deviceControlSync.
-                playThrough.Deactivate();
-                playThrough_UISounds.Deactivate();
-
-                deviceControlSync.SetDevices(bgmDevice, newOutputDevice);
-                deviceControlSync.Activate();
-
-                // Stream audio from BGMDevice to the new output device. This blocks while the old device
-                // stops IO.
-                playThrough.SetDevices(&bgmDevice, &newOutputDevice);
-                playThrough.Activate();
-
-                // TODO: Support setting different devices as the default output device and the
-                //       default system output device, the way OS X does.
-                BGMAudioDevice uiSoundsDevice = bgmDevice.GetUISoundsBGMDeviceInstance();
-                playThrough_UISounds.SetDevices(&uiSoundsDevice, &newOutputDevice);
-                playThrough_UISounds.Activate();
-
+                BGMAudioDevice newOutputDevice(newDeviceID);
+                [self setOutputDeviceForPlaythroughAndControlSync:newOutputDevice];
                 outputDevice = newOutputDevice;
             }
             
@@ -373,8 +361,7 @@ forAppWithProcessID:(pid_t)processID
                                         revertTo:(revertOnFailure ? &currentDeviceID : nullptr)];
         }
 
-        // Tell BGMXPCHelper about the new output device.
-        [self sendOutputDeviceToBGMXPCHelper];
+        [self propagateOutputDeviceChange];
     } @finally {
         [stateLock unlock];
     }
@@ -382,7 +369,30 @@ forAppWithProcessID:(pid_t)processID
     return nil;
 }
 
-- (void) setDataSource:(UInt32)dataSourceID device:(BGMAudioDevice)device {
+// Changes the output device that playthrough plays audio to and that BGMDevice's controls are
+// kept in sync with. Throws CAException.
+- (void) setOutputDeviceForPlaythroughAndControlSync:(const BGMAudioDevice&)newOutputDevice {
+    // Deactivate playthrough rather than stopping it so it can't be started by HAL notifications
+    // while we're updating deviceControlSync.
+    playThrough.Deactivate();
+    playThrough_UISounds.Deactivate();
+
+    deviceControlSync.SetDevices(bgmDevice, newOutputDevice);
+    deviceControlSync.Activate();
+
+    // Stream audio from BGMDevice to the new output device. This blocks while the old device stops
+    // IO.
+    playThrough.SetDevices(&bgmDevice, &newOutputDevice);
+    playThrough.Activate();
+
+    // TODO: Support setting different devices as the default output device and the default system
+    //       output device the way OS X does?
+    BGMAudioDevice uiSoundsDevice = bgmDevice.GetUISoundsBGMDeviceInstance();
+    playThrough_UISounds.SetDevices(&uiSoundsDevice, &newOutputDevice);
+    playThrough_UISounds.Activate();
+}
+
+- (void) setDataSource:(UInt32)dataSourceID device:(BGMAudioDevice&)device {
     BGMLogAndSwallowExceptions("BGMAudioDeviceManager::setDataSource", [&] {
         AudioObjectPropertyScope scope = kAudioObjectPropertyScopeOutput;
         UInt32 channel = 0;
@@ -394,6 +404,14 @@ forAppWithProcessID:(pid_t)processID
             device.SetCurrentDataSourceByID(scope, channel, dataSourceID);
         }
     });
+}
+
+- (void) propagateOutputDeviceChange {
+    // Tell BGMXPCHelper that the output device has changed.
+    [self sendOutputDeviceToBGMXPCHelper];
+
+    // Update the menu item for the volume of the output device.
+    [outputVolumeMenuItem outputDeviceDidChange];
 }
 
 - (NSError*) failedToSetOutputDevice:(AudioDeviceID)deviceID

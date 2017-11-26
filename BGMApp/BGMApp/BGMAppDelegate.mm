@@ -141,7 +141,9 @@ static float const kStatusBarIconPadding = 0.25;
 
     // Set up audioDevices, which coordinates BGMDevice and the output device. It manages
     // playthrough, volume/mute controls, etc.
-    [self initAudioDeviceManager];
+    if (![self initAudioDeviceManager]) {
+        return;
+    }
 
     // Handle some of the unusual reasons BGMApp might have to exit, mostly crashes.
     BGMTermination::SetUpTerminationCleanUp(audioDevices);
@@ -176,6 +178,7 @@ static float const kStatusBarIconPadding = 0.25;
                                                          view:self.outputVolumeView
                                                        slider:self.outputVolumeSlider
                                                   deviceLabel:self.outputVolumeLabel];
+    [audioDevices setOutputVolumeMenuItem:outputVolume];
 
     // Add it to the main menu below the "Volumes" heading.
     [self.bgmMenu insertItem:outputVolume
@@ -202,14 +205,14 @@ static float const kStatusBarIconPadding = 0.25;
     return [[BGMUserDefaults alloc] initWithDefaults:wrappedDefaults];
 }
 
-- (void) initAudioDeviceManager {
+// Returns NO if (and only if) BGMApp is about to terminate because of a fatal error.
+- (BOOL) initAudioDeviceManager {
     NSError* error;
-
     audioDevices = [[BGMAudioDeviceManager alloc] initWithError:&error];
 
-    if (audioDevices == nil) {
+    if (!audioDevices) {
         [self showDeviceNotFoundErrorMessageAndExit:error.code];
-        return;
+        return NO;
     }
 
     error = [audioDevices setBGMDeviceAsOSDefault];
@@ -220,6 +223,8 @@ static float const kStatusBarIconPadding = 0.25;
                                            "default audio device."
                           informativeText:@"You might be able to set it yourself."];
     }
+
+    return YES;
 }
 
 - (void) applicationWillTerminate:(NSNotification*)aNotification {
@@ -254,7 +259,9 @@ static float const kStatusBarIconPadding = 0.25;
             [alert setMessageText:@"Could not find an audio output device."];
             [alert setInformativeText:@"If you do have one installed, this is probably a bug. Sorry about that. Feel free to file an issue on GitHub."];
         }
-        
+
+        // This crashes if built with Xcode 9.0.1, but works with versions of Xcode before 9 and
+        // with 9.1.
         [alert runModal];
         [NSApp terminate:self];
     });

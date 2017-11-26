@@ -373,8 +373,8 @@ bool    BGMPlayThrough::CheckIOProcsAreStopped() const noexcept
     return statesOK;
 }
 
-void    BGMPlayThrough::SetDevices(BGMAudioDevice* __nullable inInputDevice,
-                                   BGMAudioDevice* __nullable inOutputDevice)
+void    BGMPlayThrough::SetDevices(const BGMAudioDevice* __nullable inInputDevice,
+                                   const BGMAudioDevice* __nullable inOutputDevice)
 {
     CAMutex::Locker stateLocker(mStateMutex);
     
