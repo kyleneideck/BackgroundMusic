@@ -148,6 +148,7 @@ Failing that, you might have to uninstall. Consider filing a bug report if you d
 - [Soundflower](https://github.com/mattingalls/Soundflower) - "MacOS system extension that allows applications to pass
   audio to other applications."
 - [WavTap](https://github.com/pje/WavTap) - "globally capture whatever your mac is playing—-as simply as a screenshot"
+- [eqMac](http://www.bitgapp.com/eqmac/), [GitHub](https://github.com/nodeful/eqMac2) - "System-wide Audio Equalizer for the Mac"
 - [llaudio](https://github.com/mountainstorm/llaudio) - "An old piece of work to reverse engineer the Mac OSX
   user/kernel audio interface. Shows how to read audio straight out of the kernel as you would on Darwin (where most the
   OSX goodness is missing)"
@@ -165,7 +166,6 @@ Failing that, you might have to uninstall. Consider filing a bug report if you d
 - [Sound Siphon](https://staticz.com/soundsiphon/), [Sound Control](https://staticz.com/soundcontrol/) - System/app audio recording, per-app volumes, system audio equaliser
 - [SoundBunny](https://www.prosofteng.com/soundbunny-mac-volume-control/) - "Control application volume independently."
 - [Boom 2](http://www.globaldelight.com/boom/index.php) - "The Best Volume Booster & Equalizer For Mac"
-- [eqMac](http://www.bitgapp.com/eqmac/) - "System-wide Audio Equalizer for Mac OSX"
 
 ## License
 
