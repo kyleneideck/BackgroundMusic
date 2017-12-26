@@ -72,6 +72,7 @@ enum
     kObjectID_Device_UI_Sounds                  = 9,   // Belongs to kObjectID_PlugIn
     kObjectID_Stream_Input_UI_Sounds            = 10,  // Belongs to kObjectID_Device_UI_Sounds
     kObjectID_Stream_Output_UI_Sounds           = 11,  // Belongs to kObjectID_Device_UI_Sounds
+    kObjectID_Volume_Output_Master_UI_Sounds    = 12,  // Belongs to kObjectID_Device_UI_Sounds
 };
 
 // AudioObjectPropertyElement docs: "Elements are numbered sequentially where 0 represents the

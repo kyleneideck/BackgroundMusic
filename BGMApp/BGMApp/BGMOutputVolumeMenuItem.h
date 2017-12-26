@@ -27,6 +27,8 @@
 #import <Cocoa/Cocoa.h>
 
 
+#pragma clang assume_nonnull begin
+
 @interface BGMOutputVolumeMenuItem : NSMenuItem
 
 // A menu item with a slider for controlling the volume of the output device. Similar to the one in
@@ -41,4 +43,6 @@
 - (void) outputDeviceDidChange;
 
 @end
+
+#pragma clang assume_nonnull end
 

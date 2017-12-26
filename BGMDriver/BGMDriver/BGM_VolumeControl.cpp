@@ -31,12 +31,14 @@
 #include "CAException.h"
 #include "CADebugMacros.h"
 #include "CADispatchQueue.h"
+#include "BGM_Utils.h"
 
 // STL Includes
 #include <algorithm>
 
 // System Includes
 #include <CoreAudio/AudioHardwareBase.h>
+#include <Accelerate/Accelerate.h>
 
 
 #pragma clang assume_nonnull begin
@@ -56,10 +58,12 @@ BGM_VolumeControl::BGM_VolumeControl(AudioObjectID inObjectID,
                 inElement),
     mMutex("Volume Control"),
     mVolumeRaw(kDefaultMinRawVolume),
+    mAmplitudeGain(0.0f),
     mMinVolumeRaw(kDefaultMinRawVolume),
     mMaxVolumeRaw(kDefaultMaxRawVolume),
     mMinVolumeDb(kDefaultMinDbVolume),
-    mMaxVolumeDb(kDefaultMaxDbVolume)
+    mMaxVolumeDb(kDefaultMaxDbVolume),
+    mWillApplyVolumeToAudio(false)
 {
     // Setup the volume curve with the one range
     mVolumeCurve.AddRange(mMinVolumeRaw, mMaxVolumeRaw, mMinVolumeDb, mMaxVolumeDb);
@@ -290,42 +294,28 @@ void    BGM_VolumeControl::SetPropertyData(AudioObjectID inObjectID,
     switch(inAddress.mSelector)
     {
         case kAudioLevelControlPropertyScalarValue:
-            // For the scalar volume, we clamp the new value to [0, 1]. Note that if this
-            // value changes, it implies that the dB value changed too.
             {
                 ThrowIf(inDataSize != sizeof(Float32),
                         CAException(kAudioHardwareBadPropertySizeError),
                         "BGM_VolumeControl::SetPropertyData: wrong size for the data for "
                         "kAudioLevelControlPropertyScalarValue");
 
-                // Read the new scalar volume and clamp it.
+                // Read the new scalar volume.
                 Float32 theNewVolumeScalar = *reinterpret_cast<const Float32*>(inData);
-                theNewVolumeScalar = std::min(1.0f, std::max(0.0f, theNewVolumeScalar));
-
-                // Store the new volume.
-                SInt32 theNewVolumeRaw = mVolumeCurve.ConvertScalarToRaw(theNewVolumeScalar);
-                SetVolumeRaw(theNewVolumeRaw);
+                SetVolumeScalar(theNewVolumeScalar);
             }
             break;
 
         case kAudioLevelControlPropertyDecibelValue:
-            // For the dB value, we first convert it to a raw value since that is how
-            // the value is tracked. Note that if this value changes, it implies that the
-            // scalar value changes as well.
             {
                 ThrowIf(inDataSize != sizeof(Float32),
                         CAException(kAudioHardwareBadPropertySizeError),
                         "BGM_VolumeControl::SetPropertyData: wrong size for the data for "
                         "kAudioLevelControlPropertyDecibelValue");
 
-                // Read the new volume in dB and clamp it.
+                // Read the new volume in dB.
                 Float32 theNewVolumeDb = *reinterpret_cast<const Float32*>(inData);
-                theNewVolumeDb =
-                        std::min(mMaxVolumeDb, std::max(mMinVolumeDb, theNewVolumeDb));
-
-                // Store the new volume.
-                SInt32 theNewVolumeRaw = mVolumeCurve.ConvertDBToRaw(theNewVolumeDb);
-                SetVolumeRaw(theNewVolumeRaw);
+                SetVolumeDb(theNewVolumeDb);
             }
             break;
 
@@ -341,6 +331,75 @@ void    BGM_VolumeControl::SetPropertyData(AudioObjectID inObjectID,
     };
 }
 
+#pragma mark Accessors
+
+void    BGM_VolumeControl::SetVolumeScalar(Float32 inNewVolumeScalar)
+{
+    // For the scalar volume, we clamp the new value to [0, 1]. Note that if this value changes, it
+    // implies that the dB value changes too.
+    inNewVolumeScalar = std::min(1.0f, std::max(0.0f, inNewVolumeScalar));
+
+    // Store the new volume.
+    SInt32 theNewVolumeRaw = mVolumeCurve.ConvertScalarToRaw(inNewVolumeScalar);
+    SetVolumeRaw(theNewVolumeRaw);
+}
+
+void    BGM_VolumeControl::SetVolumeDb(Float32 inNewVolumeDb)
+{
+    // For the dB value, we first convert it to a raw value since that is how the value is tracked.
+    // Note that if this value changes, it implies that the scalar value changes as well.
+
+    // Clamp the new volume.
+    inNewVolumeDb = std::min(mMaxVolumeDb, std::max(mMinVolumeDb, inNewVolumeDb));
+
+    // Store the new volume.
+    SInt32 theNewVolumeRaw = mVolumeCurve.ConvertDBToRaw(inNewVolumeDb);
+    SetVolumeRaw(theNewVolumeRaw);
+}
+
+void    BGM_VolumeControl::SetWillApplyVolumeToAudio(bool inWillApplyVolumeToAudio)
+{
+    mWillApplyVolumeToAudio = inWillApplyVolumeToAudio;
+}
+
+#pragma mark IO Operations
+
+bool    BGM_VolumeControl::WillApplyVolumeToAudioRT() const
+{
+    return mWillApplyVolumeToAudio;
+}
+
+void    BGM_VolumeControl::ApplyVolumeToAudioRT(Float32* ioBuffer, UInt32 inBufferFrameSize) const
+{
+    ThrowIf(!mWillApplyVolumeToAudio,
+            CAException(kAudioHardwareIllegalOperationError),
+            "BGM_VolumeControl::ApplyVolumeToAudioRT: This control doesn't process audio data");
+
+    // Don't bother if the change is very unlikely to be perceptible.
+    if((mAmplitudeGain < 0.99f) || (mAmplitudeGain > 1.01f))
+    {
+        // Apply the amount of gain/loss for the current volume to the audio signal by multiplying
+        // each sample. This call to vDSP_vsmul is equivalent to
+        //
+        // for(UInt32 i = 0; i < inBufferFrameSize * 2; i++)
+        // {
+        //     ioBuffer[i] *= mAmplitudeGain;
+        // }
+        //
+        // but a bit faster on processors with newer SIMD instructions. However, it shouldn't take
+        // more than a few microseconds either way. (Unless some of the samples were subnormal
+        // numbers for some reason.)
+        //
+        // It would be a tiny bit faster still to not do this in-place, i.e. use separate input and
+        // output buffers, but then we'd have to copy the data into the output buffer when the
+        // volume is at 1.0. With our current use of this class, most people will leave the volume
+        // at 1.0, so it wouldn't be worth it.
+        vDSP_vsmul(ioBuffer, 1, &mAmplitudeGain, ioBuffer, 1, inBufferFrameSize * 2);
+    }
+}
+
+#pragma mark Implementation
+
 void    BGM_VolumeControl::SetVolumeRaw(SInt32 inNewVolumeRaw)
 {
     CAMutex::Locker theLocker(mMutex);
@@ -352,6 +411,41 @@ void    BGM_VolumeControl::SetVolumeRaw(SInt32 inNewVolumeRaw)
     if(mVolumeRaw != inNewVolumeRaw)
     {
         mVolumeRaw = inNewVolumeRaw;
+
+        // CAVolumeCurve deals with volumes in three different scales: scalar, dB and raw. Raw
+        // volumes are the number of steps along the dB curve, so dB and raw volumes are linearly
+        // related.
+        //
+        // macOS uses the scalar volume to set the position of its volume sliders for the
+        // device. We have to set the scalar volume to the position of our volume slider for a
+        // device (more specifically, a linear mapping of it onto [0,1]) or macOS's volume sliders
+        // or it will work differently to our own.
+        //
+        // When we set a new slider position as the device's scalar volume, we convert it to raw
+        // with CAVolumeCurve::ConvertScalarToRaw, which will "undo the curve". However, we haven't
+        // applied the curve at that point.
+        //
+        // So, to actually apply the curve, we use CAVolumeCurve::ConvertRawToScalar to get the
+        // linear slider position back, map it onto the range of raw volumes and use
+        // CAVolumeCurve::ConvertRawToScalar again to apply the curve.
+        //
+        // It might be that we should be using CAVolumeCurve with transfer functions x^n where
+        // 0 < n < 1, but a lot more of the transfer functions it supports have n >= 1, including
+        // the default one. So I'm a bit confused.
+        //
+        // TODO: I think this means the dB volume we report will be wrong. It also makes the code
+        //       pretty confusing.
+        Float32 theSliderPosition = mVolumeCurve.ConvertRawToScalar(mVolumeRaw);
+
+        // TODO: This assumes the control should never boost the signal. (So, technically, it never
+        //       actually applies gain, only loss.)
+        SInt32 theRawRange = mMaxVolumeRaw - mMinVolumeRaw;
+        SInt32 theSliderPositionInRawSteps = static_cast<SInt32>(theSliderPosition * theRawRange);
+        theSliderPositionInRawSteps += mMinVolumeRaw;
+
+        mAmplitudeGain = mVolumeCurve.ConvertRawToScalar(theSliderPositionInRawSteps);
+
+        BGMAssert((mAmplitudeGain >= 0.0f) && (mAmplitudeGain <= 1.0f), "Gain not in [0,1]");
 
         // Send notifications.
         CADispatchQueue::GetGlobalSerialQueue().Dispatch(false, ^{

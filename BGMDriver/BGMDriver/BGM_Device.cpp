@@ -71,6 +71,8 @@ void	BGM_Device::StaticInitializer()
 {
     try
     {
+        // The main instance, usually referred to in the code as "BGMDevice". This is the device
+        // that appears in System Preferences as "Background Music".
         sInstance = new BGM_Device(kObjectID_Device,
                                    CFSTR(kDeviceName),
 								   CFSTR(kBGMDeviceUID),
@@ -81,12 +83,27 @@ void	BGM_Device::StaticInitializer()
 								   kObjectID_Mute_Output_Master);
         sInstance->Activate();
 
+        // The instance for system (UI) sounds.
         sUISoundsInstance = new BGM_Device(kObjectID_Device_UI_Sounds,
 										   CFSTR(kDeviceName_UISounds),
 										   CFSTR(kBGMDeviceUID_UISounds),
 										   CFSTR(kBGMDeviceModelUID_UISounds),
                                            kObjectID_Stream_Input_UI_Sounds,
-                                           kObjectID_Stream_Output_UI_Sounds);
+                                           kObjectID_Stream_Output_UI_Sounds,
+                                           kObjectID_Volume_Output_Master_UI_Sounds,
+                                           kAudioObjectUnknown);  // No mute control.
+
+        // Set up the UI sounds device's volume control.
+        BGM_VolumeControl& theUISoundsVolumeControl = sUISoundsInstance->mVolumeControl;
+        // Default to full volume.
+        theUISoundsVolumeControl.SetVolumeScalar(1.0f);
+        // Make the volume curve a bit steeper than the default.
+        theUISoundsVolumeControl.GetVolumeCurve().SetTransferFunction(CAVolumeCurve::kPow4Over1Curve);
+        // Apply the volume to the device's output stream. The main instance of BGM_Device doesn't
+        // apply volume to its audio because BGMApp changes the real output device's volume directly
+        // instead.
+        theUISoundsVolumeControl.SetWillApplyVolumeToAudio(true);
+
         sUISoundsInstance->Activate();
     }
     catch(...)
@@ -99,24 +116,6 @@ void	BGM_Device::StaticInitializer()
         delete sUISoundsInstance;
         sUISoundsInstance = nullptr;
     }
-}
-
-BGM_Device::BGM_Device(AudioObjectID inObjectID,
-					   const CFStringRef __nonnull inDeviceName,
-					   const CFStringRef __nonnull inDeviceUID,
-					   const CFStringRef __nonnull inDeviceModelUID,
-					   AudioObjectID inInputStreamID,
-					   AudioObjectID inOutputStreamID)
-:
-    BGM_Device(inObjectID,
-               inDeviceName,
-               inDeviceUID,
-			   inDeviceModelUID,
-               inInputStreamID,
-               inOutputStreamID,
-               kAudioObjectUnknown,
-               kAudioObjectUnknown)
-{
 }
 
 BGM_Device::BGM_Device(AudioObjectID inObjectID,
@@ -139,8 +138,8 @@ BGM_Device::BGM_Device(AudioObjectID inObjectID,
     mInputStream(inInputStreamID, inObjectID, false, kSampleRateDefault),
     mOutputStream(inOutputStreamID, inObjectID, false, kSampleRateDefault),
     mAudibleState(),
-    mVolumeControl(inOutputVolumeControlID, GetObjectID(), kAudioObjectPropertyScopeOutput),
-    mMuteControl(inOutputMuteControlID, GetObjectID(), kAudioObjectPropertyScopeOutput)
+    mVolumeControl(inOutputVolumeControlID, GetObjectID()),
+    mMuteControl(inOutputMuteControlID, GetObjectID())
 {
     // Initialises the loopback clock with the default sample rate and, if there is one, sets the wrapped device to the same sample rate
     SetSampleRate(kSampleRateDefault);
@@ -674,6 +673,8 @@ void	BGM_Device::Device_GetPropertyData(AudioObjectID inObjectID, pid_t inClient
                     CAException(kAudioHardwareBadPropertySizeError),
                     "BGM_Device::GetPropertyData: not enough space for the return value of "
                     "kAudioDevicePropertyDeviceCanBeDefaultDevice for the device");
+            // TODO: Add a field for this and set it in BGM_Device::StaticInitializer so we don't
+            //       have to handle a specific instance differently here.
             *reinterpret_cast<UInt32*>(outData) = (GetObjectID() == kObjectID_Device_UI_Sounds ? 0 : 1);
             outDataSize = sizeof(UInt32);
             break;
@@ -1299,12 +1300,16 @@ void	BGM_Device::WillDoIOOperation(UInt32 inOperationID, bool& outWillDo, bool& 
 			outWillDo = true;
 			outWillDoInPlace = true;
 			break;
-			
+
+        case kAudioServerPlugInIOOperationProcessMix:
+            outWillDo = mVolumeControl.WillApplyVolumeToAudioRT();
+            outWillDoInPlace = true;
+            break;
+
 		case kAudioServerPlugInIOOperationCycle:
         case kAudioServerPlugInIOOperationConvertInput:
         case kAudioServerPlugInIOOperationProcessInput:
 		case kAudioServerPlugInIOOperationMixOutput:
-		case kAudioServerPlugInIOOperationProcessMix:
 		case kAudioServerPlugInIOOperationConvertMix:
 		default:
 			outWillDo = false;
@@ -1360,6 +1365,23 @@ void	BGM_Device::DoIOOperation(AudioObjectID inStreamObjectID, UInt32 inClientID
 												 reinterpret_cast<const Float32*>(ioMainBuffer));
             }
             ApplyClientRelativeVolume(inClientID, inIOBufferFrameSize, ioMainBuffer);
+            break;
+
+        case kAudioServerPlugInIOOperationProcessMix:
+            {
+                // Check the arguments.
+                ThrowIfNULL(ioMainBuffer,
+                            CAException(kAudioHardwareIllegalOperationError),
+                            "BGM_Device::DoIOOperation: Buffer for "
+                                    "kAudioServerPlugInIOOperationProcessMix must not be null");
+
+                CAMutex::Locker theIOLocker(mIOMutex);
+
+                // We ask to do this IO operation so this device can apply its own volume to the
+                // stream. Currently, only the UI sounds device does.
+                mVolumeControl.ApplyVolumeToAudioRT(reinterpret_cast<Float32*>(ioMainBuffer),
+                                                    inIOBufferFrameSize);
+            }
             break;
 
         case kAudioServerPlugInIOOperationWriteMix:

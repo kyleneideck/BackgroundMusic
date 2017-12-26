@@ -241,8 +241,8 @@ void    BGM_AbstractDevice::GetPropertyData(AudioObjectID inObjectID,
         case kAudioDevicePropertyZeroTimeStampPeriod:
         case kAudioDevicePropertyNominalSampleRate:
         case kAudioDevicePropertyAvailableNominalSampleRates:
-            // Crash debug builds if a concrete device delegates a required property that can't be
-            // handled here or in BGM_Object (the parent of this class).
+            // Should be unreachable. Reaching this point would mean a concrete device has delegated
+            // a required property that can't be handled by this class or its parent, BGM_Object.
             //
             // See BGM_Device for info about these properties.
             //
@@ -250,7 +250,8 @@ void    BGM_AbstractDevice::GetPropertyData(AudioObjectID inObjectID,
             BGMAssert(false,
                       "BGM_AbstractDevice::GetPropertyData: Property %u not handled in subclass",
                       inAddress.mSelector);
-
+            // Throw in release builds.
+            Throw(CAException(kAudioHardwareIllegalOperationError));
 
         case kAudioDevicePropertyTransportType:
             // This value represents how the device is attached to the system. This can be

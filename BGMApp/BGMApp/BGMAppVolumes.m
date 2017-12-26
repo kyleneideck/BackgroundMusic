@@ -142,10 +142,12 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
 - (void) setVolumeOfMenuItem:(NSMenuItem*)menuItem relativeVolume:(int)volume panPosition:(int)pan {
     // Update the sliders.
     for (NSView* subview in menuItem.view.subviews) {
+        // Set the volume.
         if (volume != -1 && [subview isKindOfClass:[BGMAVM_VolumeSlider class]]) {
             [(BGMAVM_VolumeSlider*)subview setRelativeVolume:volume];
         }
 
+        // Set the pan position.
         if (pan != -1 && [subview isKindOfClass:[BGMAVM_PanSlider class]]) {
             [(BGMAVM_PanSlider*)subview setPanPosition:pan];
         }

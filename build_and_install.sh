@@ -148,8 +148,7 @@ if ! [[ -x "${XCODEBUILD}" ]]; then
     XCODEBUILD=$(/usr/bin/xcrun --find xcodebuild &2>>${LOG_FILE} || true)
 fi
 
-# TODO: Update this when/if Xcode 6 is supported.
-RECOMMENDED_MIN_XCODE_VERSION=7
+RECOMMENDED_MIN_XCODE_VERSION=8
 
 usage() {
     echo "Usage: $0 [options]" >&2

@@ -35,38 +35,38 @@
 #import <CoreAudio/AudioHardware.h>
 
 
+#pragma clang assume_nonnull begin
+
 const float                    kSliderEpsilon           = 1e-10f;
 const AudioObjectPropertyScope kScope                   = kAudioDevicePropertyScopeOutput;
 NSString* const __nonnull      kGenericOutputDeviceName = @"Output Device";
 
 @implementation BGMOutputVolumeMenuItem {
     BGMAudioDeviceManager* audioDevices;
-    NSTextField* outputVolumeLabel;
+    NSTextField* deviceLabel;
     NSSlider* volumeSlider;
 }
 
-// TODO: Update the UI when the output device is changed.
 // TODO: Show the output device's icon next to its name.
-// TODO: Disable the slider if the output device doesn't have a volume control.
 // TODO: Should the menu (bgmMenu) hide after you change the output volume slider, like the normal
 //       menu bar volume slider does?
 // TODO: Move the output devices from Preferences to the main menu so they're slightly easier to
 //       access?
-// TODO: Update the screenshot in the README.
+// TODO: Update the screenshot in the README at some point.
 - (instancetype) initWithAudioDevices:(BGMAudioDeviceManager*)devices
                                  view:(NSView*)view
                                slider:(NSSlider*)slider
                           deviceLabel:(NSTextField*)label {
     if ((self = [super initWithTitle:@"" action:nil keyEquivalent:@""])) {
         audioDevices = devices;
-        outputVolumeLabel = label;
+        deviceLabel = label;
         volumeSlider = slider;
 
         // Apply our custom view from MainMenu.xib.
         self.view = view;
 
         [self initSlider];
-        [self setOutputVolumeLabel];
+        [self updateLabelAndToolTip];
     }
 
     return self;
@@ -150,15 +150,16 @@ NSString* const __nonnull      kGenericOutputDeviceName = @"Output Device";
 - (void) outputDeviceDidChange {
     dispatch_async(dispatch_get_main_queue(), ^{
         // Update the label to use the name of the new output device.
-        [self setOutputVolumeLabel];
+        [self updateLabelAndToolTip];
         // Set the slider to the volume of the new device.
         [self updateVolumeSlider];
     });
 }
 
-// Sets the label to the name of the output device. Falls back to a generic name if the device
-// returns an error when queried.
-- (void) setOutputVolumeLabel {
+// Sets the label to the output device's name or, if it has one, its current datasource. If it has a
+// datasource, the device's name is set as this menu item's tooltip. Falls back to a generic name if
+// the device returns an error when queried.
+- (void) updateLabelAndToolTip {
     BGMAudioDevice device = audioDevices.outputDevice;
     BOOL didSetLabel = NO;
 
@@ -167,34 +168,37 @@ NSString* const __nonnull      kGenericOutputDeviceName = @"Output Device";
             // The device has datasources, so use the current datasource's name like macOS does.
             UInt32 dataSourceID = device.GetCurrentDataSourceID(kScope, kMasterChannel);
 
-            outputVolumeLabel.stringValue =
+            deviceLabel.stringValue =
                 (__bridge_transfer NSString*)device.CopyDataSourceNameForID(kScope,
                                                                             kMasterChannel,
                                                                             dataSourceID);
             didSetLabel = YES;  // So we know not to change the text if setting the tooltip fails.
 
-            outputVolumeLabel.toolTip = (__bridge_transfer NSString*)device.CopyName();
+            // Set the tooltip of the menu item (the container) rather than the label because menu
+            // items' tooltips will still appear when a different app is focused and, as far as I
+            // know, BGMApp should never be the foreground app.
+            self.toolTip = (__bridge_transfer NSString*)device.CopyName();
         } else {
-            outputVolumeLabel.stringValue = (__bridge_transfer NSString*)device.CopyName();
+            deviceLabel.stringValue = (__bridge_transfer NSString*)device.CopyName();
         }
     } catch (const CAException& e) {
         BGMLogException(e);
 
         // The device returned an error, so set the label to a generic device name, since we don't
         // want to leave it set to the previous device's name.
-        outputVolumeLabel.toolTip = nil;
+        self.toolTip = nil;
 
         if (!didSetLabel) {
-            outputVolumeLabel.stringValue = kGenericOutputDeviceName;
+            deviceLabel.stringValue = kGenericOutputDeviceName;
         }
     }
 
     // Take the label out of the accessibility hierarchy, which also moves the slider up a level.
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000  // MAC_OS_X_VERSION_10_10
-    if ([outputVolumeLabel.cell respondsToSelector:@selector(setAccessibilityElement:)]) {
+    if ([deviceLabel.cell respondsToSelector:@selector(setAccessibilityElement:)]) {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wpartial-availability"
-        outputVolumeLabel.cell.accessibilityElement = NO;
+        deviceLabel.cell.accessibilityElement = NO;
 #pragma clang diagnostic pop
     }
 #endif
@@ -226,4 +230,7 @@ NSString* const __nonnull      kGenericOutputDeviceName = @"Output Device";
 }
 
 @end
+
+#pragma clang assume_nonnull end
+
 

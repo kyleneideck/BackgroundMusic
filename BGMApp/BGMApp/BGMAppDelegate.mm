@@ -24,11 +24,12 @@
 #import "BGMAppDelegate.h"
 
 // Local Includes
-#import "BGM_Types.h"
+#import "BGM_Utils.h"
 #import "BGMUserDefaults.h"
 #import "BGMMusicPlayers.h"
 #import "BGMAutoPauseMusic.h"
 #import "BGMAutoPauseMenuItem.h"
+#import "BGMSystemSoundsVolume.h"
 #import "BGMAppVolumesController.h"
 #import "BGMPreferencesMenu.h"
 #import "BGMXPCListener.h"
@@ -55,6 +56,7 @@ static float const kStatusBarIconPadding = 0.25;
     BGMAutoPauseMusic* autoPauseMusic;
     BGMAutoPauseMenuItem* autoPauseMenuItem;
     BGMMusicPlayers* musicPlayers;
+    BGMSystemSoundsVolume* systemSoundsVolume;
     BGMAppVolumesController* appVolumes;
     BGMPreferencesMenu* prefsMenu;
     BGMXPCListener* xpcListener;
@@ -172,23 +174,8 @@ static float const kStatusBarIconPadding = 0.25;
                                       [self showXPCHelperErrorMessage:error];
                                   }];
 
-    // Create the menu item with the (main) output volume slider.
-    BGMOutputVolumeMenuItem* outputVolume =
-        [[BGMOutputVolumeMenuItem alloc] initWithAudioDevices:audioDevices
-                                                         view:self.outputVolumeView
-                                                       slider:self.outputVolumeSlider
-                                                  deviceLabel:self.outputVolumeLabel];
-    [audioDevices setOutputVolumeMenuItem:outputVolume];
+    [self initVolumesMenuSection];
 
-    // Add it to the main menu below the "Volumes" heading.
-    [self.bgmMenu insertItem:outputVolume
-                     atIndex:([self.bgmMenu indexOfItemWithTag:kVolumesHeadingMenuItemTag] + 1)];
-
-
-    appVolumes = [[BGMAppVolumesController alloc] initWithMenu:self.bgmMenu
-                                                 appVolumeView:self.appVolumeView
-                                                  audioDevices:audioDevices];
-    
     prefsMenu = [[BGMPreferencesMenu alloc] initWithBGMMenu:self.bgmMenu
                                                audioDevices:audioDevices
                                                musicPlayers:musicPlayers
@@ -225,6 +212,36 @@ static float const kStatusBarIconPadding = 0.25;
     }
 
     return YES;
+}
+
+- (void) initVolumesMenuSection {
+    // Create the menu item with the (main) output volume slider.
+    BGMOutputVolumeMenuItem* outputVolume =
+            [[BGMOutputVolumeMenuItem alloc] initWithAudioDevices:audioDevices
+                                                             view:self.outputVolumeView
+                                                           slider:self.outputVolumeSlider
+                                                      deviceLabel:self.outputVolumeLabel];
+    [audioDevices setOutputVolumeMenuItem:outputVolume];
+
+    NSInteger headingIdx = [self.bgmMenu indexOfItemWithTag:kVolumesHeadingMenuItemTag];
+
+    // Add it to the main menu below the "Volumes" heading.
+    [self.bgmMenu insertItem:outputVolume atIndex:(headingIdx + 1)];
+
+    // Add the volume control for system (UI) sounds to the menu.
+    BGMAudioDevice uiSoundsDevice = [audioDevices bgmDevice].GetUISoundsBGMDeviceInstance();
+
+    systemSoundsVolume =
+        [[BGMSystemSoundsVolume alloc] initWithUISoundsDevice:uiSoundsDevice
+                                                         view:self.systemSoundsView
+                                                       slider:self.systemSoundsSlider];
+
+    [self.bgmMenu insertItem:systemSoundsVolume.menuItem atIndex:(headingIdx + 2)];
+
+    // Add the app volumes to the menu.
+    appVolumes = [[BGMAppVolumesController alloc] initWithMenu:self.bgmMenu
+                                                 appVolumeView:self.appVolumeView
+                                                  audioDevices:audioDevices];
 }
 
 - (void) applicationWillTerminate:(NSNotification*)aNotification {

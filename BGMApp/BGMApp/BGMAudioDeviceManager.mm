@@ -186,7 +186,7 @@
 #pragma mark Systemwide Default Device
 
 // Note that there are two different "default" output devices on OS X: "output" and "system output". See
-// AudioHardwarePropertyDefaultSystemOutputDevice in AudioHardware.h.
+// kAudioHardwarePropertyDefaultSystemOutputDevice in AudioHardware.h.
 
 - (NSError* __nullable) setBGMDeviceAsOSDefault {
     // Copy bgmDevice so we can call the HAL without holding stateLock. See startPlayThroughSync.

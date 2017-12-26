@@ -45,6 +45,8 @@
 		1C533C7B1EED2F6200270802 /* safe_install_dir.sh in Resources */ = {isa = PBXBuildFile; fileRef = 276972901CB16008007A2F7C /* safe_install_dir.sh */; };
 		1C533C7C1EED2F8A00270802 /* com.bearisdriving.BGM.XPCHelper.plist.template in Resources */ = {isa = PBXBuildFile; fileRef = 2769728D1CAFCEFD007A2F7C /* com.bearisdriving.BGM.XPCHelper.plist.template */; };
 		1C533C801EF532CA00270802 /* _uninstall-non-interactive.sh in Resources */ = {isa = PBXBuildFile; fileRef = 1C533C7F1EF532CA00270802 /* _uninstall-non-interactive.sh */; };
+		1C780FF21FEF6C3B00497FAD /* BGMSystemSoundsVolume.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C780FF11FEF6C3B00497FAD /* BGMSystemSoundsVolume.mm */; };
+		1C780FF31FEF6C3B00497FAD /* BGMSystemSoundsVolume.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C780FF11FEF6C3B00497FAD /* BGMSystemSoundsVolume.mm */; };
 		1C837DD81F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C837DD71F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm */; };
 		1C837DD91F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C837DD71F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm */; };
 		1C837DDA1F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C837DD71F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm */; };
@@ -251,6 +253,8 @@
 		1C46994D1BD7694C00F78043 /* BGMDeviceControlSync.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BGMDeviceControlSync.h; sourceTree = "<group>"; };
 		1C533C791EED28B700270802 /* uninstall.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = uninstall.sh; path = ../../uninstall.sh; sourceTree = "<group>"; };
 		1C533C7F1EF532CA00270802 /* _uninstall-non-interactive.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = "_uninstall-non-interactive.sh"; sourceTree = "<group>"; };
+		1C780FF01FEF6C3B00497FAD /* BGMSystemSoundsVolume.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BGMSystemSoundsVolume.h; sourceTree = "<group>"; };
+		1C780FF11FEF6C3B00497FAD /* BGMSystemSoundsVolume.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = BGMSystemSoundsVolume.mm; sourceTree = "<group>"; };
 		1C8034C21BDAFD5700668E00 /* CAPThread.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CAPThread.cpp; path = PublicUtility/CAPThread.cpp; sourceTree = "<group>"; };
 		1C8034C31BDAFD5700668E00 /* CAPThread.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CAPThread.h; path = PublicUtility/CAPThread.h; sourceTree = "<group>"; };
 		1C837DD61F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BGMOutputVolumeMenuItem.h; sourceTree = "<group>"; };
@@ -286,7 +290,7 @@
 		1CE7064A1BF1EC0600BFC06D /* BGMOutputDevicePrefs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGMOutputDevicePrefs.h; path = Preferences/BGMOutputDevicePrefs.h; sourceTree = "<group>"; };
 		1CE7064B1BF1EC0600BFC06D /* BGMOutputDevicePrefs.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = BGMOutputDevicePrefs.mm; path = Preferences/BGMOutputDevicePrefs.mm; sourceTree = "<group>"; };
 		1CEACF4E1F34A30000FEC143 /* Mock_CAHALAudioSystemObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Mock_CAHALAudioSystemObject.cpp; path = UnitTests/Mock_CAHALAudioSystemObject.cpp; sourceTree = "<group>"; };
-		1CED61681C3081C2002CAFCF /* LICENSE */ = {isa = PBXFileReference; fileEncoding = 1; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
+		1CED61681C3081C2002CAFCF /* LICENSE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		1CED616A1C316E1A002CAFCF /* BGMAudioDeviceManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BGMAudioDeviceManager.h; sourceTree = "<group>"; };
 		1CED616B1C316E1A002CAFCF /* BGMAudioDeviceManager.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = BGMAudioDeviceManager.mm; sourceTree = "<group>"; };
 		1CF5423A1EAAEE4300445AD8 /* BGMAudioDevice.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BGMAudioDevice.cpp; sourceTree = "<group>"; };
@@ -314,7 +318,7 @@
 		2743CA1C1D86DA9B0089613B /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		275343BF1DFD01BC00DF3858 /* SystemPreferences.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SystemPreferences.h; sourceTree = "<group>"; };
 		2769728B1CAFCEE8007A2F7C /* post_install.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = post_install.sh; path = BGMXPCHelper/post_install.sh; sourceTree = SOURCE_ROOT; };
-		2769728D1CAFCEFD007A2F7C /* com.bearisdriving.BGM.XPCHelper.plist.template */ = {isa = PBXFileReference; explicitFileType = text.xml; fileEncoding = 1; name = com.bearisdriving.BGM.XPCHelper.plist.template; path = BGMXPCHelper/com.bearisdriving.BGM.XPCHelper.plist.template; sourceTree = SOURCE_ROOT; };
+		2769728D1CAFCEFD007A2F7C /* com.bearisdriving.BGM.XPCHelper.plist.template */ = {isa = PBXFileReference; explicitFileType = text.xml; fileEncoding = 4; name = com.bearisdriving.BGM.XPCHelper.plist.template; path = BGMXPCHelper/com.bearisdriving.BGM.XPCHelper.plist.template; sourceTree = SOURCE_ROOT; };
 		276972901CB16008007A2F7C /* safe_install_dir.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = safe_install_dir.sh; path = BGMXPCHelper/safe_install_dir.sh; sourceTree = SOURCE_ROOT; };
 		2771700F1CA0C83B00AB34B4 /* BGM_Utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGM_Utils.h; path = ../SharedSource/BGM_Utils.h; sourceTree = "<group>"; };
 		277170141CA24D7C00AB34B4 /* BGMXPCListenerDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGMXPCListenerDelegate.h; path = BGMXPCHelper/BGMXPCListenerDelegate.h; sourceTree = SOURCE_ROOT; };
@@ -532,6 +536,8 @@
 				1CB8B33C1BBA75EF000E2DD1 /* BGMAppDelegate.mm */,
 				1C837DD61F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.h */,
 				1C837DD71F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm */,
+				1C780FF01FEF6C3B00497FAD /* BGMSystemSoundsVolume.h */,
+				1C780FF11FEF6C3B00497FAD /* BGMSystemSoundsVolume.mm */,
 				1C3DB48A1BE0888500EC8160 /* BGMAppVolumes.h */,
 				1C3DB4881BE0885A00EC8160 /* BGMAppVolumes.m */,
 				1CD410D21F9EDDAD0070A094 /* BGMAppVolumesController.h */,
@@ -928,6 +934,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1C86DA6A1F91EE3B000C8CCF /* CAPThread.cpp in Sources */,
+				1C780FF21FEF6C3B00497FAD /* BGMSystemSoundsVolume.mm in Sources */,
 				1C4699471BD5C0E400F78043 /* BGMiTunes.m in Sources */,
 				1CD410D41F9EDDAD0070A094 /* BGMAppVolumesController.mm in Sources */,
 				1C1962E41BC94E15008A4DF7 /* CARingBuffer.cpp in Sources */,
@@ -982,6 +989,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1CACCF3A1F334447007F86CA /* BGMBackgroundMusicDevice.cpp in Sources */,
+				1C780FF31FEF6C3B00497FAD /* BGMSystemSoundsVolume.mm in Sources */,
 				1CC6593D1F91DEB400B0CCDC /* BGMTermination.mm in Sources */,
 				1CD410D51F9EDDAD0070A094 /* BGMAppVolumesController.mm in Sources */,
 				1CD989571ECFFD250014BBBF /* CAHostTimeBase.cpp in Sources */,

@@ -69,7 +69,7 @@ public:
     bool                          mIsMusicPlayer = false;
     
     // The client's volume relative to other clients. In the range [0.0, 4.0], defaults to 1.0 (unchanged).
-    // mRelativeVolumeCurve is applied this this value when it's set.
+    // mRelativeVolumeCurve is applied to this value when it's set.
     Float32                       mRelativeVolume = 1.0;
     
     // The client's pan position, in the range [-100, 100] where -100 is left and 100 is right

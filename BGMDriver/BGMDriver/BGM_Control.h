@@ -22,7 +22,6 @@
 //  An AudioObject that represents a user-controllable aspect of a device or stream, such as volume
 //  or balance.
 //
-//
 
 #ifndef BGMDriver__BGM_Control
 #define BGMDriver__BGM_Control
@@ -43,9 +42,10 @@ protected:
                                     AudioClassID inClassID,
                                     AudioClassID inBaseClassID,
                                     AudioObjectID inOwnerObjectID,
-                                    AudioObjectPropertyScope inScope,
-                                    AudioObjectPropertyElement inElement
-                                            = kAudioObjectPropertyElementMaster);
+                                    AudioObjectPropertyScope inScope =
+                                            kAudioObjectPropertyScopeOutput,
+                                    AudioObjectPropertyElement inElement =
+                                            kAudioObjectPropertyElementMaster);
 
 #pragma mark Property Operations
 

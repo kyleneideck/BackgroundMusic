@@ -61,7 +61,7 @@ the Background Music device. You can create the aggregate device using the Audio
 ## Install from source
 
 Building should take less than a minute, but you'll need [Xcode](https://developer.apple.com/xcode/download/) version 
-7 or higher.
+8 or higher.
 
 If you're comfortable with it, you can just paste the following at a Terminal prompt.
 

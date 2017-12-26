@@ -300,7 +300,7 @@ Float32 BGM_Clients::GetClientRelativeVolumeRT(UInt32 inClientID) const
 {
     BGM_Client theClient;
     bool didGetClient = mClientMap.GetClientRT(inClientID, &theClient);
-    return (didGetClient ? theClient.mRelativeVolume : 1.0);
+    return (didGetClient ? theClient.mRelativeVolume : 1.0f);
 }
 
 SInt32 BGM_Clients::GetClientPanPositionRT(UInt32 inClientID) const

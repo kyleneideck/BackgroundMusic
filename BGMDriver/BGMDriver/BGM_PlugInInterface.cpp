@@ -116,6 +116,7 @@ static BGM_Object& BGM_LookUpOwnerObject(AudioObjectID inObjectID)
         case kObjectID_Device_UI_Sounds:
         case kObjectID_Stream_Input_UI_Sounds:
         case kObjectID_Stream_Output_UI_Sounds:
+        case kObjectID_Volume_Output_Master_UI_Sounds:
             return BGM_Device::GetUISoundsInstance();
 
         case kObjectID_Device_Null:

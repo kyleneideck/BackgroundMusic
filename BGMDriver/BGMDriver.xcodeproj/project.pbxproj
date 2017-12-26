@@ -21,6 +21,7 @@
 		1C7010761F05ED5100D8CCDC /* BGM_AudibleState.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C7010731F05ED5100D8CCDC /* BGM_AudibleState.cpp */; };
 		1C7010791F07A0BA00D8CCDC /* BGM_VolumeControl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C7010771F07A0BA00D8CCDC /* BGM_VolumeControl.cpp */; };
 		1C70107A1F07A0BA00D8CCDC /* BGM_VolumeControl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C7010771F07A0BA00D8CCDC /* BGM_VolumeControl.cpp */; };
+		1C780FEF1FEE78E800497FAD /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1C780FEE1FEE78E800497FAD /* Accelerate.framework */; };
 		1C8034DD1BDD073B00668E00 /* BGM_ClientsTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C8034DC1BDD073B00668E00 /* BGM_ClientsTests.mm */; };
 		1CA2A9E21E8D1D08007A76A4 /* BGM_Stream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CA2A9E01E8D1D08007A76A4 /* BGM_Stream.cpp */; };
 		1CB8B36E1BBBD541000E2DD1 /* BGM_PlugInInterface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CB8B36D1BBBD541000E2DD1 /* BGM_PlugInInterface.cpp */; };
@@ -105,6 +106,7 @@
 		1C7010741F05ED5100D8CCDC /* BGM_AudibleState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BGM_AudibleState.h; sourceTree = "<group>"; };
 		1C7010771F07A0BA00D8CCDC /* BGM_VolumeControl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BGM_VolumeControl.cpp; sourceTree = "<group>"; };
 		1C7010781F07A0BA00D8CCDC /* BGM_VolumeControl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BGM_VolumeControl.h; sourceTree = "<group>"; };
+		1C780FEE1FEE78E800497FAD /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
 		1C8034DA1BDD073B00668E00 /* BGMDriverTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BGMDriverTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1C8034DC1BDD073B00668E00 /* BGM_ClientsTests.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = BGM_ClientsTests.mm; sourceTree = "<group>"; };
 		1C8034DE1BDD073B00668E00 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -175,6 +177,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1C780FEF1FEE78E800497FAD /* Accelerate.framework in Frameworks */,
 				2743C9E61D7EF8E00089613B /* libPublicUtility.a in Frameworks */,
 				2795973E1C9847CF00A002FB /* Foundation.framework in Frameworks */,
 				1CB8B3761BBBD924000E2DD1 /* CoreAudio.framework in Frameworks */,
@@ -324,6 +327,7 @@
 		2743CA241D86E2E80089613B /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				1C780FEE1FEE78E800497FAD /* Accelerate.framework */,
 				1CB8B3741BBBD924000E2DD1 /* CoreAudio.framework */,
 				1CB8B3751BBBD924000E2DD1 /* CoreFoundation.framework */,
 				2795973D1C9847CF00A002FB /* Foundation.framework */,

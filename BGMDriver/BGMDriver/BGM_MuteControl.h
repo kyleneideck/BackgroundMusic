@@ -46,7 +46,8 @@ class BGM_MuteControl
 public:
                               BGM_MuteControl(AudioObjectID inObjectID,
                                               AudioObjectID inOwnerObjectID,
-                                              AudioObjectPropertyScope inScope,
+                                              AudioObjectPropertyScope inScope =
+                                                      kAudioObjectPropertyScopeOutput,
                                               AudioObjectPropertyElement inElement =
                                                       kAudioObjectPropertyElementMaster);
 

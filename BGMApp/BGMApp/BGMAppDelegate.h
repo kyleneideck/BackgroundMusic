@@ -36,12 +36,19 @@ static NSInteger const kSeparatorBelowVolumesMenuItemTag = 4;
 @interface BGMAppDelegate : NSObject <NSApplicationDelegate, NSMenuDelegate>
 
 @property (weak) IBOutlet NSMenu* bgmMenu;
+
 @property (weak) IBOutlet NSView* outputVolumeView;
 @property (weak) IBOutlet NSTextField* outputVolumeLabel;
 @property (weak) IBOutlet NSSlider* outputVolumeSlider;
+
+@property (weak) IBOutlet NSView* systemSoundsView;
+@property (weak) IBOutlet NSSlider* systemSoundsSlider;
+
 @property (weak) IBOutlet NSView* appVolumeView;
+
 @property (weak) IBOutlet NSPanel* aboutPanel;
 @property (unsafe_unretained) IBOutlet NSTextView* aboutPanelLicenseView;
+
 @property (weak) IBOutlet NSMenuItem* autoPauseMenuItemUnwrapped;
 
 @property (readonly) BGMAudioDeviceManager* audioDevices;

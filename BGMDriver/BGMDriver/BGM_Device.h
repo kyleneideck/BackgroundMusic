@@ -69,12 +69,6 @@ protected:
                                            const CFStringRef __nonnull inDeviceUID,
 										   const CFStringRef __nonnull inDeviceModelUID,
                                            AudioObjectID inInputStreamID,
-                                           AudioObjectID inOutputStreamID);
-                                BGM_Device(AudioObjectID inObjectID,
-                                           const CFStringRef __nonnull inDeviceName,
-										   const CFStringRef __nonnull inDeviceUID,
-										   const CFStringRef __nonnull inDeviceModelUID,
-                                           AudioObjectID inInputStreamID,
                                            AudioObjectID inOutputStreamID,
                                            AudioObjectID inOutputVolumeControlID,
 										   AudioObjectID inOutputMuteControlID);
