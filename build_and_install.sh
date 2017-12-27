@@ -40,7 +40,7 @@ set -o errtrace
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
 error_handler() {
-    LAST_COMMAND="${BASH_COMMAND}" LAST_COMMAND_EXIT_STATUS=$?
+    LAST_COMMAND="$3" LAST_COMMAND_EXIT_STATUS="$2"
 
     # Log the error.
     echo "Failure in $0 at line $1. The last command was (probably)" >> ${LOG_FILE}
@@ -86,7 +86,7 @@ enable_error_handling() {
         # TODO: The version of Bash that ships with OSX only gives you the line number of the
         #       function the error occurred in -- not the line the error occurred on. There are a
         #       few solutions suggested on various websites, but none of them work.
-        trap 'error_handler ${LINENO}' ERR
+        trap 'error_handler ${LINENO} $? "${BASH_COMMAND}"' ERR
     fi
 }
 
@@ -219,12 +219,11 @@ show_spinner() {
     # (wait returns 127 if the process has already exited.)
     if [[ ${EXIT_STATUS} -ne 0 ]] && [[ ${EXIT_STATUS} -ne 127 ]]; then
         ERROR_MSG="$1"
-        if [[ ${DID_TIMEOUT} -eq 0 ]]; then
-            ERROR_MSG+="\n\nFailed command:
-                            ${PREV_COMMAND_STRING}"
+        if [[ ${DID_TIMEOUT} -ne 0 ]]; then
+            ERROR_MSG+="\n\nCommand timed out after ${TIMEOUT} seconds."
         fi
 
-        error_handler ${LINENO}
+        error_handler ${LINENO} ${EXIT_STATUS} "${PREV_COMMAND_STRING}"
 
         if [[ ${CONTINUE_ON_ERROR} -eq 0 ]]; then
             exit ${EXIT_STATUS}
