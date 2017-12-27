@@ -2,10 +2,14 @@ language: objective-c
 matrix:
   include:
     - os: osx
-      osx_image: xcode9.1
+      osx_image: xcode9.2
       xcode_sdk: macosx10.13
       sudo: required
       env: DEPLOY=true
+    - os: osx
+      osx_image: xcode9.1
+      xcode_sdk: macosx10.13
+      sudo: required
     - os: osx
       osx_image: xcode9
       xcode_sdk: macosx10.13
@@ -13,18 +17,6 @@ matrix:
     - os: osx
       osx_image: xcode8.3
       xcode_sdk: macosx10.12
-      sudo: required
-    - os: osx
-      osx_image: xcode8.2
-      xcode_sdk: macosx10.12
-      sudo: required
-    - os: osx
-      osx_image: xcode8.1
-      xcode_sdk: macosx10.12
-      sudo: required
-    - os: osx
-      osx_image: xcode8
-      xcode_sdk: macosx10.11
       sudo: required
     - os: osx
       osx_image: xcode7.3
@@ -77,8 +69,8 @@ script:
   - if ls -la "/Library/LaunchDaemons/com.bearisdriving.BGM.XPCHelper.plist"; then false; fi
 # Return early if we're not testing packaging on this OS X version.
   - if [[ "$PACKAGE" == "false" ]]; then exit 0; fi
-# Build the .pkg installer.
-  - ./package.sh
+# Build the .pkg installer. (Print the logs if it fails.)
+  - ./package.sh || (cat build_and_install.log && false)
 # Install the .pkg.
   - sudo installer -pkg Background-Music-*/BackgroundMusic-*.pkg -target / -verbose -dumplog
 # Check the BGM dirs and files were installed again.
