@@ -1,0 +1,15 @@
+# This file was added to get GitHub to display our source code correctly when
+# it has mixed tabs and spaces. (I didn't realise the sample code BGMDriver is
+# based on used tabs and it's too late to fix it now.)
+#
+# See http://editorconfig.org.
+
+# This is the top-most .editorconfig file.
+root = true
+
+# Set tabs to the width of 4 spaces in C, C++, Objective-C and Objective-C++
+# source files.
+[*.{h,c,cpp,m,mm}]
+tab_width = 4
+
+
