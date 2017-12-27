@@ -22,6 +22,7 @@
 		1C7010791F07A0BA00D8CCDC /* BGM_VolumeControl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C7010771F07A0BA00D8CCDC /* BGM_VolumeControl.cpp */; };
 		1C70107A1F07A0BA00D8CCDC /* BGM_VolumeControl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C7010771F07A0BA00D8CCDC /* BGM_VolumeControl.cpp */; };
 		1C780FEF1FEE78E800497FAD /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1C780FEE1FEE78E800497FAD /* Accelerate.framework */; };
+		1C780FF41FF275F300497FAD /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1C780FEE1FEE78E800497FAD /* Accelerate.framework */; };
 		1C8034DD1BDD073B00668E00 /* BGM_ClientsTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C8034DC1BDD073B00668E00 /* BGM_ClientsTests.mm */; };
 		1CA2A9E21E8D1D08007A76A4 /* BGM_Stream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CA2A9E01E8D1D08007A76A4 /* BGM_Stream.cpp */; };
 		1CB8B36E1BBBD541000E2DD1 /* BGM_PlugInInterface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CB8B36D1BBBD541000E2DD1 /* BGM_PlugInInterface.cpp */; };
@@ -169,6 +170,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1C780FF41FF275F300497FAD /* Accelerate.framework in Frameworks */,
 				1CBB322C1BDD3A3000C9BD55 /* CoreAudio.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
