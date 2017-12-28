@@ -101,9 +101,9 @@ private:
      */
     void                SetNullDeviceEnabled(bool inEnabled);
 
-    dispatch_block_t    CreateDeviceToggleBlock();
-    dispatch_block_t    CreateDeviceToggleBackBlock();
-    dispatch_block_t    CreateDisableNullDeviceBlock();
+    dispatch_block_t __nullable CreateDeviceToggleBlock();
+    dispatch_block_t __nullable CreateDeviceToggleBackBlock();
+    dispatch_block_t __nullable CreateDisableNullDeviceBlock();
 
     void                DestroyBlock(dispatch_block_t __nullable & block);
 
@@ -122,12 +122,13 @@ private:
     };
     BGMDeviceControlsList::ToggleState mDeviceToggleState = ToggleState::NotToggling;
 
-    dispatch_block_t    mDeviceToggleBlock;
-    dispatch_block_t    mDeviceToggleBackBlock;
-    dispatch_block_t    mDisableNullDeviceBlock;
+    dispatch_block_t __nullable mDeviceToggleBlock      = nullptr;
+    dispatch_block_t __nullable mDeviceToggleBackBlock  = nullptr;
+    dispatch_block_t __nullable mDisableNullDeviceBlock = nullptr;
 
-    dispatch_queue_t    mListenerQueue;
-    AudioObjectPropertyListenerBlock mListenerBlock;
+    // These will only ever be null after construction on 10.9, since toggling will be disabled.
+    dispatch_queue_t __nullable                 mListenerQueue = nullptr;
+    AudioObjectPropertyListenerBlock __nullable mListenerBlock = nullptr;
 
 };
 

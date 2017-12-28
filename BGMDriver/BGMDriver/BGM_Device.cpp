@@ -40,12 +40,12 @@
 #include "CACFArray.h"
 #include "CACFString.h"
 #include "CADebugMacros.h"
+#include "CAHostTimeBase.h"
 
 // STL Includes
 #include <stdexcept>
 
 // System Includes
-#include <mach/mach_time.h>
 #include <CoreAudio/AudioHardwareBase.h>
 
 
@@ -142,7 +142,7 @@ BGM_Device::BGM_Device(AudioObjectID inObjectID,
     mMuteControl(inOutputMuteControlID, GetObjectID())
 {
     // Initialises the loopback clock with the default sample rate and, if there is one, sets the wrapped device to the same sample rate
-    SetSampleRate(kSampleRateDefault);
+    SetSampleRate(kSampleRateDefault, true);
 }
 
 BGM_Device::~BGM_Device()
@@ -196,12 +196,8 @@ void	BGM_Device::Deactivate()
 
 void    BGM_Device::InitLoopback()
 {
-    //	Calculate the host ticks per frame for the loopback timer
-    struct mach_timebase_info theTimeBaseInfo;
-    mach_timebase_info(&theTimeBaseInfo);
-    Float64 theHostClockFrequency = theTimeBaseInfo.denom / theTimeBaseInfo.numer;
-    theHostClockFrequency *= 1000000000.0;
-    mLoopbackTime.hostTicksPerFrame = theHostClockFrequency / mLoopbackSampleRate;
+    // Calculate the number of host clock ticks per frame for our loopback clock.
+    mLoopbackTime.hostTicksPerFrame = CAHostTimeBase::GetFrequency() / mLoopbackSampleRate;
     
     //  Zero-out the loopback buffer
     //  2 channels * 32-bit float = bytes in each frame
@@ -1268,7 +1264,7 @@ void	BGM_Device::GetZeroTimeStamp(Float64& outSampleTime, UInt64& outHostTime, U
     	UInt64 theNextHostTime;
     	
     	//	get the current host time
-    	theCurrentHostTime = mach_absolute_time();
+        theCurrentHostTime = CAHostTimeBase::GetTheCurrentTime();
     	
     	//	calculate the next host time
     	theHostTicksPerRingBuffer = mLoopbackTime.hostTicksPerFrame * kLoopbackRingBufferFrameSize;
@@ -1707,7 +1703,7 @@ void    BGM_Device::SetEnabledControls(bool inVolumeEnabled, bool inMuteEnabled)
     }
 }
 
-void	BGM_Device::SetSampleRate(Float64 inSampleRate)
+void BGM_Device::SetSampleRate(Float64 inSampleRate, bool force)
 {
     // We try to support any sample rate a real output device might.
     ThrowIf(inSampleRate < 1.0,
@@ -1715,24 +1711,37 @@ void	BGM_Device::SetSampleRate(Float64 inSampleRate)
             "BGM_Device::SetSampleRate: unsupported sample rate");
 
     CAMutex::Locker theStateLocker(mStateMutex);
-    
-    // Update the sample rate on the wrapped device if we have one.
-    if(mWrappedAudioEngine != nullptr)
+
+    Float64 theCurrentSampleRate = GetSampleRate();
+
+    if((inSampleRate != theCurrentSampleRate) || force)  // Check whether we need to change it.
     {
-        kern_return_t theError = _HW_SetSampleRate(inSampleRate);
-        ThrowIfKernelError(theError,
-                           CAException(kAudioHardwareUnspecifiedError),
-                           "BGM_Device::SetSampleRate: Error setting the sample rate on the "
-                           "wrapped audio device.");
+        DebugMsg("BGM_Device::SetSampleRate: Changing the sample rate from %f to %f",
+                 theCurrentSampleRate,
+                 inSampleRate);
+
+        // Update the sample rate on the wrapped device if we have one.
+        if(mWrappedAudioEngine != nullptr)
+        {
+            kern_return_t theError = _HW_SetSampleRate(inSampleRate);
+            ThrowIfKernelError(theError,
+                               CAException(kAudioHardwareUnspecifiedError),
+                               "BGM_Device::SetSampleRate: Error setting the sample rate on the "
+                               "wrapped audio device.");
+        }
+
+        // Update the sample rate for loopback.
+        mLoopbackSampleRate = inSampleRate;
+        InitLoopback();
+
+        // Update the streams.
+        mInputStream.SetSampleRate(inSampleRate);
+        mOutputStream.SetSampleRate(inSampleRate);
     }
-
-    // Update the sample rate for loopback.
-    mLoopbackSampleRate = inSampleRate;
-    InitLoopback();
-
-    // Update the streams.
-    mInputStream.SetSampleRate(inSampleRate);
-    mOutputStream.SetSampleRate(inSampleRate);
+    else
+    {
+        DebugMsg("BGM_Device::SetSampleRate: The sample rate is already set to %f", inSampleRate);
+    }
 }
 
 bool    BGM_Device::IsStreamID(AudioObjectID inObjectID) const noexcept
@@ -1763,7 +1772,7 @@ kern_return_t	BGM_Device::_HW_StartIO()
     
     // Reset the loopback timing values
     mLoopbackTime.numberTimeStamps = 0;
-    mLoopbackTime.anchorHostTime = mach_absolute_time();
+    mLoopbackTime.anchorHostTime = CAHostTimeBase::GetTheCurrentTime();
     // ...and the most-recent audible/silent sample times. mAudibleState is usually guarded by the
 	// IO mutex, but we haven't started IO yet (and this function can only be called by one thread
 	// at a time).

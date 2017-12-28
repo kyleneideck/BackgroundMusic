@@ -68,11 +68,15 @@ BGMDeviceControlsList::~BGMDeviceControlsList()
         return;
     }
 
-    BGMLogAndSwallowExceptions("BGMDeviceControlsList::~BGMDeviceControlsList", [&] {
-        mAudioSystem.RemovePropertyListenerBlock(CAPropertyAddress(kAudioHardwarePropertyDevices),
-                                                 mListenerQueue,
-                                                 mListenerBlock);
-    });
+    if(mListenerQueue && mListenerBlock)
+    {
+        BGMLogAndSwallowExceptions("BGMDeviceControlsList::~BGMDeviceControlsList", ([&] {
+            mAudioSystem.RemovePropertyListenerBlock(
+                    CAPropertyAddress(kAudioHardwarePropertyDevices),
+                    mListenerQueue,
+                    mListenerBlock);
+        }));
+    }
 
     // If we're in the middle of toggling the default device, block until we've finished.
     if(mDisableNullDeviceBlock && mDeviceToggleState != ToggleState::NotToggling)
@@ -89,7 +93,7 @@ BGMDeviceControlsList::~BGMDeviceControlsList()
         // worry about ending up waiting for mDisableNullDeviceBlock when it isn't queued.
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wpartial-availability"
-        bool timedOut = dispatch_block_wait(disableNullDeviceBlock, kDisableNullDeviceTimeout);
+        long timedOut = dispatch_block_wait(disableNullDeviceBlock, kDisableNullDeviceTimeout);
 #pragma clang diagnostic pop
 
         if(timedOut)
@@ -104,8 +108,15 @@ BGMDeviceControlsList::~BGMDeviceControlsList()
     DestroyBlock(mDeviceToggleBackBlock);
     DestroyBlock(mDisableNullDeviceBlock);
 
-    Block_release(mListenerBlock);
-    dispatch_release(mListenerQueue);
+    if(mListenerBlock)
+    {
+        Block_release(mListenerBlock);
+    }
+
+    if(mListenerQueue)
+    {
+        dispatch_release(BGM_Utils::NN(mListenerQueue));
+    }
 }
 
 #pragma mark Accessors
@@ -294,10 +305,6 @@ void    BGMDeviceControlsList::InitDeviceToggling()
               "BGMDeviceControlsList::InitDeviceToggling: mBGMDevice device is not set to "
               "BGMDevice's ID");
 
-    mDeviceToggleBlock = CreateDeviceToggleBlock();
-    mDeviceToggleBackBlock = CreateDeviceToggleBackBlock();
-    mDisableNullDeviceBlock = CreateDisableNullDeviceBlock();
-
     // Register a listener to find out when the Null Device becomes available/unavailable. See
     // ToggleDefaultDevice.
 #pragma clang diagnostic push
@@ -335,9 +342,13 @@ void    BGMDeviceControlsList::InitDeviceToggling()
                         // seems to cause problems with some programs. Not sure why.
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wpartial-availability"
-                        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kToggleDeviceInitialDelay),
-                                       dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0),
-                                       mDeviceToggleBlock);
+                        if(mDeviceToggleBlock)
+                        {
+                            dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
+                                                         kToggleDeviceInitialDelay),
+                                           dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0),
+                                           BGM_Utils::NN(mDeviceToggleBlock));
+                        }
 #pragma clang diagnostic pop
                     }
                     break;
@@ -389,9 +400,12 @@ void    BGMDeviceControlsList::ToggleDefaultDevice()
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wpartial-availability"
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kToggleDeviceBackDelay),
-                   dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0),
-                   mDeviceToggleBackBlock);
+    if(mDeviceToggleBackBlock)
+    {
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kToggleDeviceBackDelay),
+                       dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0),
+                       BGM_Utils::NN(mDeviceToggleBackBlock));
+    }
 #pragma clang diagnostic pop
 }
 
@@ -415,11 +429,11 @@ void    BGMDeviceControlsList::SetNullDeviceEnabled(bool inEnabled)
                                      (inEnabled ? kCFBooleanTrue : kCFBooleanFalse));
 }
 
-dispatch_block_t    BGMDeviceControlsList::CreateDeviceToggleBlock()
+dispatch_block_t __nullable BGMDeviceControlsList::CreateDeviceToggleBlock()
 {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wpartial-availability"
-    return dispatch_block_create((dispatch_block_flags_t)0, ^{
+    dispatch_block_t __nullable toggleBlock = dispatch_block_create((dispatch_block_flags_t)0, ^{
 #pragma clang diagnostic pop
         CAMutex::Locker locker(mMutex);
 
@@ -431,13 +445,22 @@ dispatch_block_t    BGMDeviceControlsList::CreateDeviceToggleBlock()
             }));
         }
     });
+
+    if(!toggleBlock)
+    {
+        // Pretty sure this should never happen, but the docs aren't completely clear.
+        LogError("BGMDeviceControlsList::CreateDeviceToggleBlock: !toggleBlock");
+    }
+
+    return toggleBlock;
 }
 
-dispatch_block_t    BGMDeviceControlsList::CreateDeviceToggleBackBlock()
+dispatch_block_t __nullable BGMDeviceControlsList::CreateDeviceToggleBackBlock()
 {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wpartial-availability"
-    return dispatch_block_create((dispatch_block_flags_t)0, ^{
+    dispatch_block_t __nullable toggleBackBlock =
+            dispatch_block_create((dispatch_block_flags_t)0, ^{
 #pragma clang diagnostic pop
         CAMutex::Locker locker(mMutex);
 
@@ -461,18 +484,30 @@ dispatch_block_t    BGMDeviceControlsList::CreateDeviceToggleBackBlock()
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wpartial-availability"
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kDisableNullDeviceDelay),
-                       dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0),
-                       mDisableNullDeviceBlock);
+        if(mDisableNullDeviceBlock)
+        {
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kDisableNullDeviceDelay),
+                           dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0),
+                           BGM_Utils::NN(mDisableNullDeviceBlock));
+        }
 #pragma clang diagnostic pop
     });
+
+    if(!toggleBackBlock)
+    {
+        // Pretty sure this should never happen, but the docs aren't completely clear.
+        LogError("BGMDeviceControlsList::CreateDeviceToggleBackBlock: !toggleBackBlock");
+    }
+
+    return toggleBackBlock;
 }
 
-dispatch_block_t    BGMDeviceControlsList::CreateDisableNullDeviceBlock()
+dispatch_block_t __nullable BGMDeviceControlsList::CreateDisableNullDeviceBlock()
 {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wpartial-availability"
-    return dispatch_block_create((dispatch_block_flags_t)0, ^{
+    dispatch_block_t __nullable disableNullDeviceBlock =
+            dispatch_block_create((dispatch_block_flags_t)0, ^{
 #pragma clang diagnostic pop
         CAMutex::Locker locker(mMutex);
 
@@ -492,6 +527,14 @@ dispatch_block_t    BGMDeviceControlsList::CreateDisableNullDeviceBlock()
 
         BGMAssert(mBGMDevice.IsBGMDevice(), "BGMDevice's AudioObjectID changed");
     });
+
+    if(!disableNullDeviceBlock)
+    {
+        // Pretty sure this should never happen, but the docs aren't completely clear.
+        LogError("BGMDeviceControlsList::CreateDisableNullDeviceBlock: !disableNullDeviceBlock");
+    }
+
+    return disableNullDeviceBlock;
 }
 
 void    BGMDeviceControlsList::DestroyBlock(dispatch_block_t __nullable & block)

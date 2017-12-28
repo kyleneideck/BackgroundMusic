@@ -169,8 +169,8 @@ private:
 private:
     CARingBuffer        mBuffer;
     
-    AudioDeviceIOProcID __nullable mInputDeviceIOProcID;
-    AudioDeviceIOProcID __nullable mOutputDeviceIOProcID;
+    AudioDeviceIOProcID __nullable mInputDeviceIOProcID { nullptr };
+    AudioDeviceIOProcID __nullable mOutputDeviceIOProcID { nullptr };
     
     BGMAudioDevice      mInputDevice { kAudioObjectUnknown };
     BGMAudioDevice      mOutputDevice { kAudioObjectUnknown };
@@ -183,13 +183,13 @@ private:
     bool                mActive = false;
     bool                mPlayingThrough = false;
 
-    UInt64              mLastNotifiedIOStoppedOnBGMDevice;
+    UInt64              mLastNotifiedIOStoppedOnBGMDevice { 0 };
 
     std::atomic<IOState>    mInputDeviceIOProcState { IOState::Stopped };
     std::atomic<IOState>    mOutputDeviceIOProcState { IOState::Stopped };
     
     // For debug logging.
-    UInt64              mToldOutputDeviceToStartAt;
+    UInt64              mToldOutputDeviceToStartAt { 0 };
 
     // IOProc vars. (Should only be used inside IOProcs.)
     
@@ -199,7 +199,7 @@ private:
     Float64             mLastOutputSampleTime = -1;
     
     // Subtract this from the output time to get the input time.
-    Float64             mInToOutSampleOffset;
+    Float64             mInToOutSampleOffset { 0.0 };
     
 };
 

@@ -98,14 +98,16 @@ BGM_TaskQueue::BGM_TaskQueue()
 BGM_TaskQueue::~BGM_TaskQueue()
 {
     // Join the worker threads
-    QueueSync(kBGMTaskStopWorkerThread, /* inRunOnRealtimeThread = */ true);
-    QueueSync(kBGMTaskStopWorkerThread, /* inRunOnRealtimeThread = */ false);
-    
+    BGMLogAndSwallowExceptionsMsg("BGM_TaskQueue::~BGM_TaskQueue", "QueueSync", ([&] {
+        QueueSync(kBGMTaskStopWorkerThread, /* inRunOnRealtimeThread = */ true);
+        QueueSync(kBGMTaskStopWorkerThread, /* inRunOnRealtimeThread = */ false);
+    }));
+
     // Destroy the semaphores
     auto destroySemaphore = [] (semaphore_t inSemaphore) {
         kern_return_t theError = semaphore_destroy(mach_task_self(), inSemaphore);
         
-        BGM_Utils::ThrowIfMachError("BGM_TaskQueue::~BGM_TaskQueue", "semaphore_destroy", theError);
+        BGM_Utils::LogIfMachError("BGM_TaskQueue::~BGM_TaskQueue", "semaphore_destroy", theError);
     };
     
     destroySemaphore(mRealTimeThreadWorkQueuedSemaphore);

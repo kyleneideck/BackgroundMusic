@@ -162,10 +162,13 @@ private:
      for the device. See BGM_Device::RequestEnabledControls, BGM_Device::PerformConfigChange and
      RequestDeviceConfigurationChange in AudioServerPlugIn.h.
 
+     @param inNewSampleRate The sample rate.
+     @param force If true, set the sample rate on the device even if it's currently set to
+                  inNewSampleRate.
      @throws CAException if inNewSampleRate < 1 or if applying the sample rate to one of the streams
              fails.
      */
-    void                        SetSampleRate(Float64 inNewSampleRate);
+    void                        SetSampleRate(Float64 inNewSampleRate, bool force = false);
 
     /*! @return True if inObjectID is the ID of one of this device's streams. */
     inline bool                 IsStreamID(AudioObjectID inObjectID) const noexcept;
@@ -224,7 +227,7 @@ private:
     const Float64               kSampleRateDefault = 44100.0;
     // Before we can change sample rate, the host has to stop the device. The new sample rate is
     // stored here while it does.
-    Float64                     mPendingSampleRate;
+    Float64                     mPendingSampleRate = kSampleRateDefault;
     
     BGM_WrappedAudioEngine* __nullable mWrappedAudioEngine;
     

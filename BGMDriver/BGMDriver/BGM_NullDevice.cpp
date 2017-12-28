@@ -31,9 +31,7 @@
 #include "CAException.h"
 #include "CAPropertyAddress.h"
 #include "CADispatchQueue.h"
-
-// System Includes
-#include <mach/mach_time.h>  // For mach_absolute_time
+#include "CAHostTimeBase.h"
 
 
 #pragma clang assume_nonnull begin
@@ -89,12 +87,8 @@ void    BGM_NullDevice::Activate()
         // Call the super-class, which just marks the object as active.
         BGM_AbstractDevice::Activate();
 
-        // Calculate the host ticks per frame for the clock.
-        struct mach_timebase_info theTimeBaseInfo;
-        mach_timebase_info(&theTimeBaseInfo);
-        Float64 theHostClockFrequency = theTimeBaseInfo.denom / theTimeBaseInfo.numer;
-        theHostClockFrequency *= 1000000000.0;
-        mHostTicksPerFrame = theHostClockFrequency / kSampleRate;
+        // Calculate the number of host clock ticks per frame for this device's clock.
+        mHostTicksPerFrame = CAHostTimeBase::GetFrequency() / kSampleRate;
 
         SendDeviceIsAlivePropertyNotifications();
     }
@@ -410,7 +404,7 @@ void    BGM_NullDevice::StartIO(UInt32 inClientID)
     {
         // Reset the clock.
         mNumberTimeStamps = 0;
-        mAnchorHostTime = mach_absolute_time();
+        mAnchorHostTime = CAHostTimeBase::GetTheCurrentTime();
 
         // Send notifications.
         DebugMsg("BGM_NullDevice::StartIO: Sending kAudioDevicePropertyDeviceIsRunning");
@@ -460,7 +454,7 @@ void    BGM_NullDevice::GetZeroTimeStamp(Float64& outSampleTime,
     // clockless devices don't need to, but if the device doesn't have
     // kAudioDevicePropertyZeroTimeStampPeriod the HAL seems to reject it. So we give it a simple
     // clock similar to the loopback clock in BGM_Device.
-    UInt64 theCurrentHostTime = mach_absolute_time();
+    UInt64 theCurrentHostTime = CAHostTimeBase::GetTheCurrentTime();
 
     // Calculate the next host time.
     Float64 theHostTicksPerPeriod = mHostTicksPerFrame * static_cast<Float64>(kZeroTimeStampPeriod);

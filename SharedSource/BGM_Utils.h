@@ -144,7 +144,7 @@ namespace BGM_Utils
     template <typename T>
     inline T __nonnull NN(T __nullable v) {
         BGMAssertNonNull(v);
-        return v;
+        return static_cast<T __nonnull>(v);
     }
     
     // Log (and swallow) errors returned by Mach functions. Returns false if there was an error.

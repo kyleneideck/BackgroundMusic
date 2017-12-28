@@ -30,6 +30,10 @@
 
 #pragma clang assume_nonnull begin
 
+// TODO: It's a bit confusing that this slider's default position is all the way right, but the App
+//       Volumes sliders default to 50%. After you move the slider there's no way to tell how to put
+//       it back to its normal position.
+
 NSString* const kMenuItemToolTip =
     @"Alerts, notification sounds, etc. Usually short. Can be played by any app.";
 
