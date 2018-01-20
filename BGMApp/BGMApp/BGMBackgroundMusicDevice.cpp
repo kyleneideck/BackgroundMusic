@@ -49,6 +49,7 @@ BGMBackgroundMusicDevice::BGMBackgroundMusicDevice()
 {
     if((GetObjectID() == kAudioObjectUnknown) || (mUISoundsBGMDevice == kAudioObjectUnknown))
     {
+        LogError("BGMBackgroundMusicDevice::BGMBackgroundMusicDevice: Error getting BGMDevice ID");
         Throw(CAException(kAudioHardwareIllegalOperationError));
     }
 };
