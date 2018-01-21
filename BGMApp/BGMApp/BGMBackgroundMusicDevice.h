@@ -150,7 +150,7 @@ public:
      @throws CAException If the HAL returns an error or an invalid PID when queried.
      @see kAudioDeviceCustomPropertyMusicPlayerProcessID in BGM_Types.h.
      */
-    pid_t               GetMusicPlayerProcessID() const;
+    virtual pid_t       GetMusicPlayerProcessID() const;
     /*!
      Set the value of BGMDevice's property for the selected music player's process ID. Pass zero to
      unset the property. Setting this property will unset the bundle ID version of the property.
@@ -158,7 +158,7 @@ public:
      @throws CAException If the HAL returns an error.
      @see kAudioDeviceCustomPropertyMusicPlayerProcessID in BGM_Types.h.
      */
-    void                SetMusicPlayerProcessID(CFNumberRef inProcessID) {
+    virtual void        SetMusicPlayerProcessID(CFNumberRef inProcessID) {
                             SetPropertyData_CFType(kBGMMusicPlayerProcessIDAddress, inProcessID); }
     /*!
      @return The value of BGMDevice's property for the selected music player's bundle ID. The empty
@@ -166,7 +166,7 @@ public:
      @throws CAException If the HAL returns an error or an invalid bundle ID when queried.
      @see kAudioDeviceCustomPropertyMusicPlayerBundleID in BGM_Types.h.
      */
-    CFStringRef         GetMusicPlayerBundleID() const;
+    virtual CFStringRef GetMusicPlayerBundleID() const;
     /*!
      Set the value of BGMDevice's property for the selected music player's bundle ID. Pass the empty
      string to unset the property. Setting this property will unset the process ID version of the
@@ -175,7 +175,7 @@ public:
      @throws CAException If the HAL returns an error.
      @see kAudioDeviceCustomPropertyMusicPlayerBundleID in BGM_Types.h.
      */
-    void                SetMusicPlayerBundleID(CFStringRef inBundleID) {
+    virtual void        SetMusicPlayerBundleID(CFStringRef inBundleID) {
                             SetPropertyData_CFString(kBGMMusicPlayerBundleIDAddress, inBundleID); }
 
 #pragma mark UI Sounds Instance

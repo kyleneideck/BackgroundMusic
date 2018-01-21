@@ -17,7 +17,7 @@
 //  BGMMusicPlayersUnitTests.mm
 //  BGMAppUnitTests
 //
-//  Copyright © 2016, 2017 Kyle Neideck
+//  Copyright © 2016-2018 Kyle Neideck
 //
 
 // Unit include
@@ -72,6 +72,47 @@
 
 // -------------------------------------------------------------------------------------------------
 
+class BGMMockBackgroundMusicDevice
+:
+    public BGMBackgroundMusicDevice
+{
+
+public:
+    CFStringRef GetMusicPlayerBundleID() const;
+    void        SetMusicPlayerBundleID(CFStringRef inBundleID);
+
+private:
+    CFStringRef mMusicPlayerBundleID = CFSTR("");
+
+};
+
+CFStringRef BGMMockBackgroundMusicDevice::GetMusicPlayerBundleID() const
+{
+    return mMusicPlayerBundleID;
+}
+
+void BGMMockBackgroundMusicDevice::SetMusicPlayerBundleID(CFStringRef inBundleID)
+{
+    mMusicPlayerBundleID = inBundleID;
+}
+
+// -------------------------------------------------------------------------------------------------
+
+@interface BGMMockAudioDeviceManager : BGMAudioDeviceManager
+@end
+
+@implementation BGMMockAudioDeviceManager {
+    BGMBackgroundMusicDevice bgmDevice;
+}
+
+- (BGMBackgroundMusicDevice) bgmDevice {
+    return bgmDevice;
+}
+
+@end
+
+// -------------------------------------------------------------------------------------------------
+
 @interface BGMMusicPlayersUnitTests : XCTestCase
 @end
 
@@ -85,8 +126,8 @@
 
 - (void) setUp {
     [super setUp];
-    
-    devices = [BGMAudioDeviceManager new];
+
+    devices = [BGMMockAudioDeviceManager new];
     defaults = [BGMMockUserDefaults new];
     
     // These are the IDs hardcoded in BGMSpotify and BGMVLC.
@@ -95,8 +136,6 @@
 }
 
 - (void) tearDown {
-    [self resetDevice];
-    
     [super tearDown];
 }
 
