@@ -36,7 +36,36 @@
 #include <stdexcept>
 
 
-@interface BGM_DeviceTests : XCTestCase
+// Subclass BGM_Device to add some test-only functions.
+class TestBGM_Device
+:
+    public BGM_Device
+{
+
+public:
+    TestBGM_Device();
+    ~TestBGM_Device() = default;
+
+};
+
+TestBGM_Device::TestBGM_Device()
+:
+    BGM_Device(kObjectID_Device,
+               CFSTR(kDeviceName),
+               CFSTR(kBGMDeviceUID),
+               CFSTR(kBGMDeviceModelUID),
+               kObjectID_Stream_Input,
+               kObjectID_Stream_Output,
+               kObjectID_Volume_Output_Master,
+               kObjectID_Mute_Output_Master)
+{
+    Activate();
+}
+
+
+@interface BGM_DeviceTests : XCTestCase {
+    TestBGM_Device* testDevice;
+}
 
 @end
 
@@ -45,29 +74,79 @@
 
 - (void) setUp {
     [super setUp];
+    testDevice = new TestBGM_Device();
 }
 
 - (void) tearDown {
-    // Reminder: add code here, above the super call
+    delete testDevice;
     [super tearDown];
 }
 
+- (void) testDoIOOperation_writeMix_readInput {
+    // The number of audio frames to send/receive in the IO operations.
+    const int kFrameSize = 512;
+
+    // Choose a sample time that will make the data wrap around to the start of the device's
+    // internal ring buffer.
+    AudioServerPlugInIOCycleInfo cycleInfo {};
+    cycleInfo.mOutputTime.mSampleTime = kLoopbackRingBufferFrameSize - 25.0;
+
+    // Generate the test input data.
+    Float32 inputBuffer[kFrameSize * 2];
+
+    for(int i = 0; i < kFrameSize * 2; i++)
+    {
+        inputBuffer[i] = static_cast<Float32>(i);
+    }
+
+    // Send a copy of the input buffer just in case DoIOOperation modifies the data for some reason.
+    Float32 inputBufferCopy[kFrameSize * 2];
+    memcpy(inputBufferCopy, inputBuffer, sizeof(inputBuffer));
+
+    // Send the input data to the device.
+    testDevice->DoIOOperation(/* inStreamObjectID = */ kObjectID_Stream_Output,
+                              /* inClientID = */ 0,
+                              /* inOperationID = */ kAudioServerPlugInIOOperationWriteMix,
+                              /* inIOBufferFrameSize = */ kFrameSize,
+                              /* inIOCycleInfo = */ cycleInfo,
+                              /* ioMainBuffer = */ inputBuffer,
+                              /* ioSecondaryBuffer = */ nullptr);
+
+    // Request data from the same point in time so we get the same data back.
+    cycleInfo.mInputTime.mSampleTime = kLoopbackRingBufferFrameSize - 25.0;
+
+    // Read the data back from the device.
+    Float32 outputBuffer[kFrameSize * 2];
+
+    testDevice->DoIOOperation(/* inStreamObjectID = */ kObjectID_Stream_Output,
+                              /* inClientID = */ 0,
+                              /* inOperationID = */ kAudioServerPlugInIOOperationReadInput,
+                              /* inIOBufferFrameSize = */ kFrameSize,
+                              /* inIOCycleInfo = */ cycleInfo,
+                              /* ioMainBuffer = */ outputBuffer,
+                              /* ioSecondaryBuffer = */ nullptr);
+
+    // Check the output matches the input.
+    for(int i = 0; i < kFrameSize * 2; i++)
+    {
+        XCTAssertEqual(inputBuffer[i], outputBuffer[i]);
+    }
+}
+
 - (void) testCustomPropertyMusicPlayerBundleID {
-    BGM_Device& device = BGM_Device::GetInstance();
-    
     // Convenience wrappers
     auto getBundleID = [&](UInt32 inDataSize = sizeof(CFStringRef)){
-        CFStringRef bundleID = NULL;
+        CFStringRef bundleID = nullptr;
         UInt32 outDataSize;
         
-        device.GetPropertyData(/* inObjectID = */ kObjectID_Device,
-                               /* inClientPID = */ 3,
-                               /* inAddress = */ kBGMMusicPlayerBundleIDAddress,
-                               /* inQualifierDataSize = */ 0,
-                               /* inQualifierData = */ NULL,
-                               /* inDataSize = */ inDataSize,
-                               /* outDataSize = */ outDataSize,
-                               /* outData = */ reinterpret_cast<void* __nonnull>(&bundleID));
+        testDevice->GetPropertyData(/* inObjectID = */ kObjectID_Device,
+                                    /* inClientPID = */ 3,
+                                    /* inAddress = */ kBGMMusicPlayerBundleIDAddress,
+                                    /* inQualifierDataSize = */ 0,
+                                    /* inQualifierData = */ nullptr,
+                                    /* inDataSize = */ inDataSize,
+                                    /* outDataSize = */ outDataSize,
+                                    /* outData = */ reinterpret_cast<void* __nonnull>(&bundleID));
         
         // This isn't technically required, but we're unlikely to ever want to return any more/less data from GetPropertyData.
         XCTAssertEqual(outDataSize, sizeof(CFStringRef));
@@ -76,13 +155,13 @@
     };
     
     auto setBundleID = [&](const CFStringRef* __nullable bundleID, UInt32 dataSize = sizeof(CFStringRef)){
-        device.SetPropertyData(/* inObjectID = */ kObjectID_Device,
-                               /* inClientPID = */ 1234,
-                               /* inAddress = */ kBGMMusicPlayerBundleIDAddress,
-                               /* inQualifierDataSize = */ 0,
-                               /* inQualifierData = */ NULL,
-                               /* inDataSize = */ dataSize,
-                               /* inData = */ reinterpret_cast<const void* __nonnull>(bundleID));
+        testDevice->SetPropertyData(/* inObjectID = */ kObjectID_Device,
+                                    /* inClientPID = */ 1234,
+                                    /* inAddress = */ kBGMMusicPlayerBundleIDAddress,
+                                    /* inQualifierDataSize = */ 0,
+                                    /* inQualifierData = */ nullptr,
+                                    /* inDataSize = */ dataSize,
+                                    /* inData = */ reinterpret_cast<const void* __nonnull>(bundleID));
     };
     
     // Should be set to the empty string by default.
@@ -103,11 +182,12 @@
     // Arguments should be null-checked.
     BGMShouldThrow<std::runtime_error>(self, [&](){
         UInt32 outDataSize;
-        device.GetPropertyData(kObjectID_Device, 0, kBGMMusicPlayerBundleIDAddress, 0, NULL, sizeof(CFStringRef),
-                               outDataSize, /* outData = */ reinterpret_cast<void* __nonnull>(NULL));
+        testDevice->GetPropertyData(kObjectID_Device, 0, kBGMMusicPlayerBundleIDAddress, 0, nullptr,
+                                    sizeof(CFStringRef), outDataSize,
+                                    /* outData = */ reinterpret_cast<void* __nonnull>(NULL));
     });
     BGMShouldThrow<std::runtime_error>(self, [&](){
-        setBundleID(NULL);
+        setBundleID(nullptr);
     });
     
     // Invalid data should be rejected.
@@ -115,7 +195,7 @@
         setBundleID((CFStringRef*)&kCFNull);
     });
     BGMShouldThrow<CAException>(self, [&](){
-        CFStringRef nullRef = NULL;
+        CFStringRef nullRef = nullptr;
         setBundleID(&nullRef);
     });
     BGMShouldThrow<CAException>(self, [&](){
