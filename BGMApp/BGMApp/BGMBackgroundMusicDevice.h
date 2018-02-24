@@ -103,7 +103,7 @@ public:
      */
     void                SetAppVolume(SInt32 inVolume,
                                      pid_t inAppProcessID,
-                                     CFStringRef inAppBundleID);
+                                     CFStringRef __nullable inAppBundleID);
     /*!
      @param inPanPosition A value between kAppPanLeftRawValue and kAppPanRightRawValue from
                           BGM_Types.h. A negative value has a higher proportion of left channel, and

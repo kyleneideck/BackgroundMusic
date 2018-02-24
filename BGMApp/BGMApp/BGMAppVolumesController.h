@@ -35,6 +35,16 @@
       appVolumeView:(NSView*)view
        audioDevices:(BGMAudioDeviceManager*)audioDevices;
 
+// See BGMBackgroundMusicDevice::SetAppVolume.
+- (void)  setVolume:(SInt32)volume
+forAppWithProcessID:(pid_t)processID
+           bundleID:(NSString* __nullable)bundleID;
+
+// See BGMBackgroundMusicDevice::SetPanVolume.
+- (void) setPanPosition:(SInt32)pan
+    forAppWithProcessID:(pid_t)processID
+               bundleID:(NSString* __nullable)bundleID;
+
 @end
 
 #pragma clang assume_nonnull end

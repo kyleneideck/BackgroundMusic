@@ -17,7 +17,7 @@
 //  BGMAppDelegate.mm
 //  BGMApp
 //
-//  Copyright © 2016, 2017 Kyle Neideck
+//  Copyright © 2016-2018 Kyle Neideck
 //
 
 // Self Includes
@@ -43,7 +43,9 @@
 
 #pragma clang assume_nonnull begin
 
-static float const kStatusBarIconPadding = 0.25;
+static float const     kStatusBarIconPadding = 0.25;
+static NSString* const kOptNoPersistentData  = @"--no-persistent-data";
+static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
 
 @implementation BGMAppDelegate {
     // The button in the system status bar (the bar with volume, battery, clock, etc.) to show the main menu
@@ -65,8 +67,9 @@ static float const kStatusBarIconPadding = 0.25;
 @synthesize audioDevices = audioDevices;
 
 - (void) awakeFromNib {
-    // Show BGMApp in the dock, if the command-line option for that was passed. This is used by the UI tests.
-    if ([NSProcessInfo.processInfo.arguments indexOfObject:@"--show-dock-icon"] != NSNotFound) {
+    // Show BGMApp in the dock, if the command-line option for that was passed. This is used by the
+    // UI tests.
+    if ([NSProcessInfo.processInfo.arguments indexOfObject:kOptShowDockIcon] != NSNotFound) {
         [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
     }
     
@@ -78,12 +81,23 @@ static float const kStatusBarIconPadding = 0.25;
 // Set up the status bar item. (The thing you click to show BGMApp's UI.)
 - (void) initStatusBarItem {
     statusBarItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSSquareStatusItemLength];
-    
-    // Set the icon
-    NSImage* icon = [NSImage imageNamed:@"FermataIcon"];
 
     // NSStatusItem doesn't have the "button" property on OS X 10.9.
     BOOL buttonAvailable = (floor(NSAppKitVersionNumber) >= NSAppKitVersionNumber10_10);
+
+    // Set the title/tooltip to "Background Music".
+    statusBarItem.title = [NSRunningApplication currentApplication].localizedName;
+    statusBarItem.toolTip = statusBarItem.title;
+
+    if (buttonAvailable) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpartial-availability"
+        statusBarItem.button.accessibilityLabel = statusBarItem.title;
+#pragma clang diagnostic pop
+    }
+
+    // Set the icon.
+    NSImage* icon = [NSImage imageNamed:@"FermataIcon"];
 
     if (icon != nil) {
         NSRect statusBarItemFrame;
@@ -151,45 +165,26 @@ static float const kStatusBarIconPadding = 0.25;
     BGMTermination::SetUpTerminationCleanUp(audioDevices);
 
     // Set up the rest of the UI and other external interfaces.
-
     BGMUserDefaults* userDefaults = [self createUserDefaults];
 
     musicPlayers = [[BGMMusicPlayers alloc] initWithAudioDevices:audioDevices
                                                     userDefaults:userDefaults];
-    
+
     autoPauseMusic = [[BGMAutoPauseMusic alloc] initWithAudioDevices:audioDevices
                                                         musicPlayers:musicPlayers];
     
-    autoPauseMenuItem = [[BGMAutoPauseMenuItem alloc] initWithMenuItem:self.autoPauseMenuItemUnwrapped
-                                                        autoPauseMusic:autoPauseMusic
-                                                          musicPlayers:musicPlayers
-                                                          userDefaults:userDefaults];
+    [self setUpMainMenu:userDefaults];
     
     xpcListener = [[BGMXPCListener alloc] initWithAudioDevices:audioDevices
                                   helperConnectionErrorHandler:^(NSError* error) {
                                       NSLog(@"BGMAppDelegate::applicationDidFinishLaunching: (helperConnectionErrorHandler) "
                                              "BGMXPCHelper connection error: %@",
                                             error);
-                                      
                                       [self showXPCHelperErrorMessage:error];
                                   }];
 
-    [self initVolumesMenuSection];
 
-    prefsMenu = [[BGMPreferencesMenu alloc] initWithBGMMenu:self.bgmMenu
-                                               audioDevices:audioDevices
-                                               musicPlayers:musicPlayers
-                                                 aboutPanel:self.aboutPanel
-                                      aboutPanelLicenseView:self.aboutPanelLicenseView];
     
-    // Handle events about the main menu. (See the NSMenuDelegate methods below.)
-    self.bgmMenu.delegate = self;
-}
-
-- (BGMUserDefaults*) createUserDefaults {
-    BOOL persistentDefaults = [NSProcessInfo.processInfo.arguments indexOfObject:@"--no-persistent-data"] == NSNotFound;
-    NSUserDefaults* wrappedDefaults = persistentDefaults ? [NSUserDefaults standardUserDefaults] : nil;
-    return [[BGMUserDefaults alloc] initWithDefaults:wrappedDefaults];
 }
 
 // Returns NO if (and only if) BGMApp is about to terminate because of a fatal error.
@@ -212,6 +207,32 @@ static float const kStatusBarIconPadding = 0.25;
     }
 
     return YES;
+}
+
+- (void) setUpMainMenu:(BGMUserDefaults*)userDefaults {
+    autoPauseMenuItem =
+        [[BGMAutoPauseMenuItem alloc] initWithMenuItem:self.autoPauseMenuItemUnwrapped
+                                        autoPauseMusic:autoPauseMusic
+                                          musicPlayers:musicPlayers
+                                          userDefaults:userDefaults];
+
+    [self initVolumesMenuSection];
+
+    prefsMenu = [[BGMPreferencesMenu alloc] initWithBGMMenu:self.bgmMenu
+                                               audioDevices:audioDevices
+                                               musicPlayers:musicPlayers
+                                                 aboutPanel:self.aboutPanel
+                                      aboutPanelLicenseView:self.aboutPanelLicenseView];
+
+    // Handle events about the main menu. (See the NSMenuDelegate methods below.)
+    self.bgmMenu.delegate = self;
+}
+
+- (BGMUserDefaults*) createUserDefaults {
+    BOOL persistentDefaults =
+        [NSProcessInfo.processInfo.arguments indexOfObject:kOptNoPersistentData] == NSNotFound;
+    NSUserDefaults* wrappedDefaults = persistentDefaults ? [NSUserDefaults standardUserDefaults] : nil;
+    return [[BGMUserDefaults alloc] initWithDefaults:wrappedDefaults];
 }
 
 - (void) initVolumesMenuSection {
@@ -249,6 +270,7 @@ static float const kStatusBarIconPadding = 0.25;
     
     DebugMsg("BGMAppDelegate::applicationWillTerminate");
 
+    // Change the user's default output device back.
     NSError* error = [audioDevices unsetBGMDeviceAsOSDefault];
     
     if (error) {

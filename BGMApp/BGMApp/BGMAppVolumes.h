@@ -21,18 +21,19 @@
 //
 
 // Local Includes
-#import "BGMAudioDeviceManager.h"
+#import "BGMAppVolumesController.h"
 
 // System Includes
 #import <Cocoa/Cocoa.h>
+
 
 #pragma clang assume_nonnull begin
 
 @interface BGMAppVolumes : NSObject
 
-- (id) initWithMenu:(NSMenu*)menu
-      appVolumeView:(NSView*)view
-       audioDevices:(BGMAudioDeviceManager*)audioDevices;
+- (id) initWithController:(BGMAppVolumesController*)inController
+                  bgmMenu:(NSMenu*)inMenu
+            appVolumeView:(NSView*)inView;
 
 // Pass -1 for initialVolume or initialPan to leave the volume/pan at its default level.
 - (void) insertMenuItemForApp:(NSRunningApplication*)app
@@ -51,6 +52,7 @@
 
 - (void) setUpWithApp:(NSRunningApplication*)app
               context:(BGMAppVolumes*)ctx
+           controller:(BGMAppVolumesController*)ctrl
              menuItem:(NSMenuItem*)item;
 
 @end

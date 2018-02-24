@@ -132,7 +132,7 @@ CFArrayRef BGMBackgroundMusicDevice::GetAppVolumes() const
 
 void BGMBackgroundMusicDevice::SetAppVolume(SInt32 inVolume,
                                             pid_t inAppProcessID,
-                                            CFStringRef inAppBundleID)
+                                            CFStringRef __nullable inAppBundleID)
 {
     BGMAssert((kAppRelativeVolumeMinRawValue <= inVolume) &&
                       (inVolume <= kAppRelativeVolumeMaxRawValue),

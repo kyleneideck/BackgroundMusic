@@ -17,7 +17,7 @@
 //  BGMAppVolumesController.mm
 //  BGMApp
 //
-//  Copyright © 2017 Kyle Neideck
+//  Copyright © 2017, 2018 Kyle Neideck
 //  Copyright © 2017 Andrew Tonner
 //
 
@@ -34,6 +34,9 @@
 #import "CACFDictionary.h"
 #import "CACFString.h"
 
+// System Includes
+#include <libproc.h>
+
 
 #pragma clang assume_nonnull begin
 
@@ -48,14 +51,16 @@ typedef struct BGMAppVolumeAndPan {
     BGMAudioDeviceManager* audioDevices;
 }
 
+#pragma mark Initialisation
+
 - (id) initWithMenu:(NSMenu*)menu
       appVolumeView:(NSView*)view
        audioDevices:(BGMAudioDeviceManager*)devices {
     if ((self = [super init])) {
         audioDevices = devices;
-        appVolumes = [[BGMAppVolumes alloc] initWithMenu:menu
-                                           appVolumeView:view
-                                            audioDevices:devices];
+        appVolumes = [[BGMAppVolumes alloc] initWithController:self
+                                                       bgmMenu:menu
+                                                 appVolumeView:view];
 
         // Create the menu items for controlling app volumes.
         NSArray<NSRunningApplication*>* apps = [[NSWorkspace sharedWorkspace] runningApplications];
@@ -148,6 +153,55 @@ typedef struct BGMAppVolumeAndPan {
     for (NSRunningApplication* app in apps) {
         [appVolumes removeMenuItemForApp:app];
     }
+}
+
+#pragma mark Accessors
+
+- (void)  setVolume:(SInt32)volume
+forAppWithProcessID:(pid_t)processID
+           bundleID:(NSString* __nullable)bundleID {
+    // Update the app's volume.
+    audioDevices.bgmDevice.SetAppVolume(volume, processID, (__bridge_retained CFStringRef)bundleID);
+
+    // If this volume is for FaceTime, set the volume for the avconferenced process as well. This
+    // works around FaceTime not playing its own audio. It plays UI sounds through
+    // systemsoundserverd and call audio through avconferenced.
+    //
+    // This isn't ideal because other apps might play audio through avconferenced, but I don't see a
+    // good way we could find out which app is actually playing the audio. We could probably figure
+    // it out from reading avconferenced's logs, at least, if it turns out to be important. See
+    // https://github.com/kyleneideck/BackgroundMusic/issues/139.
+    if ([bundleID isEqual:@"com.apple.FaceTime"]) {
+        [self setAvconferencedVolume:volume];
+    }
+}
+
+- (void) setAvconferencedVolume:(SInt32)volume {
+    // TODO: This volume will be lost if avconferenced is restarted.
+    pid_t pids[1024];
+    size_t procCount = proc_listallpids(pids, 1024);
+    char path[PROC_PIDPATHINFO_MAXSIZE];
+
+    for (int i = 0; i < procCount; i++) {
+        pid_t pid = pids[i];
+
+        if (proc_pidpath(pid, path, sizeof(path)) > 0 &&
+            strncmp(path, "/usr/libexec/avconferenced", sizeof(path)) == 0) {
+            DebugMsg("Setting avconferenced volume: %d", volume);
+            audioDevices.bgmDevice.SetAppVolume(volume, pid, nullptr);
+            return;
+        }
+    }
+
+    LogWarning("Failed to set avconferenced volume.");
+}
+
+- (void) setPanPosition:(SInt32)pan
+    forAppWithProcessID:(pid_t)processID
+               bundleID:(NSString* __nullable)bundleID {
+    audioDevices.bgmDevice.SetAppPanPosition(pan,
+                                             processID,
+                                             (__bridge_retained CFStringRef)bundleID);
 }
 
 #pragma mark KVO

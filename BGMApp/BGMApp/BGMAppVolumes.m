@@ -17,7 +17,7 @@
 //  BGMAppVolumes.m
 //  BGMApp
 //
-//  Copyright © 2016, 2017 Kyle Neideck
+//  Copyright © 2016-2018 Kyle Neideck
 //  Copyright © 2017 Andrew Tonner
 //
 
@@ -38,27 +38,27 @@ static CGFloat const   kAppVolumeViewInitialHeight = 20;
 static NSString* const kMoreAppsMenuTitle          = @"More Apps";
 
 @implementation BGMAppVolumes {
+    BGMAppVolumesController* controller;
+
     NSMenu* bgmMenu;
     NSMenu* moreAppsMenu;
     
     NSView* appVolumeView;
     CGFloat appVolumeViewFullHeight;
-    
-    BGMAudioDeviceManager* audioDevices;
 
     // The number of menu items this class has added to bgmMenu. Doesn't include the More Apps menu.
     NSInteger numMenuItems;
 }
 
-- (id) initWithMenu:(NSMenu*)menu
-      appVolumeView:(NSView*)view
-       audioDevices:(BGMAudioDeviceManager*)devices {
+- (id) initWithController:(BGMAppVolumesController*)inController
+                  bgmMenu:(NSMenu*)inMenu
+            appVolumeView:(NSView*)inView {
     if ((self = [super init])) {
-        bgmMenu = menu;
+        controller = inController;
+        bgmMenu = inMenu;
         moreAppsMenu = [[NSMenu alloc] initWithTitle:kMoreAppsMenuTitle];
-        appVolumeView = view;
+        appVolumeView = inView;
         appVolumeViewFullHeight = appVolumeView.frame.size.height;
-        audioDevices = devices;
         numMenuItems = 0;
 
         // Add the More Apps menu to the main menu.
@@ -81,12 +81,6 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
     return self;
 }
 
-// This method allows the Interface Builder Custom Classes for controls (below) to send their values
-// directly to BGMDevice. Not public to other classes.
-- (BGMAudioDeviceManager*) audioDevices {
-    return audioDevices;
-}
-
 #pragma mark UI Modifications
 
 - (void) insertMenuItemForApp:(NSRunningApplication*)app
@@ -99,6 +93,7 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
         if ([subview conformsToProtocol:@protocol(BGMAppVolumeMenuItemSubview)]) {
             [(NSView<BGMAppVolumeMenuItemSubview>*)subview setUpWithApp:app
                                                                 context:self
+                                                             controller:controller
                                                                menuItem:appVolItem];
         }
     }
@@ -276,8 +271,11 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
 
 @implementation BGMAVM_AppIcon
 
-- (void) setUpWithApp:(NSRunningApplication*)app context:(BGMAppVolumes*)ctx menuItem:(NSMenuItem*)menuItem {
-    #pragma unused (ctx, menuItem)
+- (void) setUpWithApp:(NSRunningApplication*)app
+              context:(BGMAppVolumes*)ctx
+           controller:(BGMAppVolumesController*)ctrl
+             menuItem:(NSMenuItem*)menuItem {
+    #pragma unused (ctx, ctrl, menuItem)
     
     self.image = app.icon;
 
@@ -296,8 +294,11 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
 
 @implementation BGMAVM_AppNameLabel
 
-- (void) setUpWithApp:(NSRunningApplication*)app context:(BGMAppVolumes*)ctx menuItem:(NSMenuItem*)menuItem {
-    #pragma unused (ctx, menuItem)
+- (void) setUpWithApp:(NSRunningApplication*)app
+              context:(BGMAppVolumes*)ctx
+           controller:(BGMAppVolumesController*)ctrl
+             menuItem:(NSMenuItem*)menuItem {
+    #pragma unused (ctx, ctrl, menuItem)
     
     NSString* name = app.localizedName ? (NSString*)app.localizedName : @"";
     self.stringValue = name;
@@ -307,8 +308,11 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
 
 @implementation BGMAVM_ShowMoreControlsButton
 
-- (void) setUpWithApp:(NSRunningApplication*)app context:(BGMAppVolumes*)ctx menuItem:(NSMenuItem*)menuItem {
-    #pragma unused (app)
+- (void) setUpWithApp:(NSRunningApplication*)app
+              context:(BGMAppVolumes*)ctx
+           controller:(BGMAppVolumesController*)ctrl
+             menuItem:(NSMenuItem*)menuItem {
+    #pragma unused (app, ctrl)
     
     // Set up the button that show/hide the extra controls (currently only a pan slider) for the app.
     self.cell.representedObject = menuItem;
@@ -336,13 +340,16 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
     // Will be set to -1 for apps without a pid
     pid_t appProcessID;
     NSString* __nullable appBundleID;
-    BGMAppVolumes* context;
+    BGMAppVolumesController* controller;
 }
 
-- (void) setUpWithApp:(NSRunningApplication*)app context:(BGMAppVolumes*)ctx menuItem:(NSMenuItem*)menuItem {
-    #pragma unused (menuItem)
+- (void) setUpWithApp:(NSRunningApplication*)app
+              context:(BGMAppVolumes*)ctx
+           controller:(BGMAppVolumesController*)ctrl
+             menuItem:(NSMenuItem*)menuItem {
+    #pragma unused (ctx, menuItem)
     
-    context = ctx;
+    controller = ctrl;
     
     self.target = self;
     self.action = @selector(appVolumeChanged);
@@ -388,9 +395,7 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
 
     // The values from our sliders are in
     // [kAppRelativeVolumeMinRawValue, kAppRelativeVolumeMaxRawValue] already.
-    [context.audioDevices setVolume:self.intValue
-                forAppWithProcessID:appProcessID
-                           bundleID:appBundleID];
+    [controller setVolume:self.intValue forAppWithProcessID:appProcessID bundleID:appBundleID];
 }
 
 @end
@@ -399,13 +404,16 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
     // Will be set to -1 for apps without a pid
     pid_t appProcessID;
     NSString* __nullable appBundleID;
-    BGMAppVolumes* context;
+    BGMAppVolumesController* controller;
 }
 
-- (void) setUpWithApp:(NSRunningApplication*)app context:(BGMAppVolumes*)ctx menuItem:(NSMenuItem*)menuItem {
-    #pragma unused (menuItem)
+- (void) setUpWithApp:(NSRunningApplication*)app
+              context:(BGMAppVolumes*)ctx
+           controller:(BGMAppVolumesController*)ctrl
+             menuItem:(NSMenuItem*)menuItem {
+    #pragma unused (ctx, menuItem)
     
-    context = ctx;
+    controller = ctrl;
     
     self.target = self;
     self.action = @selector(appPanPositionChanged);
@@ -434,9 +442,7 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
     DebugMsg("BGMAppVolumes::appPanPositionChanged: App pan position for %s changed to %d", appBundleID.UTF8String, self.intValue);
 
     // The values from our sliders are in [kAppPanLeftRawValue, kAppPanRightRawValue] already.
-    [context.audioDevices setPanPosition:self.intValue
-                     forAppWithProcessID:appProcessID
-                                bundleID:appBundleID];
+    [controller setPanPosition:self.intValue forAppWithProcessID:appProcessID bundleID:appBundleID];
 }
 
 @end

@@ -68,13 +68,6 @@ static const int kBGMErrorCode_ReturningEarly       = 3;
 - (CAHALAudioDevice) outputDevice;
 #endif
 
-- (void)  setVolume:(SInt32)volume
-forAppWithProcessID:(pid_t)processID
-           bundleID:(NSString* __nullable)bundleID;
-- (void) setPanPosition:(SInt32)pan
-    forAppWithProcessID:(pid_t)processID
-               bundleID:(NSString* __nullable)bundleID;
-
 - (BOOL) isOutputDevice:(AudioObjectID)deviceID;
 - (BOOL) isOutputDataSource:(UInt32)dataSourceID;
 

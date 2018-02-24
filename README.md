@@ -31,6 +31,8 @@ Still very much in alpha. Not code signed, so you'll have to **right-click it an
 > [sig](https://github.com/kyleneideck/BackgroundMusic/releases/download/v0.1.1/BackgroundMusic-0.1.1.pkg.asc),
 > [key (0595DF814E41A6F69334C5E2CAA8D9B8E39EC18C)](https://bearisdriving.com/kyle-neideck.gpg)</sub>
 
+We also have [snapshot builds](https://github.com/kyleneideck/BackgroundMusic/releases).
+
 ## Auto-pause music
 
 Background Music can pause your music player app when other audio starts playing and unpause it afterwards. The idea is

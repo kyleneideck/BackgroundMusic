@@ -258,18 +258,6 @@
     return outputDevice;
 }
 
-- (void)  setVolume:(SInt32)volume
-forAppWithProcessID:(pid_t)processID
-           bundleID:(NSString* __nullable)bundleID {
-    bgmDevice->SetAppVolume(volume, processID, (__bridge_retained CFStringRef)bundleID);
-}
-
-- (void) setPanPosition:(SInt32)pan
-    forAppWithProcessID:(pid_t)processID
-               bundleID:(NSString* __nullable)bundleID {
-    bgmDevice->SetAppPanPosition(pan, processID, (__bridge_retained CFStringRef)bundleID);
-}
-
 - (BOOL) isOutputDevice:(AudioObjectID)deviceID {
     @try {
         [stateLock lock];
@@ -399,7 +387,7 @@ forAppWithProcessID:(pid_t)processID
 }
 
 - (void) setDataSource:(UInt32)dataSourceID device:(BGMAudioDevice&)device {
-    BGMLogAndSwallowExceptions("BGMAudioDeviceManager::setDataSource", [&] {
+    BGMLogAndSwallowExceptions("BGMAudioDeviceManager::setDataSource", ([&] {
         AudioObjectPropertyScope scope = kAudioObjectPropertyScopeOutput;
         UInt32 channel = 0;
 
@@ -409,7 +397,7 @@ forAppWithProcessID:(pid_t)processID
             
             device.SetCurrentDataSourceByID(scope, channel, dataSourceID);
         }
-    });
+    }));
 }
 
 - (void) propagateOutputDeviceChange {
