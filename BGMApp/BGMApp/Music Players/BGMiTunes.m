@@ -30,7 +30,7 @@
 #import "BGMScriptingBridge.h"
 
 // PublicUtility Includes
-#include "CADebugMacros.h"
+#import "CADebugMacros.h"
 
 
 #pragma clang assume_nonnull begin
@@ -45,7 +45,7 @@
     return (NSUUID*)musicPlayerID;
 }
 
-- (id) init {
+- (instancetype) init {
     if ((self = [super initWithMusicPlayerID:[BGMiTunes sharedMusicPlayerID]
                                         name:@"iTunes"
                                     bundleID:@"com.apple.iTunes"])) {

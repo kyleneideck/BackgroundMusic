@@ -31,7 +31,7 @@
 #import "BGMScriptingBridge.h"
 
 // PublicUtility Includes
-#include "CADebugMacros.h"
+#import "CADebugMacros.h"
 
 
 #pragma clang assume_nonnull begin
@@ -40,7 +40,7 @@
     BGMScriptingBridge* scriptingBridge;
 }
 
-- (id) init {
+- (instancetype) init {
     if ((self = [super initWithMusicPlayerID:[BGMMusicPlayerBase makeID:@"A9790CD5-4886-47C7-9FFC-DD70743CF2BF"]
                                         name:@"Decibel"
                                     bundleID:@"org.sbooth.Decibel"])) {

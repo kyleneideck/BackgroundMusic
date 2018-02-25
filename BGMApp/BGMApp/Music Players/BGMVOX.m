@@ -30,7 +30,7 @@
 #import "BGMScriptingBridge.h"
 
 // PublicUtility Includes
-#include "CADebugMacros.h"
+#import "CADebugMacros.h"
 
 
 #pragma clang assume_nonnull begin
@@ -39,7 +39,7 @@
     BGMScriptingBridge* scriptingBridge;
 }
 
-- (id) init {
+- (instancetype) init {
     if ((self = [super initWithMusicPlayerID:[BGMMusicPlayerBase makeID:@"26498C5D-C18B-4689-8B41-9DA91A78FFAD"]
                                         name:@"VOX"
                                     bundleID:@"com.coppertino.Vox"])) {

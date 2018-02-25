@@ -31,7 +31,7 @@
 #import "BGMScriptingBridge.h"
 
 // PublicUtility Includes
-#include "CADebugMacros.h"
+#import "CADebugMacros.h"
 
 
 #pragma clang assume_nonnull begin
@@ -40,7 +40,7 @@
     BGMScriptingBridge* scriptingBridge;
 }
 
-- (id) init {
+- (instancetype) init {
     if ((self = [super initWithMusicPlayerID:[BGMMusicPlayerBase makeID:@"5226F4B9-C740-4045-A273-4B8EABC0E8FC"]
                                         name:@"VLC"
                                     bundleID:@"org.videolan.vlc"])) {
