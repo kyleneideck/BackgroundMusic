@@ -171,7 +171,7 @@ Failing that, you might have to uninstall. Consider filing a bug report if you d
 
 ## License
 
-Copyright © 2016, 2017 [Background Music contributors](https://github.com/kyleneideck/BackgroundMusic/graphs/contributors).
+Copyright © 2016-2018 [Background Music contributors](https://github.com/kyleneideck/BackgroundMusic/graphs/contributors).
 Licensed under [GPLv2](https://www.gnu.org/licenses/gpl-2.0.html), or any later version.
 
 Background Music includes code from:
