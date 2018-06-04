@@ -412,6 +412,7 @@
                            errorCode:(OSStatus)errorCode
                             revertTo:(AudioDeviceID*)revertTo {
     // Using LogWarning from PublicUtility instead of NSLog here crashes from a bad access. Not sure why.
+    // TODO: Possibly caused by a bug in CADebugMacros.cpp. See commit ab9d4cd.
     NSLog(@"BGMAudioDeviceManager::failedToSetOutputDevice: Couldn't set device with ID %u as output device. "
           "%s%d. %@",
           deviceID,

@@ -17,13 +17,14 @@
 # along with Background Music. If not, see <http://www.gnu.org/licenses/>.
 
 #
-# preinstall
+# postinstall
 #
 # Copyright © 2017 Kyle Neideck
 #
 
 PATH=/bin:/sbin:/usr/bin:/usr/sbin; export PATH
 
+coreaudiod_plist="/System/Library/LaunchDaemons/com.apple.audio.coreaudiod.plist"
 dest_volume="$3"
 xpc_helper_path="$(bash safe_install_dir.sh -y)"
 
@@ -34,6 +35,8 @@ cp -Rf "BGMXPCHelper.xpc" "$xpc_helper_path"
 bash "post_install.sh" "$xpc_helper_path" "BGMXPCHelper.xpc/Contents/MacOS/BGMXPCHelper" "."
 
 # TODO: Verify the installed files, their permissions, the _BGMXPCHelper user/group, etc.
+# TODO: Instead of just sleeping for 5 seconds, wait until coreaudiod is restarted and BGMDevice is
+#       ready to use.
 
 # The extra or-clauses are fallback versions of the command that restarts coreaudiod. Apparently
 # some of these commands don't work with older versions of launchctl, so I figure there's no
@@ -51,5 +54,7 @@ open "${dest_volume}/Applications/Background Music.app"
 
 # The installer plays a sound when it finishes, so give BGMApp a second to launch.
 sleep 1
+
+exit 0
 
 

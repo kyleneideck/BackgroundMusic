@@ -38,6 +38,12 @@
       location = "group:uninstall.sh">
    </FileRef>
    <FileRef
+      location = "group:package.sh">
+   </FileRef>
+   <FileRef
+      location = "group:pkg">
+   </FileRef>
+   <FileRef
       location = "group:Images">
    </FileRef>
 </Workspace>

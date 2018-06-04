@@ -145,7 +145,7 @@ if ! [[ -x "${XCODEBUILD}" ]]; then
 fi
 # This check is last because it takes 10 seconds or so if it fails.
 if ! [[ -x "${XCODEBUILD}" ]]; then
-    XCODEBUILD=$(/usr/bin/xcrun --find xcodebuild &2>>${LOG_FILE} || true)
+    XCODEBUILD="$(/usr/bin/xcrun --find xcodebuild 2>>${LOG_FILE} || true)"
 fi
 
 RECOMMENDED_MIN_XCODE_VERSION=8
@@ -245,8 +245,11 @@ parse_options() {
                 CONFIGURATION="Debug"
                 ;;
             b)
+                # Just build; don't install.
                 XCODEBUILD_ACTION="build"
                 # The dirs xcodebuild will build in.
+                # TODO: If these dirs were created by running this script without -b, they'll be
+                #       owned by root and xcodebuild will fail.
                 APP_PATH="./BGMApp/build"
                 DRIVER_PATH="./BGMDriver/build"
                 ;;
@@ -606,14 +609,17 @@ if [[ "${XCODEBUILD_ACTION}" == "install" ]]; then
     SUDO="sudo"
     ACTIONING="Installing"
 else
+    # No need to sudo if we're only building.
     SUDO=""
     ACTIONING="Building"
 fi
 
+# Enable AddressSanitizer in debug builds to catch memory bugs. Allow ENABLE_ASAN to be set as an
+# environment variable by only setting it here if it isn't already set. (Used by package.sh.)
 if [[ "${CONFIGURATION}" == "Debug" ]]; then
-    ENABLE_ASAN=YES
+    ENABLE_ASAN="${ENABLE_ASAN:-YES}"
 else
-    ENABLE_ASAN=NO
+    ENABLE_ASAN="${ENABLE_ASAN:-NO}"
 fi
 
 # BGMDriver
@@ -623,16 +629,6 @@ echo "[1/3] ${ACTIONING} the virtual audio device $(bold_face ${DRIVER_DIR}) to"
      | tee -a ${LOG_FILE}
 
 # Disable the -e shell option and error trap for build commands so we can handle errors differently.
-(disable_error_handling
-    # Build Apple's PublicUtility classes as a static library.
-    ${SUDO} "${XCODEBUILD}" -scheme "PublicUtility" \
-                            -configuration ${CONFIGURATION} \
-                            -enableAddressSanitizer ${ENABLE_ASAN} \
-                            BUILD_DIR=./build \
-                            RUN_CLANG_STATIC_ANALYZER=0 \
-                            ${XCODEBUILD_OPTIONS} \
-                            ${CLEAN} build >> ${LOG_FILE} 2>&1) &
-
 (disable_error_handling
     # Build and install BGMDriver
     ${SUDO} "${XCODEBUILD}" -scheme "Background Music Device" \
