@@ -32,7 +32,7 @@ install:
   - sudo launchctl kickstart -kp system/com.apple.audio.coreaudiod || sudo killall coreaudiod
 script:
 # Build in a case-sensitive disk image to catch failures that only happen on case-sensitive filesystems.
-  - hdiutil create -type SPARSEBUNDLE -fs 'Case-sensitive Journaled HFS+' -volname bgmbuild -nospotlight -verbose -attach -size 50m bgmbuild.dmg
+  - hdiutil create -type SPARSEBUNDLE -fs 'Case-sensitive Journaled HFS+' -volname bgmbuild -nospotlight -verbose -attach -size 100m bgmbuild.dmg
   - sudo cp -r . /Volumes/bgmbuild
   - cd /Volumes/bgmbuild
 # Install Background Music.
