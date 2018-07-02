@@ -237,7 +237,9 @@ BGMBackgroundMusicDevice::ResponsibleBundleIDsOf(CACFString inParentBundleID)
         { "hu.mplayerhq.mplayerosx.extended",
                 { "ch.sttz.mplayerosx.extended.binaries.officialsvn" } },
         // Discord
-        { "com.hnc.Discord", { "com.hnc.Discord.helper" } }
+        { "com.hnc.Discord", { "com.hnc.Discord.helper" } },
+        // Skype
+        { "com.skype.skype", { "com.skype.skype.Helper" } }
     };
 
     // Parallels' VM "dock helper" apps have bundle IDs like
