@@ -2,16 +2,20 @@ language: objective-c
 matrix:
   include:
     - os: osx
-      osx_image: xcode9.3
-      xcode_sdk: macosx10.13
+      osx_image: xcode10
+      xcode_sdk: macosx10.14
       sudo: required
       env: DEPLOY=true
     - os: osx
-      osx_image: xcode9.2
+      osx_image: xcode9.4
       xcode_sdk: macosx10.13
       sudo: required
     - os: osx
-      osx_image: xcode9.1
+      osx_image: xcode9.3
+      xcode_sdk: macosx10.13
+      sudo: required
+    - os: osx
+      osx_image: xcode9.2
       xcode_sdk: macosx10.13
       sudo: required
     - os: osx

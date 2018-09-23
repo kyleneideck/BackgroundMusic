@@ -526,6 +526,19 @@ log_debug_info() {
     LOG_DEBUG_INFO_TASK_PID=$!
 }
 
+# Cleans the build products and intermediate files for a build scheme.
+#
+# Params:
+#  - The Xcode build scheme to clean, e.g. "Background Music Device".
+clean() {
+    if [[ "${CLEAN}" != "" ]]; then
+        ${SUDO} "${XCODEBUILD}" -scheme "$1" \
+                                -configuration ${CONFIGURATION} \
+                                BUILD_DIR=./build \
+                                ${CLEAN} >> ${LOG_FILE} 2>&1
+    fi
+}
+
 # Register our handler so we can print a message and clean up if there's an error.
 enable_error_handling
 
@@ -622,15 +635,35 @@ else
     ENABLE_ASAN="${ENABLE_ASAN:-NO}"
 fi
 
+# Clean all projects. Done separately to workaround what I think is a bug in Xcode 10.0. If you just
+# add "clean" to the other xcodebuild commands, they seem to fail because of the DSTROOT="/" arg.
+if [[ "${CLEAN}" != "" ]]; then
+    # Disable the -e shell option and error trap for build commands so we can handle errors
+    # differently.
+    (disable_error_handling
+        clean "Background Music Device"
+        clean "PublicUtility"
+        clean "BGMXPCHelper"
+        clean "Background Music"
+        # Also delete the build dirs as files/dirs left in them can make the install step fail and,
+        # if you're using Xcode 10, the commands above will have cleaned the DerivedData dir but not
+        # the build dirs. I think this is a separate Xcode bug. See
+        # <http://www.openradar.me/40906897>.
+        ${SUDO} /bin/rm -rf BGMDriver/build BGMApp/build >> ${LOG_FILE} 2>&1) &
+
+    echo "Cleaning"
+    show_spinner "Clean command failed. Try deleting the directories BGMDriver/build and \
+BGMApp/build manually and running '$0 -n' to skip the cleaning step."
+fi
+
 # BGMDriver
 
 echo "[1/3] ${ACTIONING} the virtual audio device $(bold_face ${DRIVER_DIR}) to" \
-     "$(bold_face ${DRIVER_PATH})" \
+         "$(bold_face ${DRIVER_PATH})" \
      | tee -a ${LOG_FILE}
 
-# Disable the -e shell option and error trap for build commands so we can handle errors differently.
 (disable_error_handling
-    # Build and install BGMDriver
+    # Build and install BGMDriver.
     ${SUDO} "${XCODEBUILD}" -scheme "Background Music Device" \
                             -configuration ${CONFIGURATION} \
                             -enableAddressSanitizer ${ENABLE_ASAN} \
@@ -638,14 +671,14 @@ echo "[1/3] ${ACTIONING} the virtual audio device $(bold_face ${DRIVER_DIR}) to"
                             RUN_CLANG_STATIC_ANALYZER=0 \
                             DSTROOT="/" \
                             ${XCODEBUILD_OPTIONS} \
-                            ${CLEAN} "${XCODEBUILD_ACTION}" >> ${LOG_FILE} 2>&1) &
+                            "${XCODEBUILD_ACTION}" >> ${LOG_FILE} 2>&1) &
 
 show_spinner "${BUILD_FAILED_ERROR_MSG}"
 
 # BGMXPCHelper
 
 echo "[2/3] ${ACTIONING} $(bold_face ${XPC_HELPER_DIR}) to $(bold_face ${XPC_HELPER_PATH})" \
-     | tee -a ${LOG_FILE}
+    | tee -a ${LOG_FILE}
 
 (disable_error_handling
     ${SUDO} "${XCODEBUILD}" -scheme BGMXPCHelper \
@@ -656,7 +689,7 @@ echo "[2/3] ${ACTIONING} $(bold_face ${XPC_HELPER_DIR}) to $(bold_face ${XPC_HEL
                             DSTROOT="/" \
                             INSTALL_PATH="${XPC_HELPER_PATH}" \
                             ${XCODEBUILD_OPTIONS} \
-                            ${CLEAN} "${XCODEBUILD_ACTION}" >> ${LOG_FILE} 2>&1) &
+                            "${XCODEBUILD_ACTION}" >> ${LOG_FILE} 2>&1) &
 
 show_spinner "${BUILD_FAILED_ERROR_MSG}"
 
@@ -673,7 +706,7 @@ echo "[3/3] ${ACTIONING} $(bold_face ${APP_DIR}) to $(bold_face ${APP_PATH})" \
                             RUN_CLANG_STATIC_ANALYZER=0 \
                             DSTROOT="/" \
                             ${XCODEBUILD_OPTIONS} \
-                            ${CLEAN} "${XCODEBUILD_ACTION}" >> ${LOG_FILE} 2>&1) &
+                            "${XCODEBUILD_ACTION}" >> ${LOG_FILE} 2>&1) &
 
 show_spinner "${BUILD_FAILED_ERROR_MSG}"
 
