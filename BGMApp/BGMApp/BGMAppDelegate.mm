@@ -216,6 +216,9 @@ static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
         }
     };
 
+    // Skip this if we're compiling on a version of macOS before 10.14 as won't compile and it
+    // isn't needed.
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400  // MAC_OS_X_VERSION_10_14
     if (@available(macOS 10.14, *)) {
         // On macOS 10.14+ we need to get the user's permission to use input devices before we can
         // use BGMDevice for playthrough (see BGMPlayThrough), so we wait until they've given it
@@ -240,7 +243,10 @@ static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
                                          //       with instructions.
                                      }
                                  }];
-    } else {
+    }
+    else
+#endif
+    {
         // We can change the device immediately on older versions of macOS because they don't
         // require user permission for input devices.
         setDefaultDevice();
