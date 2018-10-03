@@ -17,7 +17,7 @@
 //  BGMMusicPlayers.mm
 //  BGMApp
 //
-//  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016-2018 Kyle Neideck
 //
 
 // Self include
@@ -206,6 +206,16 @@
              @"BGMMusicPlayers::setSelectedMusicPlayerImpl: Only the music players in the musicPlayers array can be selected. "
               "newSelectedMusicPlayer=%@",
              newSelectedMusicPlayer.name);
+
+    if (_selectedMusicPlayer == newSelectedMusicPlayer) {
+        DebugMsg("BGMMusicPlayers::setSelectedMusicPlayerImpl: %s is already the selected music "
+                 "player.",
+                 _selectedMusicPlayer.name.UTF8String);
+        return;
+    }
+
+    // Tell the current music player (object) a different player has been selected.
+    [_selectedMusicPlayer onDeselect];
     
     _selectedMusicPlayer = newSelectedMusicPlayer;
     
@@ -217,6 +227,9 @@
     
     // Save the new setting in user defaults.
     userDefaults.selectedMusicPlayerID = _selectedMusicPlayer.musicPlayerID.UUIDString;
+
+    // Tell the music player (object) it's been selected.
+    [_selectedMusicPlayer onSelect];
 }
 
 - (void) updateBGMDeviceMusicPlayerProperties {

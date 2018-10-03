@@ -40,6 +40,9 @@
 // PublicUtility Includes
 #import "CAPropertyAddress.h"
 
+// System Includes
+#import <AVFoundation/AVCaptureDevice.h>
+
 
 #pragma clang assume_nonnull begin
 
@@ -161,6 +164,9 @@ static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
         return;
     }
 
+    // Make BGMDevice the default device.
+    [self setBGMDeviceAsDefault];
+
     // Handle some of the unusual reasons BGMApp might have to exit, mostly crashes.
     BGMTermination::SetUpTerminationCleanUp(audioDevices);
 
@@ -182,9 +188,6 @@ static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
                                             error);
                                       [self showXPCHelperErrorMessage:error];
                                   }];
-
-
-    
 }
 
 // Returns NO if (and only if) BGMApp is about to terminate because of a fatal error.
@@ -197,16 +200,51 @@ static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
         return NO;
     }
 
-    error = [audioDevices setBGMDeviceAsOSDefault];
-
-    if (error) {
-        [self showSetDeviceAsDefaultError:error
-                                  message:@"Could not set the Background Music device as your"
-                                           "default audio device."
-                          informativeText:@"You might be able to set it yourself."];
-    }
-
     return YES;
+}
+
+// Sets the "Background Music" virtual audio device (BGMDevice) as the user's default audio device.
+- (void) setBGMDeviceAsDefault {
+    void (^setDefaultDevice)() = ^{
+        NSError* error = [audioDevices setBGMDeviceAsOSDefault];
+
+        if (error) {
+            [self showSetDeviceAsDefaultError:error
+                                      message:@"Could not set the Background Music device as your"
+                                               "default audio device."
+                              informativeText:@"You might be able to change it yourself."];
+        }
+    };
+
+    if (@available(macOS 10.14, *)) {
+        // On macOS 10.14+ we need to get the user's permission to use input devices before we can
+        // use BGMDevice for playthrough (see BGMPlayThrough), so we wait until they've given it
+        // before making BGMDevice the default device. This way, if the user is playing audio when
+        // they open Background Music, we won't interrupt it while we're waiting for them to click
+        // OK.
+        //
+        // TODO: This isn't a perfect solution because, if the user takes too long to accept,
+        //       BGMPlayThrough will try to use BGMDevice again and log some errors.
+        [AVCaptureDevice requestAccessForMediaType:AVMediaTypeAudio
+                                 completionHandler:^(BOOL granted) {
+                                     if (granted) {
+                                         DebugMsg("BGMAppDelegate::setBGMDeviceAsDefault: "
+                                                  "Permission granted");
+                                         setDefaultDevice();
+                                     } else {
+                                         NSLog(@"BGMAppDelegate::setBGMDeviceAsDefault: "
+                                               "Permission denied");
+                                         // TODO: If they don't accept, Background Music won't work
+                                         //       at all and the only way to fix it is in System
+                                         //       Preferences, so we should show an error dialog
+                                         //       with instructions.
+                                     }
+                                 }];
+    } else {
+        // We can change the device immediately on older versions of macOS because they don't
+        // require user permission for input devices.
+        setDefaultDevice();
+    }
 }
 
 - (void) setUpMainMenu:(BGMUserDefaults*)userDefaults {

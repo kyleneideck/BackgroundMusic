@@ -17,11 +17,14 @@
 //  BGMScriptingBridge.m
 //  BGMApp
 //
-//  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016-2018 Kyle Neideck
 //
 
 // Self Include
 #import "BGMScriptingBridge.h"
+
+// Local Includes
+#import "BGM_Utils.h"
 
 // PublicUtility Includes
 #import "CADebugMacros.h"
@@ -30,16 +33,16 @@
 #pragma clang assume_nonnull begin
 
 @implementation BGMScriptingBridge {
-    NSString* bundleID;
+    id<BGMMusicPlayer> __weak _musicPlayer;
     // Tokens for the notification observers. We need these to remove the observers in dealloc.
-    id didLaunchToken, didTerminateToken;
+    id _didLaunchToken, _didTerminateToken;
 }
 
 @synthesize application = _application;
 
-- (instancetype) initWithBundleID:(NSString*)inBundleID {
+- (instancetype) initWithMusicPlayer:(id<BGMMusicPlayer>)musicPlayer {
     if ((self = [super init])) {
-        bundleID = inBundleID;
+        _musicPlayer = musicPlayer;
         
         [self initApplication];
     }
@@ -48,9 +51,17 @@
 }
 
 - (void) initApplication {
+    NSString* bundleID = _musicPlayer.bundleID;
+    BGMAssert(bundleID, "Music players need a bundle ID to use ScriptingBridge");
+
+    BGMScriptingBridge* __weak weakSelf = self;
+
     void (^createSBApplication)(void) = ^{
-        _application = [SBApplication applicationWithBundleIdentifier:bundleID];
-        _application.delegate = self;
+        BGMScriptingBridge* __strong strongSelf = weakSelf;
+        strongSelf->_application = [SBApplication applicationWithBundleIdentifier:bundleID];
+        // TODO: I think the SBApplication will still keep a strong ref to this object, so we might
+        //       have to make a separate delegate object.
+        strongSelf->_application.delegate = strongSelf;
     };
     
     BOOL (^isAboutThisMusicPlayer)(NSNotification*) = ^(NSNotification* note) {
@@ -66,26 +77,30 @@
     //     "For applications that declare themselves to have a dynamic scripting interface, this method will
     //     launch the application if it is not already running."
     NSNotificationCenter* center = [[NSWorkspace sharedWorkspace] notificationCenter];
-    didLaunchToken = [center addObserverForName:NSWorkspaceDidLaunchApplicationNotification
-                                         object:nil
-                                          queue:nil
-                                     usingBlock:^(NSNotification* note) {
-                                         if (isAboutThisMusicPlayer(note)) {
-                                             DebugMsg("BGMScriptingBridge::initApplication: %s launched",
-                                                      bundleID.UTF8String);
-                                             createSBApplication();
-                                         }
-                                     }];
-    didTerminateToken = [center addObserverForName:NSWorkspaceDidTerminateApplicationNotification
-                                            object:nil
-                                             queue:nil
-                                        usingBlock:^(NSNotification* note) {
-                                            if (isAboutThisMusicPlayer(note)) {
-                                                DebugMsg("BGMScriptingBridge::initApplication: %s terminated",
-                                                         bundleID.UTF8String);
-                                                _application = nil;
-                                            }
-                                        }];
+    _didLaunchToken = [center addObserverForName:NSWorkspaceDidLaunchApplicationNotification
+                                          object:nil
+                                           queue:nil
+                                      usingBlock:^(NSNotification* note)
+                       {
+                           if (isAboutThisMusicPlayer(note)) {
+                               DebugMsg("BGMScriptingBridge::initApplication: %s launched",
+                                        bundleID.UTF8String);
+                               createSBApplication();
+                               [weakSelf ensurePermission];
+                           }
+                       }];
+    _didTerminateToken = [center addObserverForName:NSWorkspaceDidTerminateApplicationNotification
+                                             object:nil
+                                              queue:nil
+                                         usingBlock:^(NSNotification* note)
+                          {
+                              if (isAboutThisMusicPlayer(note)) {
+                                  DebugMsg("BGMScriptingBridge::initApplication: %s terminated",
+                                           bundleID.UTF8String);
+                                  BGMScriptingBridge* __strong strongSelf = weakSelf;
+                                  strongSelf->_application = nil;
+                              }
+                          }];
     
     // Create the SBApplication if the music player is already running.
     if ([NSRunningApplication runningApplicationsWithBundleIdentifier:bundleID].count > 0) {
@@ -97,13 +112,67 @@
     // Remove the application launch/termination observers.
     NSNotificationCenter* center = [NSWorkspace sharedWorkspace].notificationCenter;
     
-    if (didLaunchToken) {
-        [center removeObserver:didLaunchToken];
+    if (_didLaunchToken) {
+        [center removeObserver:_didLaunchToken];
     }
     
-    if (didTerminateToken) {
-        [center removeObserver:didTerminateToken];
+    if (_didTerminateToken) {
+        [center removeObserver:_didTerminateToken];
     }
+}
+
+- (void) ensurePermission {
+    // Skip this check if running on a version of macOS before 10.14. In that case, we don't require
+    // user permission to send Apple Events. Also skip it if compiling on an earlier version.
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400  // MAC_OS_X_VERSION_10_14
+    if (@available(macOS 10.14, *)) {
+        id<BGMMusicPlayer> musicPlayer = _musicPlayer;
+
+        if (!musicPlayer.selected) {
+            DebugMsg("BGMScriptingBridge::ensurePermission: %s not selected. Nothing to do.",
+                     musicPlayer.name.UTF8String);
+            return;
+        }
+
+        if (!musicPlayer.running) {
+            DebugMsg("BGMScriptingBridge::ensurePermission: %s not running. Nothing to do.",
+                     musicPlayer.name.UTF8String);
+            return;
+        }
+
+        // AEDeterminePermissionToAutomateTarget will block if it has to show a dialog to the user
+        // to ask for permission, so dispatch this to make sure it doesn't run on the main thread.
+        dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+            NSAppleEventDescriptor* musicPlayerEventDescriptor =
+                [NSAppleEventDescriptor
+                 descriptorWithBundleIdentifier:(NSString*)musicPlayer.bundleID];
+
+            OSStatus status =
+                AEDeterminePermissionToAutomateTarget(musicPlayerEventDescriptor.aeDesc,
+                                                      typeWildCard,
+                                                      typeWildCard,
+                                                      true);
+
+            DebugMsg("BGMScriptingBridge::ensurePermission: "
+                     "Apple Events permission status for %s: %d",
+                     musicPlayer.name.UTF8String,
+                     status);
+
+            if (status != noErr) {
+                // TODO: If they deny permission, we should grey-out the auto-pause menu item and
+                //       add something to the UI that indicates the problem. Maybe a warning icon
+                //       that shows an explanation when you hover your mouse over it. (We can't just
+                //       ask them again later because the API doesn't support it. They can only fix
+                //       it in System Preferences.)
+                NSLog(@"BGMScriptingBridge::ensurePermission: Permission denied for %@. status=%d",
+                      musicPlayer.name,
+                      status);
+            }
+        });
+    } else {
+        DebugMsg("BGMScriptingBridge::ensurePermission: Not macOS 10.14+. Nothing to do.");
+    }
+#endif /* MAC_OS_X_VERSION_MAX_ALLOWED >= 101400 */
 }
 
 #pragma mark SBApplicationDelegate
@@ -118,7 +187,7 @@
     NSString* vars = [NSString stringWithFormat:@"event='%4.4s' error=%@ application=%@",
                          (char*)&(event->descriptorType), error, self.application];
     DebugMsg("BGMScriptingBridge::eventDidFail: Apple event sent to %s failed. %s",
-             bundleID.UTF8String,
+             _musicPlayer.bundleID.UTF8String,
              vars.UTF8String);
 #else
     #pragma unused (event, error)

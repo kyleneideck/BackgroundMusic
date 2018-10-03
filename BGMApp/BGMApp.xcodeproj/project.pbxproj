@@ -51,6 +51,8 @@
 		1C837DD91F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C837DD71F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm */; };
 		1C837DDA1F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C837DD71F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm */; };
 		1C86DA6A1F91EE3B000C8CCF /* CAPThread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C8034C21BDAFD5700668E00 /* CAPThread.cpp */; };
+		1C8B0C6A216205BF008C5679 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1C8B0C69216205BF008C5679 /* AVFoundation.framework */; };
+		1C8B0C6B21645355008C5679 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1C8B0C69216205BF008C5679 /* AVFoundation.framework */; };
 		1C8D8304204238DB00A838F2 /* BGMSwinsian.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C8D8302204238DB00A838F2 /* BGMSwinsian.m */; };
 		1C8D830520423E1C00A838F2 /* BGMSwinsian.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C8D8302204238DB00A838F2 /* BGMSwinsian.m */; };
 		1C8D830620423E2400A838F2 /* BGMSwinsian.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C8D8302204238DB00A838F2 /* BGMSwinsian.m */; };
@@ -262,6 +264,7 @@
 		1C8034C31BDAFD5700668E00 /* CAPThread.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CAPThread.h; path = PublicUtility/CAPThread.h; sourceTree = "<group>"; };
 		1C837DD61F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BGMOutputVolumeMenuItem.h; sourceTree = "<group>"; };
 		1C837DD71F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = BGMOutputVolumeMenuItem.mm; sourceTree = "<group>"; };
+		1C8B0C69216205BF008C5679 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		1C8D8301204238DB00A838F2 /* Swinsian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Swinsian.h; path = "Music Players/Swinsian.h"; sourceTree = "<group>"; };
 		1C8D8302204238DB00A838F2 /* BGMSwinsian.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BGMSwinsian.m; path = "Music Players/BGMSwinsian.m"; sourceTree = "<group>"; };
 		1C8D8303204238DB00A838F2 /* BGMSwinsian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGMSwinsian.h; path = "Music Players/BGMSwinsian.h"; sourceTree = "<group>"; };
@@ -358,6 +361,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1C8B0C6A216205BF008C5679 /* AVFoundation.framework in Frameworks */,
 				270A84511E0044EF00F13C99 /* ScriptingBridge.framework in Frameworks */,
 				1CD1FD301BDDEAF2004F7E1B /* AudioToolbox.framework in Frameworks */,
 				1C1963031BCAC160008A4DF7 /* CoreAudio.framework in Frameworks */,
@@ -368,6 +372,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1C8B0C6B21645355008C5679 /* AVFoundation.framework in Frameworks */,
 				1CD989401ECFFCC50014BBBF /* AudioToolbox.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -692,6 +697,7 @@
 		2743CA1B1D86DA9B0089613B /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				1C8B0C69216205BF008C5679 /* AVFoundation.framework */,
 				270A84501E0044EE00F13C99 /* ScriptingBridge.framework */,
 				1CD1FD2F1BDDEAF2004F7E1B /* AudioToolbox.framework */,
 				1C1963021BCAC160008A4DF7 /* CoreAudio.framework */,

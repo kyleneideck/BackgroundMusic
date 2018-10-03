@@ -17,7 +17,7 @@
 //  BGMMusicPlayer.m
 //  BGMApp
 //
-//  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016-2018 Kyle Neideck
 //
 
 // Self Include
@@ -35,6 +35,7 @@
 @synthesize name = _name;
 @synthesize bundleID = _bundleID;
 @synthesize pid = _pid;
+@synthesize selected = _selected;
 
 - (instancetype) initWithMusicPlayerID:(NSUUID*)musicPlayerID
                                   name:(NSString*)name
@@ -56,6 +57,7 @@
         _name = name;
         _bundleID = bundleID;
         _pid = pid;
+        _selected = NO;
     }
 
     return self;
@@ -80,6 +82,14 @@
         (!bundleID ? nil : [[NSWorkspace sharedWorkspace] absolutePathForAppBundleWithIdentifier:(NSString*)bundleID]);
     
     return (!bundlePath ? nil : [[NSWorkspace sharedWorkspace] iconForFile:(NSString*)bundlePath]);
+}
+
+- (void) onSelect {
+    _selected = YES;
+}
+
+- (void) onDeselect {
+    _selected = NO;
 }
 
 @end

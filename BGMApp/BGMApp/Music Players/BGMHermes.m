@@ -17,7 +17,7 @@
 //  BGMHermes.m
 //  BGMApp
 //
-//  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016-2018 Kyle Neideck
 //
 
 // Self Include
@@ -44,7 +44,7 @@
     if ((self = [super initWithMusicPlayerID:[BGMMusicPlayerBase makeID:@"0CDC67B0-56D3-4D94-BC06-6E380D8F5E34"]
                                         name:@"Hermes"
                                     bundleID:@"com.alexcrichton.Hermes"])) {
-        scriptingBridge = [[BGMScriptingBridge alloc] initWithBundleID:(NSString*)self.bundleID];
+        scriptingBridge = [[BGMScriptingBridge alloc] initWithMusicPlayer:self];
     }
     
     return self;
@@ -52,6 +52,11 @@
 
 - (HermesApplication* __nullable) hermes {
     return (HermesApplication* __nullable)scriptingBridge.application;
+}
+
+- (void) onSelect {
+    [super onSelect];
+    [scriptingBridge ensurePermission];
 }
 
 - (BOOL) isRunning {

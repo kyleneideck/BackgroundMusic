@@ -17,7 +17,7 @@
 //  BGMiTunes.m
 //  BGMApp
 //
-//  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016-2018 Kyle Neideck
 //
 
 // Self Include
@@ -49,7 +49,7 @@
     if ((self = [super initWithMusicPlayerID:[BGMiTunes sharedMusicPlayerID]
                                         name:@"iTunes"
                                     bundleID:@"com.apple.iTunes"])) {
-        scriptingBridge = [[BGMScriptingBridge alloc] initWithBundleID:(NSString* __nonnull)self.bundleID];
+        scriptingBridge = [[BGMScriptingBridge alloc] initWithMusicPlayer:self];
     }
     
     return self;
@@ -57,6 +57,11 @@
 
 - (iTunesApplication* __nullable) iTunes {
     return (iTunesApplication*)scriptingBridge.application;
+}
+
+- (void) onSelect {
+    [super onSelect];
+    [scriptingBridge ensurePermission];
 }
 
 - (BOOL) isRunning {

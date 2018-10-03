@@ -17,7 +17,7 @@
 //  BGMScriptingBridge.h
 //  BGMApp
 //
-//  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016, 2018 Kyle Neideck
 //
 //  A wrapper around Scripting Bridge's SBApplication that tries to avoid ever launching the application.
 //
@@ -29,6 +29,9 @@
 //  unless the music player app is running. That way messages sent while the app is closed are ignored.
 //
 
+// Local Includes
+#import "BGMMusicPlayer.h"
+
 // System Includes
 #import <Cocoa/Cocoa.h>
 #import <ScriptingBridge/ScriptingBridge.h>
@@ -38,11 +41,18 @@
 
 @interface BGMScriptingBridge : NSObject <SBApplicationDelegate>
 
-- (instancetype) initWithBundleID:(NSString*)bundleID;
+// Only keeps a weak ref to musicPlayer.
+- (instancetype) initWithMusicPlayer:(id<BGMMusicPlayer>)musicPlayer;
 
 // If the music player application is running, this property is the Scripting Bridge object representing
 // it. If not, it's set to nil. Used to send Apple events to the music player app.
 @property (readonly) __kindof SBApplication* __nullable application;
+
+// macOS 10.14 requires the user's permission to send Apple Events. If the music player that owns
+// this object (i.e. the one passed to initWithMusicPlayer) is currently the selected music player
+// and the user hasn't already given us permission to send it Apple Events, this method asks the
+// user for permission.
+- (void) ensurePermission;
 
 // SBApplicationDelegate
 

@@ -6,6 +6,7 @@
 tags
 cmake-build-debug/
 /Background-Music-*/
+BGM.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
 
 # Everything below is from https://github.com/github/gitignore/blob/master/Objective-C.gitignore
 

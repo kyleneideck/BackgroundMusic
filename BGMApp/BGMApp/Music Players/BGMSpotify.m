@@ -17,7 +17,7 @@
 //  BGMSpotify.m
 //  BGMApp
 //
-//  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016-2018 Kyle Neideck
 //
 //  Spotify's AppleScript API looks to have been designed to match iTunes', so this file is basically
 //  just s/iTunes/Spotify/ on BGMiTunes.m
@@ -47,7 +47,7 @@
     if ((self = [super initWithMusicPlayerID:[BGMMusicPlayerBase makeID:@"EC2A907F-8515-4687-9570-1BF63176E6D8"]
                                         name:@"Spotify"
                                     bundleID:@"com.spotify.client"])) {
-        scriptingBridge = [[BGMScriptingBridge alloc] initWithBundleID:(NSString*)self.bundleID];
+        scriptingBridge = [[BGMScriptingBridge alloc] initWithMusicPlayer:self];
     }
     
     return self;
@@ -55,6 +55,11 @@
 
 - (SpotifyApplication* __nullable) spotify {
     return (SpotifyApplication* __nullable)scriptingBridge.application;
+}
+
+- (void) onSelect {
+    [super onSelect];
+    [scriptingBridge ensurePermission];
 }
 
 - (BOOL) isRunning {

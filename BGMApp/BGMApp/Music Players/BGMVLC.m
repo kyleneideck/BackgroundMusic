@@ -17,7 +17,7 @@
 //  BGMVLC.m
 //  BGMApp
 //
-//  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016-2018 Kyle Neideck
 //  Portions copyright (C) 2012 Peter Ljunglöf. All rights reserved.
 //
 
@@ -44,7 +44,7 @@
     if ((self = [super initWithMusicPlayerID:[BGMMusicPlayerBase makeID:@"5226F4B9-C740-4045-A273-4B8EABC0E8FC"]
                                         name:@"VLC"
                                     bundleID:@"org.videolan.vlc"])) {
-        scriptingBridge = [[BGMScriptingBridge alloc] initWithBundleID:(NSString*)self.bundleID];
+        scriptingBridge = [[BGMScriptingBridge alloc] initWithMusicPlayer:self];
     }
     
     return self;
@@ -52,6 +52,11 @@
 
 - (VLCApplication* __nullable) vlc {
     return (VLCApplication*)scriptingBridge.application;
+}
+
+- (void) onSelect {
+    [super onSelect];
+    [scriptingBridge ensurePermission];
 }
 
 - (BOOL) isRunning {

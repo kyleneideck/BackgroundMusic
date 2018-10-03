@@ -17,7 +17,7 @@
 //  BGMVOX.m
 //  BGMApp
 //
-//  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016-2018 Kyle Neideck
 //
 
 // Self Include
@@ -43,7 +43,7 @@
     if ((self = [super initWithMusicPlayerID:[BGMMusicPlayerBase makeID:@"26498C5D-C18B-4689-8B41-9DA91A78FFAD"]
                                         name:@"VOX"
                                     bundleID:@"com.coppertino.Vox"])) {
-        scriptingBridge = [[BGMScriptingBridge alloc] initWithBundleID:(NSString*)self.bundleID];
+        scriptingBridge = [[BGMScriptingBridge alloc] initWithMusicPlayer:self];
     }
     
     return self;
@@ -51,6 +51,11 @@
 
 - (VoxApplication* __nullable) vox {
     return (VoxApplication*)scriptingBridge.application;
+}
+
+- (void) onSelect {
+    [super onSelect];
+    [scriptingBridge ensurePermission];
 }
 
 - (BOOL) isRunning {

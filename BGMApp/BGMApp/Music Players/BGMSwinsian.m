@@ -47,7 +47,7 @@
     if ((self = [super initWithMusicPlayerID:musicPlayerID
                                         name:@"Swinsian"
                                     bundleID:@"com.swinsian.Swinsian"])) {
-        scriptingBridge = [[BGMScriptingBridge alloc] initWithBundleID:(NSString*)self.bundleID];
+        scriptingBridge = [[BGMScriptingBridge alloc] initWithMusicPlayer:self];
     }
     
     return self;
@@ -55,6 +55,11 @@
 
 - (SwinsianApplication* __nullable) swinsian {
     return (SwinsianApplication* __nullable)scriptingBridge.application;
+}
+
+- (void) onSelect {
+    [super onSelect];
+    [scriptingBridge ensurePermission];
 }
 
 - (BOOL) isRunning {

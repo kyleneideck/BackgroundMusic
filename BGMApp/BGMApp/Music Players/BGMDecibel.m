@@ -17,7 +17,7 @@
 //  BGMDecibel.m
 //  BGMApp
 //
-//  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016-2018 Kyle Neideck
 //  Copyright © 2016 Tanner Hoke
 //
 
@@ -44,7 +44,7 @@
     if ((self = [super initWithMusicPlayerID:[BGMMusicPlayerBase makeID:@"A9790CD5-4886-47C7-9FFC-DD70743CF2BF"]
                                         name:@"Decibel"
                                     bundleID:@"org.sbooth.Decibel"])) {
-        scriptingBridge = [[BGMScriptingBridge alloc] initWithBundleID:(NSString*)self.bundleID];
+        scriptingBridge = [[BGMScriptingBridge alloc] initWithMusicPlayer:self];
     }
     
     return self;
@@ -52,6 +52,11 @@
 
 - (DecibelApplication* __nullable) decibel {
     return (DecibelApplication* __nullable)scriptingBridge.application;
+}
+
+- (void) onSelect {
+    [super onSelect];
+    [scriptingBridge ensurePermission];
 }
 
 - (BOOL) isRunning {

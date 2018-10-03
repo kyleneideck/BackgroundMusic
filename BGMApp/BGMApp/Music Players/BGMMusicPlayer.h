@@ -17,7 +17,7 @@
 //  BGMMusicPlayer.h
 //  BGMApp
 //
-//  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016, 2018 Kyle Neideck
 //
 //  The base classes and protocol for objects that represent a music player app.
 //
@@ -84,6 +84,9 @@
 //       BGMMusicPlayers could pass a pointer to itself to createInstances.
 @property NSNumber* __nullable pid;
 
+// True if this is currently the selected music player.
+@property (readonly) BOOL selected;
+
 // The state of the music player.
 //
 // True if the music player app is open.
@@ -97,10 +100,14 @@
 // BGMApp paused it.
 @property (readonly, getter=isPaused) BOOL paused;
 
+// Called when the user selects this music player.
+- (void) onSelect;
+// Called when this is the selected music player and the user selects a different one.
+- (void) onDeselect;
+
 // Pause the music player. Does nothing if the music player is already paused or isn't running.
 // Returns YES if the music player is paused now but wasn't before, returns NO otherwise.
 - (BOOL) pause;
-
 // Unpause the music player. Does nothing if the music player is already playing or isn't running.
 // Returns YES if the music player is playing now but wasn't before, returns NO otherwise.
 - (BOOL) unpause;
@@ -130,6 +137,9 @@
 @property (readonly) NSString* name;
 @property (readonly) NSString* __nullable bundleID;
 @property NSNumber* __nullable pid;
+@property (readonly) BOOL selected;
+- (void) onSelect;
+- (void) onDeselect;
 
 @end
 
