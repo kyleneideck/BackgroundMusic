@@ -19,7 +19,7 @@
 #
 # postinstall
 #
-# Copyright © 2017 Kyle Neideck
+# Copyright © 2017, 2018 Kyle Neideck
 #
 
 PATH=/bin:/sbin:/usr/bin:/usr/sbin; export PATH
@@ -50,7 +50,14 @@ bash "post_install.sh" "$xpc_helper_path" "BGMXPCHelper.xpc/Contents/MacOS/BGMXP
     killall coreaudiod &>/dev/null) && \
     sleep 5
 
-open "${dest_volume}/Applications/Background Music.app"
+# Try opening BGMApp using its bundle ID first so the installer can declare it as "relocatable".
+# That way, if the user moves BGMApp and then installs a newer version of Background Music, the
+# installer will try to find the old version of BGMApp and put the new one in the same place.
+#
+# If we can't open BGMApp, it very likely didn't install properly, so we fail the install.
+open -b com.bearisdriving.BGM.App || \
+    open "${dest_volume}/Applications/Background Music.app" || \
+    exit 1
 
 # The installer plays a sound when it finishes, so give BGMApp a second to launch.
 sleep 1

@@ -28,7 +28,7 @@
 # Based on https://github.com/tekezo/Karabiner-Elements/blob/master/make-package.sh
 #
 
-# TODO: Code signing. See `man pkgbuild`.
+# TODO: Code signing. See `man productbuild`.
 
 PATH="/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin"; export PATH
 
@@ -162,6 +162,7 @@ pkgbuild \
 
 productbuild \
     --distribution "pkg/Distribution.xml" \
+    --identifier "$pkg_identifier" \
     --resources "pkgres" \
     --package-path "$out_dir" \
     "$pkg"
