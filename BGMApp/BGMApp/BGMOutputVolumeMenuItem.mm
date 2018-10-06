@@ -259,6 +259,7 @@ NSString* const __nonnull      kGenericOutputDeviceName = @"Output Device";
             self.toolTip = (__bridge_transfer NSString*)outputDevice.CopyName();
         } else {
             deviceLabel.stringValue = (__bridge_transfer NSString*)outputDevice.CopyName();
+            self.toolTip = nil;
         }
     } catch (const CAException& e) {
         BGMLogException(e);
