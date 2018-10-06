@@ -17,7 +17,7 @@
 //  BGMOutputVolumeMenuItem.mm
 //  BGMApp
 //
-//  Copyright © 2017 Kyle Neideck
+//  Copyright © 2017, 2018 Kyle Neideck
 //
 
 // Self Include
@@ -45,6 +45,9 @@ NSString* const __nonnull      kGenericOutputDeviceName = @"Output Device";
     BGMAudioDeviceManager* audioDevices;
     NSTextField* deviceLabel;
     NSSlider* volumeSlider;
+    BGMAudioDevice outputDevice;
+    AudioObjectPropertyListenerBlock updateSliderListenerBlock;
+    AudioObjectPropertyListenerBlock updateLabelListenerBlock;
 }
 
 // TODO: Show the output device's icon next to its name.
@@ -61,15 +64,47 @@ NSString* const __nonnull      kGenericOutputDeviceName = @"Output Device";
         audioDevices = devices;
         deviceLabel = label;
         volumeSlider = slider;
+        outputDevice = audioDevices.outputDevice;
+
+        // These are initialised in the methods called below.
+        updateSliderListenerBlock = nil;
+        updateLabelListenerBlock = nil;
 
         // Apply our custom view from MainMenu.xib.
         self.view = view;
 
+        // Set up the UI components in the view.
         [self initSlider];
         [self updateLabelAndToolTip];
+
+        // Register a listener so we can update if the output device's data source changes.
+        [self addOutputDeviceDataSourceListener];
     }
 
     return self;
+}
+
+// We currently only use one instance of this class and it's never deallocated, but it's probably
+// good practice to define dealloc anyway.
+- (void) dealloc {
+    dispatch_sync(dispatch_get_main_queue(), ^{
+        // Remove the audio property listeners.
+        [self removeOutputDeviceDataSourceListener];
+
+        BGMLogAndSwallowExceptions("BGMOutputVolumeMenuItem::dealloc", ([&] {
+            audioDevices.bgmDevice.RemovePropertyListenerBlock(
+                CAPropertyAddress(kAudioDevicePropertyVolumeScalar, kScope),
+                dispatch_get_main_queue(),
+                updateSliderListenerBlock);
+        }));
+
+        BGMLogAndSwallowExceptions("BGMOutputVolumeMenuItem::dealloc", ([&] {
+            audioDevices.bgmDevice.RemovePropertyListenerBlock(
+                CAPropertyAddress(kAudioDevicePropertyMute, kScope),
+                dispatch_get_main_queue(),
+                updateSliderListenerBlock);
+        }));
+    });
 }
 
 - (void) initSlider {
@@ -84,16 +119,14 @@ NSString* const __nonnull      kGenericOutputDeviceName = @"Output Device";
 
     // Register a listener that will update the slider when the user changes the volume or
     // mutes/unmutes their audio.
-    AudioObjectPropertyListenerBlock updateSlider =
+    BGMOutputVolumeMenuItem* __weak weakSelf = self;
+
+    updateSliderListenerBlock =
         ^(UInt32 inNumberAddresses, const AudioObjectPropertyAddress* inAddresses) {
             // The docs for AudioObjectPropertyListenerBlock say inAddresses will always contain
-            // at least one property the block is listening to, so there's no need to check
-            // inAddresses.
+            // at least one property the block is listening to, so there's no need to check it.
             #pragma unused (inNumberAddresses, inAddresses)
-
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [self updateVolumeSlider];
-            });
+            [weakSelf updateVolumeSlider];
         };
 
     // Instead of swallowing exceptions, we could try again later, but I doubt it would be worth the
@@ -103,13 +136,15 @@ NSString* const __nonnull      kGenericOutputDeviceName = @"Output Device";
         audioDevices.bgmDevice.AddPropertyListenerBlock(
             CAPropertyAddress(kAudioDevicePropertyVolumeScalar, kScope),
             dispatch_get_main_queue(),
-            updateSlider);
+            updateSliderListenerBlock);
+    }));
 
+    BGMLogAndSwallowExceptions("BGMOutputVolumeMenuItem::initSlider", ([&] {
         // Register the same listener for mute/unmute notifications.
         audioDevices.bgmDevice.AddPropertyListenerBlock(
             CAPropertyAddress(kAudioDevicePropertyMute, kScope),
             dispatch_get_main_queue(),
-            updateSlider);
+            updateSliderListenerBlock);
     }));
 }
 
@@ -147,10 +182,55 @@ NSString* const __nonnull      kGenericOutputDeviceName = @"Output Device";
     }));
 };
 
+- (void) addOutputDeviceDataSourceListener {
+    // Create the block that updates deviceLabel when the output device's data source changes, e.g.
+    // from Internal Speakers to Headphones.
+    if (!updateLabelListenerBlock) {
+        BGMOutputVolumeMenuItem* __weak weakSelf = self;
+
+        updateLabelListenerBlock =
+            ^(UInt32 inNumberAddresses, const AudioObjectPropertyAddress* inAddresses) {
+                // The docs for AudioObjectPropertyListenerBlock say inAddresses will always contain
+                // at least one property the block is listening to, so there's no need to check it.
+                #pragma unused (inNumberAddresses, inAddresses)
+                [weakSelf updateLabelAndToolTip];
+            };
+    }
+
+    // Register the listener.
+    //
+    // Instead of swallowing exceptions, we could try again later, but I doubt it would be worth the
+    // effort. And the documentation doesn't actually explain what could cause this to fail.
+    BGMLogAndSwallowExceptions("BGMOutputVolumeMenuItem::addOutputDeviceDataSourceListener", ([&] {
+        outputDevice.AddPropertyListenerBlock(
+            CAPropertyAddress(kAudioDevicePropertyDataSource, kScope),
+            dispatch_get_main_queue(),
+            updateLabelListenerBlock);
+    }));
+}
+
+- (void) removeOutputDeviceDataSourceListener {
+    BGMLogAndSwallowExceptions("BGMOutputVolumeMenuItem::removeOutputDeviceDataSourceListener",
+                               ([&] {
+        outputDevice.RemovePropertyListenerBlock(
+            CAPropertyAddress(kAudioDevicePropertyDataSource, kScope),
+            dispatch_get_main_queue(),
+            updateLabelListenerBlock);
+    }));
+}
+
 - (void) outputDeviceDidChange {
     dispatch_async(dispatch_get_main_queue(), ^{
+        // Remove the data source listener from the previous output device.
+        [self removeOutputDeviceDataSourceListener];
+
+        // Add it to the new output device.
+        outputDevice = audioDevices.outputDevice;
+        [self addOutputDeviceDataSourceListener];
+
         // Update the label to use the name of the new output device.
         [self updateLabelAndToolTip];
+
         // Set the slider to the volume of the new device.
         [self updateVolumeSlider];
     });
@@ -160,26 +240,25 @@ NSString* const __nonnull      kGenericOutputDeviceName = @"Output Device";
 // datasource, the device's name is set as this menu item's tooltip. Falls back to a generic name if
 // the device returns an error when queried.
 - (void) updateLabelAndToolTip {
-    BGMAudioDevice device = audioDevices.outputDevice;
     BOOL didSetLabel = NO;
 
     try {
-        if (device.HasDataSourceControl(kScope, kMasterChannel)) {
+        if (outputDevice.HasDataSourceControl(kScope, kMasterChannel)) {
             // The device has datasources, so use the current datasource's name like macOS does.
-            UInt32 dataSourceID = device.GetCurrentDataSourceID(kScope, kMasterChannel);
+            UInt32 dataSourceID = outputDevice.GetCurrentDataSourceID(kScope, kMasterChannel);
 
             deviceLabel.stringValue =
-                (__bridge_transfer NSString*)device.CopyDataSourceNameForID(kScope,
-                                                                            kMasterChannel,
-                                                                            dataSourceID);
+                (__bridge_transfer NSString*)outputDevice.CopyDataSourceNameForID(kScope,
+                                                                                  kMasterChannel,
+                                                                                  dataSourceID);
             didSetLabel = YES;  // So we know not to change the text if setting the tooltip fails.
 
             // Set the tooltip of the menu item (the container) rather than the label because menu
             // items' tooltips will still appear when a different app is focused and, as far as I
             // know, BGMApp should never be the foreground app.
-            self.toolTip = (__bridge_transfer NSString*)device.CopyName();
+            self.toolTip = (__bridge_transfer NSString*)outputDevice.CopyName();
         } else {
-            deviceLabel.stringValue = (__bridge_transfer NSString*)device.CopyName();
+            deviceLabel.stringValue = (__bridge_transfer NSString*)outputDevice.CopyName();
         }
     } catch (const CAException& e) {
         BGMLogException(e);
@@ -192,6 +271,10 @@ NSString* const __nonnull      kGenericOutputDeviceName = @"Output Device";
             deviceLabel.stringValue = kGenericOutputDeviceName;
         }
     }
+
+    DebugMsg("BGMOutputVolumeMenuItem::updateLabelAndToolTip: Label: '%s' Tooltip: '%s'",
+             deviceLabel.stringValue.UTF8String,
+             self.toolTip.UTF8String);
 
     // Take the label out of the accessibility hierarchy, which also moves the slider up a level.
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000  // MAC_OS_X_VERSION_10_10
@@ -232,5 +315,4 @@ NSString* const __nonnull      kGenericOutputDeviceName = @"Output Device";
 @end
 
 #pragma clang assume_nonnull end
-
 
