@@ -98,6 +98,8 @@ deploy:
   file_glob: true
   file: Background-Music-*/*
   skip_cleanup: true
+  name: $TRAVIS_TAG
+  prerelease: true
   on:
     repo: kyleneideck/BackgroundMusic
     tags: true
