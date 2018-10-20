@@ -5,7 +5,7 @@
 # Background Music
 ##### macOS audio utility
 
-![](Images/README/Screenshot.png)
+<img src="Images/README/Screenshot.png" width="340" height="342" />
 
 - Automatically pauses your music player when other audio starts playing and unpauses it afterwards
 - Per-application volume, boost quiet apps
@@ -15,20 +15,20 @@
 
 ## Download
 
-### Version 0.1.1
+### Version 0.2.0
 
-<a href="https://github.com/kyleneideck/BackgroundMusic/releases/download/v0.1.1/BackgroundMusic-0.1.1.pkg"><img 
+<a href="https://github.com/kyleneideck/BackgroundMusic/releases/download/v0.2.0/BackgroundMusic-0.2.0.pkg"><img 
 src="Images/README/pkg-icon.png" width="32" height="32" align="absmiddle" />
-BackgroundMusic-0.1.1.pkg</a> (473 KB)
+BackgroundMusic-0.2.0.pkg</a> (581 KB)
 
 Still very much in alpha. Not code signed, so you'll have to **right-click it and choose "Open"**.
 
 **Requires OS X 10.10+**. Should work on 10.9, but I haven't tried it.
 
-> <sub>MD5: e02988e6b32eafa88b99c4da33e7fe56</sub><br/>
-> <sub>SHA256: 7ce875bb00fdeb2b5b363aa92367b3fa096d18cb02a02c461d5df66307ab1088</sub><br/>
+> <sub>MD5: 23653c889f9ba7efc9cbb4e550c54060</sub><br/>
+> <sub>SHA256: 78184ba743ba79e8cbd81bc8e2ea28b59100cc626ea77be58d6612bcfe2c7b78</sub><br/>
 > <sub>PGP:
-> [sig](https://github.com/kyleneideck/BackgroundMusic/releases/download/v0.1.1/BackgroundMusic-0.1.1.pkg.asc),
+> [sig](https://github.com/kyleneideck/BackgroundMusic/releases/download/v0.2.0/BackgroundMusic-0.2.0.pkg.asc),
 > [key (0595DF814E41A6F69334C5E2CAA8D9B8E39EC18C)](https://bearisdriving.com/kyle-neideck.gpg)</sub>
 
 We also have [snapshot builds](https://github.com/kyleneideck/BackgroundMusic/releases).
