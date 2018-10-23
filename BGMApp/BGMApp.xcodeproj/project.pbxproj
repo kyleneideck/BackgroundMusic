@@ -40,6 +40,8 @@
 		1C3DB4891BE0885A00EC8160 /* BGMAppVolumes.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C3DB4881BE0885A00EC8160 /* BGMAppVolumes.m */; };
 		1C4699471BD5C0E400F78043 /* BGMiTunes.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C4699461BD5C0E400F78043 /* BGMiTunes.m */; };
 		1C46994E1BD7694C00F78043 /* BGMDeviceControlSync.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C46994C1BD7694C00F78043 /* BGMDeviceControlSync.cpp */; };
+		1C4D1A1D217C7D6400A1ACD0 /* BGMPreferredOutputDevices.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C4D1A1C217C7D6400A1ACD0 /* BGMPreferredOutputDevices.mm */; };
+		1C4D1A1E217C7D6400A1ACD0 /* BGMPreferredOutputDevices.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C4D1A1C217C7D6400A1ACD0 /* BGMPreferredOutputDevices.mm */; };
 		1C50FF631EC9F4490031A6EA /* BGMAudioDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CF5423A1EAAEE4300445AD8 /* BGMAudioDevice.cpp */; };
 		1C533C7A1EED28B700270802 /* uninstall.sh in Resources */ = {isa = PBXBuildFile; fileRef = 1C533C791EED28B700270802 /* uninstall.sh */; };
 		1C533C7B1EED2F6200270802 /* safe_install_dir.sh in Resources */ = {isa = PBXBuildFile; fileRef = 276972901CB16008007A2F7C /* safe_install_dir.sh */; };
@@ -256,6 +258,8 @@
 		1C4699461BD5C0E400F78043 /* BGMiTunes.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BGMiTunes.m; path = "Music Players/BGMiTunes.m"; sourceTree = "<group>"; };
 		1C46994C1BD7694C00F78043 /* BGMDeviceControlSync.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BGMDeviceControlSync.cpp; sourceTree = "<group>"; };
 		1C46994D1BD7694C00F78043 /* BGMDeviceControlSync.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BGMDeviceControlSync.h; sourceTree = "<group>"; };
+		1C4D1A1B217C7D6400A1ACD0 /* BGMPreferredOutputDevices.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BGMPreferredOutputDevices.h; sourceTree = "<group>"; };
+		1C4D1A1C217C7D6400A1ACD0 /* BGMPreferredOutputDevices.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = BGMPreferredOutputDevices.mm; sourceTree = "<group>"; };
 		1C533C791EED28B700270802 /* uninstall.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = uninstall.sh; path = ../../uninstall.sh; sourceTree = "<group>"; };
 		1C533C7F1EF532CA00270802 /* _uninstall-non-interactive.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = "_uninstall-non-interactive.sh"; sourceTree = "<group>"; };
 		1C780FF01FEF6C3B00497FAD /* BGMSystemSoundsVolume.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BGMSystemSoundsVolume.h; sourceTree = "<group>"; };
@@ -557,6 +561,8 @@
 				1CD410D31F9EDDAD0070A094 /* BGMAppVolumesController.mm */,
 				1CED616A1C316E1A002CAFCF /* BGMAudioDeviceManager.h */,
 				1CED616B1C316E1A002CAFCF /* BGMAudioDeviceManager.mm */,
+				1C4D1A1B217C7D6400A1ACD0 /* BGMPreferredOutputDevices.h */,
+				1C4D1A1C217C7D6400A1ACD0 /* BGMPreferredOutputDevices.mm */,
 				1CF5423B1EAAEE4300445AD8 /* BGMAudioDevice.h */,
 				1CF5423A1EAAEE4300445AD8 /* BGMAudioDevice.cpp */,
 				1CACCF381F3175AD007F86CA /* BGMBackgroundMusicDevice.h */,
@@ -959,6 +965,7 @@
 				1C0BD0A81BF1B029004F4CF5 /* BGMPreferencesMenu.mm in Sources */,
 				1C1962F41BCABFC5008A4DF7 /* CAHALAudioObject.cpp in Sources */,
 				27F7D4901D2483B100821C4B /* BGMDecibel.m in Sources */,
+				1C4D1A1D217C7D6400A1ACD0 /* BGMPreferredOutputDevices.mm in Sources */,
 				1C2336DA1BEAB6E7004C1C4E /* BGMMusicPlayer.m in Sources */,
 				1C1962F61BCABFC5008A4DF7 /* CAHALAudioSystemObject.cpp in Sources */,
 				1CC1DF821BE5068A00FB8FE4 /* CACFDictionary.cpp in Sources */,
@@ -1015,6 +1022,7 @@
 				1CD9895A1ECFFD250014BBBF /* CARingBuffer.cpp in Sources */,
 				1CD989421ECFFCFC0014BBBF /* BGMAppVolumes.m in Sources */,
 				1CD989431ECFFCFC0014BBBF /* BGMAudioDeviceManager.mm in Sources */,
+				1C4D1A1E217C7D6400A1ACD0 /* BGMPreferredOutputDevices.mm in Sources */,
 				1CD989441ECFFCFC0014BBBF /* BGMAutoPauseMenuItem.m in Sources */,
 				1CD989451ECFFCFC0014BBBF /* BGMAutoPauseMusic.mm in Sources */,
 				1C837DD91F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm in Sources */,

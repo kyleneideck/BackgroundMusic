@@ -90,6 +90,10 @@ static const int kBGMErrorCode_ReturningEarly       = 3;
                                  dataSourceID:(UInt32)dataSourceID
                               revertOnFailure:(BOOL)revertOnFailure;
 
+// Sets the output device to the device with the lowest latency. Used when we have no better way to
+// choose the output device.
+- (void) setOutputDeviceByLatency;
+
 // Start playthrough synchronously. Blocks until IO has started on the output device and playthrough
 // is running. See BGMPlayThrough.
 //

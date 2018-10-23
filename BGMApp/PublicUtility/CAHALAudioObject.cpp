@@ -236,7 +236,10 @@ bool	CAHALAudioObject::ObjectExists(AudioObjectID inObjectID)
 {
 	Boolean isSettable;
 	CAPropertyAddress theAddress(kAudioObjectPropertyClass);
-	return (inObjectID == 0) || (AudioObjectIsPropertySettable(inObjectID, &theAddress, &isSettable) != 0);
+    // BGM edit: Negated the expression returned. Seems to have been a bug.
+    //return (inObjectID == 0) || (AudioObjectIsPropertySettable(inObjectID, &theAddress, &isSettable) != 0);
+    return (inObjectID != kAudioObjectUnknown) && (AudioObjectIsPropertySettable(inObjectID, &theAddress, &isSettable) == kAudioHardwareNoError);
+    // BGM edit end
 }
 
 UInt32	CAHALAudioObject::GetNumberOwnedObjects(AudioClassID inClass) const

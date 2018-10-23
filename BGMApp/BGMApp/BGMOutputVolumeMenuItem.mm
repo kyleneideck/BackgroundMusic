@@ -212,10 +212,12 @@ NSString* const __nonnull      kGenericOutputDeviceName = @"Output Device";
 - (void) removeOutputDeviceDataSourceListener {
     BGMLogAndSwallowExceptions("BGMOutputVolumeMenuItem::removeOutputDeviceDataSourceListener",
                                ([&] {
-        outputDevice.RemovePropertyListenerBlock(
-            CAPropertyAddress(kAudioDevicePropertyDataSource, kScope),
-            dispatch_get_main_queue(),
-            updateLabelListenerBlock);
+        if (CAHALAudioObject::ObjectExists(outputDevice)) {
+            outputDevice.RemovePropertyListenerBlock(
+                CAPropertyAddress(kAudioDevicePropertyDataSource, kScope),
+                dispatch_get_main_queue(),
+                updateLabelListenerBlock);
+        }
     }));
 }
 
