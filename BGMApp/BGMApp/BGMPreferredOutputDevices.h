@@ -34,6 +34,7 @@
 #import "BGMAudioDeviceManager.h"
 
 // System Includes
+#import <CoreAudio/AudioHardwareBase.h>
 #import <Foundation/Foundation.h>
 
 
@@ -44,6 +45,8 @@
 // Starts responding to device connections/disconnections immediately. Stops if/when the instance is
 // deallocated.
 - (instancetype) initWithDevices:(BGMAudioDeviceManager*)devices;
+
+- (void) userChangedOutputDeviceTo:(AudioObjectID)device;
 
 @end
 

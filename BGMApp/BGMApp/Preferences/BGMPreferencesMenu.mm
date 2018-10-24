@@ -17,7 +17,7 @@
 //  BGMPreferencesMenu.mm
 //  BGMApp
 //
-//  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016, 2018 Kyle Neideck
 //
 
 // Self Include
@@ -46,6 +46,7 @@ static NSInteger const kAboutPanelMenuItemTag = 3;
 
 - (id) initWithBGMMenu:(NSMenu*)inBGMMenu
           audioDevices:(BGMAudioDeviceManager*)inAudioDevices
+      preferredDevices:(BGMPreferredOutputDevices*)inPreferredDevices
           musicPlayers:(BGMMusicPlayers*)inMusicPlayers
             aboutPanel:(NSPanel*)inAboutPanel
  aboutPanelLicenseView:(NSTextView*)inAboutPanelLicenseView {
@@ -57,7 +58,8 @@ static NSInteger const kAboutPanelMenuItemTag = 3;
                                                                          audioDevices:inAudioDevices
                                                                          musicPlayers:inMusicPlayers];
         
-        outputDevicePrefs = [[BGMOutputDevicePrefs alloc] initWithAudioDevices:inAudioDevices];
+        outputDevicePrefs = [[BGMOutputDevicePrefs alloc] initWithAudioDevices:inAudioDevices
+                                                              preferredDevices:inPreferredDevices];
         
         aboutPanel = [[BGMAboutPanel alloc] initWithPanel:inAboutPanel licenseView:inAboutPanelLicenseView];
         

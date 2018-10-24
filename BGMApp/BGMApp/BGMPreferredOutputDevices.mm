@@ -42,6 +42,8 @@ NSString* const kAudioSystemSettingsPlist =
     @"/Library/Preferences/Audio/com.apple.audio.SystemSettings.plist";
 
 @implementation BGMPreferredOutputDevices {
+    NSRecursiveLock* _stateLock;
+
     // Used to change BGMApp's output device.
     BGMAudioDeviceManager* _devices;
 
@@ -55,6 +57,7 @@ NSString* const kAudioSystemSettingsPlist =
 
 - (instancetype) initWithDevices:(BGMAudioDeviceManager*)devices {
     if ((self = [super init])) {
+        _stateLock = [NSRecursiveLock new];
         _devices = devices;
         _preferredDevices = [self readPreferredDevices];
 
@@ -65,6 +68,20 @@ NSString* const kAudioSystemSettingsPlist =
     }
 
     return self;
+}
+
+- (void) dealloc {
+    @try {
+        [_stateLock lock];
+
+        // Tell CoreAudio not to call the listener block anymore.
+        CAHALAudioSystemObject().RemovePropertyListenerBlock(
+            CAPropertyAddress(kAudioHardwarePropertyDevices),
+            dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0),
+            _deviceListListener);
+    } @finally {
+        [_stateLock unlock];
+    }
 }
 
 // Reads the preferred devices list from CoreAudio's Plist file.
@@ -123,14 +140,6 @@ NSString* const kAudioSystemSettingsPlist =
     return deviceUIDs;
 }
 
-- (void) dealloc {
-    // Tell CoreAudio not to call the listener block anymore.
-    CAHALAudioSystemObject().RemovePropertyListenerBlock(
-        CAPropertyAddress(kAudioHardwarePropertyDevices),
-        dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0),
-        _deviceListListener);
-}
-
 - (void) listenForDevicesAddedOrRemoved {
     // Create the block that will run when a device is added or removed.
     BGMPreferredOutputDevices* __weak weakSelf = self;
@@ -139,10 +148,9 @@ NSString* const kAudioSystemSettingsPlist =
                             const AudioObjectPropertyAddress* inAddresses) {
 #pragma unused (inNumberAddresses, inAddresses)
 
-        BGMLogAndSwallowExceptions("BGMPreferredOutputDevices::listenForDevicesAddedOrRemoved",
-                                   ([&] () {
+        BGM_Utils::LogAndSwallowExceptions(BGMDbgArgs, [&] () {
             [weakSelf connectedDeviceListChanged];
-        }));
+        });
     };
 
     // Register the listener block with CoreAudio.
@@ -153,31 +161,36 @@ NSString* const kAudioSystemSettingsPlist =
 }
 
 - (void) connectedDeviceListChanged {
-    // Decide which device should be the output device now. If a device has been connected
-    // and it's preferred over the current output device, we'll change to that device. If
-    // the current output device has been removed, we'll change to the next most-preferred
-    // device.
-    AudioObjectID preferredDevice = [self findPreferredDevice];
+    @try {
+        [_stateLock lock];
 
-    if (preferredDevice == kAudioObjectUnknown) {
-        // The current output device was disconnected and there are no preferred devices
-        // connected, so pick one arbitrarily.
-        DebugMsg("BGMPreferredOutputDevices::connectedDeviceListChanged: "
-                 "Changing to an arbitrary output device.");
-        [_devices setOutputDeviceByLatency];
-    } else if (_devices.outputDevice.GetObjectID() != preferredDevice) {
-        // Change to the preferred device.
-        DebugMsg("BGMPreferredOutputDevices::connectedDeviceListChanged: "
-                 "Changing output device to %d.",
-                 preferredDevice);
-        NSError* __nullable error = [_devices setOutputDeviceWithID:preferredDevice
-                                                    revertOnFailure:YES];
-        if (error) {
-            // There's not much we can do if this happens.
-            LogError("BGMPreferredOutputDevices::connectedDeviceListChanged: "
-                     "Failed to change to preferred device. Error: %s",
-                     error.debugDescription.UTF8String);
+        // Decide which device should be the output device now. If a device has been connected and
+        // it's preferred over the current output device, we'll change to that device. If the
+        // current output device has been removed, we'll change to the next most-preferred device.
+        AudioObjectID preferredDevice = [self findPreferredDevice];
+
+        if (preferredDevice == kAudioObjectUnknown) {
+            // The current output device was disconnected and there are no preferred devices
+            // connected, so pick one arbitrarily.
+            DebugMsg("BGMPreferredOutputDevices::connectedDeviceListChanged: "
+                     "Changing to an arbitrary output device.");
+            [_devices setOutputDeviceByLatency];
+        } else if (_devices.outputDevice.GetObjectID() != preferredDevice) {
+            // Change to the preferred device.
+            DebugMsg("BGMPreferredOutputDevices::connectedDeviceListChanged: "
+                     "Changing output device to %d.",
+                     preferredDevice);
+            NSError* __nullable error = [_devices setOutputDeviceWithID:preferredDevice
+                                                        revertOnFailure:YES];
+            if (error) {
+                // There's not much we can do if this happens.
+                LogError("BGMPreferredOutputDevices::connectedDeviceListChanged: "
+                         "Failed to change to preferred device. Error: %s",
+                         error.debugDescription.UTF8String);
+            }
         }
+    } @finally {
+        [_stateLock unlock];
     }
 }
 
@@ -244,6 +257,40 @@ NSString* const kAudioSystemSettingsPlist =
     DebugMsg("BGMPreferredOutputDevices::currentOutputDeviceStillConnected: "
              "Output device was removed.");
     return false;
+}
+
+- (void) userChangedOutputDeviceTo:(AudioObjectID)device {
+    @try {
+        [_stateLock lock];
+
+        BGM_Utils::LogAndSwallowExceptions(BGMDbgArgs, [&] () {
+            // Add the new output device to the list.
+            NSString* __nullable outputDeviceUID =
+                (__bridge NSString* __nullable)CAHALAudioDevice(device).CopyDeviceUID();
+
+            if (outputDeviceUID) {
+                // Limit the list to three devices because that's what macOS does.
+                if (_preferredDevices.count >= 2) {
+                    _preferredDevices = @[BGMNN(outputDeviceUID),
+                                          _preferredDevices[0],
+                                          _preferredDevices[1]];
+                } else if (_preferredDevices.count >= 1) {
+                    _preferredDevices = @[BGMNN(outputDeviceUID), _preferredDevices[0]];
+                } else {
+                    _preferredDevices = @[BGMNN(outputDeviceUID)];
+                }
+
+                DebugMsg("BGMPreferredOutputDevices::outputDeviceWillChangeTo: "
+                         "Preferred devices: %s",
+                         _preferredDevices.debugDescription.UTF8String);
+            } else {
+                LogWarning("BGMPreferredOutputDevices::outputDeviceWillChangeTo: "
+                           "Output device has no UID");
+            }
+        });
+    } @finally {
+        [_stateLock unlock];
+    }
 }
 
 @end

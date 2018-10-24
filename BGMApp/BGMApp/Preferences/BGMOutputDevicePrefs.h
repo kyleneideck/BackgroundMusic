@@ -17,11 +17,12 @@
 //  BGMOutputDevicePrefs.h
 //  BGMApp
 //
-//  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016, 2018 Kyle Neideck
 //
 
 // Local Includes
 #import "BGMAudioDeviceManager.h"
+#import "BGMPreferredOutputDevices.h"
 
 // System Includes
 #import <AppKit/AppKit.h>
@@ -31,7 +32,8 @@
 
 @interface BGMOutputDevicePrefs : NSObject
 
-- (id) initWithAudioDevices:(BGMAudioDeviceManager*)inAudioDevices;
+- (id) initWithAudioDevices:(BGMAudioDeviceManager*)inAudioDevices
+           preferredDevices:(BGMPreferredOutputDevices*)inPreferredDevices;
 - (void) populatePreferencesMenu:(NSMenu*)prefsMenu;
 
 @end

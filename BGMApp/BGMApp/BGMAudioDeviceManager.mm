@@ -319,29 +319,9 @@
         AudioDeviceID currentDeviceID = outputDevice.GetObjectID();  // (Doesn't throw.)
 
         try {
-            if (newDeviceID != currentDeviceID) {
-                BGMAudioDevice newOutputDevice(newDeviceID);
-                [self setOutputDeviceForPlaythroughAndControlSync:newOutputDevice];
-                outputDevice = newOutputDevice;
-            }
-            
-            // Set the output device to use the new data source.
-            if (dataSourceID) {
-                // TODO: If this fails, ideally we'd still start playthrough and return an error, but not
-                //       revert the device. It would probably be a bit awkward, though.
-                [self setDataSource:*dataSourceID device:outputDevice];
-            }
-            
-            if (newDeviceID != currentDeviceID) {
-                // We successfully changed to the new device. Start playthrough on it, since audio might be
-                // playing. (If we only changed the data source, playthrough will already be running if it
-                // needs to be.)
-                playThrough.Start();
-                playThrough_UISounds.Start();
-                // But stop playthrough if audio isn't playing, since it uses CPU.
-                playThrough.StopIfIdle();
-                playThrough_UISounds.StopIfIdle();
-            }
+            [self setOutputDeviceWithIDImpl:newDeviceID
+                               dataSourceID:dataSourceID
+                            currentDeviceID:currentDeviceID];
         } catch (const CAException& e) {
             BGMAssert(e.GetError() != kAudioHardwareNoError,
                       "CAException with kAudioHardwareNoError");
@@ -355,12 +335,42 @@
                                         revertTo:(revertOnFailure ? &currentDeviceID : nullptr)];
         }
 
+        // Tell other classes and BGMXPCHelper that we changed the output device.
         [self propagateOutputDeviceChange];
     } @finally {
         [stateLock unlock];
     }
 
     return nil;
+}
+
+// Throws CAException.
+- (void) setOutputDeviceWithIDImpl:(AudioObjectID)newDeviceID
+                      dataSourceID:(UInt32* __nullable)dataSourceID
+                   currentDeviceID:(AudioObjectID)currentDeviceID {
+    if (newDeviceID != currentDeviceID) {
+        BGMAudioDevice newOutputDevice(newDeviceID);
+        [self setOutputDeviceForPlaythroughAndControlSync:newOutputDevice];
+        outputDevice = newOutputDevice;
+    }
+
+    // Set the output device to use the new data source.
+    if (dataSourceID) {
+        // TODO: If this fails, ideally we'd still start playthrough and return an error, but not
+        //       revert the device. It would probably be a bit awkward, though.
+        [self setDataSource:*dataSourceID device:outputDevice];
+    }
+
+    if (newDeviceID != currentDeviceID) {
+        // We successfully changed to the new device. Start playthrough on it, since audio might be
+        // playing. (If we only changed the data source, playthrough will already be running if it
+        // needs to be.)
+        playThrough.Start();
+        playThrough_UISounds.Start();
+        // But stop playthrough if audio isn't playing, since it uses CPU.
+        playThrough.StopIfIdle();
+        playThrough_UISounds.StopIfIdle();
+    }
 }
 
 // Changes the output device that playthrough plays audio to and that BGMDevice's controls are

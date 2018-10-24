@@ -270,6 +270,7 @@ static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
 
     prefsMenu = [[BGMPreferencesMenu alloc] initWithBGMMenu:self.bgmMenu
                                                audioDevices:audioDevices
+                                           preferredDevices:preferredOutputDevices
                                                musicPlayers:musicPlayers
                                                  aboutPanel:self.aboutPanel
                                       aboutPanelLicenseView:self.aboutPanelLicenseView];

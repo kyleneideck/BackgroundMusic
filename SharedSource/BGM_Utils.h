@@ -17,7 +17,7 @@
 //  BGM_Utils.h
 //  SharedSource
 //
-//  Copyright © 2016, 2017 Kyle Neideck
+//  Copyright © 2016-2018 Kyle Neideck
 //
 
 #ifndef SharedSource__BGM_Utils
@@ -59,6 +59,11 @@
               __LINE__, \
               __FUNCTION__, \
               expressionStr);
+
+// Used to give the first 3 arguments of BGM_Utils::LogAndSwallowExceptions and
+// BGM_Utils::LogUnexpectedExceptions (and probably others in future). Mainly so we can call those
+// functions directly instead of using the macro wrappers.
+#define BGMDbgArgs __FILE__, __LINE__, __FUNCTION__
 
 #pragma mark Objective-C Macros
 

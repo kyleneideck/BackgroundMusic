@@ -17,7 +17,7 @@
 //  BGMOutputDevicePrefs.mm
 //  BGMApp
 //
-//  Copyright © 2016, 2017 Kyle Neideck
+//  Copyright © 2016-2018 Kyle Neideck
 //
 
 // Self Include
@@ -40,12 +40,15 @@ static NSInteger const kOutputDeviceMenuItemTag = 2;
 
 @implementation BGMOutputDevicePrefs {
     BGMAudioDeviceManager* audioDevices;
+    BGMPreferredOutputDevices* preferredDevices;
     NSMutableArray<NSMenuItem*>* outputDeviceMenuItems;
 }
 
-- (id) initWithAudioDevices:(BGMAudioDeviceManager*)inAudioDevices {
+- (id) initWithAudioDevices:(BGMAudioDeviceManager*)inAudioDevices
+           preferredDevices:(BGMPreferredOutputDevices*)inPreferredDevices {
     if ((self = [super init])) {
         audioDevices = inAudioDevices;
+        preferredDevices = inPreferredDevices;
         outputDeviceMenuItems = [NSMutableArray new];
     }
     
@@ -220,6 +223,11 @@ static NSInteger const kOutputDeviceMenuItemTag = 2;
         // Dispatched because it usually blocks. (Note that we're using
         // DISPATCH_QUEUE_PRIORITY_HIGH, which is the second highest priority.)
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+            if (changingDevice) {
+                // Add the new output device to the list of preferred devices.
+                [preferredDevices userChangedOutputDeviceTo:newDeviceID];
+            }
+
             [self changeToOutputDevice:newDeviceID
                          newDataSource:newDataSourceID
                             deviceName:deviceName];
