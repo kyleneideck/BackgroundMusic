@@ -638,21 +638,16 @@ OSStatus    BGMPlayThrough::Stop()
         bool outputDeviceAlive = false;
         
         CATry
-        inputDeviceAlive = mInputDevice.IsAlive();
+        inputDeviceAlive = CAHALAudioObject::ObjectExists(mInputDevice) && mInputDevice.IsAlive();
         CACatch
         
         CATry
-        outputDeviceAlive = mOutputDevice.IsAlive();
+        outputDeviceAlive =
+            CAHALAudioObject::ObjectExists(mOutputDevice) && mOutputDevice.IsAlive();
         CACatch
-        
-        if(inputDeviceAlive)
-        {
-            mInputDeviceIOProcState = IOState::Stopping;
-        }
-        if(outputDeviceAlive)
-        {
-            mOutputDeviceIOProcState = IOState::Stopping;
-        }
+
+        mInputDeviceIOProcState = inputDeviceAlive ? IOState::Stopping : IOState::Stopped;
+        mOutputDeviceIOProcState = outputDeviceAlive ? IOState::Stopping : IOState::Stopped;
         
         // Wait for the IOProcs to stop themselves. This is so the IOProcs don't get called after the BGMPlayThrough instance
         // (pointed to by the client data they get from the HAL) is deallocated.
@@ -662,14 +657,28 @@ OSStatus    BGMPlayThrough::Stop()
         //     when you make the call from outside of your IOProc. However, if you call AudioDeviceStop() from inside your IOProc,
         //     you do get the guarantee that your IOProc will not get called again after the IOProc has returned.
         UInt64 totalWaitNs = 0;
-        BGMLogAndSwallowExceptions("BGMPlayThrough::Stop", [&]() {
-            Float64 expectedInputCycleNs =
-                mInputDevice.GetIOBufferSize() * (1 / mInputDevice.GetNominalSampleRate()) * NSEC_PER_SEC;
-            Float64 expectedOutputCycleNs =
-                mOutputDevice.GetIOBufferSize() * (1 / mOutputDevice.GetNominalSampleRate()) * NSEC_PER_SEC;
+        BGM_Utils::LogAndSwallowExceptions(BGMDbgArgs, [&]() {
+            Float64 expectedInputCycleNs = 0;
+
+            if(inputDeviceAlive)
+            {
+                expectedInputCycleNs =
+                    mInputDevice.GetIOBufferSize() * (1 / mInputDevice.GetNominalSampleRate()) *
+                            NSEC_PER_SEC;
+            }
+
+            Float64 expectedOutputCycleNs = 0;
+
+            if(outputDeviceAlive)
+            {
+                expectedOutputCycleNs =
+                    mOutputDevice.GetIOBufferSize() * (1 / mOutputDevice.GetNominalSampleRate()) *
+                            NSEC_PER_SEC;
+            }
+
             UInt64 expectedMaxCycleNs =
                 static_cast<UInt64>(std::max(expectedInputCycleNs, expectedOutputCycleNs));
-            
+
             while((mInputDeviceIOProcState == IOState::Stopping || mOutputDeviceIOProcState == IOState::Stopping)
                   && (totalWaitNs < kStopIOProcTimeoutInIOCycles * expectedMaxCycleNs))
             {
