@@ -66,35 +66,17 @@
 
 #pragma mark Construction/Destruction
 
-- (instancetype) initWithError:(NSError** __nullable)error {
+- (instancetype) init {
     if ((self = [super init])) {
         stateLock = [NSRecursiveLock new];
         bgmXPCHelperConnection = nil;
         outputVolumeMenuItem = nil;
+        outputDevice = kAudioObjectUnknown;
 
         try {
             bgmDevice = new BGMBackgroundMusicDevice;
         } catch (const CAException& e) {
-            LogError("BGMAudioDeviceManager::initWithError: BGMDevice not found. (%d)", e.GetError());
-            
-            if (error) {
-                *error = [NSError errorWithDomain:@kBGMAppBundleID code:kBGMErrorCode_BGMDeviceNotFound userInfo:nil];
-            }
-            
-            self = nil;
-            return self;
-        }
-
-        try {
-            [self initOutputDevice];
-        } catch (const CAException& e) {
-            LogError("BGMAudioDeviceManager::initWithError: failed to init output device (%d)",
-                     e.GetError());
-
-            if (error) {
-                *error = [NSError errorWithDomain:@kBGMAppBundleID code:kBGMErrorCode_OutputDeviceNotFound userInfo:nil];
-            }
-            
+            LogError("BGMAudioDeviceManager::init: BGMDevice not found. (%d)", e.GetError());
             self = nil;
             return self;
         }
@@ -113,86 +95,6 @@
         }
     } @finally {
         [stateLock unlock];
-    }
-}
-
-// Throws a CAException if it fails to set the output device.
-- (void) initOutputDevice {
-    CAHALAudioSystemObject audioSystem;
-    // outputDevice = BGMAudioDevice(CFSTR("AppleHDAEngineOutput:1B,0,1,1:0"));
-    BGMAudioDevice defaultDevice = audioSystem.GetDefaultAudioDevice(false, false);
-
-    if (defaultDevice.IsBGMDeviceInstance()) {
-        // BGMDevice is already the default (it could have been set manually or BGMApp could have
-        // failed to change it back the last time it closed), so just pick the device with the
-        // lowest latency.
-        //
-        // TODO: Temporarily disable BGMDevice so we can find out what the previous default was and
-        //       use that instead.
-        [self setOutputDeviceByLatency];
-    } else {
-        // TODO: Return the error from setOutputDeviceWithID so it can be returned by initWithError.
-        [self setOutputDeviceWithID:defaultDevice revertOnFailure:NO];
-    }
-
-    if (outputDevice == kAudioObjectUnknown) {
-        LogError("BGMAudioDeviceManager::initOutputDevice: Failed to set output device");
-        Throw(CAException(kAudioHardwareUnspecifiedError));
-    }
-
-    if (outputDevice.IsBGMDeviceInstance()) {
-        LogError("BGMAudioDeviceManager::initOutputDevice: Failed to change output device from "
-                 "BGMDevice");
-        Throw(CAException(kAudioHardwareUnspecifiedError));
-    }
-    
-    // Log message
-    CFStringRef outputDeviceUID = outputDevice.CopyDeviceUID();
-    DebugMsg("BGMAudioDeviceManager::initOutputDevice: Set output device to %s",
-             CFStringGetCStringPtr(outputDeviceUID, kCFStringEncodingUTF8));
-    CFRelease(outputDeviceUID);
-}
-
-- (void) setOutputDeviceByLatency {
-    CAHALAudioSystemObject audioSystem;
-    UInt32 numDevices = audioSystem.GetNumberAudioDevices();
-
-    if (numDevices > 0) {
-        BGMAudioDevice minLatencyDevice = kAudioObjectUnknown;
-        UInt32 minLatency = UINT32_MAX;
-
-        CAAutoArrayDelete<AudioObjectID> devices(numDevices);
-        audioSystem.GetAudioDevices(numDevices, devices);
-
-        for (UInt32 i = 0; i < numDevices; i++) {
-            BGMAudioDevice device(devices[i]);
-
-            if (!device.IsBGMDeviceInstance()) {
-                BOOL hasOutputChannels = NO;
-
-                BGMLogAndSwallowExceptionsMsg("BGMAudioDeviceManager::setOutputDeviceByLatency",
-                                              "GetTotalNumberChannels", ([&] {
-                    hasOutputChannels = device.GetTotalNumberChannels(/* inIsInput = */ false) > 0;
-                }));
-
-                if (hasOutputChannels) {
-                    BGMLogAndSwallowExceptionsMsg("BGMAudioDeviceManager::setOutputDeviceByLatency",
-                                                  "GetLatency", ([&] {
-                        UInt32 latency = device.GetLatency(false);
-
-                        if (latency < minLatency) {
-                            minLatencyDevice = devices[i];
-                            minLatency = latency;
-                        }
-                    }));
-                }
-            }
-        }
-
-        if (minLatencyDevice != kAudioObjectUnknown) {
-            // TODO: On error, try a different output device.
-            [self setOutputDeviceWithID:minLatencyDevice revertOnFailure:NO];
-        }
     }
 }
 
@@ -371,6 +273,12 @@
         playThrough.StopIfIdle();
         playThrough_UISounds.StopIfIdle();
     }
+
+    CFStringRef outputDeviceUID = outputDevice.CopyDeviceUID();
+    DebugMsg("BGMAudioDeviceManager::setOutputDeviceWithIDImpl: Set output device to %s (%d)",
+             CFStringGetCStringPtr(outputDeviceUID, kCFStringEncodingUTF8),
+             outputDevice.GetObjectID());
+    CFRelease(outputDeviceUID);
 }
 
 // Changes the output device that playthrough plays audio to and that BGMDevice's controls are

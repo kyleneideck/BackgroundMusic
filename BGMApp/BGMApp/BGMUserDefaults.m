@@ -17,11 +17,14 @@
 //  BGMUserDefaults.m
 //  BGMApp
 //
-//  Copyright © 2016, 2017 Kyle Neideck
+//  Copyright © 2016-2018 Kyle Neideck
 //
 
-// Self include
+// Self Include
 #import "BGMUserDefaults.h"
+
+// Local Includes
+#import "BGM_Utils.h"
 
 
 #pragma clang assume_nonnull begin
@@ -29,6 +32,7 @@
 // Keys
 static NSString* const BGMDefaults_AutoPauseMusicEnabled = @"AutoPauseMusicEnabled";
 static NSString* const BGMDefaults_SelectedMusicPlayerID = @"SelectedMusicPlayerID";
+static NSString* const BGMDefaults_PreferredDeviceUIDs = @"PreferredDeviceUIDs";
 
 @implementation BGMUserDefaults {
     // The defaults object wrapped by this object.
@@ -75,6 +79,17 @@ static NSString* const BGMDefaults_SelectedMusicPlayerID = @"SelectedMusicPlayer
 - (void) setAutoPauseMusicEnabled:(BOOL)autoPauseMusicEnabled {
     [self setBool:BGMDefaults_AutoPauseMusicEnabled to:autoPauseMusicEnabled];
 }
+
+- (NSArray<NSString*>*) preferredDeviceUIDs {
+    NSArray<NSString*>* __nullable uids = [self get:BGMDefaults_PreferredDeviceUIDs];
+    return uids ? BGMNN(uids) : @[];
+}
+
+- (void) setPreferredDeviceUIDs:(NSArray<NSString*>*)devices {
+    [self set:BGMDefaults_PreferredDeviceUIDs to:devices];
+}
+
+#pragma mark Implementation
 
 - (id __nullable) get:(NSString*)key {
     return defaults ? [defaults objectForKey:key] : transientDefaults[key];

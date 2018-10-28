@@ -86,7 +86,7 @@
         __typeof((expression)) value = (expression); \
         BGMAssertNonNull2(value, #expression); \
         BGMNonNullCastHelper<__typeof((expression))>* helper; \
-        (__typeof(helper.asNonNull))value; \
+        (__typeof(helper.asNonNull) __nonnull)value; \
     })
 
 #else /* __has_feature(objc_generics) */

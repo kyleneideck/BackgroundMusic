@@ -38,9 +38,6 @@
 #import "BGMTermination.h"
 #import "SystemPreferences.h"
 
-// PublicUtility Includes
-#import "CAPropertyAddress.h"
-
 // System Includes
 #import <AVFoundation/AVCaptureDevice.h>
 
@@ -166,9 +163,18 @@ static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
         return;
     }
 
+    // Persistently stores user settings and data.
+    BGMUserDefaults* userDefaults = [self createUserDefaults];
+
     // Handles changing (or not changing) the output device when devices are added or removed. Must
     // be initialised before calling setBGMDeviceAsDefault.
-    preferredOutputDevices = [[BGMPreferredOutputDevices alloc] initWithDevices:audioDevices];
+    preferredOutputDevices =
+        [[BGMPreferredOutputDevices alloc] initWithDevices:audioDevices userDefaults:userDefaults];
+
+    // Choose an output device for BGMApp to use to play audio.
+    if (![self setInitialOutputDevice]) {
+        return;
+    }
 
     // Make BGMDevice the default device.
     [self setBGMDeviceAsDefault];
@@ -177,8 +183,6 @@ static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
     BGMTermination::SetUpTerminationCleanUp(audioDevices);
 
     // Set up the rest of the UI and other external interfaces.
-    BGMUserDefaults* userDefaults = [self createUserDefaults];
-
     musicPlayers = [[BGMMusicPlayers alloc] initWithAudioDevices:audioDevices
                                                     userDefaults:userDefaults];
 
@@ -198,11 +202,31 @@ static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
 
 // Returns NO if (and only if) BGMApp is about to terminate because of a fatal error.
 - (BOOL) initAudioDeviceManager {
-    NSError* error;
-    audioDevices = [[BGMAudioDeviceManager alloc] initWithError:&error];
+    audioDevices = [BGMAudioDeviceManager new];
 
     if (!audioDevices) {
-        [self showDeviceNotFoundErrorMessageAndExit:error.code];
+        [self showBGMDeviceNotFoundErrorMessageAndExit];
+        return NO;
+    }
+
+    return YES;
+}
+
+// Returns NO if (and only if) BGMApp is about to terminate because of a fatal error.
+- (BOOL) setInitialOutputDevice {
+    AudioObjectID preferredDevice = [preferredOutputDevices findPreferredDevice];
+
+    if (preferredDevice != kAudioObjectUnknown) {
+        NSError* __nullable error = [audioDevices setOutputDeviceWithID:preferredDevice
+                                                        revertOnFailure:NO];
+        if (error) {
+            // Show the error message.
+            [self showFailedToSetOutputDeviceErrorMessage:BGMNN(error)
+                                          preferredDevice:preferredDevice];
+        }
+    } else {
+        // We couldn't find a device to use, so show an error message and quit.
+        [self showOutputDeviceNotFoundErrorMessageAndExit];
         return NO;
     }
 
@@ -333,28 +357,46 @@ static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
 
 #pragma mark Error messages
 
-- (void) showDeviceNotFoundErrorMessageAndExit:(NSInteger)code {
-    // Show an error dialog and exit if either BGMDevice wasn't found on the system or we couldn't find any output devices
-    
-    // NSAlert should only be used on the main thread.
-    dispatch_async(dispatch_get_main_queue(), ^{
-        NSAlert* alert = [NSAlert new];
-        
-        if (code == kBGMErrorCode_BGMDeviceNotFound) {
-            // TODO: Check whether the driver files are in /Library/Audio/Plug-Ins/HAL and offer to install them if not. Also,
-            //       it would be nice if we could restart coreaudiod automatically (using launchd).
-            [alert setMessageText:@"Could not find the Background Music virtual audio device."];
-            [alert setInformativeText:@"Make sure you've installed Background Music Device.driver to /Library/Audio/Plug-Ins/HAL and restarted coreaudiod (e.g. \"sudo killall coreaudiod\")."];
-        } else if (code == kBGMErrorCode_OutputDeviceNotFound) {
-            [alert setMessageText:@"Could not find an audio output device."];
-            [alert setInformativeText:@"If you do have one installed, this is probably a bug. Sorry about that. Feel free to file an issue on GitHub."];
-        }
+- (void) showBGMDeviceNotFoundErrorMessageAndExit {
+    // BGMDevice wasn't found on the system. Most likely, BGMDriver isn't installed. Show an error
+    // dialog and exit.
+    //
+    // TODO: Check whether the driver files are in /Library/Audio/Plug-Ins/HAL? Might even want to
+    //       offer to install them if not.
+    [self showErrorMessage:@"Could not find the Background Music virtual audio device."
+           informativeText:@"Make sure you've installed Background Music Device.driver to "
+                            "/Library/Audio/Plug-Ins/HAL and restarted coreaudiod (e.g. \"sudo "
+                            "killall coreaudiod\")."
+ exitAfterMessageDismissed:YES];
+}
 
-        // This crashes if built with Xcode 9.0.1, but works with versions of Xcode before 9 and
-        // with 9.1.
+- (void) showFailedToSetOutputDeviceErrorMessage:(NSError*)error
+                                 preferredDevice:(BGMAudioDevice)device {
+    NSLog(@"Failed to set initial output device. Error: %@", error);
+
+    dispatch_async(dispatch_get_main_queue(), ^{
+        NSAlert* alert = [NSAlert alertWithError:BGMNN(error)];
+        alert.messageText = @"Failed to set the output device.";
+
+        NSString* __nullable name = nil;
+        BGM_Utils::LogAndSwallowExceptions(BGMDbgArgs, [&] {
+            name = (__bridge NSString* __nullable)device.CopyName();
+        });
+
+        alert.informativeText =
+                [NSString stringWithFormat:@"Could not start the device '%@'. (Error: %ld)",
+                        name, error.code];
+
         [alert runModal];
-        [NSApp terminate:self];
     });
+}
+
+- (void) showOutputDeviceNotFoundErrorMessageAndExit {
+    // We couldn't find any output devices. Show an error dialog and exit.
+    [self showErrorMessage:@"Could not find an audio output device."
+           informativeText:@"If you do have one installed, this is probably a bug. Sorry about "
+                            "that. Feel free to file an issue on GitHub."
+ exitAfterMessageDismissed:YES];
 }
 
 - (void) showXPCHelperErrorMessage:(NSError*)error {
@@ -378,6 +420,25 @@ static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
             [alert runModal];
         });
     }
+}
+
+- (void) showErrorMessage:(NSString*)message
+          informativeText:(NSString*)informativeText
+exitAfterMessageDismissed:(BOOL)fatal {
+    // NSAlert should only be used on the main thread.
+    dispatch_async(dispatch_get_main_queue(), ^{
+        NSAlert* alert = [NSAlert new];
+        [alert setMessageText:message];
+        [alert setInformativeText:informativeText];
+
+        // This crashes if built with Xcode 9.0.1, but works with versions of Xcode before 9 and
+        // with 9.1.
+        [alert runModal];
+
+        if (fatal) {
+            [NSApp terminate:self];
+        }
+    });
 }
 
 - (void) showSetDeviceAsDefaultError:(NSError*)error

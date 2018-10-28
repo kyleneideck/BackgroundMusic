@@ -17,7 +17,7 @@
 //  BGMAudioDeviceManager.h
 //  BGMApp
 //
-//  Copyright © 2016, 2017 Kyle Neideck
+//  Copyright © 2016-2018 Kyle Neideck
 //
 //  Manages BGMDevice and the output device. Sets the system's current default device as the output
 //  device on init, then starts playthrough and mirroring the devices' controls.
@@ -43,13 +43,13 @@
 
 #pragma clang assume_nonnull begin
 
-static const int kBGMErrorCode_BGMDeviceNotFound    = 1;
-static const int kBGMErrorCode_OutputDeviceNotFound = 2;
-static const int kBGMErrorCode_ReturningEarly       = 3;
+static const int kBGMErrorCode_OutputDeviceNotFound = 1;
+static const int kBGMErrorCode_ReturningEarly       = 2;
 
 @interface BGMAudioDeviceManager : NSObject
 
-- (instancetype) initWithError:(NSError**)error;
+// Returns nil if BGMDevice isn't installed.
+- (instancetype) init;
 
 // Set the BGMOutputVolumeMenuItem to be notified when the output device is changed.
 - (void) setOutputVolumeMenuItem:(BGMOutputVolumeMenuItem*)item;
@@ -89,10 +89,6 @@ static const int kBGMErrorCode_ReturningEarly       = 3;
 - (NSError* __nullable) setOutputDeviceWithID:(AudioObjectID)deviceID
                                  dataSourceID:(UInt32)dataSourceID
                               revertOnFailure:(BOOL)revertOnFailure;
-
-// Sets the output device to the device with the lowest latency. Used when we have no better way to
-// choose the output device.
-- (void) setOutputDeviceByLatency;
 
 // Start playthrough synchronously. Blocks until IO has started on the output device and playthrough
 // is running. See BGMPlayThrough.

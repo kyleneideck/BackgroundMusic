@@ -84,27 +84,25 @@ NSString* const __nonnull      kGenericOutputDeviceName = @"Output Device";
     return self;
 }
 
-// We currently only use one instance of this class and it's never deallocated, but it's probably
-// good practice to define dealloc anyway.
 - (void) dealloc {
-    dispatch_sync(dispatch_get_main_queue(), ^{
-        // Remove the audio property listeners.
-        [self removeOutputDeviceDataSourceListener];
+    // Remove the audio property listeners.
+    // TODO: This call isn't thread safe. (But currently this dealloc method is only called if
+    //       there's an error.)
+    [self removeOutputDeviceDataSourceListener];
 
-        BGMLogAndSwallowExceptions("BGMOutputVolumeMenuItem::dealloc", ([&] {
-            audioDevices.bgmDevice.RemovePropertyListenerBlock(
-                CAPropertyAddress(kAudioDevicePropertyVolumeScalar, kScope),
-                dispatch_get_main_queue(),
-                updateSliderListenerBlock);
-        }));
+    BGMLogAndSwallowExceptions("BGMOutputVolumeMenuItem::dealloc", ([&] {
+        audioDevices.bgmDevice.RemovePropertyListenerBlock(
+            CAPropertyAddress(kAudioDevicePropertyVolumeScalar, kScope),
+            dispatch_get_main_queue(),
+            updateSliderListenerBlock);
+    }));
 
-        BGMLogAndSwallowExceptions("BGMOutputVolumeMenuItem::dealloc", ([&] {
-            audioDevices.bgmDevice.RemovePropertyListenerBlock(
-                CAPropertyAddress(kAudioDevicePropertyMute, kScope),
-                dispatch_get_main_queue(),
-                updateSliderListenerBlock);
-        }));
-    });
+    BGMLogAndSwallowExceptions("BGMOutputVolumeMenuItem::dealloc", ([&] {
+        audioDevices.bgmDevice.RemovePropertyListenerBlock(
+            CAPropertyAddress(kAudioDevicePropertyMute, kScope),
+            dispatch_get_main_queue(),
+            updateSliderListenerBlock);
+    }));
 }
 
 - (void) initSlider {
