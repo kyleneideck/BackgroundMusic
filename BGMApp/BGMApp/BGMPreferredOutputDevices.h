@@ -48,9 +48,9 @@
 - (instancetype) initWithDevices:(BGMAudioDeviceManager*)devices
                     userDefaults:(BGMUserDefaults*)userDefaults;
 
-// Returns the most-preferred device currently connected. If no preferred devices are connected,
-// returns the current output device. If the current output device has been disconnected, returns
-// an arbitrary device.
+// Returns the most-preferred device that's currently connected. If no preferred devices are
+// connected, returns the current output device. If the current output device has been disconnected,
+// returns an arbitrary device.
 //
 // If none of the connected devices can be used as the output device, or if it can't find a device
 // to use because the HAL returned errors when queried, returns kAudioObjectUnknown.

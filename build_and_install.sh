@@ -19,7 +19,7 @@
 #
 # build_and_install.sh
 #
-# Copyright © 2016, 2017 Kyle Neideck
+# Copyright © 2016-2018 Kyle Neideck
 # Copyright © 2016 Nick Jacques
 #
 # Builds and installs BGMApp, BGMDriver and BGMXPCHelper. Requires xcodebuild and Xcode.

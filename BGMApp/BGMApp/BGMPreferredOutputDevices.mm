@@ -110,15 +110,18 @@ NSString* const kAudioSystemSettingsPlist =
 
     // Default to a list with just the systemwide default device (or an empty list if that fails) if
     // we can't read the preferred devices from the Plist because preferredDeviceUIDsFrom will use
-    // BGMApp's stored preferred devices to fill in the rest.
+    // BGMApp's stored preferred devices to fill in the rest optimistically. This doesn't help us
+    // tell when to switch to a newly connected device, but it should improve our chances of
+    // switching to the best device if the current output device is disconnected.
     NSArray<NSDictionary*>* preferredOutputDeviceInfos = @[];
 
     // If we can't read the Plist, we only know that the current systemwide default device is the
-    // most-preferred device.
+    // most-preferred device that's currently connected.
     //
     // TODO: If we are able to read the Plist, check that the systemwide default device is the
-    //       most-preferred in the list from the Plist. If it isn't, the format of the Plist has
-    //       probably changed, so we should ignore it's data and log a warning.
+    //       most-preferred device in the list from the Plist that's also connected. If it isn't,
+    //       the format of the Plist has probably changed, so we should ignore its data and log a
+    //       warning.
     BGM_Utils::LogAndSwallowExceptions(BGMDbgArgs, [&] {
         BGMAudioDevice defaultDevice = CAHALAudioSystemObject().GetDefaultAudioDevice(false, false);
         NSString* __nullable defaultDeviceUID =
@@ -294,7 +297,7 @@ NSString* const kAudioSystemSettingsPlist =
 
         if (!defaultDevice.IsBGMDeviceInstance()) {
             // BGMDevice isn't the systemwide default device, so we know the default device is the
-            // most preferred.
+            // most-preferred device that's currently connected.
             preferredDevice = defaultDevice;
         }
     });
