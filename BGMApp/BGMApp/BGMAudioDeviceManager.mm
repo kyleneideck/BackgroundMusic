@@ -26,16 +26,17 @@
 // Local Includes
 #import "BGM_Types.h"
 #import "BGM_Utils.h"
-#import "BGMDeviceControlSync.h"
-#import "BGMPlayThrough.h"
 #import "BGMAudioDevice.h"
-#import "BGMXPCProtocols.h"
+#import "BGMDeviceControlSync.h"
+#import "BGMOutputDevicePrefs.h"
 #import "BGMOutputVolumeMenuItem.h"
+#import "BGMPlayThrough.h"
+#import "BGMXPCProtocols.h"
 
 // PublicUtility Includes
-#import "CAHALAudioSystemObject.h"
-#import "CAAutoDisposer.h"
 #import "CAAtomic.h"
+#import "CAAutoDisposer.h"
+#import "CAHALAudioSystemObject.h"
 
 
 #pragma clang assume_nonnull begin
@@ -60,6 +61,7 @@
     NSXPCConnection* __nullable bgmXPCHelperConnection;
 
     BGMOutputVolumeMenuItem* __nullable outputVolumeMenuItem;
+    BGMOutputDevicePrefs* __nullable outputDevicePrefs;
 
     NSRecursiveLock* stateLock;
 }
@@ -71,6 +73,7 @@
         stateLock = [NSRecursiveLock new];
         bgmXPCHelperConnection = nil;
         outputVolumeMenuItem = nil;
+        outputDevicePrefs = nil;
         outputDevice = kAudioObjectUnknown;
 
         try {
@@ -100,6 +103,10 @@
 
 - (void) setOutputVolumeMenuItem:(BGMOutputVolumeMenuItem*)item {
     outputVolumeMenuItem = item;
+}
+
+- (void) setOutputDevicePrefs:(BGMOutputDevicePrefs*)prefs {
+    outputDevicePrefs = prefs;
 }
 
 #pragma mark Systemwide Default Device
@@ -324,6 +331,7 @@
 
     // Update the menu item for the volume of the output device.
     [outputVolumeMenuItem outputDeviceDidChange];
+    [outputDevicePrefs outputDeviceDidChange];
 }
 
 - (NSError*) failedToSetOutputDevice:(AudioDeviceID)deviceID

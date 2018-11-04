@@ -25,7 +25,6 @@
 
 // Local Includes
 #import "BGMAutoPauseMusicPrefs.h"
-#import "BGMOutputDevicePrefs.h"
 #import "BGMAboutPanel.h"
 
 
@@ -38,7 +37,6 @@ static NSInteger const kAboutPanelMenuItemTag = 3;
 @implementation BGMPreferencesMenu {
     // Menu sections
     BGMAutoPauseMusicPrefs* autoPauseMusicPrefs;
-    BGMOutputDevicePrefs* outputDevicePrefs;
     
     // The About Background Music window
     BGMAboutPanel* aboutPanel;
@@ -46,20 +44,15 @@ static NSInteger const kAboutPanelMenuItemTag = 3;
 
 - (id) initWithBGMMenu:(NSMenu*)inBGMMenu
           audioDevices:(BGMAudioDeviceManager*)inAudioDevices
-      preferredDevices:(BGMPreferredOutputDevices*)inPreferredDevices
           musicPlayers:(BGMMusicPlayers*)inMusicPlayers
             aboutPanel:(NSPanel*)inAboutPanel
  aboutPanelLicenseView:(NSTextView*)inAboutPanelLicenseView {
     if ((self = [super init])) {
         NSMenu* prefsMenu = [[inBGMMenu itemWithTag:kPreferencesMenuItemTag] submenu];
-        [prefsMenu setDelegate:self];
         
         autoPauseMusicPrefs = [[BGMAutoPauseMusicPrefs alloc] initWithPreferencesMenu:prefsMenu
                                                                          audioDevices:inAudioDevices
                                                                          musicPlayers:inMusicPlayers];
-        
-        outputDevicePrefs = [[BGMOutputDevicePrefs alloc] initWithAudioDevices:inAudioDevices
-                                                              preferredDevices:inPreferredDevices];
         
         aboutPanel = [[BGMAboutPanel alloc] initWithPanel:inAboutPanel licenseView:inAboutPanelLicenseView];
         
@@ -70,12 +63,6 @@ static NSInteger const kAboutPanelMenuItemTag = 3;
     }
     
     return self;
-}
-
-#pragma mark NSMenuDelegate
-
-- (void) menuNeedsUpdate:(NSMenu*)menu {
-    [outputDevicePrefs populatePreferencesMenu:menu];
 }
 
 @end

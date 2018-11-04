@@ -25,7 +25,6 @@
 
 // Local Includes
 #import "BGMAudioDeviceManager.h"
-#import "BGMPreferredOutputDevices.h"
 #import "BGMMusicPlayers.h"
 
 // System Includes
@@ -34,11 +33,10 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface BGMPreferencesMenu : NSObject <NSMenuDelegate>
+@interface BGMPreferencesMenu : NSObject
 
 - (id) initWithBGMMenu:(NSMenu*)inBGMMenu
           audioDevices:(BGMAudioDeviceManager*)inAudioDevices
-      preferredDevices:(BGMPreferredOutputDevices*)inPreferredDevices
           musicPlayers:(BGMMusicPlayers*)inMusicPlayers
             aboutPanel:(NSPanel*)inAboutPanel
  aboutPanelLicenseView:(NSTextView*)inAboutPanelLicenseView;

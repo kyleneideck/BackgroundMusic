@@ -17,7 +17,7 @@
 //  BGMAppUITests.mm
 //  BGMAppUITests
 //
-//  Copyright © 2017 Kyle Neideck
+//  Copyright © 2017, 2018 Kyle Neideck
 //
 //  You might want to use Xcode's UI test recording feature if you add new tests.
 //
@@ -60,8 +60,8 @@
     // Set up the app object and some convenience vars.
     app = [[XCUIApplication alloc] init];
     menuItems = app.menuBars.menuItems;
-    icon = [app.menuBars childrenMatchingType:XCUIElementTypeMenuBarItem].element;
     prefs = menuItems[@"Preferences"];
+    icon = [app.menuBars childrenMatchingType:XCUIElementTypeStatusItem].element;
 
     // TODO: Make sure BGMDevice isn't set as the OS X default device before launching BGMApp.
 
@@ -72,6 +72,20 @@
 
     // Launch BGMApp.
     [app launch];
+
+     if (![icon waitForExistenceWithTimeout:1.0]) {
+        // The status bar icon/button has this type when using older versions of XCTest, so try
+        // both. (Actually, it might depend on the macOS or Xcode version. I'm not sure.)
+        XCUIElement* iconOldType =
+                [app.menuBars childrenMatchingType:XCUIElementTypeMenuBarItem].element;
+         if (![iconOldType waitForExistenceWithTimeout:5.0]) {
+             icon = iconOldType;
+         }
+    }
+
+    // Wait for the initial elements.
+    XCTAssert([app waitForExistenceWithTimeout:10.0]);
+    XCTAssert([icon waitForExistenceWithTimeout:10.0]);
 }
 
 - (void) tearDown {
@@ -91,10 +105,22 @@
 - (void) testCycleOutputDevices {
     const int NUM_CYCLES = 2;
 
-    // Get the list of output devices from the preferences menu.
+    // sbApp lets us use AppleScript to query BGMApp and check the test has made the changes to its
+    // settings we expect.
+    BGMAppApplication* sbApp = [SBApplication applicationWithBundleIdentifier:@kBGMAppBundleID];
+
+    // Get macOS to show the "'Xcode' wants to control 'Background Music'" dialog before we start
+    // the test so it doesn't interrupt it.
+    [[sbApp selectedOutputDevice] name];
+
+    // Click the icon to open the main menu.
     [icon click];
-    [prefs hover];
-    NSArray<XCUIElement*>* outputDeviceMenuItems = [self outputDeviceMenuItems];
+
+    // Get the list of output devices from the main menu.
+    // BGMOutputDevicePrefs::createMenuItemForDevice gives every output device menu item the
+    // accessibility identifier "output-device" so we can find all of them here.
+    NSArray<XCUIElement*>* outputDeviceMenuItems =
+        [menuItems matchingIdentifier:@"output-device"].allElementsBoundByIndex;
 
     // For debugging certain issues, it can be useful to repeatedly switch between two
     // devices:
@@ -105,14 +131,10 @@
     // Click the last device to close the menu again.
     [outputDeviceMenuItems.lastObject click];
 
-    BGMAppApplication* sbApp = [SBApplication applicationWithBundleIdentifier:@kBGMAppBundleID];
-
     for (int i = 0; i < NUM_CYCLES; i++) {
         // Select each output device.
         for (XCUIElement* item in outputDeviceMenuItems) {
             [icon click];
-            [prefs hover];
-
             [item click];
 
             // Assert that the device we clicked is the selected device now.
@@ -126,29 +148,6 @@
             }
         }
     }
-}
-
-// Find the menu items for the output devices in the preferences menu.
-- (NSArray<XCUIElement*>*) outputDeviceMenuItems {
-    NSArray<XCUIElement*>* items = @[];
-    BOOL inOutputDeviceSection = NO;
-
-    for (int i = 0; i < prefs.menuItems.count; i++) {
-        XCUIElement* menuItem = [prefs.menuItems elementBoundByIndex:i];
-
-        if ([menuItem.title isEqual:@"Output Device"]) {
-            inOutputDeviceSection = YES;
-        } else if (inOutputDeviceSection) {
-            // Assume that finding a separator menu item means we've reached the end of the section.
-            if (((NSMenuItem*)menuItem.value).separatorItem || [menuItem.title isEqual:@""]) {
-                break;
-            }
-
-            items = [items arrayByAddingObject:menuItem];
-        }
-    }
-
-    return items;
 }
 
 - (void) testSelectMusicPlayer {

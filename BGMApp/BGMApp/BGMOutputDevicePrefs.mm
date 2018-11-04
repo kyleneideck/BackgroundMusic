@@ -29,36 +29,111 @@
 #import "BGMAudioDevice.h"
 
 // PublicUtility Includes
-#include "CAHALAudioSystemObject.h"
-#include "CAHALAudioDevice.h"
-#include "CAAutoDisposer.h"
+#import "CAAutoDisposer.h"
+#import "CAHALAudioDevice.h"
+#import "CAHALAudioSystemObject.h"
+#import "CAPropertyAddress.h"
+
+// STL Includes
+#import <set>
 
 
 #pragma clang assume_nonnull begin
 
-static NSInteger const kOutputDeviceMenuItemTag = 2;
+static NSInteger const kOutputDeviceMenuItemTag = 5;
 
 @implementation BGMOutputDevicePrefs {
+    NSMenu* bgmMenu;
     BGMAudioDeviceManager* audioDevices;
     BGMPreferredOutputDevices* preferredDevices;
     NSMutableArray<NSMenuItem*>* outputDeviceMenuItems;
+    // Called when a CoreAudio property has changed and we might need to update the menu. For
+    // example, when a device is connected or disconnected.
+    AudioObjectPropertyListenerBlock refreshNeededListener;
+    // The devices we've added refreshNeededListener to. Used to avoid adding it to a device twice
+    // for the same property and to remove it from all devices in dealloc.
+    std::set<BGMAudioDevice> listenedDevices_kAudioDevicePropertyDataSources;
+    std::set<BGMAudioDevice> listenedDevices_kAudioDevicePropertyDataSource;
 }
 
-- (id) initWithAudioDevices:(BGMAudioDeviceManager*)inAudioDevices
-           preferredDevices:(BGMPreferredOutputDevices*)inPreferredDevices {
+- (instancetype) initWithBGMMenu:(NSMenu*)inBGMMenu
+                    audioDevices:(BGMAudioDeviceManager*)inAudioDevices
+                preferredDevices:(BGMPreferredOutputDevices*)inPreferredDevices {
     if ((self = [super init])) {
+        bgmMenu = inBGMMenu;
         audioDevices = inAudioDevices;
         preferredDevices = inPreferredDevices;
         outputDeviceMenuItems = [NSMutableArray new];
+
+        [self listenForDevicesAddedOrRemoved];
+        [self populateBGMMenu];
     }
     
     return self;
 }
 
-- (void) populatePreferencesMenu:(NSMenu*)prefsMenu {
+- (void) dealloc {
+    // Tell CoreAudio not to call the listener block anymore. This probably isn't necessary.
+    //
+    // I think it's safe to do this without dispatching to the main queue because dealloc and
+    // refreshNeededListener should be essentially mutually exclusive. If refreshNeededListener is
+    // invoked and gets a value for weakSelf, it holds the strong ref until it returns, so dealloc
+    // won't be called. If refreshNeededListener is invoked and deallocation has started, it will
+    // get nil for weakSelf and just return.
+    auto removeListener = [&] (CAHALAudioObject audioObject, AudioObjectPropertySelector prop) {
+        BGM_Utils::LogAndSwallowExceptions(BGMDbgArgs, [&] {
+            // Check the object still exists first to reduce unnecessary error logs.
+            if (CAHALAudioObject::ObjectExists(audioObject.GetObjectID())) {
+                audioObject.RemovePropertyListenerBlock(CAPropertyAddress(prop),
+                                                        dispatch_get_main_queue(),
+                                                        refreshNeededListener);
+            }
+        });
+    };
+
+    // Remove the listener from each audio object we added it to.
+    removeListener(CAHALAudioSystemObject(), kAudioHardwarePropertyDevices);
+
+    for (auto device : listenedDevices_kAudioDevicePropertyDataSources) {
+        removeListener(device, kAudioDevicePropertyDataSources);
+    }
+
+    for (auto device : listenedDevices_kAudioDevicePropertyDataSource) {
+        removeListener(device, kAudioDevicePropertyDataSource);
+    }
+}
+
+- (void) listenForDevicesAddedOrRemoved {
+    // Create the block that will run when a device is added or removed.
+    BGMOutputDevicePrefs* __weak weakSelf = self;
+
+    refreshNeededListener = ^(UInt32 inNumberAddresses,
+                              const AudioObjectPropertyAddress* inAddresses) {
+        #pragma unused (inNumberAddresses, inAddresses)
+
+        BGM_Utils::LogAndSwallowExceptions(BGMDbgArgs, [&] {
+            [weakSelf populateBGMMenu];
+        });
+    };
+
+    // Register the listener block to be called when devices are connected or disconnected.
+    BGM_Utils::LogAndSwallowExceptions(BGMDbgArgs, [&] {
+        CAHALAudioSystemObject().AddPropertyListenerBlock(
+            CAPropertyAddress(kAudioHardwarePropertyDevices),
+            dispatch_get_main_queue(),
+            refreshNeededListener);
+    });
+}
+
+- (void) populateBGMMenu {
+    // TODO: Technically, we should assert we're on the main queue rather than just the main thread.
+    BGMAssert([NSThread isMainThread],
+              "BGMOutputDevicePrefs::populateBGMMenu called on non-main thread");
+
     // Remove existing menu items
     for (NSMenuItem* item in outputDeviceMenuItems) {
-        [prefsMenu removeItem:item];
+        DebugMsg("BGMOutputDevicePrefs::populateBGMMenu: Removing %s", item.description.UTF8String);
+        [bgmMenu removeItem:item];
     }
     
     [outputDeviceMenuItems removeAllObjects];
@@ -72,25 +147,51 @@ static NSInteger const kOutputDeviceMenuItemTag = 2;
         audioSystem.GetAudioDevices(numDevices, devices);
         
         for (UInt32 i = 0; i < numDevices; i++) {
-            [self insertMenuItemsForDevice:devices[i] preferencesMenu:prefsMenu];
+            [self insertMenuItemsForDevice:devices[i]];
         }
     }
 }
 
-- (void) insertMenuItemsForDevice:(BGMAudioDevice)device preferencesMenu:(NSMenu*)prefsMenu {
+- (void) insertMenuItemsForDevice:(BGMAudioDevice)device {
     // Insert menu items after the item for the "Output Device" heading.
-    const NSInteger menuItemsIdx = [prefsMenu indexOfItemWithTag:kOutputDeviceMenuItemTag] + 1;
+    const NSInteger menuItemsIdx = [bgmMenu indexOfItemWithTag:kOutputDeviceMenuItemTag] + 1;
 
     BOOL canBeOutputDevice = YES;
-    BGMLogAndSwallowExceptions("BGMOutputDevicePrefs::insertMenuItemsForDevice", ([&] {
+    BGM_Utils::LogAndSwallowExceptions(BGMDbgArgs, [&] {
         canBeOutputDevice = device.CanBeOutputDeviceInBGMApp();
-    }));
+    });
 
     if (canBeOutputDevice) {
         for (NSMenuItem* item : [self createMenuItemsForDevice:device]) {
-            [prefsMenu insertItem:item atIndex:menuItemsIdx];
+            DebugMsg("BGMOutputDevicePrefs::insertMenuItemsForDevice: Inserting %s",
+                     item.description.UTF8String);
+            [bgmMenu insertItem:item atIndex:menuItemsIdx];
             [outputDeviceMenuItems addObject:item];
         }
+
+        // Add listeners to update the menu when the device's data source changes or it changes its
+        // list of data sources. We do this so that, for example, when you plug headphones into the
+        // built-in jack, the menu item for the built-in device will change from "Internal Speakers"
+        // to "Headphones".
+        if (listenedDevices_kAudioDevicePropertyDataSources.count(device) == 0) {
+            BGM_Utils::LogAndSwallowExceptions(BGMDbgArgs, [&] {
+                device.AddPropertyListenerBlock(CAPropertyAddress(kAudioDevicePropertyDataSources,
+                                                                  kAudioDevicePropertyScopeOutput),
+                                                dispatch_get_main_queue(),
+                                                refreshNeededListener);
+                listenedDevices_kAudioDevicePropertyDataSources.insert(device);
+            });
+        };
+
+        if (listenedDevices_kAudioDevicePropertyDataSource.count(device) == 0) {
+            BGM_Utils::LogAndSwallowExceptions(BGMDbgArgs, [&] {
+                device.AddPropertyListenerBlock(CAPropertyAddress(kAudioDevicePropertyDataSource,
+                                                                  kAudioDevicePropertyScopeOutput),
+                                                dispatch_get_main_queue(),
+                                                refreshNeededListener);
+                listenedDevices_kAudioDevicePropertyDataSource.insert(device);
+            });
+        };
     }
 }
 
@@ -109,8 +210,8 @@ static NSInteger const kOutputDeviceMenuItemTag = 2;
     // TODO: Handle data destinations as well? I don't have (or know of) any hardware with them.
     // TODO: Use the current data source's name when the control isn't settable, but only add one menu item.
     UInt32 numDataSources = 0;
-    
-    BGMLogAndSwallowExceptions("BGMOutputDevicePrefs::createMenuItemsForDevice", [&] {
+
+    BGM_Utils::LogAndSwallowExceptions(BGMDbgArgs, [&] {
         if (device.HasDataSourceControl(scope, channel) &&
                 device.DataSourceControlIsSettable(scope, channel)) {
             numDataSources = device.GetNumberAvailableDataSources(scope, channel);
@@ -126,15 +227,14 @@ static NSInteger const kOutputDeviceMenuItemTag = 2;
             DebugMsg("BGMOutputDevicePrefs::createMenuItemsForDevice: Creating item. %s%u %s%u",
                      "Device ID:", device.GetObjectID(),
                      ", Data source ID:", dataSourceIDs[i]);
-            
-            BGMLogAndSwallowExceptionsMsg("BGMOutputDevicePrefs::createMenuItemsForDevice", "(DS)", [&]() {
-                NSNumber* dataSourceID = [NSNumber numberWithUnsignedInt:dataSourceIDs[i]];
+
+            BGM_Utils::LogAndSwallowExceptions(BGMDbgArgs, "(DS)", [&] {
                 NSString* dataSourceName =
                     CFBridgingRelease(device.CopyDataSourceNameForID(scope, channel, dataSourceIDs[i]));
                 NSString* deviceName = CFBridgingRelease(device.CopyName());
                 
                 [items addObject:[self createMenuItemForDevice:device
-                                                  dataSourceID:dataSourceID
+                                                  dataSourceID:@(dataSourceIDs[i])
                                                          title:dataSourceName
                                                        toolTip:deviceName]];
             });
@@ -142,13 +242,13 @@ static NSInteger const kOutputDeviceMenuItemTag = 2;
     } else {
         DebugMsg("BGMOutputDevicePrefs::createMenuItemsForDevice: Creating item. %s%u",
                  "Device ID:", device.GetObjectID());
-        
-        BGMLogAndSwallowExceptions("BGMOutputDevicePrefs::createMenuItemsForDevice", ([&] {
+
+        BGM_Utils::LogAndSwallowExceptions(BGMDbgArgs, [&] {
             [items addObject:[self createMenuItemForDevice:device
                                               dataSourceID:nil
                                                      title:CFBridgingRelease(device.CopyName())
                                                    toolTip:nil]];
-        }));
+        });
     }
     
     return items;
@@ -164,13 +264,13 @@ static NSInteger const kOutputDeviceMenuItemTag = 2;
     }
     
     NSMenuItem* item = [[NSMenuItem alloc] initWithTitle:BGMNN(title)
-                                                  action:@selector(outputDeviceWasChanged:)
+                                                  action:@selector(outputDeviceMenuItemSelected:)
                                            keyEquivalent:@""];
     
     // Add the AirPlay icon to the labels of AirPlay devices.
     //
     // TODO: Test this with real hardware that supports AirPlay. (I don't have any.)
-    BGMLogAndSwallowExceptions("BGMOutputDevicePrefs::createMenuItemForDevice", [&] {
+    BGM_Utils::LogAndSwallowExceptions(BGMDbgArgs, [&] {
         if (device.GetTransportType() == kAudioDeviceTransportTypeAirPlay) {
             item.image = [NSImage imageNamed:@"AirPlayIcon"];
             
@@ -192,12 +292,28 @@ static NSInteger const kOutputDeviceMenuItemTag = 2;
     item.indentationLevel = 1;
     item.representedObject = @{ @"deviceID": @(device.GetObjectID()),
                                 @"dataSourceID": dataSourceID ? BGMNN(dataSourceID) : [NSNull null] };
+
+    if (@available(macOS 10.10, *)) {
+        // Used for UI tests.
+        item.accessibilityIdentifier = @"output-device";
+    }
     
     return item;
 }
 
-- (void) outputDeviceWasChanged:(NSMenuItem*)menuItem {
-    DebugMsg("BGMOutputDevicePrefs::outputDeviceWasChanged: '%s' menu item selected",
+// Called by BGMAudioDeviceManager to tell us a different device has been set as the output device.
+- (void) outputDeviceDidChange {
+    BGMOutputDevicePrefs* __weak weakSelf = self;
+
+    dispatch_async(dispatch_get_main_queue(), ^{
+        BGM_Utils::LogAndSwallowExceptions(BGMDbgArgs, [&] {
+            [weakSelf populateBGMMenu];
+        });
+    });
+}
+
+- (void) outputDeviceMenuItemSelected:(NSMenuItem*)menuItem {
+    DebugMsg("BGMOutputDevicePrefs::outputDeviceMenuItemSelected: '%s' menu item selected",
              [menuItem.title UTF8String]);
     
     // Make sure the menu item is actually for an output device.
@@ -220,14 +336,14 @@ static NSInteger const kOutputDeviceMenuItemTag = 2;
                 [NSString stringWithFormat:@"%@ (%@)", menuItem.title, menuItem.toolTip] :
                 menuItem.title;
 
+        if (changingDevice) {
+            // Add the new output device to the list of preferred devices.
+            [preferredDevices userChangedOutputDeviceTo:newDeviceID];
+        }
+
         // Dispatched because it usually blocks. (Note that we're using
         // DISPATCH_QUEUE_PRIORITY_HIGH, which is the second highest priority.)
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-            if (changingDevice) {
-                // Add the new output device to the list of preferred devices.
-                [preferredDevices userChangedOutputDeviceTo:newDeviceID];
-            }
-
             [self changeToOutputDevice:newDeviceID
                          newDataSource:newDataSourceID
                             deviceName:deviceName];

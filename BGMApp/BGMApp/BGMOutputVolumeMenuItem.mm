@@ -210,6 +210,14 @@ NSString* const __nonnull      kGenericOutputDeviceName = @"Output Device";
 - (void) removeOutputDeviceDataSourceListener {
     BGMLogAndSwallowExceptions("BGMOutputVolumeMenuItem::removeOutputDeviceDataSourceListener",
                                ([&] {
+        // Technically, there's a race here in that the device could be removed after we check it
+        // exists, but before we try to remove the listener. We could check the error code of the
+        // exception and not log an error message if the code is kAudioHardwareBadObjectError or
+        // kAudioHardwareBadDeviceError, but it probably wouldn't be worth the effort.
+        //
+        // So for now the main reason for checking the device exists here is that it makes debug
+        // builds much less likely to crash here. (They crash/break when an error is logged so it
+        // will be noticed.)
         if (CAHALAudioObject::ObjectExists(outputDevice)) {
             outputDevice.RemovePropertyListenerBlock(
                 CAPropertyAddress(kAudioDevicePropertyDataSource, kScope),

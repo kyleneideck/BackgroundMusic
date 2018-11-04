@@ -32,9 +32,13 @@
 
 @interface BGMOutputDevicePrefs : NSObject
 
-- (id) initWithAudioDevices:(BGMAudioDeviceManager*)inAudioDevices
-           preferredDevices:(BGMPreferredOutputDevices*)inPreferredDevices;
-- (void) populatePreferencesMenu:(NSMenu*)prefsMenu;
+- (instancetype) initWithBGMMenu:(NSMenu*)inBGMMenu
+                    audioDevices:(BGMAudioDeviceManager*)inAudioDevices
+                preferredDevices:(BGMPreferredOutputDevices*)inPreferredDevices;
+
+// To be called when BGMApp has been set to use a different output device. For example, when a new
+// device is connected and BGMPreferredOutputDevices decides BGMApp should switch to it.
+- (void) outputDeviceDidChange;
 
 @end
 

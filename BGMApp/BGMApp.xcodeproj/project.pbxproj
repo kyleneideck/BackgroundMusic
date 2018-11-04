@@ -300,8 +300,8 @@
 		1CD1FD2F1BDDEAF2004F7E1B /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		1CD410D21F9EDDAD0070A094 /* BGMAppVolumesController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BGMAppVolumesController.h; sourceTree = "<group>"; };
 		1CD410D31F9EDDAD0070A094 /* BGMAppVolumesController.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = BGMAppVolumesController.mm; sourceTree = "<group>"; };
-		1CE7064A1BF1EC0600BFC06D /* BGMOutputDevicePrefs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGMOutputDevicePrefs.h; path = Preferences/BGMOutputDevicePrefs.h; sourceTree = "<group>"; };
-		1CE7064B1BF1EC0600BFC06D /* BGMOutputDevicePrefs.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = BGMOutputDevicePrefs.mm; path = Preferences/BGMOutputDevicePrefs.mm; sourceTree = "<group>"; };
+		1CE7064A1BF1EC0600BFC06D /* BGMOutputDevicePrefs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BGMOutputDevicePrefs.h; sourceTree = "<group>"; };
+		1CE7064B1BF1EC0600BFC06D /* BGMOutputDevicePrefs.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = BGMOutputDevicePrefs.mm; sourceTree = "<group>"; };
 		1CEACF4E1F34A30000FEC143 /* Mock_CAHALAudioSystemObject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Mock_CAHALAudioSystemObject.cpp; path = UnitTests/Mock_CAHALAudioSystemObject.cpp; sourceTree = "<group>"; };
 		1CED61681C3081C2002CAFCF /* LICENSE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		1CED616A1C316E1A002CAFCF /* BGMAudioDeviceManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BGMAudioDeviceManager.h; sourceTree = "<group>"; };
@@ -419,8 +419,6 @@
 				27D1D6BA1DD7226C0049E707 /* BGMAboutPanel.m */,
 				1C0BD0A31BF1A8E6004F4CF5 /* BGMAutoPauseMusicPrefs.h */,
 				1C0BD0A41BF1A8E6004F4CF5 /* BGMAutoPauseMusicPrefs.mm */,
-				1CE7064A1BF1EC0600BFC06D /* BGMOutputDevicePrefs.h */,
-				1CE7064B1BF1EC0600BFC06D /* BGMOutputDevicePrefs.mm */,
 			);
 			name = "Preferences Menu";
 			sourceTree = "<group>";
@@ -573,6 +571,8 @@
 				1C1465B71BCC3A73003AEFE6 /* BGMAutoPauseMusic.mm */,
 				1C4699451BD5BF2E00F78043 /* Music Players */,
 				1C0BD0A21BF1A827004F4CF5 /* Preferences Menu */,
+				1CE7064A1BF1EC0600BFC06D /* BGMOutputDevicePrefs.h */,
+				1CE7064B1BF1EC0600BFC06D /* BGMOutputDevicePrefs.mm */,
 				1C46994D1BD7694C00F78043 /* BGMDeviceControlSync.h */,
 				1C46994C1BD7694C00F78043 /* BGMDeviceControlSync.cpp */,
 				1C3D36711ED90E8600F98E66 /* BGMDeviceControlsList.h */,

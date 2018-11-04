@@ -39,6 +39,7 @@
 
 // Forward Declarations
 @class BGMOutputVolumeMenuItem;
+@class BGMOutputDevicePrefs;
 
 
 #pragma clang assume_nonnull begin
@@ -53,6 +54,9 @@ static const int kBGMErrorCode_ReturningEarly       = 2;
 
 // Set the BGMOutputVolumeMenuItem to be notified when the output device is changed.
 - (void) setOutputVolumeMenuItem:(BGMOutputVolumeMenuItem*)item;
+
+// Set the BGMOutputDevicePrefs to be notified when the output device is changed.
+- (void) setOutputDevicePrefs:(BGMOutputDevicePrefs*)prefs;
 
 // Set BGMDevice as the default audio device for all processes
 - (NSError* __nullable) setBGMDeviceAsOSDefault;
