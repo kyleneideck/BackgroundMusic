@@ -34,6 +34,8 @@
 // TODO: Skip these tests if macOS SDK 10.11 or higher isn't available.
 // TODO: Mock BGMDevice and music players.
 
+#if __clang_major__ >= 9
+
 @interface BGMAppUITests : XCTestCase
 @end
 
@@ -232,4 +234,6 @@
 }
 
 @end
+
+#endif /* __clang_major__ >= 9 */
 
