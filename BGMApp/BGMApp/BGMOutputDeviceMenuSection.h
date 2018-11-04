@@ -14,7 +14,7 @@
 // along with Background Music. If not, see <http://www.gnu.org/licenses/>.
 
 //
-//  BGMOutputDevicePrefs.h
+//  BGMOutputDeviceMenuSection.h
 //  BGMApp
 //
 //  Copyright © 2016, 2018 Kyle Neideck
@@ -30,7 +30,7 @@
 
 #pragma clang assume_nonnull begin
 
-@interface BGMOutputDevicePrefs : NSObject
+@interface BGMOutputDeviceMenuSection : NSObject
 
 - (instancetype) initWithBGMMenu:(NSMenu*)inBGMMenu
                     audioDevices:(BGMAudioDeviceManager*)inAudioDevices

@@ -29,7 +29,7 @@
 #import "BGMAutoPauseMusic.h"
 #import "BGMAutoPauseMenuItem.h"
 #import "BGMMusicPlayers.h"
-#import "BGMOutputDevicePrefs.h"
+#import "BGMOutputDeviceMenuSection.h"
 #import "BGMOutputVolumeMenuItem.h"
 #import "BGMPreferencesMenu.h"
 #import "BGMPreferredOutputDevices.h"
@@ -62,7 +62,7 @@ static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
     BGMMusicPlayers* musicPlayers;
     BGMSystemSoundsVolume* systemSoundsVolume;
     BGMAppVolumesController* appVolumes;
-    BGMOutputDevicePrefs* outputDevicePrefs;
+    BGMOutputDeviceMenuSection* outputDeviceMenuSection;
     BGMPreferencesMenu* prefsMenu;
     BGMXPCListener* xpcListener;
     BGMPreferredOutputDevices* preferredOutputDevices;
@@ -295,10 +295,11 @@ static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
     [self initVolumesMenuSection];
 
     // Output device selection.
-    outputDevicePrefs = [[BGMOutputDevicePrefs alloc] initWithBGMMenu:self.bgmMenu
-                                                         audioDevices:audioDevices
-                                                     preferredDevices:preferredOutputDevices];
-    [audioDevices setOutputDevicePrefs:outputDevicePrefs];
+    outputDeviceMenuSection =
+            [[BGMOutputDeviceMenuSection alloc] initWithBGMMenu:self.bgmMenu
+                                                   audioDevices:audioDevices
+                                               preferredDevices:preferredOutputDevices];
+    [audioDevices setOutputDeviceMenuSection:outputDeviceMenuSection];
 
     // Preferences submenu.
     prefsMenu = [[BGMPreferencesMenu alloc] initWithBGMMenu:self.bgmMenu

@@ -14,14 +14,14 @@
 // along with Background Music. If not, see <http://www.gnu.org/licenses/>.
 
 //
-//  BGMOutputDevicePrefs.mm
+//  BGMOutputDeviceMenuSection.mm
 //  BGMApp
 //
 //  Copyright © 2016-2018 Kyle Neideck
 //
 
 // Self Include
-#import "BGMOutputDevicePrefs.h"
+#import "BGMOutputDeviceMenuSection.h"
 
 // Local Includes
 #import "BGM_Utils.h"
@@ -42,7 +42,7 @@
 
 static NSInteger const kOutputDeviceMenuItemTag = 5;
 
-@implementation BGMOutputDevicePrefs {
+@implementation BGMOutputDeviceMenuSection {
     NSMenu* bgmMenu;
     BGMAudioDeviceManager* audioDevices;
     BGMPreferredOutputDevices* preferredDevices;
@@ -105,7 +105,7 @@ static NSInteger const kOutputDeviceMenuItemTag = 5;
 
 - (void) listenForDevicesAddedOrRemoved {
     // Create the block that will run when a device is added or removed.
-    BGMOutputDevicePrefs* __weak weakSelf = self;
+    BGMOutputDeviceMenuSection* __weak weakSelf = self;
 
     refreshNeededListener = ^(UInt32 inNumberAddresses,
                               const AudioObjectPropertyAddress* inAddresses) {
@@ -128,11 +128,12 @@ static NSInteger const kOutputDeviceMenuItemTag = 5;
 - (void) populateBGMMenu {
     // TODO: Technically, we should assert we're on the main queue rather than just the main thread.
     BGMAssert([NSThread isMainThread],
-              "BGMOutputDevicePrefs::populateBGMMenu called on non-main thread");
+              "BGMOutputDeviceMenuSection::populateBGMMenu called on non-main thread");
 
     // Remove existing menu items
     for (NSMenuItem* item in outputDeviceMenuItems) {
-        DebugMsg("BGMOutputDevicePrefs::populateBGMMenu: Removing %s", item.description.UTF8String);
+        DebugMsg("BGMOutputDeviceMenuSection::populateBGMMenu: Removing %s",
+                 item.description.UTF8String);
         [bgmMenu removeItem:item];
     }
     
@@ -163,7 +164,7 @@ static NSInteger const kOutputDeviceMenuItemTag = 5;
 
     if (canBeOutputDevice) {
         for (NSMenuItem* item : [self createMenuItemsForDevice:device]) {
-            DebugMsg("BGMOutputDevicePrefs::insertMenuItemsForDevice: Inserting %s",
+            DebugMsg("BGMOutputDeviceMenuSection::insertMenuItemsForDevice: Inserting %s",
                      item.description.UTF8String);
             [bgmMenu insertItem:item atIndex:menuItemsIdx];
             [outputDeviceMenuItems addObject:item];
@@ -224,7 +225,8 @@ static NSInteger const kOutputDeviceMenuItemTag = 5;
         device.GetAvailableDataSources(scope, channel, numDataSources, dataSourceIDs);
         
         for (UInt32 i = 0; i < numDataSources; i++) {
-            DebugMsg("BGMOutputDevicePrefs::createMenuItemsForDevice: Creating item. %s%u %s%u",
+            DebugMsg("BGMOutputDeviceMenuSection::createMenuItemsForDevice: "
+                     "Creating item. %s%u %s%u",
                      "Device ID:", device.GetObjectID(),
                      ", Data source ID:", dataSourceIDs[i]);
 
@@ -240,7 +242,7 @@ static NSInteger const kOutputDeviceMenuItemTag = 5;
             });
         }
     } else {
-        DebugMsg("BGMOutputDevicePrefs::createMenuItemsForDevice: Creating item. %s%u",
+        DebugMsg("BGMOutputDeviceMenuSection::createMenuItemsForDevice: Creating item. %s%u",
                  "Device ID:", device.GetObjectID());
 
         BGM_Utils::LogAndSwallowExceptions(BGMDbgArgs, [&] {
@@ -303,7 +305,7 @@ static NSInteger const kOutputDeviceMenuItemTag = 5;
 
 // Called by BGMAudioDeviceManager to tell us a different device has been set as the output device.
 - (void) outputDeviceDidChange {
-    BGMOutputDevicePrefs* __weak weakSelf = self;
+    BGMOutputDeviceMenuSection* __weak weakSelf = self;
 
     dispatch_async(dispatch_get_main_queue(), ^{
         BGM_Utils::LogAndSwallowExceptions(BGMDbgArgs, [&] {
@@ -313,7 +315,7 @@ static NSInteger const kOutputDeviceMenuItemTag = 5;
 }
 
 - (void) outputDeviceMenuItemSelected:(NSMenuItem*)menuItem {
-    DebugMsg("BGMOutputDevicePrefs::outputDeviceMenuItemSelected: '%s' menu item selected",
+    DebugMsg("BGMOutputDeviceMenuSection::outputDeviceMenuItemSelected: '%s' menu item selected",
              [menuItem.title UTF8String]);
     
     // Make sure the menu item is actually for an output device.

@@ -117,7 +117,7 @@
     [icon click];
 
     // Get the list of output devices from the main menu.
-    // BGMOutputDevicePrefs::createMenuItemForDevice gives every output device menu item the
+    // BGMOutputDeviceMenuSection::createMenuItemForDevice gives every output device menu item the
     // accessibility identifier "output-device" so we can find all of them here.
     NSArray<XCUIElement*>* outputDeviceMenuItems =
         [menuItems matchingIdentifier:@"output-device"].allElementsBoundByIndex;

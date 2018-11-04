@@ -28,7 +28,7 @@
 #import "BGM_Utils.h"
 #import "BGMAudioDevice.h"
 #import "BGMDeviceControlSync.h"
-#import "BGMOutputDevicePrefs.h"
+#import "BGMOutputDeviceMenuSection.h"
 #import "BGMOutputVolumeMenuItem.h"
 #import "BGMPlayThrough.h"
 #import "BGMXPCProtocols.h"
@@ -61,7 +61,7 @@
     NSXPCConnection* __nullable bgmXPCHelperConnection;
 
     BGMOutputVolumeMenuItem* __nullable outputVolumeMenuItem;
-    BGMOutputDevicePrefs* __nullable outputDevicePrefs;
+    BGMOutputDeviceMenuSection* __nullable outputDeviceMenuSection;
 
     NSRecursiveLock* stateLock;
 }
@@ -73,7 +73,7 @@
         stateLock = [NSRecursiveLock new];
         bgmXPCHelperConnection = nil;
         outputVolumeMenuItem = nil;
-        outputDevicePrefs = nil;
+        outputDeviceMenuSection = nil;
         outputDevice = kAudioObjectUnknown;
 
         try {
@@ -105,8 +105,8 @@
     outputVolumeMenuItem = item;
 }
 
-- (void) setOutputDevicePrefs:(BGMOutputDevicePrefs*)prefs {
-    outputDevicePrefs = prefs;
+- (void) setOutputDeviceMenuSection:(BGMOutputDeviceMenuSection*)menuSection {
+    outputDeviceMenuSection = menuSection;
 }
 
 #pragma mark Systemwide Default Device
@@ -331,7 +331,7 @@
 
     // Update the menu item for the volume of the output device.
     [outputVolumeMenuItem outputDeviceDidChange];
-    [outputDevicePrefs outputDeviceDidChange];
+    [outputDeviceMenuSection outputDeviceDidChange];
 }
 
 - (NSError*) failedToSetOutputDevice:(AudioDeviceID)deviceID
