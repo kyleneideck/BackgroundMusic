@@ -295,10 +295,12 @@ static NSInteger const kOutputDeviceMenuItemTag = 5;
     item.representedObject = @{ @"deviceID": @(device.GetObjectID()),
                                 @"dataSourceID": dataSourceID ? BGMNN(dataSourceID) : [NSNull null] };
 
+#if __clang_major__ >= 9
     if (@available(macOS 10.10, *)) {
         // Used for UI tests.
         item.accessibilityIdentifier = @"output-device";
     }
+#endif
     
     return item;
 }
