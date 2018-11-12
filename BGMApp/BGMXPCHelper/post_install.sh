@@ -20,7 +20,7 @@
 # post_install.sh
 # BGMXPCHelper
 #
-# Copyright © 2016, 2017 Kyle Neideck
+# Copyright © 2016-2018 Kyle Neideck
 #
 # Installs BGMXPCHelper's launchd plist file and "bootstraps" (registers/enables) it with launchd.
 #
@@ -63,6 +63,14 @@ if [[ -z $3 ]]; then
     RESOURCES_PATH="${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}"
 else
     RESOURCES_PATH="$3"
+fi
+
+# If DEPLOYMENT_POSTPROCESSING is true, xcodebuild calls this script even if you're just building
+# (and not also installing). I'm not sure why, as we have the "run script only when installing"
+# option enabled.
+if ! [[ -z ${ACTION} ]] && [[ "${ACTION}" != "install" ]]; then
+    echo "$0 should only be called during an install. Exiting."
+    exit 0
 fi
 
 # Safe mode.

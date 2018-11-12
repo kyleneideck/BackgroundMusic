@@ -7,67 +7,67 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1C0BD0A51BF1A8E6004F4CF5 /* BGMAutoPauseMusicPrefs.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C0BD0A41BF1A8E6004F4CF5 /* BGMAutoPauseMusicPrefs.mm */; };
-		1C0BD0A81BF1B029004F4CF5 /* BGMPreferencesMenu.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C0BD0A71BF1B029004F4CF5 /* BGMPreferencesMenu.mm */; };
-		1C1465B81BCC3A73003AEFE6 /* BGMAutoPauseMusic.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C1465B71BCC3A73003AEFE6 /* BGMAutoPauseMusic.mm */; };
-		1C1962E41BC94E15008A4DF7 /* CARingBuffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962E21BC94E15008A4DF7 /* CARingBuffer.cpp */; };
-		1C1962E71BC94E91008A4DF7 /* BGMPlayThrough.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962E51BC94E91008A4DF7 /* BGMPlayThrough.cpp */; };
-		1C1962F31BCABFC5008A4DF7 /* CAHALAudioDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962EB1BCABFC5008A4DF7 /* CAHALAudioDevice.cpp */; };
-		1C1962F41BCABFC5008A4DF7 /* CAHALAudioObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962ED1BCABFC5008A4DF7 /* CAHALAudioObject.cpp */; };
-		1C1962F51BCABFC5008A4DF7 /* CAHALAudioStream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962EF1BCABFC5008A4DF7 /* CAHALAudioStream.cpp */; };
-		1C1962F61BCABFC5008A4DF7 /* CAHALAudioSystemObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962F11BCABFC5008A4DF7 /* CAHALAudioSystemObject.cpp */; };
-		1C1962FA1BCAC061008A4DF7 /* CADebugMacros.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962F71BCAC061008A4DF7 /* CADebugMacros.cpp */; };
-		1C1962FD1BCAC0C3008A4DF7 /* CADebugPrintf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962FB1BCAC0C3008A4DF7 /* CADebugPrintf.cpp */; };
-		1C1963011BCAC0F6008A4DF7 /* CACFString.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962FF1BCAC0F6008A4DF7 /* CACFString.cpp */; };
+		1C0BD0A51BF1A8E6004F4CF5 /* BGMAutoPauseMusicPrefs.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C0BD0A41BF1A8E6004F4CF5 /* BGMAutoPauseMusicPrefs.mm */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMAutoPauseMusicPrefs.mm"; }; };
+		1C0BD0A81BF1B029004F4CF5 /* BGMPreferencesMenu.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C0BD0A71BF1B029004F4CF5 /* BGMPreferencesMenu.mm */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMPreferencesMenu.mm"; }; };
+		1C1465B81BCC3A73003AEFE6 /* BGMAutoPauseMusic.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C1465B71BCC3A73003AEFE6 /* BGMAutoPauseMusic.mm */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMAutoPauseMusic.mm"; }; };
+		1C1962E41BC94E15008A4DF7 /* CARingBuffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962E21BC94E15008A4DF7 /* CARingBuffer.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-CARingBuffer.cpp"; }; };
+		1C1962E71BC94E91008A4DF7 /* BGMPlayThrough.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962E51BC94E91008A4DF7 /* BGMPlayThrough.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMPlayThrough.cpp"; }; };
+		1C1962F31BCABFC5008A4DF7 /* CAHALAudioDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962EB1BCABFC5008A4DF7 /* CAHALAudioDevice.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-CAHALAudioDevice.cpp"; }; };
+		1C1962F41BCABFC5008A4DF7 /* CAHALAudioObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962ED1BCABFC5008A4DF7 /* CAHALAudioObject.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-CAHALAudioObject.cpp"; }; };
+		1C1962F51BCABFC5008A4DF7 /* CAHALAudioStream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962EF1BCABFC5008A4DF7 /* CAHALAudioStream.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-CAHALAudioStream.cpp"; }; };
+		1C1962F61BCABFC5008A4DF7 /* CAHALAudioSystemObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962F11BCABFC5008A4DF7 /* CAHALAudioSystemObject.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-CAHALAudioSystemObject.cpp"; }; };
+		1C1962FA1BCAC061008A4DF7 /* CADebugMacros.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962F71BCAC061008A4DF7 /* CADebugMacros.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-CADebugMacros.cpp"; }; };
+		1C1962FD1BCAC0C3008A4DF7 /* CADebugPrintf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962FB1BCAC0C3008A4DF7 /* CADebugPrintf.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-CADebugPrintf.cpp"; }; };
+		1C1963011BCAC0F6008A4DF7 /* CACFString.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962FF1BCAC0F6008A4DF7 /* CACFString.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-CACFString.cpp"; }; };
 		1C1963031BCAC160008A4DF7 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1C1963021BCAC160008A4DF7 /* CoreAudio.framework */; };
-		1C1963061BCAF468008A4DF7 /* CAMutex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1963041BCAF468008A4DF7 /* CAMutex.cpp */; };
-		1C1963091BCAF677008A4DF7 /* CAHostTimeBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1963071BCAF677008A4DF7 /* CAHostTimeBase.cpp */; };
-		1C1AA4B01F9C673000BCFB22 /* BGM_Utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27FB8C2E1DE468320084DB9D /* BGM_Utils.cpp */; };
-		1C1AA4B11F9DE3B700BCFB22 /* BGMAudioDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CF5423A1EAAEE4300445AD8 /* BGMAudioDevice.cpp */; };
-		1C1AA4B21F9DE3B700BCFB22 /* BGMBackgroundMusicDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CACCF371F3175AD007F86CA /* BGMBackgroundMusicDevice.cpp */; };
+		1C1963061BCAF468008A4DF7 /* CAMutex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1963041BCAF468008A4DF7 /* CAMutex.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-CAMutex.cpp"; }; };
+		1C1963091BCAF677008A4DF7 /* CAHostTimeBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1963071BCAF677008A4DF7 /* CAHostTimeBase.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-CAHostTimeBase.cpp"; }; };
+		1C1AA4B01F9C673000BCFB22 /* BGM_Utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27FB8C2E1DE468320084DB9D /* BGM_Utils.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMXPCHelper-BGM_Utils.cpp"; }; };
+		1C1AA4B11F9DE3B700BCFB22 /* BGMAudioDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CF5423A1EAAEE4300445AD8 /* BGMAudioDevice.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMXPCHelper-BGMAudioDevice.cpp"; }; };
+		1C1AA4B21F9DE3B700BCFB22 /* BGMBackgroundMusicDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CACCF371F3175AD007F86CA /* BGMBackgroundMusicDevice.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMXPCHelper-BGMBackgroundMusicDevice.cpp"; }; };
 		1C1AA4B31F9DE40000BCFB22 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1CD1FD2F1BDDEAF2004F7E1B /* AudioToolbox.framework */; };
 		1C227C0B1FA4C48200A95B6D /* BGMAppVolumes.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C3DB4881BE0885A00EC8160 /* BGMAppVolumes.m */; };
-		1C2336DA1BEAB6E7004C1C4E /* BGMMusicPlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C2336D91BEAB6E7004C1C4E /* BGMMusicPlayer.m */; };
-		1C2336DF1BEAE10C004C1C4E /* BGMSpotify.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C2336DE1BEAE10C004C1C4E /* BGMSpotify.m */; };
+		1C2336DA1BEAB6E7004C1C4E /* BGMMusicPlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C2336D91BEAB6E7004C1C4E /* BGMMusicPlayer.m */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMMusicPlayer.m"; }; };
+		1C2336DF1BEAE10C004C1C4E /* BGMSpotify.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C2336DE1BEAE10C004C1C4E /* BGMSpotify.m */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMSpotify.m"; }; };
 		1C2FC3041EB4D6E700A76592 /* BGMApp.sdef in Resources */ = {isa = PBXBuildFile; fileRef = 1C2FC2FF1EB4D6E700A76592 /* BGMApp.sdef */; };
-		1C2FC3141EC706E000A76592 /* BGMAppDelegate+AppleScript.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C2FC3131EC706E000A76592 /* BGMAppDelegate+AppleScript.mm */; };
+		1C2FC3141EC706E000A76592 /* BGMAppDelegate+AppleScript.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C2FC3131EC706E000A76592 /* BGMAppDelegate+AppleScript.mm */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMAppDelegate+AppleScript.mm"; }; };
 		1C2FC3151EC706E000A76592 /* BGMAppDelegate+AppleScript.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C2FC3131EC706E000A76592 /* BGMAppDelegate+AppleScript.mm */; };
-		1C2FC31B1EC7238A00A76592 /* BGMASOutputDevice.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C2FC31A1EC7238A00A76592 /* BGMASOutputDevice.mm */; };
+		1C2FC31B1EC7238A00A76592 /* BGMASOutputDevice.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C2FC31A1EC7238A00A76592 /* BGMASOutputDevice.mm */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMASOutputDevice.mm"; }; };
 		1C2FC31C1EC7238A00A76592 /* BGMASOutputDevice.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C2FC31A1EC7238A00A76592 /* BGMASOutputDevice.mm */; };
-		1C3D36721ED90E8600F98E66 /* BGMDeviceControlsList.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C3D36701ED90E8600F98E66 /* BGMDeviceControlsList.cpp */; };
+		1C3D36721ED90E8600F98E66 /* BGMDeviceControlsList.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C3D36701ED90E8600F98E66 /* BGMDeviceControlsList.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMDeviceControlsList.cpp"; }; };
 		1C3D36731ED90E8600F98E66 /* BGMDeviceControlsList.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C3D36701ED90E8600F98E66 /* BGMDeviceControlsList.cpp */; };
 		1C3D36741ED90E8600F98E66 /* BGMDeviceControlsList.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C3D36701ED90E8600F98E66 /* BGMDeviceControlsList.cpp */; };
-		1C3DB4891BE0885A00EC8160 /* BGMAppVolumes.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C3DB4881BE0885A00EC8160 /* BGMAppVolumes.m */; };
-		1C4699471BD5C0E400F78043 /* BGMiTunes.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C4699461BD5C0E400F78043 /* BGMiTunes.m */; };
-		1C46994E1BD7694C00F78043 /* BGMDeviceControlSync.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C46994C1BD7694C00F78043 /* BGMDeviceControlSync.cpp */; };
-		1C4D1A1D217C7D6400A1ACD0 /* BGMPreferredOutputDevices.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C4D1A1C217C7D6400A1ACD0 /* BGMPreferredOutputDevices.mm */; };
+		1C3DB4891BE0885A00EC8160 /* BGMAppVolumes.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C3DB4881BE0885A00EC8160 /* BGMAppVolumes.m */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMAppVolumes.m"; }; };
+		1C4699471BD5C0E400F78043 /* BGMiTunes.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C4699461BD5C0E400F78043 /* BGMiTunes.m */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMiTunes.m"; }; };
+		1C46994E1BD7694C00F78043 /* BGMDeviceControlSync.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C46994C1BD7694C00F78043 /* BGMDeviceControlSync.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMDeviceControlSync.cpp"; }; };
+		1C4D1A1D217C7D6400A1ACD0 /* BGMPreferredOutputDevices.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C4D1A1C217C7D6400A1ACD0 /* BGMPreferredOutputDevices.mm */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMPreferredOutputDevices.mm"; }; };
 		1C4D1A1E217C7D6400A1ACD0 /* BGMPreferredOutputDevices.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C4D1A1C217C7D6400A1ACD0 /* BGMPreferredOutputDevices.mm */; };
 		1C50FF631EC9F4490031A6EA /* BGMAudioDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CF5423A1EAAEE4300445AD8 /* BGMAudioDevice.cpp */; };
 		1C533C7A1EED28B700270802 /* uninstall.sh in Resources */ = {isa = PBXBuildFile; fileRef = 1C533C791EED28B700270802 /* uninstall.sh */; };
 		1C533C7B1EED2F6200270802 /* safe_install_dir.sh in Resources */ = {isa = PBXBuildFile; fileRef = 276972901CB16008007A2F7C /* safe_install_dir.sh */; };
 		1C533C7C1EED2F8A00270802 /* com.bearisdriving.BGM.XPCHelper.plist.template in Resources */ = {isa = PBXBuildFile; fileRef = 2769728D1CAFCEFD007A2F7C /* com.bearisdriving.BGM.XPCHelper.plist.template */; };
 		1C533C801EF532CA00270802 /* _uninstall-non-interactive.sh in Resources */ = {isa = PBXBuildFile; fileRef = 1C533C7F1EF532CA00270802 /* _uninstall-non-interactive.sh */; };
-		1C780FF21FEF6C3B00497FAD /* BGMSystemSoundsVolume.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C780FF11FEF6C3B00497FAD /* BGMSystemSoundsVolume.mm */; };
+		1C780FF21FEF6C3B00497FAD /* BGMSystemSoundsVolume.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C780FF11FEF6C3B00497FAD /* BGMSystemSoundsVolume.mm */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMSystemSoundsVolume.mm"; }; };
 		1C780FF31FEF6C3B00497FAD /* BGMSystemSoundsVolume.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C780FF11FEF6C3B00497FAD /* BGMSystemSoundsVolume.mm */; };
-		1C837DD81F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C837DD71F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm */; };
+		1C837DD81F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C837DD71F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMOutputVolumeMenuItem.mm"; }; };
 		1C837DD91F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C837DD71F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm */; };
 		1C837DDA1F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C837DD71F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm */; };
-		1C86DA6A1F91EE3B000C8CCF /* CAPThread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C8034C21BDAFD5700668E00 /* CAPThread.cpp */; };
+		1C86DA6A1F91EE3B000C8CCF /* CAPThread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C8034C21BDAFD5700668E00 /* CAPThread.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-CAPThread.cpp"; }; };
 		1C8B0C6A216205BF008C5679 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1C8B0C69216205BF008C5679 /* AVFoundation.framework */; };
 		1C8B0C6B21645355008C5679 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1C8B0C69216205BF008C5679 /* AVFoundation.framework */; };
-		1C8D8304204238DB00A838F2 /* BGMSwinsian.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C8D8302204238DB00A838F2 /* BGMSwinsian.m */; };
+		1C8D8304204238DB00A838F2 /* BGMSwinsian.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C8D8302204238DB00A838F2 /* BGMSwinsian.m */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMSwinsian.m"; }; };
 		1C8D830520423E1C00A838F2 /* BGMSwinsian.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C8D8302204238DB00A838F2 /* BGMSwinsian.m */; };
 		1C8D830620423E2400A838F2 /* BGMSwinsian.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C8D8302204238DB00A838F2 /* BGMSwinsian.m */; };
-		1CACCF391F3175AD007F86CA /* BGMBackgroundMusicDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CACCF371F3175AD007F86CA /* BGMBackgroundMusicDevice.cpp */; };
+		1CACCF391F3175AD007F86CA /* BGMBackgroundMusicDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CACCF371F3175AD007F86CA /* BGMBackgroundMusicDevice.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMBackgroundMusicDevice.cpp"; }; };
 		1CACCF3A1F334447007F86CA /* BGMBackgroundMusicDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CACCF371F3175AD007F86CA /* BGMBackgroundMusicDevice.cpp */; };
 		1CACCF3B1F334450007F86CA /* BGMBackgroundMusicDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CACCF371F3175AD007F86CA /* BGMBackgroundMusicDevice.cpp */; };
-		1CB8B33D1BBA75EF000E2DD1 /* BGMAppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1CB8B33C1BBA75EF000E2DD1 /* BGMAppDelegate.mm */; };
-		1CB8B33F1BBA75EF000E2DD1 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 1CB8B33E1BBA75EF000E2DD1 /* main.m */; };
-		1CC1DF811BE5068A00FB8FE4 /* CACFArray.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CC1DF7D1BE5068A00FB8FE4 /* CACFArray.cpp */; };
-		1CC1DF821BE5068A00FB8FE4 /* CACFDictionary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CC1DF7F1BE5068A00FB8FE4 /* CACFDictionary.cpp */; };
-		1CC1DF911BE5891300FB8FE4 /* CADebugger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CC1DF8F1BE5891300FB8FE4 /* CADebugger.cpp */; };
+		1CB8B33D1BBA75EF000E2DD1 /* BGMAppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1CB8B33C1BBA75EF000E2DD1 /* BGMAppDelegate.mm */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMAppDelegate.mm"; }; };
+		1CB8B33F1BBA75EF000E2DD1 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 1CB8B33E1BBA75EF000E2DD1 /* main.m */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-main.m"; }; };
+		1CC1DF811BE5068A00FB8FE4 /* CACFArray.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CC1DF7D1BE5068A00FB8FE4 /* CACFArray.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-CACFArray.cpp"; }; };
+		1CC1DF821BE5068A00FB8FE4 /* CACFDictionary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CC1DF7F1BE5068A00FB8FE4 /* CACFDictionary.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-CACFDictionary.cpp"; }; };
+		1CC1DF911BE5891300FB8FE4 /* CADebugger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CC1DF8F1BE5891300FB8FE4 /* CADebugger.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-CADebugger.cpp"; }; };
 		1CC1DF961BE8607700FB8FE4 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1CC1DF951BE8607700FB8FE4 /* Images.xcassets */; };
-		1CC6593C1F91DEB400B0CCDC /* BGMTermination.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1CC6593A1F91DEB400B0CCDC /* BGMTermination.mm */; };
+		1CC6593C1F91DEB400B0CCDC /* BGMTermination.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1CC6593A1F91DEB400B0CCDC /* BGMTermination.mm */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMTermination.mm"; }; };
 		1CC6593D1F91DEB400B0CCDC /* BGMTermination.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1CC6593A1F91DEB400B0CCDC /* BGMTermination.mm */; };
 		1CC6593E1F91DEB400B0CCDC /* BGMTermination.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1CC6593A1F91DEB400B0CCDC /* BGMTermination.mm */; };
 		1CCC4F3E1E58196C008053E4 /* BGMXPCHelperTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 1CCC4F3C1E58196C008053E4 /* BGMXPCHelperTests.m */; };
@@ -75,7 +75,7 @@
 		1CCC4F4E1E581C40008053E4 /* Mock_CAHALAudioObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CCC4F4C1E581C40008053E4 /* Mock_CAHALAudioObject.cpp */; };
 		1CCC4F621E584100008053E4 /* BGMAppUITests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1CCC4F611E584100008053E4 /* BGMAppUITests.mm */; };
 		1CD1FD301BDDEAF2004F7E1B /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1CD1FD2F1BDDEAF2004F7E1B /* AudioToolbox.framework */; };
-		1CD410D41F9EDDAD0070A094 /* BGMAppVolumesController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1CD410D31F9EDDAD0070A094 /* BGMAppVolumesController.mm */; };
+		1CD410D41F9EDDAD0070A094 /* BGMAppVolumesController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1CD410D31F9EDDAD0070A094 /* BGMAppVolumesController.mm */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMAppVolumesController.mm"; }; };
 		1CD410D51F9EDDAD0070A094 /* BGMAppVolumesController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1CD410D31F9EDDAD0070A094 /* BGMAppVolumesController.mm */; };
 		1CD410D61F9EDDAD0070A094 /* BGMAppVolumesController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1CD410D31F9EDDAD0070A094 /* BGMAppVolumesController.mm */; };
 		1CD989341ECFFC9E0014BBBF /* BGM_Utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27FB8C2E1DE468320084DB9D /* BGM_Utils.cpp */; };
@@ -117,36 +117,36 @@
 		1CD989581ECFFD250014BBBF /* CAMutex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1963041BCAF468008A4DF7 /* CAMutex.cpp */; };
 		1CD989591ECFFD250014BBBF /* CAPThread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C8034C21BDAFD5700668E00 /* CAPThread.cpp */; };
 		1CD9895A1ECFFD250014BBBF /* CARingBuffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962E21BC94E15008A4DF7 /* CARingBuffer.cpp */; };
-		1CE7064C1BF1EC0600BFC06D /* BGMOutputDeviceMenuSection.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1CE7064B1BF1EC0600BFC06D /* BGMOutputDeviceMenuSection.mm */; };
+		1CE7064C1BF1EC0600BFC06D /* BGMOutputDeviceMenuSection.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1CE7064B1BF1EC0600BFC06D /* BGMOutputDeviceMenuSection.mm */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMOutputDeviceMenuSection.mm"; }; };
 		1CEACF4D1F34793700FEC143 /* CAHALAudioDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962EB1BCABFC5008A4DF7 /* CAHALAudioDevice.cpp */; };
 		1CEACF4F1F34A30000FEC143 /* Mock_CAHALAudioSystemObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CEACF4E1F34A30000FEC143 /* Mock_CAHALAudioSystemObject.cpp */; };
 		1CED61691C3081C2002CAFCF /* LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = 1CED61681C3081C2002CAFCF /* LICENSE */; };
-		1CED616C1C316E1A002CAFCF /* BGMAudioDeviceManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1CED616B1C316E1A002CAFCF /* BGMAudioDeviceManager.mm */; };
+		1CED616C1C316E1A002CAFCF /* BGMAudioDeviceManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1CED616B1C316E1A002CAFCF /* BGMAudioDeviceManager.mm */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMAudioDeviceManager.mm"; }; };
 		1CF2D58F1F944773008B6E35 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1C1963021BCAC160008A4DF7 /* CoreAudio.framework */; };
-		1CF2D5901F944789008B6E35 /* CAHALAudioDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962EB1BCABFC5008A4DF7 /* CAHALAudioDevice.cpp */; };
-		1CF2D5911F944789008B6E35 /* CAHALAudioObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962ED1BCABFC5008A4DF7 /* CAHALAudioObject.cpp */; };
-		1CF2D5921F944789008B6E35 /* CAHALAudioSystemObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962F11BCABFC5008A4DF7 /* CAHALAudioSystemObject.cpp */; };
-		1CF2D5931F94479A008B6E35 /* CAHALAudioStream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962EF1BCABFC5008A4DF7 /* CAHALAudioStream.cpp */; };
-		1CF2D5941F9447AE008B6E35 /* CACFArray.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CC1DF7D1BE5068A00FB8FE4 /* CACFArray.cpp */; };
-		1CF2D5951F9447AE008B6E35 /* CACFDictionary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CC1DF7F1BE5068A00FB8FE4 /* CACFDictionary.cpp */; };
-		1CF2D5961F9447AE008B6E35 /* CACFNumber.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 271677B81C6CBDFA0080B0A2 /* CACFNumber.cpp */; };
-		1CF2D5971F9447AE008B6E35 /* CACFString.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962FF1BCAC0F6008A4DF7 /* CACFString.cpp */; };
-		1CF2D5981F9447AE008B6E35 /* CADebugger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CC1DF8F1BE5891300FB8FE4 /* CADebugger.cpp */; };
-		1CF2D5991F9447AE008B6E35 /* CADebugMacros.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962F71BCAC061008A4DF7 /* CADebugMacros.cpp */; };
-		1CF2D59A1F9447AE008B6E35 /* CADebugPrintf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962FB1BCAC0C3008A4DF7 /* CADebugPrintf.cpp */; };
-		1CF2D59B1F9447AE008B6E35 /* CAHostTimeBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1963071BCAF677008A4DF7 /* CAHostTimeBase.cpp */; };
-		1CF2D59C1F9447AE008B6E35 /* CAMutex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1963041BCAF468008A4DF7 /* CAMutex.cpp */; };
-		1CF2D59D1F9447AE008B6E35 /* CAPThread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C8034C21BDAFD5700668E00 /* CAPThread.cpp */; };
-		1CF2D59E1F9447AE008B6E35 /* CARingBuffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962E21BC94E15008A4DF7 /* CARingBuffer.cpp */; };
-		1CF5423C1EAAEE4300445AD8 /* BGMAudioDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CF5423A1EAAEE4300445AD8 /* BGMAudioDevice.cpp */; };
+		1CF2D5901F944789008B6E35 /* CAHALAudioDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962EB1BCABFC5008A4DF7 /* CAHALAudioDevice.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMXPCHelper-CAHALAudioDevice.cpp"; }; };
+		1CF2D5911F944789008B6E35 /* CAHALAudioObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962ED1BCABFC5008A4DF7 /* CAHALAudioObject.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMXPCHelper-CAHALAudioObject.cpp"; }; };
+		1CF2D5921F944789008B6E35 /* CAHALAudioSystemObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962F11BCABFC5008A4DF7 /* CAHALAudioSystemObject.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMXPCHelper-CAHALAudioSystemObject.cpp"; }; };
+		1CF2D5931F94479A008B6E35 /* CAHALAudioStream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962EF1BCABFC5008A4DF7 /* CAHALAudioStream.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMXPCHelper-CAHALAudioStream.cpp"; }; };
+		1CF2D5941F9447AE008B6E35 /* CACFArray.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CC1DF7D1BE5068A00FB8FE4 /* CACFArray.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMXPCHelper-CACFArray.cpp"; }; };
+		1CF2D5951F9447AE008B6E35 /* CACFDictionary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CC1DF7F1BE5068A00FB8FE4 /* CACFDictionary.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMXPCHelper-CACFDictionary.cpp"; }; };
+		1CF2D5961F9447AE008B6E35 /* CACFNumber.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 271677B81C6CBDFA0080B0A2 /* CACFNumber.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMXPCHelper-CACFNumber.cpp"; }; };
+		1CF2D5971F9447AE008B6E35 /* CACFString.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962FF1BCAC0F6008A4DF7 /* CACFString.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMXPCHelper-CACFString.cpp"; }; };
+		1CF2D5981F9447AE008B6E35 /* CADebugger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CC1DF8F1BE5891300FB8FE4 /* CADebugger.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMXPCHelper-CADebugger.cpp"; }; };
+		1CF2D5991F9447AE008B6E35 /* CADebugMacros.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962F71BCAC061008A4DF7 /* CADebugMacros.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMXPCHelper-CADebugMacros.cpp"; }; };
+		1CF2D59A1F9447AE008B6E35 /* CADebugPrintf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962FB1BCAC0C3008A4DF7 /* CADebugPrintf.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMXPCHelper-CADebugPrintf.cpp"; }; };
+		1CF2D59B1F9447AE008B6E35 /* CAHostTimeBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1963071BCAF677008A4DF7 /* CAHostTimeBase.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMXPCHelper-CAHostTimeBase.cpp"; }; };
+		1CF2D59C1F9447AE008B6E35 /* CAMutex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1963041BCAF468008A4DF7 /* CAMutex.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMXPCHelper-CAMutex.cpp"; }; };
+		1CF2D59D1F9447AE008B6E35 /* CAPThread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C8034C21BDAFD5700668E00 /* CAPThread.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMXPCHelper-CAPThread.cpp"; }; };
+		1CF2D59E1F9447AE008B6E35 /* CARingBuffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962E21BC94E15008A4DF7 /* CARingBuffer.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMXPCHelper-CARingBuffer.cpp"; }; };
+		1CF5423C1EAAEE4300445AD8 /* BGMAudioDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CF5423A1EAAEE4300445AD8 /* BGMAudioDevice.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMAudioDevice.cpp"; }; };
 		1CF5423D1EAAEE4300445AD8 /* BGMAudioDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CF5423A1EAAEE4300445AD8 /* BGMAudioDevice.cpp */; };
 		270A84511E0044EF00F13C99 /* ScriptingBridge.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 270A84501E0044EE00F13C99 /* ScriptingBridge.framework */; };
-		271677BA1C6CBDFA0080B0A2 /* CACFNumber.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 271677B81C6CBDFA0080B0A2 /* CACFNumber.cpp */; };
-		27379B8A1C7C562D0084A24C /* BGMVLC.m in Sources */ = {isa = PBXBuildFile; fileRef = 27379B891C7C562D0084A24C /* BGMVLC.m */; };
-		273F10DF1CC3D0B900C1C6DA /* BGMVOX.m in Sources */ = {isa = PBXBuildFile; fileRef = 273F10DE1CC3D0B900C1C6DA /* BGMVOX.m */; };
-		2743C9EB1D852B360089613B /* BGMMusicPlayers.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2743C9E81D852B350089613B /* BGMMusicPlayers.mm */; };
-		2743C9EC1D852B360089613B /* BGMScriptingBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 2743C9EA1D852B350089613B /* BGMScriptingBridge.m */; };
-		2743C9F11D853FBB0089613B /* BGMUserDefaults.m in Sources */ = {isa = PBXBuildFile; fileRef = 2743C9F01D853FBB0089613B /* BGMUserDefaults.m */; };
+		271677BA1C6CBDFA0080B0A2 /* CACFNumber.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 271677B81C6CBDFA0080B0A2 /* CACFNumber.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-CACFNumber.cpp"; }; };
+		27379B8A1C7C562D0084A24C /* BGMVLC.m in Sources */ = {isa = PBXBuildFile; fileRef = 27379B891C7C562D0084A24C /* BGMVLC.m */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMVLC.m"; }; };
+		273F10DF1CC3D0B900C1C6DA /* BGMVOX.m in Sources */ = {isa = PBXBuildFile; fileRef = 273F10DE1CC3D0B900C1C6DA /* BGMVOX.m */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMVOX.m"; }; };
+		2743C9EB1D852B360089613B /* BGMMusicPlayers.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2743C9E81D852B350089613B /* BGMMusicPlayers.mm */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMMusicPlayers.mm"; }; };
+		2743C9EC1D852B360089613B /* BGMScriptingBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 2743C9EA1D852B350089613B /* BGMScriptingBridge.m */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMScriptingBridge.m"; }; };
+		2743C9F11D853FBB0089613B /* BGMUserDefaults.m in Sources */ = {isa = PBXBuildFile; fileRef = 2743C9F01D853FBB0089613B /* BGMUserDefaults.m */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMUserDefaults.m"; }; };
 		2743CA011D86D3CB0089613B /* BGMMusicPlayers.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2743C9E81D852B350089613B /* BGMMusicPlayers.mm */; };
 		2743CA021D86D3CB0089613B /* BGMiTunes.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C4699461BD5C0E400F78043 /* BGMiTunes.m */; };
 		2743CA031D86D41C0089613B /* BGMScriptingBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 2743C9EA1D852B350089613B /* BGMScriptingBridge.m */; };
@@ -174,16 +174,16 @@
 		2743CA221D86DE960089613B /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1C1963021BCAC160008A4DF7 /* CoreAudio.framework */; };
 		2743CA231D86DEA70089613B /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1CD1FD2F1BDDEAF2004F7E1B /* AudioToolbox.framework */; };
 		274827951E11052500B31D8D /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1CB8B3421BBA75EF000E2DD1 /* MainMenu.xib */; };
-		277170161CA24D7C00AB34B4 /* BGMXPCListenerDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 277170151CA24D7C00AB34B4 /* BGMXPCListenerDelegate.m */; };
-		2795973B1C982E4E00A002FB /* BGMXPCListener.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2795973A1C982E4E00A002FB /* BGMXPCListener.mm */; };
-		279F48771DD6D73A00768A85 /* BGMHermes.m in Sources */ = {isa = PBXBuildFile; fileRef = 279F48761DD6D73900768A85 /* BGMHermes.m */; };
-		27C457E61CF2BC2600A6C9A6 /* BGMAutoPauseMenuItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C457E51CF2BC2600A6C9A6 /* BGMAutoPauseMenuItem.m */; };
-		27D1D6BB1DD7226C0049E707 /* BGMAboutPanel.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D1D6BA1DD7226C0049E707 /* BGMAboutPanel.m */; };
-		27D643C01C9FB99200737F6E /* BGMXPCHelperService.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27D643BA1C9FB84C00737F6E /* BGMXPCHelperService.mm */; };
-		27D643C11C9FB99200737F6E /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D643BC1C9FB84C00737F6E /* main.m */; };
-		27F7D4901D2483B100821C4B /* BGMDecibel.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F7D48F1D2483B100821C4B /* BGMDecibel.m */; };
+		277170161CA24D7C00AB34B4 /* BGMXPCListenerDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 277170151CA24D7C00AB34B4 /* BGMXPCListenerDelegate.m */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMXPCHelper-BGMXPCListenerDelegate.m"; }; };
+		2795973B1C982E4E00A002FB /* BGMXPCListener.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2795973A1C982E4E00A002FB /* BGMXPCListener.mm */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMXPCListener.mm"; }; };
+		279F48771DD6D73A00768A85 /* BGMHermes.m in Sources */ = {isa = PBXBuildFile; fileRef = 279F48761DD6D73900768A85 /* BGMHermes.m */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMHermes.m"; }; };
+		27C457E61CF2BC2600A6C9A6 /* BGMAutoPauseMenuItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 27C457E51CF2BC2600A6C9A6 /* BGMAutoPauseMenuItem.m */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMAutoPauseMenuItem.m"; }; };
+		27D1D6BB1DD7226C0049E707 /* BGMAboutPanel.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D1D6BA1DD7226C0049E707 /* BGMAboutPanel.m */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMAboutPanel.m"; }; };
+		27D643C01C9FB99200737F6E /* BGMXPCHelperService.mm in Sources */ = {isa = PBXBuildFile; fileRef = 27D643BA1C9FB84C00737F6E /* BGMXPCHelperService.mm */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMXPCHelper-BGMXPCHelperService.mm"; }; };
+		27D643C11C9FB99200737F6E /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D643BC1C9FB84C00737F6E /* main.m */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMXPCHelper-main.m"; }; };
+		27F7D4901D2483B100821C4B /* BGMDecibel.m in Sources */ = {isa = PBXBuildFile; fileRef = 27F7D48F1D2483B100821C4B /* BGMDecibel.m */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMDecibel.m"; }; };
 		27FB8C071DD75D0A0084DB9D /* BGMHermes.m in Sources */ = {isa = PBXBuildFile; fileRef = 279F48761DD6D73900768A85 /* BGMHermes.m */; };
-		27FB8C2F1DE468320084DB9D /* BGM_Utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27FB8C2E1DE468320084DB9D /* BGM_Utils.cpp */; };
+		27FB8C2F1DE468320084DB9D /* BGM_Utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27FB8C2E1DE468320084DB9D /* BGM_Utils.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGM_Utils.cpp"; }; };
 		27FB8C301DE4758A0084DB9D /* BGMPlayThrough.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962E51BC94E91008A4DF7 /* BGMPlayThrough.cpp */; };
 		27FB8C311DE4758A0084DB9D /* BGM_Utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27FB8C2E1DE468320084DB9D /* BGM_Utils.cpp */; };
 /* End PBXBuildFile section */
@@ -1262,14 +1262,15 @@
 				CLANG_USE_OPTIMIZATION_PROFILE = NO;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
+				DEPLOYMENT_POSTPROCESSING = NO;
 				DWARF_DSYM_FILE_NAME = "$(EXECUTABLE_NAME).dSYM";
 				DWARF_DSYM_FOLDER_PATH = "$(CONFIGURATION_BUILD_DIR)/$(EXECUTABLE_FOLDER_PATH)";
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				INFOPLIST_FILE = BGMApp/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				LLVM_LTO = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = com.bearisdriving.BGM.App;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRIP_STYLE = "non-global";
 				WARNING_CFLAGS = "-Wpartial-availability";
 			};
 			name = DebugOpt;
@@ -1443,14 +1444,15 @@
 				CLANG_USE_OPTIMIZATION_PROFILE = NO;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
+				DEPLOYMENT_POSTPROCESSING = NO;
 				DWARF_DSYM_FILE_NAME = "$(EXECUTABLE_NAME).dSYM";
 				DWARF_DSYM_FOLDER_PATH = "$(CONFIGURATION_BUILD_DIR)/$(EXECUTABLE_FOLDER_PATH)";
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				INFOPLIST_FILE = BGMApp/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				LLVM_LTO = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = com.bearisdriving.BGM.App;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRIP_STYLE = "non-global";
 				WARNING_CFLAGS = "-Wpartial-availability";
 			};
 			name = Debug;
@@ -1462,6 +1464,7 @@
 				CLANG_USE_OPTIMIZATION_PROFILE = NO;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
+				DEPLOYMENT_POSTPROCESSING = YES;
 				DWARF_DSYM_FILE_NAME = "$(EXECUTABLE_NAME).dSYM";
 				DWARF_DSYM_FOLDER_PATH = "$(CONFIGURATION_BUILD_DIR)/$(EXECUTABLE_FOLDER_PATH)";
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
@@ -1470,6 +1473,7 @@
 				LLVM_LTO = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.bearisdriving.BGM.App;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRIP_STYLE = "non-global";
 				WARNING_CFLAGS = (
 					"-Wno-profile-instr-out-of-date",
 					"-Wpartial-availability",
@@ -1527,6 +1531,7 @@
 		27379B991C7F57DB0084A24C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				DEPLOYMENT_POSTPROCESSING = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"CoreAudio_Debug=1",
@@ -1545,10 +1550,12 @@
 		27379B9A1C7F57DB0084A24C /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				DEPLOYMENT_POSTPROCESSING = YES;
 				INFOPLIST_FILE = BGMXPCHelper/Info.plist;
 				INSTALL_GROUP = wheel;
 				INSTALL_OWNER = root;
 				INSTALL_PATH = /usr/local/libexec;
+				LLVM_LTO = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.bearisdriving.BGM.XPCHelper;
 				PRODUCT_NAME = BGMXPCHelper;
 			};
@@ -1557,6 +1564,7 @@
 		27379B9B1C7F57DB0084A24C /* DebugOpt */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				DEPLOYMENT_POSTPROCESSING = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"CoreAudio_Debug=1",
