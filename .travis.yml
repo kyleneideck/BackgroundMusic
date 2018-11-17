@@ -41,7 +41,10 @@ script:
   - cd /Volumes/bgmbuild
 # Install Background Music.
   - yes | ./build_and_install.sh
+# Print the log file, but put it in a fold because it's so long.
+  - echo -en 'build_and_install.log\ntravis_fold:start:build.log\\r'
   - cat build_and_install.log
+  - echo -en 'travis_fold:end:build.log\\r'
   - find */build/Release/*/ -type f -exec md5 {} \;
 # Log the installed audio devices...
   - system_profiler SPAudioDataType
@@ -60,9 +63,12 @@ script:
 # Skip the UI tests until Travis has support for them.
   - BGMApp/BGMAppTests/UITests/travis-skip.py
 # Run the tests.
+# The echo commands put the output into a fold in the Travis logs.
+  - echo -en 'Unit Tests\ntravis_fold:start:tests\\r'
   - xcodebuild -workspace BGM.xcworkspace -scheme 'Background Music Device' test
   - xcodebuild -workspace BGM.xcworkspace -scheme 'Background Music' test
   - xcodebuild -workspace BGM.xcworkspace -scheme 'BGMXPCHelper' test
+  - echo -en 'travis_fold:end:tests\\r'
 # Uninstall Background Music.
   - yes | ./uninstall.sh
 # Check the BGM dirs and files were removed.
