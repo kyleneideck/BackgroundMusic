@@ -146,7 +146,11 @@ sed "s/{{VERSION}}/$version/g" "pkg/Distribution.xml.template" > "pkg/Distributi
 
 # --------------------------------------------------
 
-pkg="$out_dir/BackgroundMusic-$version.pkg"
+# As a security check for releases, we manually build the same package locally, compare it to the
+# release built by Travis and then code sign it. (And then remove the code signature on a different
+# computer and check that the signed package still matches the one from Travis.) So we include
+# "unsigned" in the name to differentiate the two versions.
+pkg="$out_dir/BackgroundMusic-$version.unsigned.pkg"
 pkg_identifier="com.bearisdriving.BGM"
 
 echo "Creating $pkg"
