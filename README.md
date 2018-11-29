@@ -33,6 +33,12 @@ Still very much in alpha. Not code signed, so you'll have to **right-click it an
 
 We also have [snapshot builds](https://github.com/kyleneideck/BackgroundMusic/releases).
 
+### Or install using [Homebrew](https://brew.sh/)
+
+```bash
+brew cask install background-music
+```
+
 ## Auto-pause music
 
 Background Music can pause your music player app when other audio starts playing and unpause it afterwards. The idea is
