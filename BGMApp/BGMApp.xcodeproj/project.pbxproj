@@ -945,7 +945,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 			shellPath = /bin/bash;
-			shellScript = "/bin/bash $SRCROOT/BGMXPCHelper/post_install.sh\n";
+			shellScript = "/bin/bash \"$SRCROOT/BGMXPCHelper/post_install.sh\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
