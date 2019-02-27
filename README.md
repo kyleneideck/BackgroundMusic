@@ -42,6 +42,7 @@ brew cask install background-music
 If you want the snapshot version:
 
 ```bash
+brew tap homebrew/cask-versions
 brew cask install background-music-pre
 ```
 
