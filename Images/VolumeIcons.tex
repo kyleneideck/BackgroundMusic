@@ -1,0 +1,69 @@
+% This file is part of Background Music.
+%
+% Background Music is free software: you can redistribute it and/or
+% modify it under the terms of the GNU General Public License as
+% published by the Free Software Foundation, either version 2 of the
+% License, or (at your option) any later version.
+%
+% Background Music is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+% GNU General Public License for more details.
+%
+% You should have received a copy of the GNU General Public License
+% along with Background Music. If not, see <http://www.gnu.org/licenses/>.
+
+%
+% VolumeIcons.tex
+%
+% Build with XeTeX:
+%   xelatex -jobname=Volume0 '\def\UseOption{}\input{VolumeIcons.tex}'
+%   xelatex -jobname=Volume1 '\def\UseOption{w1}\input{VolumeIcons.tex}'
+%   xelatex -jobname=Volume2 '\def\UseOption{w1,w2}\input{VolumeIcons.tex}'
+%   xelatex -jobname=Volume3 '\def\UseOption{w1,w2,w3}\input{VolumeIcons.tex}'
+%   for n in 0 1 2 3; do mv Volume$n.pdf ../BGMApp/BGMApp/Images.xcassets/Volume$n.imageset/; done
+%
+% Might build correctly with regular LaTeX. I haven't tried it.
+%
+
+\documentclass[tikz]{standalone}
+\usepackage{tikz}
+% "dummyOption" prevents "Package optional Warning: No options were selected,
+% so all optional text will be printed" when building Volume0.pdf.
+\usepackage[dummyOption]{optional}
+
+\begin{document}
+\begin{tikzpicture}
+
+% Speaker (Rounded box and triangle)
+\fill[rounded corners=5mm]
+    (0mm, 62.5mm) rectangle (25mm, 37.5mm) {};
+\draw[rounded corners=2.5mm,fill=black]
+    (3mm, 50mm)--(34mm, 76.5mm)--(34mm, 23.5mm)--cycle;
+
+% First sound wave (Curved line)
+\opt{w1}{
+    \draw[line width=4.3mm,line cap=round]
+        (44mm, 36.5mm) to[out=46,in=-46] (44mm, 63.5mm);
+}
+
+% Second sound wave (Curved line)
+\opt{w2}{
+    \draw[line width=4.3mm,line cap=round]
+        (57.5mm, 27.5mm) to[out=46,in=-46] (57.5mm, 72.5mm);
+}
+
+% Third sound wave (Curved line)
+\opt{w3}{
+    \draw[line width=4.3mm,line cap=round]
+        (72mm, 18.5mm) to[out=46,in=-46] (72mm, 81.5mm);
+}
+
+% Always draw a transparent copy of the third wave so the images will all have
+% the same width.
+\draw[line width=4.3mm,line cap=round,opacity=0]
+    (72mm, 18.5mm) to[out=46,in=-46] (72mm, 81.5mm);
+
+\end{tikzpicture}
+\end{document}
+

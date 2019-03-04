@@ -202,7 +202,7 @@ static NSInteger const kOutputDeviceMenuItemTag = 5;
     NSMutableArray<NSMenuItem*>* items = [NSMutableArray new];
 
     AudioObjectPropertyScope scope = kAudioObjectPropertyScopeOutput;
-    UInt32 channel = 0;  // 0 is the master channel.
+    UInt32 channel = kAudioObjectPropertyElementMaster;
     
     // If the device has data sources, create a menu item for each. Otherwise, create a single menu item
     // for the device. This way the menu items' titles will be, for example, "Internal Speakers" rather

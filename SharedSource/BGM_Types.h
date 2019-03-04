@@ -17,7 +17,7 @@
 //  BGM_Types.h
 //  SharedSource
 //
-//  Copyright © 2016, 2017 Kyle Neideck
+//  Copyright © 2016, 2017, 2019 Kyle Neideck
 //
 
 #ifndef SharedSource__BGM_Types
@@ -77,7 +77,7 @@ enum
 
 // AudioObjectPropertyElement docs: "Elements are numbered sequentially where 0 represents the
 // master element."
-static const AudioObjectPropertyElement kMasterChannel = 0;
+static const AudioObjectPropertyElement kMasterChannel = kAudioObjectPropertyElementMaster;
 
 #pragma BGM Plug-in Custom Properties
 

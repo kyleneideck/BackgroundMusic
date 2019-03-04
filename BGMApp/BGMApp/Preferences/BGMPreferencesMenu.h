@@ -17,7 +17,7 @@
 //  BGMPreferencesMenu.h
 //  BGMApp
 //
-//  Copyright © 2016, 2018 Kyle Neideck
+//  Copyright © 2016, 2018, 2019 Kyle Neideck
 //
 //  Handles the preferences menu UI. The user's preference changes are often passed directly to the driver rather
 //  than to other BGMApp classes.
@@ -26,6 +26,7 @@
 // Local Includes
 #import "BGMAudioDeviceManager.h"
 #import "BGMMusicPlayers.h"
+#import "BGMStatusBarItem.h"
 
 // System Includes
 #import <Cocoa/Cocoa.h>
@@ -38,6 +39,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (id) initWithBGMMenu:(NSMenu*)inBGMMenu
           audioDevices:(BGMAudioDeviceManager*)inAudioDevices
           musicPlayers:(BGMMusicPlayers*)inMusicPlayers
+         statusBarItem:(BGMStatusBarItem*)inStatusBarItem
             aboutPanel:(NSPanel*)inAboutPanel
  aboutPanelLicenseView:(NSTextView*)inAboutPanelLicenseView;
 

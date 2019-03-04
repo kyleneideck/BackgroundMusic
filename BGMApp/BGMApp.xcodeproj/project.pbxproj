@@ -7,6 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		19FE7071FF5280BC38F35E1D /* BGMVolumeChangeListener.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 19FE7179EBFA116F3861E79D /* BGMVolumeChangeListener.cpp */; };
+		19FE719951725A698A419CBA /* BGMVolumeChangeListener.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 19FE7179EBFA116F3861E79D /* BGMVolumeChangeListener.cpp */; };
+		19FE77608F6C80D0B1F595A7 /* BGMStatusBarItem.mm in Sources */ = {isa = PBXBuildFile; fileRef = 19FE774DD758EC163EF4F28C /* BGMStatusBarItem.mm */; };
+		19FE7921FD1B6C037429ECA4 /* BGMStatusBarItem.mm in Sources */ = {isa = PBXBuildFile; fileRef = 19FE774DD758EC163EF4F28C /* BGMStatusBarItem.mm */; };
+		19FE7DFF63F69E77C53BF95E /* BGMVolumeChangeListener.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 19FE7179EBFA116F3861E79D /* BGMVolumeChangeListener.cpp */; };
+		19FE7F77376562C179449013 /* BGMStatusBarItem.mm in Sources */ = {isa = PBXBuildFile; fileRef = 19FE774DD758EC163EF4F28C /* BGMStatusBarItem.mm */; };
 		1C0BD0A51BF1A8E6004F4CF5 /* BGMAutoPauseMusicPrefs.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C0BD0A41BF1A8E6004F4CF5 /* BGMAutoPauseMusicPrefs.mm */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMAutoPauseMusicPrefs.mm"; }; };
 		1C0BD0A81BF1B029004F4CF5 /* BGMPreferencesMenu.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C0BD0A71BF1B029004F4CF5 /* BGMPreferencesMenu.mm */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMPreferencesMenu.mm"; }; };
 		1C1465B81BCC3A73003AEFE6 /* BGMAutoPauseMusic.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C1465B71BCC3A73003AEFE6 /* BGMAutoPauseMusic.mm */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMAutoPauseMusic.mm"; }; };
@@ -206,6 +212,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		19FE7179EBFA116F3861E79D /* BGMVolumeChangeListener.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BGMVolumeChangeListener.cpp; sourceTree = "<group>"; };
+		19FE774DD758EC163EF4F28C /* BGMStatusBarItem.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = BGMStatusBarItem.mm; sourceTree = "<group>"; };
+		19FE799A86A285DD9423D164 /* BGMStatusBarItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BGMStatusBarItem.h; sourceTree = "<group>"; };
+		19FE7FDAEBC3F0DB8C99823B /* BGMVolumeChangeListener.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BGMVolumeChangeListener.h; sourceTree = "<group>"; };
 		1C0BD0A31BF1A8E6004F4CF5 /* BGMAutoPauseMusicPrefs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGMAutoPauseMusicPrefs.h; path = Preferences/BGMAutoPauseMusicPrefs.h; sourceTree = "<group>"; };
 		1C0BD0A41BF1A8E6004F4CF5 /* BGMAutoPauseMusicPrefs.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = BGMAutoPauseMusicPrefs.mm; path = Preferences/BGMAutoPauseMusicPrefs.mm; sourceTree = "<group>"; };
 		1C0BD0A61BF1B029004F4CF5 /* BGMPreferencesMenu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGMPreferencesMenu.h; path = Preferences/BGMPreferencesMenu.h; sourceTree = "<group>"; };
@@ -579,10 +589,14 @@
 				1C3D36701ED90E8600F98E66 /* BGMDeviceControlsList.cpp */,
 				1C1962E61BC94E91008A4DF7 /* BGMPlayThrough.h */,
 				1C1962E51BC94E91008A4DF7 /* BGMPlayThrough.cpp */,
+				19FE799A86A285DD9423D164 /* BGMStatusBarItem.h */,
+				19FE774DD758EC163EF4F28C /* BGMStatusBarItem.mm */,
 				1CC6593B1F91DEB400B0CCDC /* BGMTermination.h */,
 				1CC6593A1F91DEB400B0CCDC /* BGMTermination.mm */,
 				2743C9ED1D8538700089613B /* BGMUserDefaults.h */,
 				2743C9F01D853FBB0089613B /* BGMUserDefaults.m */,
+				19FE7FDAEBC3F0DB8C99823B /* BGMVolumeChangeListener.h */,
+				19FE7179EBFA116F3861E79D /* BGMVolumeChangeListener.cpp */,
 				2795973C1C982E8C00A002FB /* BGMXPCListener.h */,
 				2795973A1C982E4E00A002FB /* BGMXPCListener.mm */,
 				1C2FC3161EC7078F00A76592 /* Scripting */,
@@ -1004,6 +1018,8 @@
 				2795973B1C982E4E00A002FB /* BGMXPCListener.mm in Sources */,
 				27C457E61CF2BC2600A6C9A6 /* BGMAutoPauseMenuItem.m in Sources */,
 				1C1465B81BCC3A73003AEFE6 /* BGMAutoPauseMusic.mm in Sources */,
+				19FE7F77376562C179449013 /* BGMStatusBarItem.mm in Sources */,
+				19FE719951725A698A419CBA /* BGMVolumeChangeListener.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1061,6 +1077,8 @@
 				1CCC4F621E584100008053E4 /* BGMAppUITests.mm in Sources */,
 				1C2FC31C1EC7238A00A76592 /* BGMASOutputDevice.mm in Sources */,
 				1C2FC3151EC706E000A76592 /* BGMAppDelegate+AppleScript.mm in Sources */,
+				19FE7921FD1B6C037429ECA4 /* BGMStatusBarItem.mm in Sources */,
+				19FE7DFF63F69E77C53BF95E /* BGMVolumeChangeListener.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1134,6 +1152,8 @@
 				1CC6593E1F91DEB400B0CCDC /* BGMTermination.mm in Sources */,
 				2743CA011D86D3CB0089613B /* BGMMusicPlayers.mm in Sources */,
 				2743CA021D86D3CB0089613B /* BGMiTunes.m in Sources */,
+				19FE77608F6C80D0B1F595A7 /* BGMStatusBarItem.mm in Sources */,
+				19FE7071FF5280BC38F35E1D /* BGMVolumeChangeListener.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

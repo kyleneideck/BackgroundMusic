@@ -17,10 +17,10 @@
 //  BGMAppDelegate.mm
 //  BGMApp
 //
-//  Copyright © 2016-2018 Kyle Neideck
+//  Copyright © 2016-2019 Kyle Neideck
 //
 
-// Self Includes
+// Self Include
 #import "BGMAppDelegate.h"
 
 // Local Includes
@@ -33,6 +33,7 @@
 #import "BGMOutputVolumeMenuItem.h"
 #import "BGMPreferencesMenu.h"
 #import "BGMPreferredOutputDevices.h"
+#import "BGMStatusBarItem.h"
 #import "BGMSystemSoundsVolume.h"
 #import "BGMTermination.h"
 #import "BGMUserDefaults.h"
@@ -45,18 +46,19 @@
 
 #pragma clang assume_nonnull begin
 
-static float const     kStatusBarIconPadding = 0.25;
 static NSString* const kOptNoPersistentData  = @"--no-persistent-data";
 static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
 
 @implementation BGMAppDelegate {
-    // The button in the system status bar (the bar with volume, battery, clock, etc.) to show the main menu
-    // for the app. These are called "menu bar extras" in the Human Interface Guidelines.
-    NSStatusItem* statusBarItem;
+    // The button in the system status bar that shows the main menu.
+    BGMStatusBarItem* statusBarItem;
     
     // Only show the 'BGMXPCHelper is missing' error dialog once.
     BOOL haveShownXPCHelperErrorMessage;
-    
+
+    // Persistently stores user settings and data.
+    BGMUserDefaults* userDefaults;
+
     BGMAutoPauseMusic* autoPauseMusic;
     BGMAutoPauseMenuItem* autoPauseMenuItem;
     BGMMusicPlayers* musicPlayers;
@@ -71,6 +73,8 @@ static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
 @synthesize audioDevices = audioDevices;
 
 - (void) awakeFromNib {
+    [super awakeFromNib];
+    
     // Show BGMApp in the dock, if the command-line option for that was passed. This is used by the
     // UI tests.
     if ([NSProcessInfo.processInfo.arguments indexOfObject:kOptShowDockIcon] != NSNotFound) {
@@ -79,72 +83,19 @@ static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
     
     haveShownXPCHelperErrorMessage = NO;
 
-    [self initStatusBarItem];
-}
-
-// Set up the status bar item. (The thing you click to show BGMApp's UI.)
-- (void) initStatusBarItem {
-    statusBarItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSSquareStatusItemLength];
-
-    // NSStatusItem doesn't have the "button" property on OS X 10.9.
-    BOOL buttonAvailable = (floor(NSAppKitVersionNumber) >= NSAppKitVersionNumber10_10);
-
-    // Set the title/tooltip to "Background Music".
-    statusBarItem.title = [NSRunningApplication currentApplication].localizedName;
-    statusBarItem.toolTip = statusBarItem.title;
-
-    if (buttonAvailable) {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wpartial-availability"
-        statusBarItem.button.accessibilityLabel = statusBarItem.title;
-#pragma clang diagnostic pop
+    // Set up audioDevices, which coordinates BGMDevice and the output device. It manages
+    // playthrough, volume/mute controls, etc.
+    if (![self initAudioDeviceManager]) {
+        return;
     }
 
-    // Set the icon.
-    NSImage* icon = [NSImage imageNamed:@"FermataIcon"];
+    // Stored user settings
+    userDefaults = [self createUserDefaults];
 
-    if (icon != nil) {
-        NSRect statusBarItemFrame;
-
-        if (buttonAvailable) {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wpartial-availability"
-            statusBarItemFrame = statusBarItem.button.frame;
-#pragma clang diagnostic pop
-        } else {
-            // OS X 10.9 fallback. I haven't tested this (or anything else on 10.9).
-            statusBarItemFrame = statusBarItem.view.frame;
-        }
-
-        CGFloat lengthMinusPadding = statusBarItemFrame.size.height * (1 - kStatusBarIconPadding);
-        [icon setSize:NSMakeSize(lengthMinusPadding, lengthMinusPadding)];
-
-        // Make the icon a "template image" so it gets drawn colour-inverted when it's highlighted or the status
-        // bar's in dark mode
-        [icon setTemplate:YES];
-
-        if (buttonAvailable) {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wpartial-availability"
-            statusBarItem.button.image = icon;
-#pragma clang diagnostic pop
-        } else {
-            statusBarItem.image = icon;
-        }
-    } else {
-        // If our icon is missing for some reason, fallback to a fermata character (1D110)
-        if (buttonAvailable) {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wpartial-availability"
-            statusBarItem.button.title = @"𝄐";
-#pragma clang diagnostic pop
-        } else {
-            statusBarItem.title = @"𝄐";
-        }
-    }
-    
-    // Set the main menu
-    statusBarItem.menu = self.bgmMenu;
+    // Add the status bar item. (The thing you click to show BGMApp's main menu.)
+    statusBarItem = [[BGMStatusBarItem alloc] initWithMenu:self.bgmMenu
+                                              audioDevices:audioDevices
+                                              userDefaults:userDefaults];
 }
 
 - (void) applicationDidFinishLaunching:(NSNotification*)aNotification {
@@ -158,15 +109,6 @@ static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
     NSLog(@"BGMApp version: %@, BGMApp build number: %@",
           NSBundle.mainBundle.infoDictionary[@"CFBundleShortVersionString"],
           NSBundle.mainBundle.infoDictionary[@"CFBundleVersion"]);
-
-    // Set up audioDevices, which coordinates BGMDevice and the output device. It manages
-    // playthrough, volume/mute controls, etc.
-    if (![self initAudioDeviceManager]) {
-        return;
-    }
-
-    // Persistently stores user settings and data.
-    BGMUserDefaults* userDefaults = [self createUserDefaults];
 
     // Handles changing (or not changing) the output device when devices are added or removed. Must
     // be initialised before calling setBGMDeviceAsDefault.
@@ -191,7 +133,7 @@ static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
     autoPauseMusic = [[BGMAutoPauseMusic alloc] initWithAudioDevices:audioDevices
                                                         musicPlayers:musicPlayers];
     
-    [self setUpMainMenu:userDefaults];
+    [self setUpMainMenu];
     
     xpcListener = [[BGMXPCListener alloc] initWithAudioDevices:audioDevices
                                   helperConnectionErrorHandler:^(NSError* error) {
@@ -285,7 +227,7 @@ static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
     }
 }
 
-- (void) setUpMainMenu:(BGMUserDefaults*)userDefaults {
+- (void) setUpMainMenu {
     autoPauseMenuItem =
         [[BGMAutoPauseMenuItem alloc] initWithMenuItem:self.autoPauseMenuItemUnwrapped
                                         autoPauseMusic:autoPauseMusic
@@ -305,6 +247,7 @@ static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
     prefsMenu = [[BGMPreferencesMenu alloc] initWithBGMMenu:self.bgmMenu
                                                audioDevices:audioDevices
                                                musicPlayers:musicPlayers
+                                              statusBarItem:statusBarItem
                                                  aboutPanel:self.aboutPanel
                                       aboutPanelLicenseView:self.aboutPanelLicenseView];
 

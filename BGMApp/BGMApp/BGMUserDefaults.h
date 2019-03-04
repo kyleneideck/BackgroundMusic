@@ -17,13 +17,16 @@
 //  BGMUserDefaults.h
 //  BGMApp
 //
-//  Copyright © 2016-2018 Kyle Neideck
+//  Copyright © 2016-2019 Kyle Neideck
 //
 //  A simple wrapper around our use of NSUserDefaults. Used to store the preferences/state that only
 //  apply to BGMApp. The others are stored by BGMDriver.
 //
 
-// System includes
+// Local Includes
+#import "BGMStatusBarItem.h"
+
+// System Includes
 #import <Cocoa/Cocoa.h>
 
 
@@ -43,6 +46,10 @@
 // The UIDs of the output devices most recently selected by the user. The most-recently selected
 // device is at index 0. See BGMPreferredOutputDevices.
 @property NSArray<NSString*>* preferredDeviceUIDs;
+
+// The (type of) icon to show in the button in the status bar. (The button the user clicks to open
+// BGMApp's main menu.)
+@property BGMStatusBarIcon statusBarIcon;
 
 @end
 

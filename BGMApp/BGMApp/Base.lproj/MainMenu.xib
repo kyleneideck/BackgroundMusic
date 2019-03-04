@@ -52,7 +52,17 @@
                                 <modifierMask key="keyEquivalentModifierMask"/>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="nb1-jq-97L"/>
-                            <menuItem title="About Background Music" tag="3" id="R45-Vo-Eto">
+                            <menuItem title="Status Bar Icon" enabled="NO" id="CmD-ot-1wE">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                            </menuItem>
+                            <menuItem title="Background Music Logo" state="on" tag="2" id="9VF-qy-6fh">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                            </menuItem>
+                            <menuItem title="Volume Icon" tag="3" toolTip="todo" id="B47-O2-wd0">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="pYP-Fy-nKA"/>
+                            <menuItem title="About Background Music" tag="4" id="R45-Vo-Eto">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                             </menuItem>
                         </items>
@@ -205,7 +215,7 @@
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <clipView key="contentView" ambiguous="YES" drawsBackground="NO" id="Cdb-RA-YK0">
                             <rect key="frame" x="1" y="1" width="565" height="243"/>
-                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                            <autoresizingMask key="autoresizingMask"/>
                             <subviews>
                                 <textView ambiguous="YES" editable="NO" importsGraphics="NO" richText="NO" verticallyResizable="YES" id="LSG-PF-cl8">
                                     <rect key="frame" x="-6" y="0.0" width="577" height="243"/>
@@ -316,7 +326,7 @@
     </objects>
     <resources>
         <image name="FermataIcon" width="284" height="284"/>
-        <image name="NSComputer" width="128" height="128"/>
+        <image name="NSComputer" width="32" height="32"/>
         <image name="buttonCell:IXo-C7-3uE:image" width="1" height="1">
             <mutableData key="keyedArchiveRepresentation">
 YnBsaXN0MDDUAQIDBAUGPT5YJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoK4HCBMU

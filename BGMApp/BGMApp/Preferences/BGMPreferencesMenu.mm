@@ -17,7 +17,7 @@
 //  BGMPreferencesMenu.mm
 //  BGMApp
 //
-//  Copyright © 2016, 2018 Kyle Neideck
+//  Copyright © 2016, 2018, 2019 Kyle Neideck
 //
 
 // Self Include
@@ -32,12 +32,19 @@ NS_ASSUME_NONNULL_BEGIN
 
 // Interface Builder tags
 static NSInteger const kPreferencesMenuItemTag = 1;
-static NSInteger const kAboutPanelMenuItemTag = 3;
+static NSInteger const kBGMIconMenuItemTag     = 2;
+static NSInteger const kVolumeIconMenuItemTag  = 3;
+static NSInteger const kAboutPanelMenuItemTag  = 4;
 
 @implementation BGMPreferencesMenu {
-    // Menu sections
+    // Menu sections/items
     BGMAutoPauseMusicPrefs* autoPauseMusicPrefs;
-    
+    NSMenuItem* bgmIconMenuItem;
+    NSMenuItem* volumeIconMenuItem;
+
+    // The menu item you press to open BGMApp's main menu.
+    BGMStatusBarItem* statusBarItem;
+
     // The About Background Music window
     BGMAboutPanel* aboutPanel;
 }
@@ -45,6 +52,7 @@ static NSInteger const kAboutPanelMenuItemTag = 3;
 - (id) initWithBGMMenu:(NSMenu*)inBGMMenu
           audioDevices:(BGMAudioDeviceManager*)inAudioDevices
           musicPlayers:(BGMMusicPlayers*)inMusicPlayers
+         statusBarItem:(BGMStatusBarItem*)inStatusBarItem
             aboutPanel:(NSPanel*)inAboutPanel
  aboutPanelLicenseView:(NSTextView*)inAboutPanelLicenseView {
     if ((self = [super init])) {
@@ -55,7 +63,22 @@ static NSInteger const kAboutPanelMenuItemTag = 3;
                                                                          musicPlayers:inMusicPlayers];
         
         aboutPanel = [[BGMAboutPanel alloc] initWithPanel:inAboutPanel licenseView:inAboutPanelLicenseView];
-        
+
+        statusBarItem = inStatusBarItem;
+
+        // Set up the menu items under the "Status Bar Icon" heading.
+        bgmIconMenuItem = [prefsMenu itemWithTag:kBGMIconMenuItemTag];
+        bgmIconMenuItem.state =
+                (statusBarItem.icon == BGMFermataStatusBarIcon) ? NSOnState : NSOffState;
+        [bgmIconMenuItem setTarget:self];
+        [bgmIconMenuItem setAction:@selector(useBGMStatusBarIcon)];
+
+        volumeIconMenuItem = [prefsMenu itemWithTag:kVolumeIconMenuItemTag];
+        volumeIconMenuItem.state =
+                (statusBarItem.icon == BGMVolumeStatusBarIcon) ? NSOnState : NSOffState;
+        [volumeIconMenuItem setTarget:self];
+        [volumeIconMenuItem setAction:@selector(useVolumeStatusBarIcon)];
+
         // Set up the "About Background Music" menu item
         NSMenuItem* aboutMenuItem = [prefsMenu itemWithTag:kAboutPanelMenuItemTag];
         [aboutMenuItem setTarget:aboutPanel];
@@ -63,6 +86,29 @@ static NSInteger const kAboutPanelMenuItemTag = 3;
     }
     
     return self;
+}
+
+- (void) useBGMStatusBarIcon {
+    // Change the icon.
+    statusBarItem.icon = BGMFermataStatusBarIcon;
+
+    // Select/deselect the menu items.
+    bgmIconMenuItem.state = NSOnState;
+    volumeIconMenuItem.state = NSOffState;
+}
+
+- (void) useVolumeStatusBarIcon {
+    // TODO: Maybe we should show a message that tells the user how to hide the built-in volume
+    //       icon. They probably won't want two status bar items that look the same. Or we might be
+    //       able to automatically hide the built-in icon while BGMApp is running and show it again
+    //       when BGMApp is closed.
+
+    // Change the icon.
+    statusBarItem.icon = BGMVolumeStatusBarIcon;
+
+    // Select/deselect the menu items.
+    bgmIconMenuItem.state = NSOffState;
+    volumeIconMenuItem.state = NSOnState;
 }
 
 @end

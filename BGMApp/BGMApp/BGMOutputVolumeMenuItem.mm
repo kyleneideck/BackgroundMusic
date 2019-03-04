@@ -17,7 +17,7 @@
 //  BGMOutputVolumeMenuItem.mm
 //  BGMApp
 //
-//  Copyright © 2017, 2018 Kyle Neideck
+//  Copyright © 2017-2019 Kyle Neideck
 //
 
 // Self Include
@@ -26,6 +26,7 @@
 // Local Includes
 #import "BGM_Utils.h"
 #import "BGMAudioDevice.h"
+#import "BGMVolumeChangeListener.h"
 
 // PublicUtility Includes
 #import "CAException.h"
@@ -46,7 +47,7 @@ NSString* const __nonnull      kGenericOutputDeviceName = @"Output Device";
     NSTextField* deviceLabel;
     NSSlider* volumeSlider;
     BGMAudioDevice outputDevice;
-    AudioObjectPropertyListenerBlock updateSliderListenerBlock;
+    BGMVolumeChangeListener* volumeChangeListener;
     AudioObjectPropertyListenerBlock updateLabelListenerBlock;
 }
 
@@ -66,9 +67,8 @@ NSString* const __nonnull      kGenericOutputDeviceName = @"Output Device";
         volumeSlider = slider;
         outputDevice = audioDevices.outputDevice;
 
-        // These are initialised in the methods called below.
-        updateSliderListenerBlock = nil;
-        updateLabelListenerBlock = nil;
+        // volumeChangeListener and updateLabelListenerBlock are initialised in the methods called
+        // below.
 
         // Apply our custom view from MainMenu.xib.
         self.view = view;
@@ -89,20 +89,6 @@ NSString* const __nonnull      kGenericOutputDeviceName = @"Output Device";
     // TODO: This call isn't thread safe. (But currently this dealloc method is only called if
     //       there's an error.)
     [self removeOutputDeviceDataSourceListener];
-
-    BGMLogAndSwallowExceptions("BGMOutputVolumeMenuItem::dealloc", ([&] {
-        audioDevices.bgmDevice.RemovePropertyListenerBlock(
-            CAPropertyAddress(kAudioDevicePropertyVolumeScalar, kScope),
-            dispatch_get_main_queue(),
-            updateSliderListenerBlock);
-    }));
-
-    BGMLogAndSwallowExceptions("BGMOutputVolumeMenuItem::dealloc", ([&] {
-        audioDevices.bgmDevice.RemovePropertyListenerBlock(
-            CAPropertyAddress(kAudioDevicePropertyMute, kScope),
-            dispatch_get_main_queue(),
-            updateSliderListenerBlock);
-    }));
 }
 
 - (void) initSlider {
@@ -118,32 +104,9 @@ NSString* const __nonnull      kGenericOutputDeviceName = @"Output Device";
     // Register a listener that will update the slider when the user changes the volume or
     // mutes/unmutes their audio.
     BGMOutputVolumeMenuItem* __weak weakSelf = self;
-
-    updateSliderListenerBlock =
-        ^(UInt32 inNumberAddresses, const AudioObjectPropertyAddress* inAddresses) {
-            // The docs for AudioObjectPropertyListenerBlock say inAddresses will always contain
-            // at least one property the block is listening to, so there's no need to check it.
-            #pragma unused (inNumberAddresses, inAddresses)
-            [weakSelf updateVolumeSlider];
-        };
-
-    // Instead of swallowing exceptions, we could try again later, but I doubt it would be worth the
-    // effort. And the documentation doesn't actually explain what could cause this to fail.
-    BGMLogAndSwallowExceptions("BGMOutputVolumeMenuItem::initSlider", ([&] {
-        // Register the listener to receive volume notifications.
-        audioDevices.bgmDevice.AddPropertyListenerBlock(
-            CAPropertyAddress(kAudioDevicePropertyVolumeScalar, kScope),
-            dispatch_get_main_queue(),
-            updateSliderListenerBlock);
-    }));
-
-    BGMLogAndSwallowExceptions("BGMOutputVolumeMenuItem::initSlider", ([&] {
-        // Register the same listener for mute/unmute notifications.
-        audioDevices.bgmDevice.AddPropertyListenerBlock(
-            CAPropertyAddress(kAudioDevicePropertyMute, kScope),
-            dispatch_get_main_queue(),
-            updateSliderListenerBlock);
-    }));
+    volumeChangeListener = new BGMVolumeChangeListener(audioDevices.bgmDevice, [&] {
+        [weakSelf updateVolumeSlider];
+    });
 }
 
 // Updates the value of the output volume slider. Should only be called on the main thread because
@@ -178,7 +141,7 @@ NSString* const __nonnull      kGenericOutputDeviceName = @"Output Device";
             volumeSlider.doubleValue = 0.0;
         }
     }));
-};
+}
 
 - (void) addOutputDeviceDataSourceListener {
     // Create the block that updates deviceLabel when the output device's data source changes, e.g.

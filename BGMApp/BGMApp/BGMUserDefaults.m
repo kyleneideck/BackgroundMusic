@@ -17,7 +17,7 @@
 //  BGMUserDefaults.m
 //  BGMApp
 //
-//  Copyright © 2016-2018 Kyle Neideck
+//  Copyright © 2016-2019 Kyle Neideck
 //
 
 // Self Include
@@ -32,7 +32,8 @@
 // Keys
 static NSString* const BGMDefaults_AutoPauseMusicEnabled = @"AutoPauseMusicEnabled";
 static NSString* const BGMDefaults_SelectedMusicPlayerID = @"SelectedMusicPlayerID";
-static NSString* const BGMDefaults_PreferredDeviceUIDs = @"PreferredDeviceUIDs";
+static NSString* const BGMDefaults_PreferredDeviceUIDs   = @"PreferredDeviceUIDs";
+static NSString* const BGMDefaults_StatusBarIcon         = @"StatusBarIcon";
 
 @implementation BGMUserDefaults {
     // The defaults object wrapped by this object.
@@ -89,6 +90,22 @@ static NSString* const BGMDefaults_PreferredDeviceUIDs = @"PreferredDeviceUIDs";
     [self set:BGMDefaults_PreferredDeviceUIDs to:devices];
 }
 
+- (BGMStatusBarIcon) statusBarIcon {
+    NSInteger icon = [self getInt:BGMDefaults_StatusBarIcon or:kBGMStatusBarIconDefaultValue];
+
+    // Just in case we get an invalid value somehow.
+    if ((icon < kBGMStatusBarIconMinValue) || (icon > kBGMStatusBarIconMaxValue)) {
+        NSLog(@"BGMUserDefaults::statusBarIcon: Unknown BGMStatusBarIcon: %ld", (long)icon);
+        icon = kBGMStatusBarIconDefaultValue;
+    }
+
+    return (BGMStatusBarIcon)icon;
+}
+
+- (void) setStatusBarIcon:(BGMStatusBarIcon)icon {
+    [self setInt:BGMDefaults_StatusBarIcon to:icon];
+}
+
 #pragma mark Implementation
 
 - (id __nullable) get:(NSString*)key {
@@ -103,6 +120,7 @@ static NSString* const BGMDefaults_PreferredDeviceUIDs = @"PreferredDeviceUIDs";
     }
 }
 
+// TODO: This method should have a default value param.
 - (BOOL) getBool:(NSString*)key {
     return defaults ? [defaults boolForKey:key] : [transientDefaults[key] boolValue];
 }
@@ -111,7 +129,32 @@ static NSString* const BGMDefaults_PreferredDeviceUIDs = @"PreferredDeviceUIDs";
     if (defaults) {
         [defaults setBool:value forKey:key];
     } else {
-        transientDefaults[key] = [NSNumber numberWithBool:value];
+        transientDefaults[key] = @(value);
+    }
+}
+
+- (NSInteger) getInt:(NSString*)key or:(NSInteger)valueIfNil
+{
+    if (defaults) {
+        if ([defaults objectForKey:key]) {
+            return [defaults integerForKey:key];
+        } else {
+            return valueIfNil;
+        }
+    } else {
+        if (transientDefaults[key]) {
+            return [transientDefaults[key] intValue];
+        } else {
+            return valueIfNil;
+        }
+    }
+}
+
+- (void) setInt:(NSString*)key to:(NSInteger)value {
+    if (defaults) {
+        [defaults setInteger:value forKey:key];
+    } else {
+        transientDefaults[key] = @(value);
     }
 }
 
