@@ -132,6 +132,8 @@ Failing that, you might have to uninstall. Consider filing a bug report if you d
 
 ## Known issues
 
+- Setting an app's volume above 50% can cause [clipping](https://en.wikipedia.org/wiki/Clipping_(audio)). Currently, the
+  best solution is to instead set your overall volume to max and lower the volumes of other apps.
 - VLC automatically pauses iTunes/Spotify when it starts playing something, but that stops Background Music from
   unpausing your music afterwards. To workaround it, open VLC's preferences, click `Show All`, go `Interface` > `Main
   interfaces` > `macosx` and change `Control external music players` to either `Do nothing` or `Pause and resume
@@ -184,7 +186,7 @@ Failing that, you might have to uninstall. Consider filing a bug report if you d
 
 ## License
 
-Copyright © 2016-2018 [Background Music contributors](https://github.com/kyleneideck/BackgroundMusic/graphs/contributors).
+Copyright © 2016-2019 [Background Music contributors](https://github.com/kyleneideck/BackgroundMusic/graphs/contributors).
 Licensed under [GPLv2](https://www.gnu.org/licenses/gpl-2.0.html), or any later version.
 
 Background Music includes code from:
