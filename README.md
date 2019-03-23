@@ -23,7 +23,7 @@ BackgroundMusic-0.2.0.pkg</a> (581 KB)
 
 Still very much in alpha. Not code signed, so you'll have to **right-click it and choose "Open"**.
 
-**Requires OS X 10.10+**. Should work on 10.9, but I haven't tried it.
+**Requires macOS 10.10+**. Should work on 10.9, but I haven't tried it.
 
 > <sub>MD5: 23653c889f9ba7efc9cbb4e550c54060</sub><br/>
 > <sub>SHA256: 78184ba743ba79e8cbd81bc8e2ea28b59100cc626ea77be58d6612bcfe2c7b78</sub><br/>
