@@ -84,7 +84,7 @@ static CGFloat const kVolumeIconAdditionalVerticalPadding = 0.075;
 
         // Update the icon when BGMDevice's volume changes.
         BGMStatusBarItem* __weak weakSelf = self;
-        volumeChangeListener = new BGMVolumeChangeListener(audioDevices.bgmDevice, [&] {
+        volumeChangeListener = new BGMVolumeChangeListener(audioDevices.bgmDevice, [=] {
             [weakSelf bgmDeviceVolumeDidChange];
         });
     }
