@@ -104,7 +104,7 @@ NSString* const __nonnull      kGenericOutputDeviceName = @"Output Device";
     // Register a listener that will update the slider when the user changes the volume or
     // mutes/unmutes their audio.
     BGMOutputVolumeMenuItem* __weak weakSelf = self;
-    volumeChangeListener = new BGMVolumeChangeListener(audioDevices.bgmDevice, [&] {
+    volumeChangeListener = new BGMVolumeChangeListener(audioDevices.bgmDevice, [=] {
         [weakSelf updateVolumeSlider];
     });
 }
