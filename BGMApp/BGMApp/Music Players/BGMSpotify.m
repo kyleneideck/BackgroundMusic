@@ -57,8 +57,8 @@
     return (SpotifyApplication* __nullable)scriptingBridge.application;
 }
 
-- (void) onSelect {
-    [super onSelect];
+- (void) wasSelected {
+    [super wasSelected];
     [scriptingBridge ensurePermission];
 }
 

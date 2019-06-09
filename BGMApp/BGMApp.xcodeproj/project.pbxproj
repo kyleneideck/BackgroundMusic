@@ -8,11 +8,11 @@
 
 /* Begin PBXBuildFile section */
 		19FE7071FF5280BC38F35E1D /* BGMVolumeChangeListener.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 19FE7179EBFA116F3861E79D /* BGMVolumeChangeListener.cpp */; };
-		19FE719951725A698A419CBA /* BGMVolumeChangeListener.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 19FE7179EBFA116F3861E79D /* BGMVolumeChangeListener.cpp */; };
+		19FE719951725A698A419CBA /* BGMVolumeChangeListener.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 19FE7179EBFA116F3861E79D /* BGMVolumeChangeListener.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMVolumeChangeListener.cpp"; }; };
 		19FE77608F6C80D0B1F595A7 /* BGMStatusBarItem.mm in Sources */ = {isa = PBXBuildFile; fileRef = 19FE774DD758EC163EF4F28C /* BGMStatusBarItem.mm */; };
 		19FE7921FD1B6C037429ECA4 /* BGMStatusBarItem.mm in Sources */ = {isa = PBXBuildFile; fileRef = 19FE774DD758EC163EF4F28C /* BGMStatusBarItem.mm */; };
 		19FE7DFF63F69E77C53BF95E /* BGMVolumeChangeListener.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 19FE7179EBFA116F3861E79D /* BGMVolumeChangeListener.cpp */; };
-		19FE7F77376562C179449013 /* BGMStatusBarItem.mm in Sources */ = {isa = PBXBuildFile; fileRef = 19FE774DD758EC163EF4F28C /* BGMStatusBarItem.mm */; };
+		19FE7F77376562C179449013 /* BGMStatusBarItem.mm in Sources */ = {isa = PBXBuildFile; fileRef = 19FE774DD758EC163EF4F28C /* BGMStatusBarItem.mm */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMStatusBarItem.mm"; }; };
 		1C0BD0A51BF1A8E6004F4CF5 /* BGMAutoPauseMusicPrefs.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C0BD0A41BF1A8E6004F4CF5 /* BGMAutoPauseMusicPrefs.mm */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMAutoPauseMusicPrefs.mm"; }; };
 		1C0BD0A81BF1B029004F4CF5 /* BGMPreferencesMenu.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C0BD0A71BF1B029004F4CF5 /* BGMPreferencesMenu.mm */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMPreferencesMenu.mm"; }; };
 		1C1465B81BCC3A73003AEFE6 /* BGMAutoPauseMusic.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C1465B71BCC3A73003AEFE6 /* BGMAutoPauseMusic.mm */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMAutoPauseMusic.mm"; }; };
@@ -55,6 +55,9 @@
 		1C533C801EF532CA00270802 /* _uninstall-non-interactive.sh in Resources */ = {isa = PBXBuildFile; fileRef = 1C533C7F1EF532CA00270802 /* _uninstall-non-interactive.sh */; };
 		1C780FF21FEF6C3B00497FAD /* BGMSystemSoundsVolume.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C780FF11FEF6C3B00497FAD /* BGMSystemSoundsVolume.mm */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMSystemSoundsVolume.mm"; }; };
 		1C780FF31FEF6C3B00497FAD /* BGMSystemSoundsVolume.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C780FF11FEF6C3B00497FAD /* BGMSystemSoundsVolume.mm */; };
+		1C8034D520B0347A004BC50C /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1C8034D420B0347A004BC50C /* Security.framework */; };
+		1C80DED320A6718600045BBE /* BGMAppWatcher.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C80DED220A6718600045BBE /* BGMAppWatcher.m */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMAppWatcher.m"; }; };
+		1C80DED420A6718600045BBE /* BGMAppWatcher.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C80DED220A6718600045BBE /* BGMAppWatcher.m */; };
 		1C837DD81F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C837DD71F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMOutputVolumeMenuItem.mm"; }; };
 		1C837DD91F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C837DD71F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm */; };
 		1C837DDA1F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C837DD71F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm */; };
@@ -64,6 +67,13 @@
 		1C8D8304204238DB00A838F2 /* BGMSwinsian.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C8D8302204238DB00A838F2 /* BGMSwinsian.m */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMSwinsian.m"; }; };
 		1C8D830520423E1C00A838F2 /* BGMSwinsian.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C8D8302204238DB00A838F2 /* BGMSwinsian.m */; };
 		1C8D830620423E2400A838F2 /* BGMSwinsian.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C8D8302204238DB00A838F2 /* BGMSwinsian.m */; };
+		1C8D830B2042DE9600A838F2 /* BGMGooglePlayMusicDesktopPlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C8D830A2042DE9500A838F2 /* BGMGooglePlayMusicDesktopPlayer.m */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMGooglePlayMusicDesktopPlayer.m"; }; };
+		1C8D830C2042DE9600A838F2 /* BGMGooglePlayMusicDesktopPlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C8D830A2042DE9500A838F2 /* BGMGooglePlayMusicDesktopPlayer.m */; };
+		1C8D830E2042F25C00A838F2 /* GooglePlayMusicDesktopPlayer.js in Resources */ = {isa = PBXBuildFile; fileRef = 1C8D830D2042F25C00A838F2 /* GooglePlayMusicDesktopPlayer.js */; };
+		1C8D830F2042F25C00A838F2 /* GooglePlayMusicDesktopPlayer.js in Resources */ = {isa = PBXBuildFile; fileRef = 1C8D830D2042F25C00A838F2 /* GooglePlayMusicDesktopPlayer.js */; };
+		1C9258472090287F00B8D3A6 /* BGMGooglePlayMusicDesktopPlayerConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C9258462090287F00B8D3A6 /* BGMGooglePlayMusicDesktopPlayerConnection.m */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMGooglePlayMusicDesktopPlayerConnection.m"; }; };
+		1C9258482090287F00B8D3A6 /* BGMGooglePlayMusicDesktopPlayerConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C9258462090287F00B8D3A6 /* BGMGooglePlayMusicDesktopPlayerConnection.m */; };
+		1C9258492090287F00B8D3A6 /* BGMGooglePlayMusicDesktopPlayerConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C9258462090287F00B8D3A6 /* BGMGooglePlayMusicDesktopPlayerConnection.m */; };
 		1CACCF391F3175AD007F86CA /* BGMBackgroundMusicDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CACCF371F3175AD007F86CA /* BGMBackgroundMusicDevice.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMBackgroundMusicDevice.cpp"; }; };
 		1CACCF3A1F334447007F86CA /* BGMBackgroundMusicDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CACCF371F3175AD007F86CA /* BGMBackgroundMusicDevice.cpp */; };
 		1CACCF3B1F334450007F86CA /* BGMBackgroundMusicDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CACCF371F3175AD007F86CA /* BGMBackgroundMusicDevice.cpp */; };
@@ -276,12 +286,20 @@
 		1C780FF11FEF6C3B00497FAD /* BGMSystemSoundsVolume.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = BGMSystemSoundsVolume.mm; sourceTree = "<group>"; };
 		1C8034C21BDAFD5700668E00 /* CAPThread.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CAPThread.cpp; path = PublicUtility/CAPThread.cpp; sourceTree = "<group>"; };
 		1C8034C31BDAFD5700668E00 /* CAPThread.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CAPThread.h; path = PublicUtility/CAPThread.h; sourceTree = "<group>"; };
+		1C8034D420B0347A004BC50C /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		1C80DED120A6718600045BBE /* BGMAppWatcher.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BGMAppWatcher.h; sourceTree = "<group>"; };
+		1C80DED220A6718600045BBE /* BGMAppWatcher.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BGMAppWatcher.m; sourceTree = "<group>"; };
 		1C837DD61F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BGMOutputVolumeMenuItem.h; sourceTree = "<group>"; };
 		1C837DD71F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = BGMOutputVolumeMenuItem.mm; sourceTree = "<group>"; };
 		1C8B0C69216205BF008C5679 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		1C8D8301204238DB00A838F2 /* Swinsian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Swinsian.h; path = "Music Players/Swinsian.h"; sourceTree = "<group>"; };
 		1C8D8302204238DB00A838F2 /* BGMSwinsian.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BGMSwinsian.m; path = "Music Players/BGMSwinsian.m"; sourceTree = "<group>"; };
 		1C8D8303204238DB00A838F2 /* BGMSwinsian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGMSwinsian.h; path = "Music Players/BGMSwinsian.h"; sourceTree = "<group>"; };
+		1C8D83092042DE9500A838F2 /* BGMGooglePlayMusicDesktopPlayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGMGooglePlayMusicDesktopPlayer.h; path = "Music Players/BGMGooglePlayMusicDesktopPlayer.h"; sourceTree = "<group>"; };
+		1C8D830A2042DE9500A838F2 /* BGMGooglePlayMusicDesktopPlayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BGMGooglePlayMusicDesktopPlayer.m; path = "Music Players/BGMGooglePlayMusicDesktopPlayer.m"; sourceTree = "<group>"; };
+		1C8D830D2042F25C00A838F2 /* GooglePlayMusicDesktopPlayer.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = GooglePlayMusicDesktopPlayer.js; path = "Music Players/GooglePlayMusicDesktopPlayer.js"; sourceTree = "<group>"; };
+		1C9258452090287F00B8D3A6 /* BGMGooglePlayMusicDesktopPlayerConnection.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = BGMGooglePlayMusicDesktopPlayerConnection.h; path = "Music Players/BGMGooglePlayMusicDesktopPlayerConnection.h"; sourceTree = "<group>"; };
+		1C9258462090287F00B8D3A6 /* BGMGooglePlayMusicDesktopPlayerConnection.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = BGMGooglePlayMusicDesktopPlayerConnection.m; path = "Music Players/BGMGooglePlayMusicDesktopPlayerConnection.m"; sourceTree = "<group>"; };
 		1CACCF371F3175AD007F86CA /* BGMBackgroundMusicDevice.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BGMBackgroundMusicDevice.cpp; sourceTree = "<group>"; };
 		1CACCF381F3175AD007F86CA /* BGMBackgroundMusicDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BGMBackgroundMusicDevice.h; sourceTree = "<group>"; };
 		1CB8B3361BBA75EF000E2DD1 /* Background Music.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Background Music.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -376,6 +394,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1C8B0C6A216205BF008C5679 /* AVFoundation.framework in Frameworks */,
+				1C8034D520B0347A004BC50C /* Security.framework in Frameworks */,
 				270A84511E0044EF00F13C99 /* ScriptingBridge.framework in Frameworks */,
 				1CD1FD301BDDEAF2004F7E1B /* AudioToolbox.framework in Frameworks */,
 				1C1963031BCAC160008A4DF7 /* CoreAudio.framework in Frameworks */,
@@ -510,6 +529,10 @@
 				1C2336D91BEAB6E7004C1C4E /* BGMMusicPlayer.m */,
 				27F7D48E1D2483B100821C4B /* BGMDecibel.h */,
 				27F7D48F1D2483B100821C4B /* BGMDecibel.m */,
+				1C8D83092042DE9500A838F2 /* BGMGooglePlayMusicDesktopPlayer.h */,
+				1C8D830A2042DE9500A838F2 /* BGMGooglePlayMusicDesktopPlayer.m */,
+				1C9258452090287F00B8D3A6 /* BGMGooglePlayMusicDesktopPlayerConnection.h */,
+				1C9258462090287F00B8D3A6 /* BGMGooglePlayMusicDesktopPlayerConnection.m */,
 				1C2336DB1BEAB73F004C1C4E /* BGMiTunes.h */,
 				1C4699461BD5C0E400F78043 /* BGMiTunes.m */,
 				1C2336DD1BEAE10C004C1C4E /* BGMSpotify.h */,
@@ -559,6 +582,8 @@
 			children = (
 				1CB8B33B1BBA75EF000E2DD1 /* BGMAppDelegate.h */,
 				1CB8B33C1BBA75EF000E2DD1 /* BGMAppDelegate.mm */,
+				1C80DED120A6718600045BBE /* BGMAppWatcher.h */,
+				1C80DED220A6718600045BBE /* BGMAppWatcher.m */,
 				1C837DD61F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.h */,
 				1C837DD71F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm */,
 				1C780FF01FEF6C3B00497FAD /* BGMSystemSoundsVolume.h */,
@@ -692,6 +717,7 @@
 				27F7D4911D2484A300821C4B /* Decibel.h */,
 				279F48781DD6D94000768A85 /* Hermes.h */,
 				27379B851C7C54870084A24C /* iTunes.h */,
+				1C8D830D2042F25C00A838F2 /* GooglePlayMusicDesktopPlayer.js */,
 				27379B861C7C54870084A24C /* Spotify.h */,
 				1C8D8301204238DB00A838F2 /* Swinsian.h */,
 				27379B871C7C552A0084A24C /* VLC.h */,
@@ -717,6 +743,7 @@
 		2743CA1B1D86DA9B0089613B /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				1C8034D420B0347A004BC50C /* Security.framework */,
 				1C8B0C69216205BF008C5679 /* AVFoundation.framework */,
 				270A84501E0044EE00F13C99 /* ScriptingBridge.framework */,
 				1CD1FD2F1BDDEAF2004F7E1B /* AudioToolbox.framework */,
@@ -871,6 +898,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 				Base,
 			);
@@ -895,6 +923,7 @@
 			files = (
 				274827951E11052500B31D8D /* MainMenu.xib in Resources */,
 				1C533C7A1EED28B700270802 /* uninstall.sh in Resources */,
+				1C8D830E2042F25C00A838F2 /* GooglePlayMusicDesktopPlayer.js in Resources */,
 				1C533C801EF532CA00270802 /* _uninstall-non-interactive.sh in Resources */,
 				1CED61691C3081C2002CAFCF /* LICENSE in Resources */,
 				1C2FC3041EB4D6E700A76592 /* BGMApp.sdef in Resources */,
@@ -922,6 +951,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1C8D830F2042F25C00A838F2 /* GooglePlayMusicDesktopPlayer.js in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -973,6 +1003,7 @@
 				1C4699471BD5C0E400F78043 /* BGMiTunes.m in Sources */,
 				1CD410D41F9EDDAD0070A094 /* BGMAppVolumesController.mm in Sources */,
 				1C1962E41BC94E15008A4DF7 /* CARingBuffer.cpp in Sources */,
+				1C8D830B2042DE9600A838F2 /* BGMGooglePlayMusicDesktopPlayer.m in Sources */,
 				273F10DF1CC3D0B900C1C6DA /* BGMVOX.m in Sources */,
 				1CC1DF811BE5068A00FB8FE4 /* CACFArray.cpp in Sources */,
 				279F48771DD6D73A00768A85 /* BGMHermes.m in Sources */,
@@ -1003,9 +1034,11 @@
 				1CED616C1C316E1A002CAFCF /* BGMAudioDeviceManager.mm in Sources */,
 				2743C9F11D853FBB0089613B /* BGMUserDefaults.m in Sources */,
 				1C1962FD1BCAC0C3008A4DF7 /* CADebugPrintf.cpp in Sources */,
+				1C80DED320A6718600045BBE /* BGMAppWatcher.m in Sources */,
 				2743C9EC1D852B360089613B /* BGMScriptingBridge.m in Sources */,
 				1CC6593C1F91DEB400B0CCDC /* BGMTermination.mm in Sources */,
 				1C837DD81F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm in Sources */,
+				1C9258472090287F00B8D3A6 /* BGMGooglePlayMusicDesktopPlayerConnection.m in Sources */,
 				1C1963011BCAC0F6008A4DF7 /* CACFString.cpp in Sources */,
 				1C1962E71BC94E91008A4DF7 /* BGMPlayThrough.cpp in Sources */,
 				1C8D8304204238DB00A838F2 /* BGMSwinsian.m in Sources */,
@@ -1031,6 +1064,7 @@
 				1CACCF3A1F334447007F86CA /* BGMBackgroundMusicDevice.cpp in Sources */,
 				1C780FF31FEF6C3B00497FAD /* BGMSystemSoundsVolume.mm in Sources */,
 				1CC6593D1F91DEB400B0CCDC /* BGMTermination.mm in Sources */,
+				1C80DED420A6718600045BBE /* BGMAppWatcher.m in Sources */,
 				1CD410D51F9EDDAD0070A094 /* BGMAppVolumesController.mm in Sources */,
 				1CD989571ECFFD250014BBBF /* CAHostTimeBase.cpp in Sources */,
 				1CD989581ECFFD250014BBBF /* CAMutex.cpp in Sources */,
@@ -1047,6 +1081,7 @@
 				1CD989481ECFFCFC0014BBBF /* BGMMusicPlayer.m in Sources */,
 				1CD989491ECFFCFC0014BBBF /* BGMDecibel.m in Sources */,
 				1C3D36731ED90E8600F98E66 /* BGMDeviceControlsList.cpp in Sources */,
+				1C9258482090287F00B8D3A6 /* BGMGooglePlayMusicDesktopPlayerConnection.m in Sources */,
 				1CD9894A1ECFFCFC0014BBBF /* BGMiTunes.m in Sources */,
 				1CD9894B1ECFFCFC0014BBBF /* BGMSpotify.m in Sources */,
 				1CD9894C1ECFFCFC0014BBBF /* BGMHermes.m in Sources */,
@@ -1118,6 +1153,7 @@
 				1C227C0B1FA4C48200A95B6D /* BGMAppVolumes.m in Sources */,
 				1CEACF4D1F34793700FEC143 /* CAHALAudioDevice.cpp in Sources */,
 				1CACCF3B1F334450007F86CA /* BGMBackgroundMusicDevice.cpp in Sources */,
+				1C8D830C2042DE9600A838F2 /* BGMGooglePlayMusicDesktopPlayer.m in Sources */,
 				1C3D36741ED90E8600F98E66 /* BGMDeviceControlsList.cpp in Sources */,
 				27FB8C301DE4758A0084DB9D /* BGMPlayThrough.cpp in Sources */,
 				27FB8C311DE4758A0084DB9D /* BGM_Utils.cpp in Sources */,
@@ -1154,6 +1190,7 @@
 				2743CA021D86D3CB0089613B /* BGMiTunes.m in Sources */,
 				19FE77608F6C80D0B1F595A7 /* BGMStatusBarItem.mm in Sources */,
 				19FE7071FF5280BC38F35E1D /* BGMVolumeChangeListener.cpp in Sources */,
+				1C9258492090287F00B8D3A6 /* BGMGooglePlayMusicDesktopPlayerConnection.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -17,7 +17,7 @@
 //  BGMAutoPauseMusicPrefs.mm
 //  BGMApp
 //
-//  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016, 2019 Kyle Neideck
 //
 
 // Self Includes
@@ -69,6 +69,7 @@ static NSInteger const kPrefsMenuAutoPauseHeaderTag = 1;
                                                        action:@selector(handleMusicPlayerChange:)
                                                 keyEquivalent:@""
                                                       atIndex:musicPlayerItemsIndex];
+        menuItem.toolTip = musicPlayer.toolTip;
         
         musicPlayerMenuItems = [musicPlayerMenuItems arrayByAddingObject:menuItem];
         

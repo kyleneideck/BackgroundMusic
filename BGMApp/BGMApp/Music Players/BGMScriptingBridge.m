@@ -17,7 +17,7 @@
 //  BGMScriptingBridge.m
 //  BGMApp
 //
-//  Copyright © 2016-2018 Kyle Neideck
+//  Copyright © 2016-2019 Kyle Neideck
 //
 
 // Self Include
@@ -25,6 +25,7 @@
 
 // Local Includes
 #import "BGM_Utils.h"
+#import "BGMAppWatcher.h"
 
 // PublicUtility Includes
 #import "CADebugMacros.h"
@@ -34,8 +35,7 @@
 
 @implementation BGMScriptingBridge {
     id<BGMMusicPlayer> __weak _musicPlayer;
-    // Tokens for the notification observers. We need these to remove the observers in dealloc.
-    id _didLaunchToken, _didTerminateToken;
+    BGMAppWatcher* appWatcher;
 }
 
 @synthesize application = _application;
@@ -57,15 +57,12 @@
     BGMScriptingBridge* __weak weakSelf = self;
 
     void (^createSBApplication)(void) = ^{
-        BGMScriptingBridge* __strong strongSelf = weakSelf;
+        BGMScriptingBridge* strongSelf = weakSelf;
         strongSelf->_application = [SBApplication applicationWithBundleIdentifier:bundleID];
-        // TODO: I think the SBApplication will still keep a strong ref to this object, so we might
-        //       have to make a separate delegate object.
+        // TODO: The SBApplication will still keep a strong ref to this object, so we would have to
+        //       make a separate delegate object to avoid the retain cycle. Not currently a problem
+        //       because we only ever create instances that live forever.
         strongSelf->_application.delegate = strongSelf;
-    };
-    
-    BOOL (^isAboutThisMusicPlayer)(NSNotification*) = ^(NSNotification* note) {
-        return [[note.userInfo[NSWorkspaceApplicationKey] bundleIdentifier] isEqualToString:bundleID];
     };
     
     // Add observers that create/destroy the SBApplication when the music player is launched/terminated. We
@@ -76,48 +73,24 @@
     // From the docs for SBApplication's applicationWithBundleIdentifier method:
     //     "For applications that declare themselves to have a dynamic scripting interface, this method will
     //     launch the application if it is not already running."
-    NSNotificationCenter* center = [[NSWorkspace sharedWorkspace] notificationCenter];
-    _didLaunchToken = [center addObserverForName:NSWorkspaceDidLaunchApplicationNotification
-                                          object:nil
-                                           queue:nil
-                                      usingBlock:^(NSNotification* note)
-                       {
-                           if (isAboutThisMusicPlayer(note)) {
-                               DebugMsg("BGMScriptingBridge::initApplication: %s launched",
-                                        bundleID.UTF8String);
-                               createSBApplication();
-                               [weakSelf ensurePermission];
-                           }
-                       }];
-    _didTerminateToken = [center addObserverForName:NSWorkspaceDidTerminateApplicationNotification
-                                             object:nil
-                                              queue:nil
-                                         usingBlock:^(NSNotification* note)
-                          {
-                              if (isAboutThisMusicPlayer(note)) {
-                                  DebugMsg("BGMScriptingBridge::initApplication: %s terminated",
-                                           bundleID.UTF8String);
-                                  BGMScriptingBridge* __strong strongSelf = weakSelf;
-                                  strongSelf->_application = nil;
-                              }
-                          }];
+    appWatcher =
+        [[BGMAppWatcher alloc] initWithBundleID:bundleID
+                                    appLaunched:^{
+                                        DebugMsg("BGMScriptingBridge::initApplication: %s launched",
+                                                 bundleID.UTF8String);
+                                        createSBApplication();
+                                        [weakSelf ensurePermission];
+                                    }
+                                  appTerminated:^{
+                                      BGMScriptingBridge* strongSelf = weakSelf;
+                                      DebugMsg("BGMScriptingBridge::initApplication: %s terminated",
+                                               bundleID.UTF8String);
+                                      strongSelf->_application = nil;
+                                  }];
     
     // Create the SBApplication if the music player is already running.
     if ([NSRunningApplication runningApplicationsWithBundleIdentifier:bundleID].count > 0) {
         createSBApplication();
-    }
-}
-
-- (void) dealloc {
-    // Remove the application launch/termination observers.
-    NSNotificationCenter* center = [NSWorkspace sharedWorkspace].notificationCenter;
-    
-    if (_didLaunchToken) {
-        [center removeObserver:_didLaunchToken];
-    }
-    
-    if (_didTerminateToken) {
-        [center removeObserver:_didTerminateToken];
     }
 }
 

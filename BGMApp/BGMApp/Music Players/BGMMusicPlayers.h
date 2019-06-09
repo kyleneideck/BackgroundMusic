@@ -17,7 +17,7 @@
 //  BGMMusicPlayers.h
 //  BGMApp
 //
-//  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016, 2019 Kyle Neideck
 //
 //  Holds the music players (i.e. BGMMusicPlayer objects) available in BGMApp. Also keeps track of
 //  which music player is currently selected by the user.
@@ -43,8 +43,8 @@
 // defaultMusicPlayerID is the musicPlayerID (see BGMMusicPlayer.h) of the music player that should be
 // selected by default.
 //
-// The createInstances method of each class in musicPlayerClasses will be called, and the results stored
-// in the musicPlayers property.
+// The createInstancesWithDefaults method of each class in musicPlayerClasses will be called and
+// the results will be stored in the musicPlayers property.
 - (instancetype) initWithAudioDevices:(BGMAudioDeviceManager*)devices
                  defaultMusicPlayerID:(NSUUID*)defaultMusicPlayerID
                    musicPlayerClasses:(NSArray<Class<BGMMusicPlayer>>*)musicPlayerClasses

@@ -53,8 +53,8 @@
     return (VoxApplication*)scriptingBridge.application;
 }
 
-- (void) onSelect {
-    [super onSelect];
+- (void) wasSelected {
+    [super wasSelected];
     [scriptingBridge ensurePermission];
 }
 

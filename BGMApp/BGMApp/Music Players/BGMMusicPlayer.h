@@ -17,7 +17,7 @@
 //  BGMMusicPlayer.h
 //  BGMApp
 //
-//  Copyright © 2016, 2018 Kyle Neideck
+//  Copyright © 2016, 2018, 2019 Kyle Neideck
 //
 //  The base classes and protocol for objects that represent a music player app.
 //
@@ -41,6 +41,9 @@
 //  BGMDriver will log the bundle ID to system.log when it becomes aware of the music player.
 //
 
+// Local Includes
+#import "BGMUserDefaults.h"
+
 // System Includes
 #import <Cocoa/Cocoa.h>
 
@@ -50,27 +53,26 @@
 @protocol BGMMusicPlayer <NSObject>
 
 // Classes return an instance of themselves for each music player app they make available in
-// BGMApp. So far that's always been a single instance, and classes haven't needed to override
-// the default implementation of createInstances from BGMMusicPlayerBase. But that will probably
-// change eventually.
+// BGMApp. So far that's always been a single instance, but that will probably change eventually.
+// Most classes don't need to override the default implementation from BGMMusicPlayerBase.
 //
-// For example, a class for custom music players would probably return an instance for each
-// custom player the user has created. (Also note that it could return an empty array.) In that
-// case the class would probably restore some state from user defaults in its createInstances.
+// But, for example, a class for custom music players would probably return an instance for each
+// custom player the user has created. (Also note that it could return an empty array.)
 //
 // TODO: I think the return type should actually be NSArray<instancetype>*, but that doesn't seem
 //       to work. There's a Clang bug about this: https://llvm.org/bugs/show_bug.cgi?id=27323
 //       (though it hasn't been confirmed yet).
-+ (NSArray<id<BGMMusicPlayer>>*) createInstances;
++ (NSArray<id<BGMMusicPlayer>>*) createInstancesWithDefaults:(BGMUserDefaults*)userDefaults;
 
 // We need a unique ID for each music player to store in user defaults. In the most common case,
 // classes that provide a static (or at least bounded) number of music players, you can generate
 // IDs with uuidgen (the command line tool) and include them in your class as constants. Otherwise,
-// you'll probably want to store them in user defaults and retrieve them in your createInstances.
+// you'll probably want to store them in user defaults and load them in createInstancesWithDefaults.
 @property (readonly) NSUUID* musicPlayerID;
 
-// The name and icon of the music player, to be used in the UI.
+// The name, tool-tip and icon of the music player, to be used in the UI.
 @property (readonly) NSString* name;
+@property (readonly) NSString* __nullable toolTip;
 @property (readonly) NSImage* __nullable icon;
 
 @property (readonly) NSString* __nullable bundleID;
@@ -81,7 +83,7 @@
 // TODO: If we ever add a music player class that uses this property, it'll need a way to inform
 //       BGMDevice of changes. It might be easiest to have BGMMusicPlayers to observe this property,
 //       on the selected music player, with KVO and update BGMDevice when it changes. Or
-//       BGMMusicPlayers could pass a pointer to itself to createInstances.
+//       BGMMusicPlayers could pass a pointer to itself to createInstancesWithDefaults.
 @property NSNumber* __nullable pid;
 
 // True if this is currently the selected music player.
@@ -101,9 +103,9 @@
 @property (readonly, getter=isPaused) BOOL paused;
 
 // Called when the user selects this music player.
-- (void) onSelect;
-// Called when this is the selected music player and the user selects a different one.
-- (void) onDeselect;
+- (void) wasSelected;
+// Called when this was the selected music player and the user just selected a different one.
+- (void) wasDeselected;
 
 // Pause the music player. Does nothing if the music player is already paused or isn't running.
 // Returns YES if the music player is paused now but wasn't before, returns NO otherwise.
@@ -123,6 +125,12 @@
 
 - (instancetype) initWithMusicPlayerID:(NSUUID*)musicPlayerID
                                   name:(NSString*)name
+                               toolTip:(NSString*)toolTip
+                              bundleID:(NSString* __nullable)bundleID;
+
+- (instancetype) initWithMusicPlayerID:(NSUUID*)musicPlayerID
+                                  name:(NSString*)name
+                               toolTip:(NSString* __nullable)toolTip
                               bundleID:(NSString* __nullable)bundleID
                                    pid:(NSNumber* __nullable)pid;
 
@@ -131,15 +139,16 @@
 + (NSUUID*) makeID:(NSString*)musicPlayerIDString;
 
 // BGMMusicPlayer default implementations
-+ (NSArray<id<BGMMusicPlayer>>*) createInstances;
++ (NSArray<id<BGMMusicPlayer>>*) createInstancesWithDefaults:(BGMUserDefaults*)userDefaults;
 @property (readonly) NSImage* __nullable icon;
 @property (readonly) NSUUID* musicPlayerID;
 @property (readonly) NSString* name;
+@property (readonly) NSString* __nullable toolTip;
 @property (readonly) NSString* __nullable bundleID;
 @property NSNumber* __nullable pid;
 @property (readonly) BOOL selected;
-- (void) onSelect;
-- (void) onDeselect;
+- (void) wasSelected;
+- (void) wasDeselected;
 
 @end
 

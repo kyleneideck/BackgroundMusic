@@ -17,7 +17,7 @@
 //  BGMAutoPauseMenuItem.m
 //  BGMApp
 //
-//  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016, 2019 Kyle Neideck
 //  Copyright © 2016 Tanner Hoke
 //
 
@@ -25,7 +25,7 @@
 #import "BGMAutoPauseMenuItem.h"
 
 // Local Includes
-#import "BGMMusicPlayer.h"
+#import "BGMAppWatcher.h"
 
 
 #pragma clang assume_nonnull begin
@@ -41,7 +41,7 @@ static SInt64 const kMenuItemUpdateWaitTime = 1;
     NSMenuItem* menuItem;
     BGMAutoPauseMusic* autoPauseMusic;
     BGMMusicPlayers* musicPlayers;
-    id<NSObject> didLaunchToken, didTerminateToken;
+    BGMAppWatcher* appWatcher;
 }
 
 - (instancetype) initWithMenuItem:(NSMenuItem*)item
@@ -66,53 +66,39 @@ static SInt64 const kMenuItemUpdateWaitTime = 1;
         // Toggle auto-pause when the menu item is clicked.
         menuItem.target = self;
         menuItem.action = @selector(toggleAutoPauseMusic);
-        
-        [self updateMenuItemTitle];
-        [self initMusicPlayerObservers];
+
+        [self initMenuItemTitle];
     }
     
     return self;
 }
 
-- (void) initMusicPlayerObservers {
-    // Add observers that enable/disable the Auto-pause Music menu item when the music player is launched/terminated.
-    NSNotificationCenter* center = [[NSWorkspace sharedWorkspace] notificationCenter];
-    
-    id<NSObject> (^addObserver)(NSString*) = ^(NSString* name) {
-        return [center addObserverForName:name
-                                   object:nil
-                                    queue:nil
-                               usingBlock:^(NSNotification* note) {
-                                   NSString* appBundleID = [note.userInfo[NSWorkspaceApplicationKey] bundleIdentifier];
-                                   BOOL isAboutThisMusicPlayer = musicPlayers.selectedMusicPlayer.bundleID &&
-                                       [appBundleID isEqualToString:(NSString*)musicPlayers.selectedMusicPlayer.bundleID];
-                                   
-                                   if (isAboutThisMusicPlayer) {
-                                       dispatch_after(dispatch_time(DISPATCH_TIME_NOW,
-                                                                    kMenuItemUpdateWaitTime * NSEC_PER_SEC),
-                                                      dispatch_get_main_queue(),
-                                                      ^{
-                                                          [self updateMenuItemTitle];
-                                                      });
-                                   }
-                               }];
-    };
-    
-    didLaunchToken = addObserver(NSWorkspaceDidLaunchApplicationNotification);
-    didTerminateToken = addObserver(NSWorkspaceDidTerminateApplicationNotification);
-}
+- (void) initMenuItemTitle {
+    // Set the initial text, tool-tip, state, etc.
+    [self updateMenuItemTitle];
 
-- (void) dealloc {
-    // Remove the application launch/termination observers.
-    NSNotificationCenter* center = [[NSWorkspace sharedWorkspace] notificationCenter];
-    
-    if (didLaunchToken) {
-        [center removeObserver:didLaunchToken];
-    }
-    
-    if (didTerminateToken) {
-        [center removeObserver:didTerminateToken];
-    }
+    // Avoid retain cycles in case we ever want to destroy instances of this class.
+    BGMAutoPauseMenuItem* __weak weakSelf = self;
+
+    // Add a callback that enables/disables the Auto-pause Music menu item when the music player
+    // is launched/terminated.
+    void (^callback)(void) = ^{
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kMenuItemUpdateWaitTime * NSEC_PER_SEC),
+                       dispatch_get_main_queue(),
+                       ^{
+                           BGMAutoPauseMenuItem* strongSelf = weakSelf;
+                           [strongSelf updateMenuItemTitle];
+                       });
+    };
+
+    appWatcher = [[BGMAppWatcher alloc] initWithAppLaunched:callback
+                                              appTerminated:callback
+                                         isMatchingBundleID:^BOOL(NSString* appBundleID) {
+        BGMAutoPauseMenuItem* strongSelf = weakSelf;
+        NSString* __nullable playerBundleID =
+                strongSelf->musicPlayers.selectedMusicPlayer.bundleID;
+        return playerBundleID && [appBundleID isEqualToString:(NSString*)playerBundleID];
+    }];
 }
 
 - (void) toggleAutoPauseMusic {
@@ -143,7 +129,7 @@ static SInt64 const kMenuItemUpdateWaitTime = 1;
     //
     // We don't actually disable it just in case the user decides to disable auto-pause and their music player isn't
     // running. E.g. someone who only recently installed Background Music and doesn't want to use auto-pause at all.
-    if (musicPlayers.selectedMusicPlayer.isRunning) {
+    if (musicPlayers.selectedMusicPlayer.running) {
         menuItem.attributedTitle = nil;
         menuItem.toolTip = nil;
     } else {

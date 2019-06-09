@@ -17,7 +17,7 @@
 //  BGMMusicPlayer.m
 //  BGMApp
 //
-//  Copyright © 2016-2018 Kyle Neideck
+//  Copyright © 2016-2019 Kyle Neideck
 //
 
 // Self Include
@@ -33,6 +33,7 @@
 
 @synthesize musicPlayerID = _musicPlayerID;
 @synthesize name = _name;
+@synthesize toolTip = _toolTip;
 @synthesize bundleID = _bundleID;
 @synthesize pid = _pid;
 @synthesize selected = _selected;
@@ -40,11 +41,27 @@
 - (instancetype) initWithMusicPlayerID:(NSUUID*)musicPlayerID
                                   name:(NSString*)name
                               bundleID:(NSString* __nullable)bundleID {
-    return [self initWithMusicPlayerID:musicPlayerID name:name bundleID:bundleID pid:nil];
+    return [self initWithMusicPlayerID:musicPlayerID
+                                  name:name
+                               toolTip:nil
+                              bundleID:bundleID
+                                   pid:nil];
 }
 
 - (instancetype) initWithMusicPlayerID:(NSUUID*)musicPlayerID
                                   name:(NSString*)name
+                               toolTip:(NSString*)toolTip
+                              bundleID:(NSString* __nullable)bundleID {
+    return [self initWithMusicPlayerID:musicPlayerID
+                                  name:name
+                               toolTip:toolTip
+                              bundleID:bundleID
+                                   pid:nil];
+}
+
+- (instancetype) initWithMusicPlayerID:(NSUUID*)musicPlayerID
+                                  name:(NSString*)name
+                               toolTip:(NSString* __nullable)toolTip
                               bundleID:(NSString* __nullable)bundleID
                                    pid:(NSNumber* __nullable)pid {
     if ((self = [super init])) {
@@ -55,6 +72,7 @@
         
         _musicPlayerID = musicPlayerID;
         _name = name;
+        _toolTip = toolTip;
         _bundleID = bundleID;
         _pid = pid;
         _selected = NO;
@@ -72,7 +90,8 @@
 
 #pragma mark BGMMusicPlayer default implementations
 
-+ (NSArray<id<BGMMusicPlayer>>*) createInstances {
++ (NSArray<id<BGMMusicPlayer>>*) createInstancesWithDefaults:(BGMUserDefaults*)userDefaults {
+    #pragma unused (userDefaults)
     return @[ [self new] ];
 }
 
@@ -84,11 +103,11 @@
     return (!bundlePath ? nil : [[NSWorkspace sharedWorkspace] iconForFile:(NSString*)bundlePath]);
 }
 
-- (void) onSelect {
+- (void) wasSelected {
     _selected = YES;
 }
 
-- (void) onDeselect {
+- (void) wasDeselected {
     _selected = NO;
 }
 

@@ -17,7 +17,7 @@
 //  BGMMusicPlayers.mm
 //  BGMApp
 //
-//  Copyright © 2016-2018 Kyle Neideck
+//  Copyright © 2016-2019 Kyle Neideck
 //
 
 // Self include
@@ -34,6 +34,7 @@
 #import "BGMDecibel.h"
 #import "BGMHermes.h"
 #import "BGMSwinsian.h"
+#import "BGMGooglePlayMusicDesktopPlayer.h"
 
 
 #pragma clang assume_nonnull begin
@@ -47,16 +48,24 @@
 
 - (instancetype) initWithAudioDevices:(BGMAudioDeviceManager*)devices
                          userDefaults:(BGMUserDefaults*)defaults {
+    // The classes handling each music player we support. If you write a new music player class, add
+    // it to this array.
+    NSArray<Class<BGMMusicPlayer>>* mpClasses = @[ [BGMVOX class],
+                                                   [BGMVLC class],
+                                                   [BGMSpotify class],
+                                                   [BGMiTunes class],
+                                                   [BGMDecibel class],
+                                                   [BGMHermes class],
+                                                   [BGMSwinsian class] ];
+
+    // We only support Google Play Music Desktop Player on macOS 10.10 and higher.
+    if (@available(macOS 10.10, *)) {
+        mpClasses = [mpClasses arrayByAddingObject:[BGMGooglePlayMusicDesktopPlayer class]];
+    }
+
     return [self initWithAudioDevices:devices
                  defaultMusicPlayerID:[BGMiTunes sharedMusicPlayerID]
-                   // If you write a new music player class, add it to this array.
-                   musicPlayerClasses:@[ [BGMVOX class],
-                                         [BGMVLC class],
-                                         [BGMSpotify class],
-                                         [BGMiTunes class],
-                                         [BGMDecibel class],
-                                         [BGMHermes class],
-                                         [BGMSwinsian class] ]
+                   musicPlayerClasses:mpClasses
                          userDefaults:defaults];
 }
 
@@ -70,11 +79,14 @@
         
         // Init _musicPlayers, an array containing one object for each music player in BGMApp.
         //
-        // Each music player class has a factory method, createInstances, that returns all the instances of that
-        // class BGMApp will use. (Though so far it's always just one instance.)
+        // Each music player class has a factory method, createInstancesWithDefaults, that returns
+        // all the instances of that class BGMApp will use. (Though so far it's always just one
+        // instance.)
         NSMutableArray* musicPlayers = [NSMutableArray new];
         for (Class<BGMMusicPlayer> musicPlayerClass in musicPlayerClasses) {
-            [musicPlayers addObjectsFromArray:[musicPlayerClass createInstances]];
+            NSArray<id<BGMMusicPlayer>>* instances =
+                    [musicPlayerClass createInstancesWithDefaults:userDefaults];
+            [musicPlayers addObjectsFromArray:instances];
         }
         
         _musicPlayers = [NSArray arrayWithArray:musicPlayers];
@@ -215,7 +227,7 @@
     }
 
     // Tell the current music player (object) a different player has been selected.
-    [_selectedMusicPlayer onDeselect];
+    [_selectedMusicPlayer wasDeselected];
     
     _selectedMusicPlayer = newSelectedMusicPlayer;
     
@@ -229,7 +241,7 @@
     userDefaults.selectedMusicPlayerID = _selectedMusicPlayer.musicPlayerID.UUIDString;
 
     // Tell the music player (object) it's been selected.
-    [_selectedMusicPlayer onSelect];
+    [_selectedMusicPlayer wasSelected];
 }
 
 - (void) updateBGMDeviceMusicPlayerProperties {

@@ -22,6 +22,8 @@
 //  A simple wrapper around our use of NSUserDefaults. Used to store the preferences/state that only
 //  apply to BGMApp. The others are stored by BGMDriver.
 //
+//  Private data will be stored in the user's keychain instead of user defaults.
+//
 
 // Local Includes
 #import "BGMStatusBarItem.h"
@@ -50,6 +52,13 @@
 // The (type of) icon to show in the button in the status bar. (The button the user clicks to open
 // BGMApp's main menu.)
 @property BGMStatusBarIcon statusBarIcon;
+
+// The auth code we're required to send when connecting to GPMDP. Stored in the keychain. Reading
+// this property is thread-safe, but writing it isn't.
+//
+// Returns nil if no code is found or if reading fails. If writing fails, an error is logged, but no
+// exception is thrown.
+@property NSString* __nullable googlePlayMusicDesktopPlayerPermanentAuthCode;
 
 @end
 
