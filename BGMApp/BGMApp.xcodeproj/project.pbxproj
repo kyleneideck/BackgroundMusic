@@ -58,6 +58,8 @@
 		1C8034D520B0347A004BC50C /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1C8034D420B0347A004BC50C /* Security.framework */; };
 		1C80DED320A6718600045BBE /* BGMAppWatcher.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C80DED220A6718600045BBE /* BGMAppWatcher.m */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMAppWatcher.m"; }; };
 		1C80DED420A6718600045BBE /* BGMAppWatcher.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C80DED220A6718600045BBE /* BGMAppWatcher.m */; };
+		1C8104AF22AD07E200B35517 /* BGMAppWatcher.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C80DED220A6718600045BBE /* BGMAppWatcher.m */; };
+		1C8104B022AD082E00B35517 /* BGMGooglePlayMusicDesktopPlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C8D830A2042DE9500A838F2 /* BGMGooglePlayMusicDesktopPlayer.m */; };
 		1C837DD81F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C837DD71F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMOutputVolumeMenuItem.mm"; }; };
 		1C837DD91F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C837DD71F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm */; };
 		1C837DDA1F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C837DD71F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm */; };
@@ -1060,6 +1062,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1C8104B022AD082E00B35517 /* BGMGooglePlayMusicDesktopPlayer.m in Sources */,
 				1C8D830520423E1C00A838F2 /* BGMSwinsian.m in Sources */,
 				1CACCF3A1F334447007F86CA /* BGMBackgroundMusicDevice.cpp in Sources */,
 				1C780FF31FEF6C3B00497FAD /* BGMSystemSoundsVolume.mm in Sources */,
@@ -1149,6 +1152,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1C8104AF22AD07E200B35517 /* BGMAppWatcher.m in Sources */,
 				1C8D830620423E2400A838F2 /* BGMSwinsian.m in Sources */,
 				1C227C0B1FA4C48200A95B6D /* BGMAppVolumes.m in Sources */,
 				1CEACF4D1F34793700FEC143 /* CAHALAudioDevice.cpp in Sources */,
