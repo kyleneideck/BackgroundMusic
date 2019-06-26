@@ -87,13 +87,13 @@ public:
 							// Return false for failure (buffer not large enough).
 				
 	CARingBufferError	Fetch(AudioBufferList *abl, UInt32 nFrames, SampleTime frameNumber);
-								// will alter mNumDataBytes of the buffers
+								// will alter mDataByteSize of the buffers
 	
 	CARingBufferError	GetTimeBounds(SampleTime &startTime, SampleTime &endTime);
 	
 protected:
 
-	int						FrameOffset(SampleTime frameNumber) { return (frameNumber & mCapacityFramesMask) * mBytesPerFrame; }
+	UInt32					FrameOffset(SampleTime frameNumber) { return (frameNumber & mCapacityFramesMask) * mBytesPerFrame; }
 
 	CARingBufferError		ClipTimeBounds(SampleTime& startRead, SampleTime& endRead);
 	

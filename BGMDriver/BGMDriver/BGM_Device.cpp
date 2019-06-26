@@ -143,6 +143,10 @@ BGM_Device::BGM_Device(AudioObjectID inObjectID,
 {
     // Initialises the loopback clock with the default sample rate and, if there is one, sets the wrapped device to the same sample rate
     SetSampleRate(kSampleRateDefault, true);
+    
+    // Had to include channel count in bytesPerFrame to make audio server's interleaved
+    // look like non-interleaved to CARingBuffer. Right?
+    mLoopbackRingBuffer.Allocate(2, 2 * sizeof(float), kLoopbackRingBufferFrameSize);
 }
 
 BGM_Device::~BGM_Device()
@@ -201,7 +205,8 @@ void    BGM_Device::InitLoopback()
     
     //  Zero-out the loopback buffer
     //  2 channels * 32-bit float = bytes in each frame
-    memset(mLoopbackRingBuffer, 0, sizeof(Float32) * 2 * kLoopbackRingBufferFrameSize);
+//    memset(mLoopbackRingBuffer, 0, sizeof(Float32) * 2 * kLoopbackRingBufferFrameSize);
+    // TODO: reset CARingBuffer. but how? can I reallocate here? subclass and call set SetTimeBounds?
 }
 
 #pragma mark Property Operations
@@ -1425,52 +1430,30 @@ void	BGM_Device::EndIOOperation(UInt32 inOperationID, UInt32 inIOBufferFrameSize
 
 void	BGM_Device::ReadInputData(UInt32 inIOBufferFrameSize, Float64 inSampleTime, void* outBuffer)
 {
-	//	figure out where we are starting
-	UInt64 theSampleTime = static_cast<UInt64>(inSampleTime);
-	UInt32 theStartFrameOffset = theSampleTime % kLoopbackRingBufferFrameSize;
-	
-	//	figure out how many frames we need to copy
-	UInt32 theNumberFramesToCopy1 = inIOBufferFrameSize;
-	UInt32 theNumberFramesToCopy2 = 0;
-	if((theStartFrameOffset + theNumberFramesToCopy1) > kLoopbackRingBufferFrameSize)
-	{
-		theNumberFramesToCopy1 = kLoopbackRingBufferFrameSize - theStartFrameOffset;
-		theNumberFramesToCopy2 = inIOBufferFrameSize - theNumberFramesToCopy1;
-	}
-	
-	//	do the copying (the byte sizes here assume a 32 bit stereo sample format)
-	Float32* theDestination = reinterpret_cast<Float32*>(outBuffer);
-	memcpy(theDestination, mLoopbackRingBuffer + (theStartFrameOffset * 2), theNumberFramesToCopy1 * 8);
-	if(theNumberFramesToCopy2 > 0)
-	{
-		memcpy(theDestination + (theNumberFramesToCopy1 * 2), mLoopbackRingBuffer, theNumberFramesToCopy2 * 8);
-    }
+    AudioBufferList abl = {
+        .mNumberBuffers = 1,
+        .mBuffers[0] = {
+            .mNumberChannels = 2,
+            .mDataByteSize = static_cast<UInt32>(inIOBufferFrameSize * sizeof(float) * 2),
+            .mData = outBuffer
+        }
+    };
+    mLoopbackRingBuffer.Fetch(&abl, inIOBufferFrameSize, static_cast<CARingBuffer::SampleTime>(inSampleTime));
     
     //DebugMsg("BGM_Device::ReadInputData: Reading. theSampleTime=%llu theStartFrameOffset=%u theNumberFramesToCopy1=%u theNumberFramesToCopy2=%u", theSampleTime, theStartFrameOffset, theNumberFramesToCopy1, theNumberFramesToCopy2);
 }
 
 void	BGM_Device::WriteOutputData(UInt32 inIOBufferFrameSize, Float64 inSampleTime, const void* inBuffer)
 {
-	//	figure out where we are starting
-	UInt64 theSampleTime = static_cast<UInt64>(inSampleTime);
-	UInt32 theStartFrameOffset = theSampleTime % kLoopbackRingBufferFrameSize;
-	
-	//	figure out how many frames we need to copy
-	UInt32 theNumberFramesToCopy1 = inIOBufferFrameSize;
-	UInt32 theNumberFramesToCopy2 = 0;
-	if((theStartFrameOffset + theNumberFramesToCopy1) > kLoopbackRingBufferFrameSize)
-	{
-		theNumberFramesToCopy1 = kLoopbackRingBufferFrameSize - theStartFrameOffset;
-		theNumberFramesToCopy2 = inIOBufferFrameSize - theNumberFramesToCopy1;
-	}
-	
-	//	do the copying (the byte sizes here assume a 32 bit stereo sample format)
-	const Float32* theSource = reinterpret_cast<const Float32*>(inBuffer);
-	memcpy(mLoopbackRingBuffer + (theStartFrameOffset * 2), theSource, theNumberFramesToCopy1 * 8);
-	if(theNumberFramesToCopy2 > 0)
-	{
-		memcpy(mLoopbackRingBuffer, theSource + (theNumberFramesToCopy1 * 2), theNumberFramesToCopy2 * 8);
-    }
+    AudioBufferList abl = {
+        .mNumberBuffers = 1,
+        .mBuffers[0] = {
+            .mNumberChannels = 2,
+            .mDataByteSize = static_cast<UInt32>(inIOBufferFrameSize * sizeof(float) * 2),
+            .mData = const_cast<void *>(inBuffer)
+        }
+    };
+    /*CARingBufferError err = */mLoopbackRingBuffer.Store(&abl, inIOBufferFrameSize, static_cast<CARingBuffer::SampleTime>(inSampleTime));
     
     //DebugMsg("BGM_Device::WriteOutputData: Writing. theSampleTime=%llu theStartFrameOffset=%u theNumberFramesToCopy1=%u theNumberFramesToCopy2=%u", theSampleTime, theStartFrameOffset, theNumberFramesToCopy1, theNumberFramesToCopy2);
 }
