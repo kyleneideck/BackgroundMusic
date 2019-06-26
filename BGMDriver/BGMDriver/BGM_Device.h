@@ -43,6 +43,7 @@
 // PublicUtility Includes
 #include "CAMutex.h"
 #include "CAVolumeCurve.h"
+#include "CARingBuffer.h"
 
 // System Includes
 #include <CoreFoundation/CoreFoundation.h>
@@ -237,7 +238,8 @@ private:
     
     #define kLoopbackRingBufferFrameSize    16384
     Float64                     mLoopbackSampleRate;
-	Float32						mLoopbackRingBuffer[kLoopbackRingBufferFrameSize * 2];
+    CARingBuffer                mLoopbackRingBuffer;
+
     // TODO: a comment explaining why we need a clock for loopback-only mode
     struct {
         Float64					hostTicksPerFrame = 0.0;

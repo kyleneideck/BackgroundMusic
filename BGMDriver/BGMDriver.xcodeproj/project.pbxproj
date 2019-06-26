@@ -78,6 +78,8 @@
 		2795973E1C9847CF00A002FB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2795973D1C9847CF00A002FB /* Foundation.framework */; };
 		27D643C31C9FBE1600737F6E /* BGM_XPCHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 27381A141C8EF50F00DF167C /* BGM_XPCHelper.m */; };
 		27E6B5F01E01966A00EC0AAB /* BGM_Utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 275343BC1DE9B44900DF3858 /* BGM_Utils.cpp */; };
+		6C6B069522C2DB1D0034C4A9 /* CARingBuffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6C6B069322C2DB1D0034C4A9 /* CARingBuffer.cpp */; };
+		6C6B069622C2DB1D0034C4A9 /* CARingBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = 6C6B069422C2DB1D0034C4A9 /* CARingBuffer.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -163,6 +165,8 @@
 		27D643B71C9FABF600737F6E /* BGM_Types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGM_Types.h; path = ../SharedSource/BGM_Types.h; sourceTree = "<group>"; };
 		27D643B81C9FABF600737F6E /* BGMXPCProtocols.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGMXPCProtocols.h; path = ../SharedSource/BGMXPCProtocols.h; sourceTree = "<group>"; };
 		27D643C21C9FBC5800737F6E /* BGM_TestUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGM_TestUtils.h; path = ../SharedSource/BGM_TestUtils.h; sourceTree = "<group>"; };
+		6C6B069322C2DB1D0034C4A9 /* CARingBuffer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CARingBuffer.cpp; path = ../BGMApp/PublicUtility/CARingBuffer.cpp; sourceTree = "<group>"; };
+		6C6B069422C2DB1D0034C4A9 /* CARingBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CARingBuffer.h; path = ../BGMApp/PublicUtility/CARingBuffer.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -322,6 +326,8 @@
 				1C3821101C4A18DE00A0C8C6 /* CAPThread.h */,
 				1CB8B38C1BBCF4A9000E2DD1 /* CAVolumeCurve.cpp */,
 				1CB8B38D1BBCF4A9000E2DD1 /* CAVolumeCurve.h */,
+				6C6B069322C2DB1D0034C4A9 /* CARingBuffer.cpp */,
+				6C6B069422C2DB1D0034C4A9 /* CARingBuffer.h */,
 			);
 			name = PublicUtility;
 			sourceTree = "<group>";
@@ -356,6 +362,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6C6B069622C2DB1D0034C4A9 /* CARingBuffer.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -555,6 +562,7 @@
 				2743C9E01D7EF8760089613B /* CAMutex.cpp in Sources */,
 				2743C9E21D7EF8760089613B /* CAPThread.cpp in Sources */,
 				2743C9E41D7EF8760089613B /* CAVolumeCurve.cpp in Sources */,
+				6C6B069522C2DB1D0034C4A9 /* CARingBuffer.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
