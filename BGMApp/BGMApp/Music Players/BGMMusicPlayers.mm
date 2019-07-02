@@ -34,6 +34,7 @@
 #import "BGMDecibel.h"
 #import "BGMHermes.h"
 #import "BGMSwinsian.h"
+#import "BGMMusic.h"
 #import "BGMGooglePlayMusicDesktopPlayer.h"
 
 
@@ -56,7 +57,8 @@
                                                    [BGMiTunes class],
                                                    [BGMDecibel class],
                                                    [BGMHermes class],
-                                                   [BGMSwinsian class] ];
+                                                   [BGMSwinsian class],
+                                                   [BGMMusic class] ];
 
     // We only support Google Play Music Desktop Player on macOS 10.10 and higher.
     if (@available(macOS 10.10, *)) {

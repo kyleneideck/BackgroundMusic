@@ -17,17 +17,19 @@
 //  BGMMusic.h
 //  BGMApp
 //
-//  Copyright © 2016-2019 Kyle Neideck, theLMGN
+//  Copyright © 2016, 2019 Kyle Neideck
+//  Copyright © 2019 theLMGN
 //
 
 // Superclass/Protocol Import
 #import "BGMMusicPlayer.h"
 
 
+#pragma clang assume_nonnull begin
+
 @interface BGMMusic : BGMMusicPlayerBase<BGMMusicPlayer>
 
-// The music player ID (see BGMMusicPlayer.h) used by BGMiTunes instances. (Though BGMApp only ever creates one instance of
-// BGMiTunes, sharedMusicPlayerID is exposed so iTunes can be set as the default music player.)
-+ (NSUUID*) sharedMusicPlayerID;
-
 @end
+
+#pragma clang assume_nonnull end
+

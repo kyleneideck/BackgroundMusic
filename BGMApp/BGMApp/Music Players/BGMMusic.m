@@ -40,7 +40,8 @@
 }
 
 + (NSUUID*) sharedMusicPlayerID {
-    NSUUID* __nullable musicPlayerID = [[NSUUID alloc] initWithUUIDString:@"7B62B5BF-CF90-4938-84E3-F16DEDC3F608"];
+    NSUUID* __nullable musicPlayerID =
+            [[NSUUID alloc] initWithUUIDString:@"829B8069-8BD2-481D-BD40-54AB8CDAE228"];
     NSAssert(musicPlayerID, @"BGMMusic::sharedMusicPlayerID: !musicPlayerID");
     return (NSUUID*)musicPlayerID;
 }
@@ -55,7 +56,7 @@
     return self;
 }
 
-- (MusicApplication* __nullable) Music {
+- (MusicApplication* __nullable) music {
     return (MusicApplication*)scriptingBridge.application;
 }
 
@@ -65,18 +66,19 @@
 }
 
 - (BOOL) isRunning {
-    return self.Music.running;
+    return self.music.running;
 }
 
-// isPlaying and isPaused check self.running first just in case Music is closed but self.Music hasn't become
-// nil yet. In that case, reading self.Music.playerState could make Scripting Bridge open Music.
+// isPlaying and isPaused check self.running first just in case Music is closed but self.music
+// hasn't become nil yet. In that case, reading self.music.playerState could make Scripting Bridge
+// open Music.
 
 - (BOOL) isPlaying {
-    return self.running && (self.Music.playerState == MusicEPlSPlaying);
+    return self.running && (self.music.playerState == MusicEPlSPlaying);
 }
 
 - (BOOL) isPaused {
-    return self.running && (self.Music.playerState == MusicEPlSPaused);
+    return self.running && (self.music.playerState == MusicEPlSPaused);
 }
 
 - (BOOL) pause {
@@ -85,7 +87,7 @@
     
     if (wasPlaying) {
         DebugMsg("BGMMusic::pause: Pausing Music");
-        [self.Music pause];
+        [self.music pause];
     }
     
     return wasPlaying;
@@ -97,7 +99,7 @@
     
     if (wasPaused) {
         DebugMsg("BGMMusic::unpause: Unpausing Music");
-        [self.Music playpause];
+        [self.music playpause];
     }
     
     return wasPaused;
@@ -106,3 +108,4 @@
 @end
 
 #pragma clang assume_nonnull end
+
