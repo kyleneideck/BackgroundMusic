@@ -100,7 +100,7 @@ Otherwise, to build and install from source:
 - If the project is in a zip, unzip it.
 - Open `Terminal.app` and [change directory](https://github.com/0nn0/terminal-mac-cheatsheet#core-commands) to the
   directory containing the project.
-- Run the following the command: `/bin/bash build_and_install.sh`.
+- Run the following command: `/bin/bash build_and_install.sh`.
 
 The script restarts the system audio process (coreaudiod) at the end of the installation, so you might want to pause any
 apps playing audio.
