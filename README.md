@@ -53,7 +53,7 @@ that when I'm listening to music and pause it to watch a video or something I al
 this keeps me from wearing headphones for hours listening to nothing.
 
 So far iTunes, [Spotify](https://www.spotify.com), [VLC](https://www.videolan.org/vlc/),
-[VOX](https://coppertino.com/vox/mac), [Decibel](https://sbooth.org/Decibel/), [Hermes](http://hermesapp.org/) and
+[VOX](https://vox.rocks/mac-music-player), [Decibel](https://sbooth.org/Decibel/), [Hermes](http://hermesapp.org/) and
 [Swinsian](https://swinsian.com/) are supported. Adding support for a new music player should only take a few
 minutes<sup id="a1">[1](#f1)</sup> -- see [BGMMusicPlayer.h](BGMApp/BGMApp/Music%20Players/BGMMusicPlayer.h). If you
 don't know how to program, or just don't feel like it, create an issue and I'll try to add it for you.
