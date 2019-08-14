@@ -68,8 +68,9 @@ function size_check {
   [[ "${size}" =~ ^[0-9]+$ ]] && [[ "${size}" -le ${max_size_mb_for_rm} ]]
 }
 
-# Ensure that the user can use sudo. (But not if this is a Travis CI build, because then it would fail.)
-if ([[ -z ${TRAVIS:-} ]] || [[ "${TRAVIS}" != true ]]) && ! sudo -v; then
+# Ensure that the user can use sudo. (Use `sudo true` instead of `sudo -v` because that causes a
+# password prompt in Travis CI builds for some reason.)
+if ! sudo true; then
   echo "ERROR: This script must be run by a user with administrator (sudo) privileges." >&2
   exit 1
 fi
