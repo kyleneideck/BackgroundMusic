@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # vim: tw=100:
 
 # This file is part of Background Music.
@@ -19,7 +19,7 @@
 #
 # postinstall
 #
-# Copyright © 2017, 2018 Kyle Neideck
+# Copyright © 2017-2019 Kyle Neideck
 #
 
 PATH=/bin:/sbin:/usr/bin:/usr/sbin; export PATH
@@ -41,7 +41,8 @@ bash "post_install.sh" "$xpc_helper_path" "BGMXPCHelper.xpc/Contents/MacOS/BGMXP
 # The extra or-clauses are fallback versions of the command that restarts coreaudiod. Apparently
 # some of these commands don't work with older versions of launchctl, so I figure there's no
 # harm in trying a bunch of different ways (which should all work).
-(launchctl kill SIGTERM system/com.apple.audio.coreaudiod &>/dev/null || \
+(sudo launchctl kickstart -k system/com.apple.audio.coreaudiod &>/dev/null || \
+    launchctl kill SIGTERM system/com.apple.audio.coreaudiod &>/dev/null || \
     launchctl kill TERM system/com.apple.audio.coreaudiod &>/dev/null || \
     launchctl kill 15 system/com.apple.audio.coreaudiod &>/dev/null || \
     launchctl kill -15 system/com.apple.audio.coreaudiod &>/dev/null || \

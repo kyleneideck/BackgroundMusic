@@ -19,7 +19,7 @@
 #
 # build_and_install.sh
 #
-# Copyright © 2016-2018 Kyle Neideck
+# Copyright © 2016-2019 Kyle Neideck
 # Copyright © 2016 Nick Jacques
 #
 # Builds and installs BGMApp, BGMDriver and BGMXPCHelper. Requires xcodebuild and Xcode.
@@ -734,7 +734,8 @@ if [[ "${XCODEBUILD_ACTION}" == "install" ]]; then
     # The extra or-clauses are fallback versions of the command that restarts coreaudiod. Apparently
     # some of these commands don't work with older versions of launchctl, so I figure there's no
     # harm in trying a bunch of different ways (which should all work).
-    (sudo launchctl kill SIGTERM system/com.apple.audio.coreaudiod &>/dev/null || \
+    (sudo launchctl kickstart -k system/com.apple.audio.coreaudiod &>/dev/null || \
+        sudo launchctl kill SIGTERM system/com.apple.audio.coreaudiod &>/dev/null || \
         sudo launchctl kill TERM system/com.apple.audio.coreaudiod &>/dev/null || \
         sudo launchctl kill 15 system/com.apple.audio.coreaudiod &>/dev/null || \
         sudo launchctl kill -15 system/com.apple.audio.coreaudiod &>/dev/null || \
