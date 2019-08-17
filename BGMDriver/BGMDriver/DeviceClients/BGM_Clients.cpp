@@ -17,7 +17,7 @@
 //  BGM_Clients.cpp
 //  BGMDriver
 //
-//  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016, 2017, 2019 Kyle Neideck
 //  Copyright © 2017 Andrew Tonner
 //
 
@@ -350,23 +350,20 @@ bool    BGM_Clients::SetClientsRelativeVolumes(const CACFArray inAppVolumes)
                 // keep the middle volume equal to 1 (meaning apps' volumes are unchanged by default).
                 Float32 theRelativeVolume = mRelativeVolumeCurve.ConvertRawToScalar(theRawRelativeVolume) * 4;
 
-                // Try to update the client's volume, first by PID and then, if that fails, by bundle ID
-                //
-                // TODO: Should we always try both in case an app has multiple clients?
+                // Try to update the client's volume, first by PID and then by bundle ID. Always try
+                // both because apps can have multiple clients.
                 if(mClientMap.SetClientsRelativeVolume(theAppPID, theRelativeVolume))
                 {
                     didChangeAppVolumes = true;
                 }
-                else if(mClientMap.SetClientsRelativeVolume(theAppBundleID, theRelativeVolume))
+
+                if(mClientMap.SetClientsRelativeVolume(theAppBundleID, theRelativeVolume))
                 {
                     didChangeAppVolumes = true;
                 }
-                else
-                {
-                    // TODO: The app isn't currently a client, so we should add it to the past clients map, or update its
-                    //       past volume if it's already in there.
-                }
-            
+
+                // TODO: If the app isn't currently a client, we should add it to the past clients
+                //       map, or update its past volume if it's already in there.
             }
         }
         
@@ -383,15 +380,14 @@ bool    BGM_Clients::SetClientsRelativeVolumes(const CACFArray inAppVolumes)
                 {
                     didChangeAppVolumes = true;
                 }
-                else if(mClientMap.SetClientsPanPosition(theAppBundleID, thePanPosition))
+
+                if(mClientMap.SetClientsPanPosition(theAppBundleID, thePanPosition))
                 {
                     didChangeAppVolumes = true;
                 }
-                else
-                {
-                    // TODO: The app isn't currently a client, so we should add it to the past clients map, or update its
-                    //       past pan position if it's already in there.
-                }
+
+                // TODO: If the app isn't currently a client, we should add it to the past clients
+                //       map, or update its past pan position if it's already in there.
             }
         }
         

@@ -182,8 +182,8 @@ private:
     std::map<CACFString, BGM_ClientPtrList>             mClientMapByBundleID;
     std::map<CACFString, BGM_ClientPtrList>             mClientMapByBundleIDShadow;
     
-    // Clients are added to mPastClientMap after they're removed so we can restore settings specific to them
-    // if they get added again.
+    // Clients are added to mPastClientMap so we can restore settings specific to them if they get
+    // added again.
     std::map<CACFString, BGM_Client>                    mPastClientMap;
     
 };

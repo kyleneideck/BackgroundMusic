@@ -17,7 +17,7 @@
 //  BGM_ClientMap.cpp
 //  BGMDriver
 //
-//  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016, 2017, 2019 Kyle Neideck
 //  Copyright © 2017 Andrew Tonner
 //
 
@@ -59,11 +59,13 @@ void    BGM_ClientMap::AddClient(BGM_Client inClient)
     // The shadow maps (which were the main maps until we swapped them) are now missing the new client. Add it again to
     // keep the sets of maps identical.
     AddClientToShadowMaps(inClient);
-    
-    // Remove the client from the past clients map (if it was in there)
+
+    // Insert the client into the past clients map. We do this here rather than in RemoveClient
+    // because some apps add multiple clients with the same bundle ID and we want to give them all
+    // the same settings (volume, etc.).
     if(inClient.mBundleID.IsValid())
     {
-        mPastClientMap.erase(inClient.mBundleID);
+        mPastClientMap[inClient.mBundleID] = inClient;
     }
 }
 
@@ -101,12 +103,6 @@ BGM_Client    BGM_ClientMap::RemoveClient(UInt32 inClientID)
             "BGM_ClientMap::RemoveClient: Could not find client to be removed");
     
     BGM_Client theClient = theClientItr->second;
-    
-    // Insert the client into the past clients map
-    if(theClient.mBundleID.IsValid())
-    {
-        mPastClientMap[theClient.mBundleID] = theClient;
-    }
     
     // Remove the client from the shadow maps
     mClientMapShadow.erase(theClientItr);
