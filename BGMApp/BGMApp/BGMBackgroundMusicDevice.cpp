@@ -17,7 +17,7 @@
 //  BGMBackgroundMusicDevice.cpp
 //  BGMApp
 //
-//  Copyright © 2016, 2017 Kyle Neideck
+//  Copyright © 2016-2019 Kyle Neideck
 //  Copyright © 2017 Andrew Tonner
 //
 
@@ -239,7 +239,9 @@ BGMBackgroundMusicDevice::ResponsibleBundleIDsOf(CACFString inParentBundleID)
         // Discord
         { "com.hnc.Discord", { "com.hnc.Discord.helper" } },
         // Skype
-        { "com.skype.skype", { "com.skype.skype.Helper" } }
+        { "com.skype.skype", { "com.skype.skype.Helper" } },
+        // Google Chrome
+        { "com.google.Chrome", { "com.google.Chrome.helper" } }
     };
 
     // Parallels' VM "dock helper" apps have bundle IDs like
