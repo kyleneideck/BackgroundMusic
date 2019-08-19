@@ -27,26 +27,6 @@
 
 We also have [snapshot builds](https://github.com/kyleneideck/BackgroundMusic/releases).
 
-# Download
-## Download version 0.3.1
-
-<a href="https://github.com/kyleneideck/BackgroundMusic/releases/download/v0.3.1/BackgroundMusic-0.3.1.pkg"><img 
-src="Images/README/pkg-icon.png" width="32" height="32" align="absmiddle" />
-BackgroundMusic-0.3.1.pkg</a> (571 KB)
-
-## Or install using [Homebrew](https://brew.sh/)
-
-```bash
-brew cask install background-music
-```
-
-If you want the snapshot version:
-
-```bash
-brew tap homebrew/cask-versions
-brew cask install background-music-pre
-```
-
 ## Auto-pause music
 **Background Music** automatically pauses your music player when a secondary audio source is playing, and unpauses the player when the secondary source has stopped. This includes audio from video players and browsers. 
 
@@ -78,7 +58,28 @@ device](https://support.apple.com/en-us/HT202000) that combines your input devic
 the Background Music device. You can create the aggregate device using the Audio MIDI Setup utility from
 `/Applications/Utilities`.
 
-## Install from source
+# Download
+### Download version 0.3.1
+
+<a href="https://github.com/kyleneideck/BackgroundMusic/releases/download/v0.3.1/BackgroundMusic-0.3.1.pkg"><img 
+src="Images/README/pkg-icon.png" width="32" height="32" align="absmiddle" />
+BackgroundMusic-0.3.1.pkg</a> (571 KB)
+
+### Or install using [Homebrew](https://brew.sh/)
+
+```bash
+brew cask install background-music
+```
+
+If you want the snapshot version:
+
+```bash
+brew tap homebrew/cask-versions
+brew cask install background-music-pre
+```
+
+
+### Install from source
 
 Building should take less than a minute, but you'll need [Xcode](https://developer.apple.com/xcode/download/) version 
 8 or higher.
@@ -113,21 +114,18 @@ apps playing audio.
 Additional detailed installation instructions can be found on [the
 Wiki](https://github.com/kyleneideck/BackgroundMusic/wiki/Installation).
 
-## Uninstall
+# Uninstall
 
-- Run the `uninstall.sh` script (using `Terminal.app`) to remove Background Music from your system. You should be able
-  to find it in `/Applications/Background Music.app/Contents/Resources/uninstall.sh`, but if not you can [download the
-  project](https://github.com/kyleneideck/BackgroundMusic/archive/master.zip) again.
-- Go to the Sound section in System Preferences and change your default output device at least once. (If you only have
-  one device now, either use `Audio MIDI Setup.app` to create a temporary aggregate device, restart any audio apps that
-  have stopped working or just restart your system.)
+**Method 1:** Run the `uninstall.sh` script (using `Terminal.app`) to remove Background Music from your system. You should be able to find it in `/Applications/Background Music.app/Contents/Resources/uninstall.sh`, but if not you can [download the project](https://github.com/kyleneideck/BackgroundMusic/archive/master.zip) again.
+  
+**Method 2:** Go to the **Sound** section under **System Preferences** and change your default output device at least once. (If you only have one device, either use `Audio MIDI Setup.app` to create a temporary aggregate device, or restart any audio applications that have stopped working, or restart your system.)
 
-### Manual Uninstall
+## Manual Uninstall
 
 Try following the instructions in [`MANUAL-UNINSTALL.md`](MANUAL-UNINSTALL.md) if `uninstall.sh` fails. (You might
 consider submitting a bug report, too.)
 
-## Troubleshooting
+# Troubleshooting
 
 If Background Music crashes and your audio stops working, open the Sound panel in System Preferences and change your
 system's default output device to something other than the Background Music device. If it already is, it might help to
@@ -135,7 +133,7 @@ change the default device and then change it back again.
 
 Failing that, you might have to uninstall. Consider filing a bug report if you do.
 
-## Known issues
+### Known issues
 
 - Setting an app's volume above 50% can cause [clipping](https://en.wikipedia.org/wiki/Clipping_(audio)). Currently, the
   best solution is to instead set your overall volume to max and lower the volumes of other apps.
@@ -162,7 +160,7 @@ Failing that, you might have to uninstall. Consider filing a bug report if you d
   [#5](https://github.com/kyleneideck/BackgroundMusic/issues/5) for details.
 - Plenty more. Some are in listed in [TODO.md](/TODO.md).
 
-## Related projects
+# Related projects
 
 - [Core Audio User-Space Driver
   Examples](https://developer.apple.com/library/mac/samplecode/AudioDriverExamples/Introduction/Intro.html)
