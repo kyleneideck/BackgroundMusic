@@ -7,23 +7,17 @@
 
 <img src="Images/README/Screenshot.png" width="340" height="342" />
 
-- Automatically pauses your music player when other audio starts playing and unpauses it afterwards
-- Per-application volume, boost quiet apps
-- Record system audio <br><br>
-- No restart required to install
-- Runs entirely in userspace
+**Background Music** gives you control over multiple sources of audio on your desktop without navigating each individual application. It provides the following functionalities:
 
-## Download
++ Automatically pause your music player when another audio source is playing
++ Increase or decrease the volume of each application
++ Record system audio
++ No restart required to install
++ Runs entirely in userspace
 
-### Version 0.3.1
+**Background Music** is still in alpha.
 
-<a href="https://github.com/kyleneideck/BackgroundMusic/releases/download/v0.3.1/BackgroundMusic-0.3.1.pkg"><img 
-src="Images/README/pkg-icon.png" width="32" height="32" align="absmiddle" />
-BackgroundMusic-0.3.1.pkg</a> (571 KB)
-
-Still very much in alpha.
-
-**Requires macOS 10.10+**. Should work on 10.9, but I haven't tried it.
+**Requires macOS 10.10+**. It may work on 10.9.
 
 > <sub>MD5: 89a74e9379041abfd6a55471f3e61b94</sub><br/>
 > <sub>SHA256: 070bef360bff9e52639a4fbf23ee7052b9645004a431af6ad62997cfed99e2d7</sub><br/>
@@ -33,7 +27,14 @@ Still very much in alpha.
 
 We also have [snapshot builds](https://github.com/kyleneideck/BackgroundMusic/releases).
 
-### Or install using [Homebrew](https://brew.sh/)
+# Download
+## Download version 0.3.1
+
+<a href="https://github.com/kyleneideck/BackgroundMusic/releases/download/v0.3.1/BackgroundMusic-0.3.1.pkg"><img 
+src="Images/README/pkg-icon.png" width="32" height="32" align="absmiddle" />
+BackgroundMusic-0.3.1.pkg</a> (571 KB)
+
+## Or install using [Homebrew](https://brew.sh/)
 
 ```bash
 brew cask install background-music
@@ -47,28 +48,30 @@ brew cask install background-music-pre
 ```
 
 ## Auto-pause music
+**Background Music** automatically pauses your music player when a secondary audio source is playing, and unpauses the player when the secondary source has stopped. This includes audio from video players and browsers. 
 
-Background Music can pause your music player app when other audio starts playing and unpause it afterwards. The idea is
-that when I'm listening to music and pause it to watch a video or something I always forget to unpause it afterwards. So
-this keeps me from wearing headphones for hours listening to nothing.
+**Background Music** currently supports the following music players:
 
-So far iTunes, [Spotify](https://www.spotify.com), [VLC](https://www.videolan.org/vlc/),
-[VOX](https://vox.rocks/mac-music-player), [Decibel](https://sbooth.org/Decibel/), [Hermes](http://hermesapp.org/),
-[Swinsian](https://swinsian.com/) and [GPMDP](https://www.googleplaymusicdesktopplayer.com/) are supported. Adding
-support for a new music player should only take a few minutes<sup id="a1">[1](#f1)</sup> -- see
++ iTunes
++ [Spotify](https://www.spotify.com)
++ [VLC](https://www.videolan.org/vlc/)
++ [VOX](https://vox.rocks/mac-music-player)
++ [Decibel](https://sbooth.org/Decibel/)
++ [Hermes](http://hermesapp.org/)
++ [Swinsian](https://swinsian.com/)
++ [GPMDP](https://www.googleplaymusicdesktopplayer.com/) 
+
+Adding support for a new music player should only take a few minutes<sup id="a1">[1](#f1)</sup> -- see
 [BGMMusicPlayer.h](BGMApp/BGMApp/Music%20Players/BGMMusicPlayer.h). If you don't know how to program, or just don't feel
 like it, feel free to [create an issue](https://github.com/kyleneideck/BackgroundMusic/issues/new).
 
+## Application volume
 
-## App volumes
-
-Background Music has a volume slider for each app running on the system. I mostly use this to boost quiet apps above
-their normal maximum volume.
+Background Music has a volume slider for each application running on the system. You can increase or decrease the volume of each active application running on your desktop. You can also boost quiet applications above their maximum volume.
 
 ## Recording system audio
 
-With Background Music running, open QuickTime Player and go `File > New Audio Recording...` (or movie/screen). Then
-click the arrow next to the record button that looks like `⌄` and select `Background Music` as the input device.
+With **Background Music** running, launch **QuickTime Player** and select `File > New Audio Recording` (or `New Screen Recording`, `New Movie Recording`). Then click the arrow next to the record button that looks like `⌄` and select `Background Music` as the input device.
 
 You should be able to record system audio and a microphone together by creating an [aggregate
 device](https://support.apple.com/en-us/HT202000) that combines your input device (usually Built-in Input) with
