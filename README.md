@@ -15,7 +15,6 @@
 [Uninstall](#uninstall)<br/>
 [Troubleshooting](#troubleshooting)<br/> 
 [Related Projects](#related-projects)<br/> 
-[Non-free](#non-free)<br/> 
 [License](#license)<br/>  
 
 # Overview
@@ -30,7 +29,7 @@
 
 ***Background Music is still in alpha***
 
-**Requires macOS 10.10+**. It may work on 10.9.
+**Requires macOS 10.10+**.
 
 > <sub>MD5: 89a74e9379041abfd6a55471f3e61b94</sub><br/>
 > <sub>SHA256: 070bef360bff9e52639a4fbf23ee7052b9645004a431af6ad62997cfed99e2d7</sub><br/>
@@ -70,7 +69,7 @@ With **Background Music** running, launch **QuickTime Player** and select **File
 You can record system audio and a microphone together by creating an [aggregate
 device](https://support.apple.com/en-us/HT202000) that combines your input device (usually Built-in Input) with
 the **Background Music** device. You can create the aggregate device using the **Audio MIDI Setup** utility under
-***/Applications/Utilities***
+***/Applications/Utilities***.
 
 # Download
 ### Download version 0.3.1
@@ -131,18 +130,56 @@ Wiki](https://github.com/kyleneideck/BackgroundMusic/wiki/Installation).
 
 # Uninstall
 
-**Method 1:** In **Terminal**, run `uninstall.sh`(found under ***/Applications/Background Music.app/Contents/Resources/***) to remove **Background Music** from your system. If you cannot locate `uninstall.sh`, you can [download the project](https://github.com/kyleneideck/BackgroundMusic/archive/master.zip) again.
-  
-**Method 2:** Under **System Preferences > Sound**, change your default output device at least once. If you only have one device:
-
-+ Use **Audio MIDI Setup** to create a temporary aggregate device
-+ Restart any audio applications that have stopped working
-+ Restart your system
+In **Terminal**, run `uninstall.sh`(found under ***/Applications/Background Music.app/Contents/Resources/***) to remove **Background Music** from your system. If you cannot locate `uninstall.sh`, you can [download the project](https://github.com/kyleneideck/BackgroundMusic/archive/master.zip) again.
 
 ## Manual Uninstall
+ If `uninstall.sh` doesn't work try the following methods:
+ 
+- Delete `Background Music.app` from ***/Applications***.
+- Delete `Background Music Device.driver` from ***/Library/Audio/Plug-Ins/HAL***.
+- Pause applications that are playing audio, if you can.
+- Restart `coreaudiod` by running the following in **Terminal**:<br>
 
-Refer to [`MANUAL-UNINSTALL.md`](MANUAL-UNINSTALL.md) if `uninstall.sh` fails. You might
-consider submitting a bug report.
+  ```shell
+  sudo launchctl kill -15 system/com.apple.audio.coreaudiod
+  ```
+- Run the following in **Terminal**:<br>
+
+  ```shell
+  sudo killall coreaudiod
+  ```
+ 
+- Under **System Preferences > Sound**, change your default output device at least once. If you only have one device:
+
+    + Use **Audio MIDI Setup** to create a temporary aggregate device
+    + Restart any audio applications that have stopped working
+    + Restart your system
+
+## Optional
+
+- Delete `BGMXPCHelper.xpc` from `/usr/local/libexec` or possibly `/Library/Application Support/Background Music`.
+- Unregister BGMXPCHelper.
+- If you're using OS X 10.11:
+
+    ```shell
+    sudo launchctl bootout system /Library/LaunchDaemons/com.bearisdriving.BGM.XPCHelper.plist
+    ```
+  - If you're using an earlier version of OS X:
+
+    ```shell
+    sudo launchctl unload /Library/LaunchDaemons/com.bearisdriving.BGM.XPCHelper.plist
+    ```
+- Delete BGMXPCHelper's launchd.plist.
+
+  ```shell
+  sudo rm /Library/LaunchDaemons/com.bearisdriving.BGM.XPCHelper.plist
+  ```
+- Delete BGMXPCHelper's user and group.
+
+  ```shell
+  sudo dscl . -delete /Users/_BGMXPCHelper
+  sudo dscl . -delete /Groups/_BGMXPCHelper
+  ```
 
 # Troubleshooting
 
