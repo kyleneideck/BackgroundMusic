@@ -7,6 +7,19 @@
 
 <img src="Images/README/Screenshot.png" width="340" height="342" />
 
+[Overview](#overview)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[Auto-pause music](#auto-pause-music)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[Application volume](#application-volume)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[Recording system audio](#recording-system-audio)<br/> 
+[Download](#download)<br/> 
+[Uninstall](#uninstall)<br/>
+[Troubleshooting](#troubleshooting)<br/> 
+[Related Projects](#related-projects)<br/> 
+[Non-free](#non-free)<br/> 
+[License](#license)<br/>  
+
+# Overview
+
 **Background Music** gives you control over multiple sources of audio on your desktop without navigating each individual application. It provides the following functionalities:
 
 + Automatically pause your music player when another audio source is playing
@@ -25,7 +38,7 @@
 > [sig](https://github.com/kyleneideck/BackgroundMusic/releases/download/v0.3.1/BackgroundMusic-0.3.1.pkg.asc),
 > [key (0595DF814E41A6F69334C5E2CAA8D9B8E39EC18C)](https://bearisdriving.com/kyle-neideck.gpg)</sub>
 
-We also have [snapshot builds](https://github.com/kyleneideck/BackgroundMusic/releases).
+We also have [snapshot builds](https://github.com/kyleneideck/BackgroundMusic/releases). 
 
 ## Auto-pause music
 
@@ -83,8 +96,6 @@ brew cask install background-music-pre
 
 # Build and install
 
-### Build
-
 Building should take less than a minute. You need [Xcode](https://developer.apple.com/xcode/download/) version 
 8 or higher.
 
@@ -103,7 +114,7 @@ include a checksum), which makes sure we can't run a half-downloaded copy of bui
     cd $(mktemp -d); echo Downloading $URL to $(pwd); curl -qfL# $URL | gzcat - | tar x && \
     /bin/bash BackgroundMusic-master/build_and_install.sh -w && rm -rf BackgroundMusic-master)
 ```
-### Build and install from source
+
 To build and install from source:
 
 1. Clone or [download](https://github.com/kyleneideck/BackgroundMusic/archive/master.zip) the project.
@@ -141,7 +152,7 @@ change the default device and then change it back again.
 
 If this does not work, you might have to uninstall. Consider filing a bug report if you do.
 
-# Known issues and solutions
+## Known issues and solutions
 
 ### Setting an application's volume above 50% can cause [clipping](https://en.wikipedia.org/wiki/Clipping_(audio))
 Set your volume to its maximum level and to lower the volumes of other applications.
