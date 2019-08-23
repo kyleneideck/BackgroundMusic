@@ -129,7 +129,7 @@ applications playing audio.
 
 ## Manual Build and Install
 
-- Install the virtual audio device `Background Music Device.driver` to **/Library/Audio/Plug-Ins/HAL**.
+- Install the virtual audio device `Background Music Device.driver` to ***/Library/Audio/Plug-Ins/HAL***.
 
   ```shell
   sudo xcodebuild -project BGMDriver/BGMDriver.xcodeproj \
@@ -152,7 +152,7 @@ applications playing audio.
                   INSTALL_PATH="$(BGMApp/BGMXPCHelper/safe_install_dir.sh)" \
                   clean install
   ```
-- Install `Background Music.app` to **/Applications** (or wherever).
+- Install `Background Music.app` to ***/Applications*** (or wherever).
 
   ```shell
   sudo xcodebuild -project BGMApp/BGMApp.xcodeproj \
