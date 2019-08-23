@@ -21,14 +21,13 @@
 
 **Background Music** gives you control over multiple sources of audio on your desktop without navigating each individual application. It provides the following functionalities:
 
-+ Automatically pause your music player when another audio source is playing
-+ Increase or decrease the volume of each application
++ Automatically pause/unpause your music player when another audio source is playing/stopped
++ Per-application volume control
 + Record system audio
 + No restart required to install
 + Runs entirely in userspace
 
-***Background Music is still in alpha***
-
+*Background Music is still in alpha*</br>
 **Requires macOS 10.10+**.
 
 > <sub>MD5: 89a74e9379041abfd6a55471f3e61b94</sub><br/>
@@ -41,7 +40,7 @@ We also have [snapshot builds](https://github.com/kyleneideck/BackgroundMusic/re
 
 ## Auto-pause music
 
-**Background Music** automatically pauses your music player when a second audio source is playing, and unpauses the player when the second source has stopped. This includes audio from video players and browsers. 
+**Background Music** automatically pauses your music player when a second audio source is playing, and unpauses the player when the second source has stopped. 
 
 The auto-pause feature currently supports following music players:
 
@@ -60,11 +59,11 @@ like it, feel free to [create an issue](https://github.com/kyleneideck/Backgroun
 
 ## Application volume
 
-**Background Music** provides a volume slider for each application running on the system. You can increase or decrease the volume of each application running on your desktop. You can also boost quiet applications above their maximum volume.
+**Background Music** provides a volume slider for each application running your system. You can boost quiet applications above their maximum volume.
 
 ## Recording system audio
 
-With **Background Music** running, launch **QuickTime Player** and select **File > New Audio Recording** (or **New Screen Recording**, **New Movie Recording**). Then click the dropdown menu (`⌄`) next to the record button and select **Background Music** as the input device.
+You can record system audio with **Background Music**. With **Background Music** running, launch **QuickTime Player** and select **File > New Audio Recording** (or **New Screen Recording**, **New Movie Recording**). Then click the dropdown menu (`⌄`) next to the record button and select **Background Music** as the input device.
 
 You can record system audio and a microphone together by creating an [aggregate
 device](https://support.apple.com/en-us/HT202000) that combines your input device (usually Built-in Input) with
@@ -159,7 +158,7 @@ In **Terminal**, run `uninstall.sh`(found under ***/Applications/Background Musi
 
 - Delete `BGMXPCHelper.xpc` from `/usr/local/libexec` or possibly `/Library/Application Support/Background Music`.
 - Unregister BGMXPCHelper.
-- If you're using OS X 10.11:
+  - If you're using OS X 10.11:
 
     ```shell
     sudo launchctl bootout system /Library/LaunchDaemons/com.bearisdriving.BGM.XPCHelper.plist
@@ -192,7 +191,7 @@ If this does not work, you might have to uninstall. Consider filing a bug report
 ## Known issues and solutions
 
 ### Setting an application's volume above 50% can cause [clipping](https://en.wikipedia.org/wiki/Clipping_(audio))
-Set your volume to its maximum level and to lower the volumes of other applications.
+Set your volume to its maximum level and lower the volumes of other applications.
 
 ### VLC pauses iTunes or Spotify when playing, and stops Background Music from unpausing your music afterwards 
 Under VLC's preferences, select **Show All**. Navigate to **Interface > Main interfaces > macosx** and change *Control external music players* to either *Do nothing* or *Pause and resume iTunes/Spotify*. 
