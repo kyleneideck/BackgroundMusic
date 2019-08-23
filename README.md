@@ -181,7 +181,7 @@ Additional detailed installation instructions can be found on [the Wiki](https:/
 In **Terminal**, run `uninstall.sh`(found under ***/Applications/Background Music.app/Contents/Resources/***) to remove **Background Music** from your system. If you cannot locate `uninstall.sh`, you can [download the project](https://github.com/kyleneideck/BackgroundMusic/archive/master.zip) again.
 
 ## Manual Uninstall
- If `uninstall.sh` doesn't work try the following methods (and consider filing a bug report):
+ If `uninstall.sh` doesn't work, try the following methods (and consider filing a bug report):
  
 - Delete `Background Music.app` from ***/Applications***.
 - Delete `Background Music Device.driver` from ***/Library/Audio/Plug-Ins/HAL***.
