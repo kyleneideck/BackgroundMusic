@@ -3,7 +3,7 @@
 ![](Images/README/FermataIcon.png)
 
 # Background Music
-##### macOS audio utility
+##### macOS audio utility - *Still in alpha*</br>
 
 <img src="Images/README/Screenshot.png" width="340" height="342" />
 
@@ -27,7 +27,6 @@
 + No restart required to install
 + Runs entirely in userspace
 
-*Background Music is still in alpha*</br>
 **Requires macOS 10.10+**.
 
 > <sub>MD5: 89a74e9379041abfd6a55471f3e61b94</sub><br/>
