@@ -3,7 +3,7 @@
 ![](Images/README/FermataIcon.png)
 
 # Background Music
-##### macOS audio utility - *Still in alpha*</br>
+##### macOS audio utility
 
 <img src="Images/README/Screenshot.png" width="340" height="342" />
 
@@ -36,6 +36,8 @@
 > [key (0595DF814E41A6F69334C5E2CAA8D9B8E39EC18C)](https://bearisdriving.com/kyle-neideck.gpg)</sub>
 
 We also have [snapshot builds](https://github.com/kyleneideck/BackgroundMusic/releases). 
+
+##### *Background Music is still in alpha.*
 
 ## Auto-pause music
 
@@ -70,7 +72,7 @@ the **Background Music** device. You can create the aggregate device using the *
 ***/Applications/Utilities***.
 
 # Download
-### Download version 0.3.1
+### Download version 0.3.1 
 
 <a href="https://github.com/kyleneideck/BackgroundMusic/releases/download/v0.3.1/BackgroundMusic-0.3.1.pkg"><img 
 src="Images/README/pkg-icon.png" width="32" height="32" align="absmiddle" />
