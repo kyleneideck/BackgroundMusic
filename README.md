@@ -38,6 +38,7 @@
 
 We also have [snapshot builds](https://github.com/kyleneideck/BackgroundMusic/releases). 
 
+
 ##### *Background Music is still in alpha.*
 
 ## Auto-pause music
@@ -173,6 +174,7 @@ applications playing audio.
   ```
 - Run `Background Music.app`.
 
+Additional detailed installation instructions can be found on [the Wiki](https://github.com/kyleneideck/BackgroundMusic/wiki/Installation).
 
 # Uninstall
 
