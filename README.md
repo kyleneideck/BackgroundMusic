@@ -22,7 +22,7 @@
 
 **Background Music** gives you control over multiple sources of audio on your desktop without navigating each individual application. It provides the following functionalities:
 
-+ Automatically pause/unpause your music player when another audio source is playing/stopped
++ Automatically pause/unpause your music player when other audio sources are playing/stopped
 + Per-application volume control
 + Record system audio
 + No restart required to install
