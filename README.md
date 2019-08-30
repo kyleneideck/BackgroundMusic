@@ -136,7 +136,7 @@ To manually build and install, see [MANUAL_INSTALL.md](https://github.com/kylene
 To uninstall **Background Music** from your system, follow these steps:
 
 1. Open **Terminal**.
-2. To locate `uninstall.sh`, run:`cd /Applications/Background\ Music.app/Contents/Re s/`.
+2. To locate `uninstall.sh`, run:`cd /Applications/Background\ Music.app/Contents/Resources/`.
 3. Run: `sh uninstall.sh`.
 
 If you cannot locate `uninstall.sh`, you can [download the project](https://github.com/kyleneideck/BackgroundMusic/archive/master.zip) again.
