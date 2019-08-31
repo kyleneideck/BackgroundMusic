@@ -7,23 +7,64 @@
 
 <img src="Images/README/Screenshot.png" width="340" height="342" />
 
-- Automatically pauses your music player when other audio starts playing and unpauses it afterwards
-- Per-application volume, boost quiet apps
-- Record system audio <br><br>
-- No restart required to install
-- Runs entirely in userspace
+[Overview](#overview)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[Auto-pause music](#auto-pause-music)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[Application volume](#application-volume)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[Recording system audio](#recording-system-audio)<br/> 
+[Download](#download)<br/> 
+[Build and Install](#build-and-install)</br>
+[Uninstall](#uninstall)<br/>
+[Troubleshooting](#troubleshooting)<br/> 
+[Related Projects](#related-projects)<br/> 
+[License](#license)<br/>  
 
-## Download
+# Overview
 
-### Version 0.3.1
+**Background Music** gives you control over multiple sources of audio on your desktop without navigating each individual application. It provides the following functionalities:
 
-<a href="https://github.com/kyleneideck/BackgroundMusic/releases/download/v0.3.1/BackgroundMusic-0.3.1.pkg"><img 
-src="Images/README/pkg-icon.png" width="32" height="32" align="absmiddle" />
-BackgroundMusic-0.3.1.pkg</a> (571 KB)
++ Automatically pause/unpause your music player when other audio sources are playing/stopped
++ Per-application volume control
++ Record system audio
++ No restart required to install
++ Runs entirely in userspace
 
-Still very much in alpha.
+##### *Note: Background Music is still in alpha.*
 
-**Requires macOS 10.10+**. Should work on 10.9, but I haven't tried it.
+## Auto-pause music
+
+**Background Music** automatically pauses your music player when a second audio source is playing, and unpauses the player when the second source has stopped. 
+
+The auto-pause feature currently supports following music players:
+
++ iTunes
++ [Spotify](https://www.spotify.com)
++ [VLC](https://www.videolan.org/vlc/)
++ [VOX](https://vox.rocks/mac-music-player)
++ [Decibel](https://sbooth.org/Decibel/)
++ [Hermes](http://hermesapp.org/)
++ [Swinsian](https://swinsian.com/)
++ [GPMDP](https://www.googleplaymusicdesktopplayer.com/) 
+
+Adding support for a new music player is straight-forward.<sup id="a1">[1](#f1)</sup> If you don't know how to program, or just don't feel
+like it, feel free to [create an issue](https://github.com/kyleneideck/BackgroundMusic/issues/new). Otherwise, see
+[BGMMusicPlayer.h](BGMApp/BGMApp/Music%20Players/BGMMusicPlayer.h). 
+
+## Application volume
+
+**Background Music** provides a volume slider for each application running your system. You can boost quiet applications above their maximum volume.
+
+## Recording system audio
+
+You can record system audio with **Background Music**. With **Background Music** running, launch **QuickTime Player** and select **File > New Audio Recording** (or **New Screen Recording**, **New Movie Recording**). Then click the dropdown menu (`⌄`) next to the record button and select **Background Music** as the input device.
+
+You can record system audio and a microphone together by creating an [aggregate
+device](https://support.apple.com/en-us/HT202000) that combines your input device (usually Built-in Input) with
+the **Background Music** device. You can create the aggregate device using the **Audio MIDI Setup** utility under
+***/Applications/Utilities***.
+
+# Download
+
+**Requires macOS 10.10+**.
 
 > <sub>MD5: 89a74e9379041abfd6a55471f3e61b94</sub><br/>
 > <sub>SHA256: 070bef360bff9e52639a4fbf23ee7052b9645004a431af6ad62997cfed99e2d7</sub><br/>
@@ -31,135 +72,112 @@ Still very much in alpha.
 > [sig](https://github.com/kyleneideck/BackgroundMusic/releases/download/v0.3.1/BackgroundMusic-0.3.1.pkg.asc),
 > [key (0595DF814E41A6F69334C5E2CAA8D9B8E39EC18C)](https://bearisdriving.com/kyle-neideck.gpg)</sub>
 
-We also have [snapshot builds](https://github.com/kyleneideck/BackgroundMusic/releases).
+You can download the current prebuilt version of **Background Music** using the following options. We also have [snapshot builds](https://github.com/kyleneideck/BackgroundMusic/releases).
 
-### Or install using [Homebrew](https://brew.sh/)
+### Option 1
+
+Download **version 0.3.1**: 
+
+<a href="https://github.com/kyleneideck/BackgroundMusic/releases/download/v0.3.1/BackgroundMusic-0.3.1.pkg"><img 
+src="Images/README/pkg-icon.png" width="32" height="32" align="absmiddle" />
+BackgroundMusic-0.3.1.pkg</a> (571 KB)
+
+### Option 2
+
+Install using [Homebrew](https://brew.sh/) by running the following command in **Terminal**:
 
 ```bash
 brew cask install background-music
 ```
 
-If you want the snapshot version:
+If you want the snapshot version, run:
 
 ```bash
 brew tap homebrew/cask-versions
 brew cask install background-music-pre
 ```
 
-## Auto-pause music
+# Build and install
 
-Background Music can pause your music player app when other audio starts playing and unpause it afterwards. The idea is
-that when I'm listening to music and pause it to watch a video or something I always forget to unpause it afterwards. So
-this keeps me from wearing headphones for hours listening to nothing.
-
-So far iTunes, [Spotify](https://www.spotify.com), [VLC](https://www.videolan.org/vlc/),
-[VOX](https://vox.rocks/mac-music-player), [Decibel](https://sbooth.org/Decibel/), [Hermes](http://hermesapp.org/),
-[Swinsian](https://swinsian.com/) and [GPMDP](https://www.googleplaymusicdesktopplayer.com/) are supported. Adding
-support for a new music player should only take a few minutes<sup id="a1">[1](#f1)</sup> -- see
-[BGMMusicPlayer.h](BGMApp/BGMApp/Music%20Players/BGMMusicPlayer.h). If you don't know how to program, or just don't feel
-like it, feel free to [create an issue](https://github.com/kyleneideck/BackgroundMusic/issues/new).
-
-
-## App volumes
-
-Background Music has a volume slider for each app running on the system. I mostly use this to boost quiet apps above
-their normal maximum volume.
-
-## Recording system audio
-
-With Background Music running, open QuickTime Player and go `File > New Audio Recording...` (or movie/screen). Then
-click the arrow next to the record button that looks like `⌄` and select `Background Music` as the input device.
-
-You should be able to record system audio and a microphone together by creating an [aggregate
-device](https://support.apple.com/en-us/HT202000) that combines your input device (usually Built-in Input) with
-the Background Music device. You can create the aggregate device using the Audio MIDI Setup utility from
-`/Applications/Utilities`.
-
-## Install from source
-
-Building should take less than a minute, but you'll need [Xcode](https://developer.apple.com/xcode/download/) version 
+If you need the latest version of **Background Music**, you can download from the source on github using the following options. Building should take less than a minute. You need [Xcode](https://developer.apple.com/xcode/download/) version 
 8 or higher.
 
-If you're comfortable with it, you can just paste the following at a Terminal prompt.
+### Option 1 
 
-<!--
-Uses /bin/bash instead of just bash on the off chance that someone has a non standard Bash in their $PATH, but
-it doesn't do that for Tar or cURL because I'm fairly sure any versions of them should work here. That said,
-build_and_install.sh doesn't call most things by absolute paths yet anyway.
+1. Open **Terminal**.
+2. Copy and paste the following command into **Terminal**:
 
-Uses "gzcat - | tar x" instead of "tar xz" because gzcat will also check the file's integrity (gzip files
-include a checksum), which makes sure we can't run a half-downloaded copy of build_and_install.sh.
--->
 ```shell
 (set -eo pipefail; URL='https://github.com/kyleneideck/BackgroundMusic/archive/master.tar.gz'; \
     cd $(mktemp -d); echo Downloading $URL to $(pwd); curl -qfL# $URL | gzcat - | tar x && \
     /bin/bash BackgroundMusic-master/build_and_install.sh -w && rm -rf BackgroundMusic-master)
 ```
+This command uses `/bin/bash` instead of `bash` in case someone has a nonstandard Bash in their `$PATH`. However, it doesn't do this for `tar` or `curl`. In addition, `build_and_install.sh` doesn't call programs by absolute paths. This command also uses `gzcat - | tar x` instead of `tar xz` because `gzcat` will also check the file's integrity (gzip files
+include a checksum), and will ensure that a half-downloaded copy of `build_and_install.sh` doesn't run.
 
-Otherwise, to build and install from source:
 
-- Clone or [download](https://github.com/kyleneideck/BackgroundMusic/archive/master.zip) the project.
-- If the project is in a zip, unzip it.
-- Open `Terminal.app` and [change directory](https://github.com/0nn0/terminal-mac-cheatsheet#core-commands) to the
+### Option 2
+
+If you are not comfortable using the single-line command above, you can manually build and install from the source on github using the following steps:
+
+1. Clone or [download](https://github.com/kyleneideck/BackgroundMusic/archive/master.zip) the project.
+2. If the project is in a zip, unzip it.
+3. Open **Terminal** and [change the directory](https://github.com/0nn0/terminal-mac-cheatsheet#core-commands) to the
   directory containing the project.
-- Run the following command: `/bin/bash build_and_install.sh`.
+4. Run: `/bin/bash build_and_install.sh`.
 
-The script restarts the system audio process (coreaudiod) at the end of the installation, so you might want to pause any
-apps playing audio.
+The script restarts the system audio process (coreaudiod) at the end of the installation, so you need to pause any
+applications playing audio.
 
-Additional detailed installation instructions can be found on [the
-Wiki](https://github.com/kyleneideck/BackgroundMusic/wiki/Installation).
+To manually build and install, see [MANUAL_INSTALL.md](https://github.com/kyleneideck/BackgroundMusic/blob/master/MANUAL-INSTALL.md).
 
-## Uninstall
+# Uninstall
 
-- Run the `uninstall.sh` script (using `Terminal.app`) to remove Background Music from your system. You should be able
-  to find it in `/Applications/Background Music.app/Contents/Resources/uninstall.sh`, but if not you can [download the
-  project](https://github.com/kyleneideck/BackgroundMusic/archive/master.zip) again.
-- Go to the Sound section in System Preferences and change your default output device at least once. (If you only have
-  one device now, either use `Audio MIDI Setup.app` to create a temporary aggregate device, restart any audio apps that
-  have stopped working or just restart your system.)
+To uninstall **Background Music** from your system, follow these steps:
 
-### Manual Uninstall
+1. Open **Terminal**.
+2. To locate `uninstall.sh`, run:`cd /Applications/Background\ Music.app/Contents/Resources/`.
+3. Run: `sh uninstall.sh`.
 
-Try following the instructions in [`MANUAL-UNINSTALL.md`](MANUAL-UNINSTALL.md) if `uninstall.sh` fails. (You might
-consider submitting a bug report, too.)
+If you cannot locate `uninstall.sh`, you can [download the project](https://github.com/kyleneideck/BackgroundMusic/archive/master.zip) again.
 
-## Troubleshooting
+To manually uninstall, see [MANUAL_UNINSTALL.md](https://github.com/kyleneideck/BackgroundMusic/blob/master/MANUAL-UNINSTALL.md).
 
-If Background Music crashes and your audio stops working, open the Sound panel in System Preferences and change your
-system's default output device to something other than the Background Music device. If it already is, it might help to
+# Troubleshooting
+
+If **Background Music** crashes and your audio stops working, open **System Preferences > Sound** and change your
+system's default output device to something other than the **Background Music** device. If it already is, then
 change the default device and then change it back again.
 
-Failing that, you might have to uninstall. Consider filing a bug report if you do.
+If this does not work, you might have to uninstall. Consider filing a bug report if you do.
 
-## Known issues
+## Known issues and solutions
 
-- Setting an app's volume above 50% can cause [clipping](https://en.wikipedia.org/wiki/Clipping_(audio)). Currently, the
-  best solution is to instead set your overall volume to max and lower the volumes of other apps.
-- VLC automatically pauses iTunes/Spotify when it starts playing something, but that stops Background Music from
-  unpausing your music afterwards. To workaround it, open VLC's preferences, click `Show All`, go `Interface` > `Main
-  interfaces` > `macosx` and change `Control external music players` to either `Do nothing` or `Pause and resume
-  iTunes/Spotify`.
+- **Setting an application's volume above 50% can cause [clipping](https://en.wikipedia.org/wiki/Clipping_(audio)).**
 
-  Similarly, Skype pauses iTunes during calls. If you want to disable that, uncheck `Pause iTunes during calls` on the
-  General tab of Skype's preferences.
-- Plugging in or unplugging headphones when Background Music isn't running can silence system audio. To fix it, go to
-  the Sound section in System Preferences, click the Output tab and change your default output device to something other
-  than the Background Music device. Alternatively, you may Option+Click on the Sound icon in the menu bar to select a
-  different output device.
+    - Set your volume to its maximum level and lower the volumes of other applications.
 
-  This happens when macOS remembers that the Background Music device was your default audio device the last time you
-  last used (or didn't use) headphones.
-- [A Chrome bug](https://bugs.chromium.org/p/chromium/issues/detail?id=557620) can stop Chrome from switching to the
-  Background Music device after you open Background Music. Chrome's audio will still play, but Background Music won't be
-  aware of it.
-- Some apps play notification sounds that are only just long enough to trigger an auto-pause. The only workaround right
-  now is to increase the `kPauseDelayNSec` constant in [BGMAutoPauseMusic.mm](/BGMApp/BGMApp/BGMAutoPauseMusic.mm).
-  That will make your music overlap the other audio for longer, though, so you don't want to increase it too much. See
-  [#5](https://github.com/kyleneideck/BackgroundMusic/issues/5) for details.
-- Plenty more. Some are in listed in [TODO.md](/TODO.md).
+- **VLC pauses iTunes or Spotify when playing, and stops Background Music from unpausing your music afterwards.** 
 
-## Related projects
+    - Under VLC's preferences, select **Show All**. Navigate to **Interface > Main interfaces > macosx** and change *Control external music players* to either *Do nothing* or *Pause and resume iTunes/Spotify*. 
+
+- **Skype pauses iTunes during calls.** 
+
+    - To disable this, uncheck *Pause iTunes during calls* on the **General** tab of **Skype**'s preferences.
+
+- **Plugging in or unplugging headphones when Background Music isn't running causes silence in the system audio.** 
+    - Navigate to **System Preferences > Sound**. Click the **Output** tab and change your default output device to something other than the **Background Music** device. Alternatively, press **Option + Click** on the sound icon within the menu bar to select a different output device. This happens when macOS remembers that the **Background Music** device was your default audio device the last time you used (or didn't use) headphones.
+
+- **[A Chrome bug](https://bugs.chromium.org/p/chromium/issues/detail?id=557620) stops Chrome from switching to the Background Music device after you open Background Music.**
+    - Chrome's audio will still play, but **Background Music** won't be aware of it.
+
+- **Some applications play notification sounds that are only just long enough to trigger an auto-pause.**
+    - Increase the `kPauseDelayNSec` constant in [BGMAutoPauseMusic.mm](/BGMApp/BGMApp/BGMAutoPauseMusic.mm). It will increase your music's overlap time over other audio, so don't increase it too much. See [#5](https://github.com/kyleneideck/BackgroundMusic/issues/5) for details.
+
+### Other issues 
+Some are in listed in [TODO.md](/TODO.md).
+
+# Related projects
 
 - [Core Audio User-Space Driver
   Examples](https://developer.apple.com/library/mac/samplecode/AudioDriverExamples/Introduction/Intro.html)
@@ -191,7 +209,7 @@ Failing that, you might have to uninstall. Consider filing a bug report if you d
 Copyright © 2016-2019 [Background Music contributors](https://github.com/kyleneideck/BackgroundMusic/graphs/contributors).
 Licensed under [GPLv2](https://www.gnu.org/licenses/gpl-2.0.html), or any later version.
 
-Background Music includes code from:
+**Background Music** includes code from:
 
 - [Core Audio User-Space Driver
   Examples](https://developer.apple.com/library/mac/samplecode/AudioDriverExamples/Introduction/Intro.html), [original
