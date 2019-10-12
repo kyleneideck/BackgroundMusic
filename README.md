@@ -32,7 +32,7 @@
 
 ## Auto-pause music
 
-**Background Music** automatically pauses your music player when a second audio source is playing, and unpauses the player when the second source has stopped. 
+**Background Music** automatically pauses your music player when a second audio source is playing and unpauses the player when the second source has stopped. 
 
 The auto-pause feature currently supports following music players:
 
@@ -99,7 +99,7 @@ brew cask install background-music-pre
 
 # Build and install
 
-If you need the latest version of **Background Music**, you can download from the source on github using the following options. Building should take less than a minute. You need [Xcode](https://developer.apple.com/xcode/download/) version 
+If you need the latest version of **Background Music**, you can download from the source on GitHub using the following options. The building should take less than a minute. You need [Xcode](https://developer.apple.com/xcode/download/) version 
 8 or higher.
 
 ### Option 1 
@@ -118,12 +118,12 @@ include a checksum), and will ensure that a half-downloaded copy of `build_and_i
 
 ### Option 2
 
-If you are not comfortable using the single-line command above, you can manually build and install from the source on github using the following steps:
+If you are not comfortable using the single-line command above, you can manually build and install from the source on GitHub using the following steps:
 
 1. Clone or [download](https://github.com/kyleneideck/BackgroundMusic/archive/master.zip) the project.
 2. If the project is in a zip, unzip it.
 3. Open **Terminal** and [change the directory](https://github.com/0nn0/terminal-mac-cheatsheet#core-commands) to the
-  directory containing the project.
+  the directory containing the project.
 4. Run: `/bin/bash build_and_install.sh`.
 
 The script restarts the system audio process (coreaudiod) at the end of the installation, so you need to pause any
@@ -157,7 +157,7 @@ If this does not work, you might have to uninstall. Consider filing a bug report
 
     - Set your volume to its maximum level and lower the volumes of other applications.
 
-- **VLC pauses iTunes or Spotify when playing, and stops Background Music from unpausing your music afterwards.** 
+- **VLC pauses iTunes or Spotify when playing, and stops Background Music from unpausing your music afterward.** 
 
     - Under VLC's preferences, select **Show All**. Navigate to **Interface > Main interfaces > macosx** and change *Control external music players* to either *Do nothing* or *Pause and resume iTunes/Spotify*. 
 
@@ -166,7 +166,7 @@ If this does not work, you might have to uninstall. Consider filing a bug report
     - To disable this, uncheck *Pause iTunes during calls* on the **General** tab of **Skype**'s preferences.
 
 - **Plugging in or unplugging headphones when Background Music isn't running causes silence in the system audio.** 
-    - Navigate to **System Preferences > Sound**. Click the **Output** tab and change your default output device to something other than the **Background Music** device. Alternatively, press **Option + Click** on the sound icon within the menu bar to select a different output device. This happens when macOS remembers that the **Background Music** device was your default audio device the last time you used (or didn't use) headphones.
+    - Navigate to **System Preferences > Sound**. Click the **Output** tab and change your default output device to something other than the **Background Music** device. Alternatively, press **Option + Click** on the sound icon within the menu bar to select a different output device. This happens when macOS remembers that the **Background Music** device as your default audio device the last time you used (or didn't use) headphones.
 
 - **[A Chrome bug](https://bugs.chromium.org/p/chromium/issues/detail?id=557620) stops Chrome from switching to the Background Music device after you open Background Music.**
     - Chrome's audio will still play, but **Background Music** won't be aware of it.
@@ -184,7 +184,7 @@ Some are in listed in [TODO.md](/TODO.md).
   The sample code from Apple that BGMDriver is based on.
 - [Soundflower](https://github.com/mattingalls/Soundflower) - "MacOS system extension that allows applications to pass
   audio to other applications."
-- [WavTap](https://github.com/pje/WavTap) - "globally capture whatever your mac is playing—-as simply as a screenshot"
+- [WavTap](https://github.com/pje/WavTap) - "globally capture whatever your mac is playing—-as simple as a screenshot"
 - [eqMac](http://www.bitgapp.com/eqmac/), [GitHub](https://github.com/nodeful/eqMac2) - "System-wide Audio Equalizer for the Mac"
 - [llaudio](https://github.com/mountainstorm/llaudio) - "An old piece of work to reverse engineer the Mac OSX
   user/kernel audio interface. Shows how to read audio straight out of the kernel as you would on Darwin (where most the
