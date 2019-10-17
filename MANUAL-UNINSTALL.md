@@ -9,7 +9,7 @@
   <sup>(Open `/Applications/Utilities/Terminal.app` and paste the following at the prompt.)</sup>
 
   ```shell
-  sudo launchctl kill -15 system/com.apple.audio.coreaudiod
+  sudo launchctl kickstart -kp system/com.apple.audio.coreaudiod
   ```
   or, if that fails
 
