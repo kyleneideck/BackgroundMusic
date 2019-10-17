@@ -2,7 +2,7 @@ language: objective-c
 matrix:
   include:
     - os: osx
-      osx_image: xcode11
+      osx_image: xcode11.2
       xcode_sdk: macosx10.14
       sudo: required
       env: DEPLOY=true
@@ -115,6 +115,7 @@ deploy:
   skip_cleanup: true
   name: $TRAVIS_TAG
   prerelease: true
+  draft: true
   on:
     repo: kyleneideck/BackgroundMusic
     tags: true
