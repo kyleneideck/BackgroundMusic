@@ -290,7 +290,8 @@ check_xcode() {
 
     # First, check xcodebuild exists on the system an is an executable.
     if ! [[ -x "${XCODEBUILD}" ]] || ! /usr/bin/xcode-select --print-path &>/dev/null || \
-        ! pkgutil --pkg-info=com.apple.pkg.CLTools_Executables &>/dev/null; then
+        (! [[ -e /Library/Developer/CommandLineTools/usr/bin/git ]] && \
+            ! pkgutil --pkg-info=com.apple.pkg.CLTools_Executables &>/dev/null); then
         EXIT_CODE=${CHECK_XCODE_ERR_NO_CLTOOLS}
     fi
 
