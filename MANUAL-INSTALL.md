@@ -38,7 +38,7 @@
   (Audio will stop working until the next step, so you might want to pause any running audio apps.)
 
   ```shell
-  sudo launchctl kill -15 system/com.apple.audio.coreaudiod
+  sudo launchctl kickstart -kp system/com.apple.audio.coreaudiod
   ```
   or, if that fails
 
