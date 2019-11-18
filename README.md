@@ -20,13 +20,10 @@
 
 # Overview
 
-**Background Music** gives you control over multiple sources of audio on your desktop without navigating each individual application. It provides the following functionalities:
-
 + Automatically pause/unpause your music player when other audio sources are playing/stopped
 + Per-application volume control
 + Record system audio
 + No restart required to install
-+ Runs entirely in userspace
 
 ##### *Note: Background Music is still in alpha.*
 
@@ -45,7 +42,7 @@ The auto-pause feature currently supports following music players:
 + [Swinsian](https://swinsian.com/)
 + [GPMDP](https://www.googleplaymusicdesktopplayer.com/) 
 
-Adding support for a new music player is straight-forward.<sup id="a1">[1](#f1)</sup> If you don't know how to program, or just don't feel
+Adding support for a new music player is usually straight-forward.<sup id="a1">[1](#f1)</sup> If you don't know how to program, or just don't feel
 like it, feel free to [create an issue](https://github.com/kyleneideck/BackgroundMusic/issues/new). Otherwise, see
 [BGMMusicPlayer.h](BGMApp/BGMApp/Music%20Players/BGMMusicPlayer.h). 
 
@@ -66,21 +63,21 @@ the **Background Music** device. You can create the aggregate device using the *
 
 **Requires macOS 10.10+**.
 
-> <sub>MD5: 89a74e9379041abfd6a55471f3e61b94</sub><br/>
-> <sub>SHA256: 070bef360bff9e52639a4fbf23ee7052b9645004a431af6ad62997cfed99e2d7</sub><br/>
-> <sub>PGP:
-> [sig](https://github.com/kyleneideck/BackgroundMusic/releases/download/v0.3.1/BackgroundMusic-0.3.1.pkg.asc),
-> [key (0595DF814E41A6F69334C5E2CAA8D9B8E39EC18C)](https://bearisdriving.com/kyle-neideck.gpg)</sub>
-
-You can download the current prebuilt version of **Background Music** using the following options. We also have [snapshot builds](https://github.com/kyleneideck/BackgroundMusic/releases).
+You can download the current version of **Background Music** using the following options. We also have [snapshot builds](https://github.com/kyleneideck/BackgroundMusic/releases).
 
 ### Option 1
 
-Download **version 0.3.1**: 
+Download **version 0.3.2**: 
 
-<a href="https://github.com/kyleneideck/BackgroundMusic/releases/download/v0.3.1/BackgroundMusic-0.3.1.pkg"><img 
+<a href="https://github.com/kyleneideck/BackgroundMusic/releases/download/v0.3.2/BackgroundMusic-0.3.2.pkg"><img 
 src="Images/README/pkg-icon.png" width="32" height="32" align="absmiddle" />
-BackgroundMusic-0.3.1.pkg</a> (571 KB)
+BackgroundMusic-0.3.2.pkg</a> (571 KB)
+
+> <sub>MD5: 7f34d9e6595566f3ba14e7afc89c86a2</sub><br/>
+> <sub>SHA256: 0cd7b488b5ab97a1ecb496e484a6c209c29f35ab503e6f73b45e56719a7aba18</sub><br/>
+> <sub>PGP:
+> [sig](https://github.com/kyleneideck/BackgroundMusic/releases/download/v0.3.2/BackgroundMusic-0.3.2.pkg.asc),
+> [key (0595DF814E41A6F69334C5E2CAA8D9B8E39EC18C)](https://bearisdriving.com/kyle-neideck.gpg)</sub>
 
 ### Option 2
 
@@ -97,9 +94,9 @@ brew tap homebrew/cask-versions
 brew cask install background-music-pre
 ```
 
-# Build and install
+# Installing from Source
 
-If you need the latest version of **Background Music**, you can download from the source on github using the following options. Building should take less than a minute. You need [Xcode](https://developer.apple.com/xcode/download/) version 
+If you need the latest version of **Background Music**, you can download from the source on GitHub using the following options. Building should take less than a minute. You need [Xcode](https://developer.apple.com/xcode/download/) version 
 8 or higher.
 
 ### Option 1 
@@ -112,13 +109,15 @@ If you need the latest version of **Background Music**, you can download from th
     cd $(mktemp -d); echo Downloading $URL to $(pwd); curl -qfL# $URL | gzcat - | tar x && \
     /bin/bash BackgroundMusic-master/build_and_install.sh -w && rm -rf BackgroundMusic-master)
 ```
+
+<details><summary>More info...</summary>
+<p>
 This command uses `/bin/bash` instead of `bash` in case someone has a nonstandard Bash in their `$PATH`. However, it doesn't do this for `tar` or `curl`. In addition, `build_and_install.sh` doesn't call programs by absolute paths. This command also uses `gzcat - | tar x` instead of `tar xz` because `gzcat` will also check the file's integrity (gzip files
 include a checksum), and will ensure that a half-downloaded copy of `build_and_install.sh` doesn't run.
-
+</p>
+</details>
 
 ### Option 2
-
-If you are not comfortable using the single-line command above, you can manually build and install from the source on github using the following steps:
 
 1. Clone or [download](https://github.com/kyleneideck/BackgroundMusic/archive/master.zip) the project.
 2. If the project is in a zip, unzip it.
@@ -136,8 +135,8 @@ To manually build and install, see [MANUAL_INSTALL.md](https://github.com/kylene
 To uninstall **Background Music** from your system, follow these steps:
 
 1. Open **Terminal**.
-2. To locate `uninstall.sh`, run:`cd /Applications/Background\ Music.app/Contents/Resources/`.
-3. Run: `sh uninstall.sh`.
+2. To locate `uninstall.sh`, run: `cd /Applications/Background\ Music.app/Contents/Resources/`.
+3. Run: `bash uninstall.sh`.
 
 If you cannot locate `uninstall.sh`, you can [download the project](https://github.com/kyleneideck/BackgroundMusic/archive/master.zip) again.
 
