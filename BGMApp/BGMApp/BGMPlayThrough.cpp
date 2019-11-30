@@ -974,7 +974,7 @@ OSStatus    BGMPlayThrough::OutputDeviceIOProc(AudioObjectID           inDevice,
                                                const AudioTimeStamp*   inOutputTime,
                                                void* __nullable        inClientData)
 {
-    #pragma unused (inDevice, inNow, inInputData, inInputTime, inOutputTime)
+    #pragma unused (inDevice, inNow, inInputData, inInputTime)
     
     // refCon (reference context) is the instance that created the IOProc
     BGMPlayThrough* const refCon = static_cast<BGMPlayThrough*>(inClientData);

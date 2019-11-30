@@ -143,10 +143,6 @@ BGM_Device::BGM_Device(AudioObjectID inObjectID,
 {
     // Initialises the loopback clock with the default sample rate and, if there is one, sets the wrapped device to the same sample rate
     SetSampleRate(kSampleRateDefault, true);
-    
-    // Had to include channel count in bytesPerFrame to make audio server's interleaved
-    // look like non-interleaved to CARingBuffer. Right?
-    mLoopbackRingBuffer.Allocate(2, 2 * sizeof(float), kLoopbackRingBufferFrameSize);
 }
 
 BGM_Device::~BGM_Device()
@@ -203,10 +199,11 @@ void    BGM_Device::InitLoopback()
     // Calculate the number of host clock ticks per frame for our loopback clock.
     mLoopbackTime.hostTicksPerFrame = CAHostTimeBase::GetFrequency() / mLoopbackSampleRate;
     
-    //  Zero-out the loopback buffer
+    //  Allocate (or re-allocate) the loopback buffer.
     //  2 channels * 32-bit float = bytes in each frame
-//    memset(mLoopbackRingBuffer, 0, sizeof(Float32) * 2 * kLoopbackRingBufferFrameSize);
-    // TODO: reset CARingBuffer. but how? can I reallocate here? subclass and call set SetTimeBounds?
+    //  Pass 1 for nChannels because it's going to be storing interleaved audio, which means we
+    //  don't need a separate buffer for each channel.
+	mLoopbackRingBuffer.Allocate(1, 2 * sizeof(Float32), kLoopbackRingBufferFrameSize);
 }
 
 #pragma mark Property Operations
@@ -1348,10 +1345,8 @@ void	BGM_Device::DoIOOperation(AudioObjectID inStreamObjectID, UInt32 inClientID
 	switch(inOperationID)
 	{
 		case kAudioServerPlugInIOOperationReadInput:
-            {
-                CAMutex::Locker theIOLocker(mIOMutex);
-                ReadInputData(inIOBufferFrameSize, inIOCycleInfo.mInputTime.mSampleTime, ioMainBuffer);
-            }
+            // Copy the audio data out of our ring buffer.
+            ReadInputData(inIOBufferFrameSize, inIOCycleInfo.mInputTime.mSampleTime, ioMainBuffer);
 			break;
             
         case kAudioServerPlugInIOOperationProcessOutput:
@@ -1389,22 +1384,24 @@ void	BGM_Device::DoIOOperation(AudioObjectID inStreamObjectID, UInt32 inClientID
             {
                 CAMutex::Locker theIOLocker(mIOMutex);
 
-				bool didChangeState =
-						mAudibleState.UpdateWithMixedIO(inIOBufferFrameSize,
-														inIOCycleInfo.mOutputTime.mSampleTime,
-														reinterpret_cast<const Float32*>(ioMainBuffer));
+                bool didChangeState =
+                        mAudibleState.UpdateWithMixedIO(
+                                inIOBufferFrameSize,
+                                inIOCycleInfo.mOutputTime.mSampleTime,
+                                reinterpret_cast<const Float32*>(ioMainBuffer));
 
                 if(didChangeState)
                 {
-                    // Send notifications. I'm pretty sure we don't have to use
-					// RequestDeviceConfigurationChange for this property, but the docs seemed a bit
-					// unclear to me.
+                    // Send notifications.
                     mTaskQueue.QueueAsync_SendPropertyNotification(
 							kAudioDeviceCustomPropertyDeviceAudibleState, GetObjectID());
                 }
-
-                WriteOutputData(inIOBufferFrameSize, inIOCycleInfo.mOutputTime.mSampleTime, ioMainBuffer);
             }
+
+            // Copy the audio data into our ring buffer.
+            WriteOutputData(inIOBufferFrameSize,
+                            inIOCycleInfo.mOutputTime.mSampleTime,
+                            ioMainBuffer);
 			break;
 
 		default:
@@ -1430,32 +1427,74 @@ void	BGM_Device::EndIOOperation(UInt32 inOperationID, UInt32 inIOBufferFrameSize
 
 void	BGM_Device::ReadInputData(UInt32 inIOBufferFrameSize, Float64 inSampleTime, void* outBuffer)
 {
+    // Wrap the provided buffer in an AudioBufferList.
     AudioBufferList abl = {
         .mNumberBuffers = 1,
         .mBuffers[0] = {
             .mNumberChannels = 2,
-            .mDataByteSize = static_cast<UInt32>(inIOBufferFrameSize * sizeof(float) * 2),
+            // Each frame is 2 Float32 samples (one per channel). The number of frames * the number
+            // of bytes per frame = the size of outBuffer in bytes.
+            .mDataByteSize = static_cast<UInt32>(inIOBufferFrameSize * sizeof(Float32) * 2),
             .mData = outBuffer
         }
     };
-    mLoopbackRingBuffer.Fetch(&abl, inIOBufferFrameSize, static_cast<CARingBuffer::SampleTime>(inSampleTime));
-    
-    //DebugMsg("BGM_Device::ReadInputData: Reading. theSampleTime=%llu theStartFrameOffset=%u theNumberFramesToCopy1=%u theNumberFramesToCopy2=%u", theSampleTime, theStartFrameOffset, theNumberFramesToCopy1, theNumberFramesToCopy2);
+
+    // Copy the audio data from our ring buffer into the provided buffer.
+    //
+    // We don't have to take the IO mutex for this because the host will try to keep the read and
+    // write heads far enough apart and, in the unlikely (or maybe impossible -- not sure) event
+    // that the read head overtakes the write head, CARingBuffer will stop us from reading
+    // old/invalid data from the ring buffer and write zeroes to the output buffer instead.
+    CARingBufferError err =
+            mLoopbackRingBuffer.Fetch(&abl,
+                                      inIOBufferFrameSize,
+                                      static_cast<CARingBuffer::SampleTime>(inSampleTime));
+
+    // Handle errors.
+    switch (err)
+    {
+        case kCARingBufferError_CPUOverload:
+            // Write silence to the buffer.
+            memset(outBuffer, 0, abl.mBuffers[0].mDataByteSize);
+            break;
+        case kCARingBufferError_TooMuch:
+            // Should be impossible, but handle it just in case. Write silence to the buffer and
+            // return an error code.
+            memset(outBuffer, 0, abl.mBuffers[0].mDataByteSize);
+            Throw(CAException(kAudioHardwareIllegalOperationError));
+        case kCARingBufferError_OK:
+            break;
+        default:
+            throw CAException(kAudioHardwareUnspecifiedError);
+    }
 }
 
 void	BGM_Device::WriteOutputData(UInt32 inIOBufferFrameSize, Float64 inSampleTime, const void* inBuffer)
 {
+    // Wrap the provided buffer in an AudioBufferList.
     AudioBufferList abl = {
         .mNumberBuffers = 1,
         .mBuffers[0] = {
             .mNumberChannels = 2,
-            .mDataByteSize = static_cast<UInt32>(inIOBufferFrameSize * sizeof(float) * 2),
+            // Each frame is 2 Float32 samples (one per channel). The number of frames * the number
+            // of bytes per frame = the size of inBuffer in bytes.
+            .mDataByteSize = static_cast<UInt32>(inIOBufferFrameSize * sizeof(Float32) * 2),
             .mData = const_cast<void *>(inBuffer)
         }
     };
-    /*CARingBufferError err = */mLoopbackRingBuffer.Store(&abl, inIOBufferFrameSize, static_cast<CARingBuffer::SampleTime>(inSampleTime));
-    
-    //DebugMsg("BGM_Device::WriteOutputData: Writing. theSampleTime=%llu theStartFrameOffset=%u theNumberFramesToCopy1=%u theNumberFramesToCopy2=%u", theSampleTime, theStartFrameOffset, theNumberFramesToCopy1, theNumberFramesToCopy2);
+
+    // Copy the audio data from the provided buffer into our ring buffer.
+    CARingBufferError err =
+            mLoopbackRingBuffer.Store(&abl,
+                                      inIOBufferFrameSize,
+                                      static_cast<CARingBuffer::SampleTime>(inSampleTime));
+
+    // Return an error code if we failed to store the data. (But ignore CPU overload, which would be
+    // temporary.)
+    if (err != kCARingBufferError_OK && err != kCARingBufferError_CPUOverload)
+    {
+        Throw(CAException(err));
+    }
 }
 
 void	BGM_Device::ApplyClientRelativeVolume(UInt32 inClientID, UInt32 inIOBufferFrameSize, void* ioBuffer) const

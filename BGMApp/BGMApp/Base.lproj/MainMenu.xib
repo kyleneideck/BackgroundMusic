@@ -58,7 +58,7 @@
                             <menuItem title="Background Music Logo" state="on" tag="2" id="9VF-qy-6fh">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                             </menuItem>
-                            <menuItem title="Volume Icon" tag="3" toolTip="todo" id="B47-O2-wd0">
+                            <menuItem title="Volume Icon" tag="3" id="B47-O2-wd0">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="pYP-Fy-nKA"/>

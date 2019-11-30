@@ -17,6 +17,7 @@
 		1C30A69F1C1E98F000C05AA5 /* CAMutex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CB8B3841BBCEFE8000E2DD1 /* CAMutex.cpp */; };
 		1C38210E1C4A163A00A0C8C6 /* BGM_TaskQueue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C38210C1C4A163A00A0C8C6 /* BGM_TaskQueue.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMDriver-BGM_TaskQueue.cpp"; }; };
 		1C3DB4871BE063C500EC8160 /* BGM_DeviceTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C3DB4861BE063C500EC8160 /* BGM_DeviceTests.mm */; };
+		1C6181A72388FC8A0068C4D3 /* CARingBuffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C6181A52388FC8A0068C4D3 /* CARingBuffer.cpp */; };
 		1C7010751F05ED5100D8CCDC /* BGM_AudibleState.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C7010731F05ED5100D8CCDC /* BGM_AudibleState.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMDriver-BGM_AudibleState.cpp"; }; };
 		1C7010761F05ED5100D8CCDC /* BGM_AudibleState.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C7010731F05ED5100D8CCDC /* BGM_AudibleState.cpp */; };
 		1C7010791F07A0BA00D8CCDC /* BGM_VolumeControl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C7010771F07A0BA00D8CCDC /* BGM_VolumeControl.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMDriver-BGM_VolumeControl.cpp"; }; };
@@ -43,6 +44,7 @@
 		1CD95B141E93AA5200EB8EF0 /* BGM_Stream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CA2A9E01E8D1D08007A76A4 /* BGM_Stream.cpp */; };
 		1CDF3ABC1E863B980001E9B7 /* BGM_NullDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CDF3ABA1E863B980001E9B7 /* BGM_NullDevice.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMDriver-BGM_NullDevice.cpp"; }; };
 		1CDF3ABF1E8644C20001E9B7 /* BGM_AbstractDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CDF3ABD1E8644C20001E9B7 /* BGM_AbstractDevice.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMDriver-BGM_AbstractDevice.cpp"; }; };
+		1CE03A4B238A5BF40036908D /* CABitOperations.h in Headers */ = {isa = PBXBuildFile; fileRef = 1CE03A4A238A5BF40036908D /* CABitOperations.h */; };
 		27379B821C76D62D0084A24C /* CADebugMacros.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CB8B3701BBBD8A4000E2DD1 /* CADebugMacros.cpp */; };
 		27379B831C76D62D0084A24C /* CADebugPrintf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CB8B3781BBBDFA2000E2DD1 /* CADebugPrintf.cpp */; };
 		27381A161C8EF50F00DF167C /* BGM_XPCHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 27381A141C8EF50F00DF167C /* BGM_XPCHelper.m */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMDriver-BGM_XPCHelper.m"; }; };
@@ -78,8 +80,6 @@
 		2795973E1C9847CF00A002FB /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2795973D1C9847CF00A002FB /* Foundation.framework */; };
 		27D643C31C9FBE1600737F6E /* BGM_XPCHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 27381A141C8EF50F00DF167C /* BGM_XPCHelper.m */; };
 		27E6B5F01E01966A00EC0AAB /* BGM_Utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 275343BC1DE9B44900DF3858 /* BGM_Utils.cpp */; };
-		6C6B069522C2DB1D0034C4A9 /* CARingBuffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6C6B069322C2DB1D0034C4A9 /* CARingBuffer.cpp */; };
-		6C6B069622C2DB1D0034C4A9 /* CARingBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = 6C6B069422C2DB1D0034C4A9 /* CARingBuffer.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -105,6 +105,8 @@
 		1C38210F1C4A18DE00A0C8C6 /* CAPThread.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CAPThread.cpp; path = PublicUtility/CAPThread.cpp; sourceTree = "<group>"; };
 		1C3821101C4A18DE00A0C8C6 /* CAPThread.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CAPThread.h; path = PublicUtility/CAPThread.h; sourceTree = "<group>"; };
 		1C3DB4861BE063C500EC8160 /* BGM_DeviceTests.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = BGM_DeviceTests.mm; sourceTree = "<group>"; };
+		1C6181A42388FC8A0068C4D3 /* CARingBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CARingBuffer.h; path = PublicUtility/CARingBuffer.h; sourceTree = "<group>"; };
+		1C6181A52388FC8A0068C4D3 /* CARingBuffer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CARingBuffer.cpp; path = PublicUtility/CARingBuffer.cpp; sourceTree = "<group>"; };
 		1C7010731F05ED5100D8CCDC /* BGM_AudibleState.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BGM_AudibleState.cpp; sourceTree = "<group>"; };
 		1C7010741F05ED5100D8CCDC /* BGM_AudibleState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BGM_AudibleState.h; sourceTree = "<group>"; };
 		1C7010771F07A0BA00D8CCDC /* BGM_VolumeControl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BGM_VolumeControl.cpp; sourceTree = "<group>"; };
@@ -151,6 +153,7 @@
 		1CDF3ABB1E863B980001E9B7 /* BGM_NullDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BGM_NullDevice.h; sourceTree = "<group>"; };
 		1CDF3ABD1E8644C20001E9B7 /* BGM_AbstractDevice.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BGM_AbstractDevice.cpp; sourceTree = "<group>"; };
 		1CDF3ABE1E8644C20001E9B7 /* BGM_AbstractDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BGM_AbstractDevice.h; sourceTree = "<group>"; };
+		1CE03A4A238A5BF40036908D /* CABitOperations.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CABitOperations.h; path = PublicUtility/CABitOperations.h; sourceTree = "<group>"; };
 		1CE3E68C1BE263CA00167F5D /* CACFDictionary.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CACFDictionary.cpp; path = PublicUtility/CACFDictionary.cpp; sourceTree = "<group>"; };
 		1CE3E68D1BE263CA00167F5D /* CACFDictionary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CACFDictionary.h; path = PublicUtility/CACFDictionary.h; sourceTree = "<group>"; };
 		1CE3E68F1BE2683900167F5D /* CACFArray.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CACFArray.cpp; path = PublicUtility/CACFArray.cpp; sourceTree = "<group>"; };
@@ -165,8 +168,6 @@
 		27D643B71C9FABF600737F6E /* BGM_Types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGM_Types.h; path = ../SharedSource/BGM_Types.h; sourceTree = "<group>"; };
 		27D643B81C9FABF600737F6E /* BGMXPCProtocols.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGMXPCProtocols.h; path = ../SharedSource/BGMXPCProtocols.h; sourceTree = "<group>"; };
 		27D643C21C9FBC5800737F6E /* BGM_TestUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGM_TestUtils.h; path = ../SharedSource/BGM_TestUtils.h; sourceTree = "<group>"; };
-		6C6B069322C2DB1D0034C4A9 /* CARingBuffer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CARingBuffer.cpp; path = ../BGMApp/PublicUtility/CARingBuffer.cpp; sourceTree = "<group>"; };
-		6C6B069422C2DB1D0034C4A9 /* CARingBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CARingBuffer.h; path = ../BGMApp/PublicUtility/CARingBuffer.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -301,6 +302,7 @@
 				1C37B3681E9B8D3C000DF98F /* CAPropertyAddress.h */,
 				1C0CB6A61C4E06C00084C15A /* CAAtomicStack.h */,
 				1C0CB6A91C50A3AF0084C15A /* CAAutoDisposer.h */,
+				1CE03A4A238A5BF40036908D /* CABitOperations.h */,
 				1CE3E68F1BE2683900167F5D /* CACFArray.cpp */,
 				1CE3E6901BE2683900167F5D /* CACFArray.h */,
 				1CE3E68C1BE263CA00167F5D /* CACFDictionary.cpp */,
@@ -324,10 +326,10 @@
 				1CB8B3851BBCEFE8000E2DD1 /* CAMutex.h */,
 				1C38210F1C4A18DE00A0C8C6 /* CAPThread.cpp */,
 				1C3821101C4A18DE00A0C8C6 /* CAPThread.h */,
+				1C6181A42388FC8A0068C4D3 /* CARingBuffer.h */,
+				1C6181A52388FC8A0068C4D3 /* CARingBuffer.cpp */,
 				1CB8B38C1BBCF4A9000E2DD1 /* CAVolumeCurve.cpp */,
 				1CB8B38D1BBCF4A9000E2DD1 /* CAVolumeCurve.h */,
-				6C6B069322C2DB1D0034C4A9 /* CARingBuffer.cpp */,
-				6C6B069422C2DB1D0034C4A9 /* CARingBuffer.h */,
 			);
 			name = PublicUtility;
 			sourceTree = "<group>";
@@ -362,7 +364,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6C6B069622C2DB1D0034C4A9 /* CARingBuffer.h in Headers */,
+				1CE03A4B238A5BF40036908D /* CABitOperations.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -553,6 +555,7 @@
 				2743C9CD1D7EF8760089613B /* CACFArray.cpp in Sources */,
 				2743C9CF1D7EF8760089613B /* CACFDictionary.cpp in Sources */,
 				2743C9D11D7EF8760089613B /* CACFNumber.cpp in Sources */,
+				1C6181A72388FC8A0068C4D3 /* CARingBuffer.cpp in Sources */,
 				2743C9D31D7EF8760089613B /* CACFString.cpp in Sources */,
 				2743C9D51D7EF8760089613B /* CADebugger.cpp in Sources */,
 				2743C9D71D7EF8760089613B /* CADebugMacros.cpp in Sources */,
@@ -562,7 +565,6 @@
 				2743C9E01D7EF8760089613B /* CAMutex.cpp in Sources */,
 				2743C9E21D7EF8760089613B /* CAPThread.cpp in Sources */,
 				2743C9E41D7EF8760089613B /* CAVolumeCurve.cpp in Sources */,
-				6C6B069522C2DB1D0034C4A9 /* CARingBuffer.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
