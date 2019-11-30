@@ -45,6 +45,7 @@
 		1CDF3ABC1E863B980001E9B7 /* BGM_NullDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CDF3ABA1E863B980001E9B7 /* BGM_NullDevice.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMDriver-BGM_NullDevice.cpp"; }; };
 		1CDF3ABF1E8644C20001E9B7 /* BGM_AbstractDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CDF3ABD1E8644C20001E9B7 /* BGM_AbstractDevice.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMDriver-BGM_AbstractDevice.cpp"; }; };
 		1CE03A4B238A5BF40036908D /* CABitOperations.h in Headers */ = {isa = PBXBuildFile; fileRef = 1CE03A4A238A5BF40036908D /* CABitOperations.h */; };
+		1CE03A4C23928B370036908D /* CARingBuffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C6181A52388FC8A0068C4D3 /* CARingBuffer.cpp */; };
 		27379B821C76D62D0084A24C /* CADebugMacros.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CB8B3701BBBD8A4000E2DD1 /* CADebugMacros.cpp */; };
 		27379B831C76D62D0084A24C /* CADebugPrintf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CB8B3781BBBDFA2000E2DD1 /* CADebugPrintf.cpp */; };
 		27381A161C8EF50F00DF167C /* BGM_XPCHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 27381A141C8EF50F00DF167C /* BGM_XPCHelper.m */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMDriver-BGM_XPCHelper.m"; }; };
@@ -487,6 +488,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1CE03A4C23928B370036908D /* CARingBuffer.cpp in Sources */,
 				1CD95B121E93AA5200EB8EF0 /* BGM_AbstractDevice.cpp in Sources */,
 				1CD95B131E93AA5200EB8EF0 /* BGM_NullDevice.cpp in Sources */,
 				1CD95B141E93AA5200EB8EF0 /* BGM_Stream.cpp in Sources */,
