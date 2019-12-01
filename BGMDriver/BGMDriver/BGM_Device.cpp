@@ -1345,8 +1345,22 @@ void	BGM_Device::DoIOOperation(AudioObjectID inStreamObjectID, UInt32 inClientID
 	switch(inOperationID)
 	{
 		case kAudioServerPlugInIOOperationReadInput:
-            // Copy the audio data out of our ring buffer.
-            ReadInputData(inIOBufferFrameSize, inIOCycleInfo.mInputTime.mSampleTime, ioMainBuffer);
+            {
+                CAMutex::Locker theIOLocker(mIOMutex);
+
+                // Copy the audio data out of our ring buffer.
+                //
+                // Take the IO mutex because, in testing, not taking it seemed to make this function
+                // occasionally miss its deadline and cause an audio glitch. It's hard to be sure
+                // that was actually the cause, but it's probably not worth the risk anyway.
+                //
+                // If an IO operation misses its deadline, the host will log this message:
+                //     Audio IO Overload inputs: '<private>' outputs: '<private>' cause: 'Unknown'
+                //     prewarming: no recovering: no
+                ReadInputData(inIOBufferFrameSize,
+                              inIOCycleInfo.mInputTime.mSampleTime,
+                              ioMainBuffer);
+            }
 			break;
             
         case kAudioServerPlugInIOOperationProcessOutput:
@@ -1396,12 +1410,12 @@ void	BGM_Device::DoIOOperation(AudioObjectID inStreamObjectID, UInt32 inClientID
                     mTaskQueue.QueueAsync_SendPropertyNotification(
 							kAudioDeviceCustomPropertyDeviceAudibleState, GetObjectID());
                 }
-            }
 
-            // Copy the audio data into our ring buffer.
-            WriteOutputData(inIOBufferFrameSize,
-                            inIOCycleInfo.mOutputTime.mSampleTime,
-                            ioMainBuffer);
+                // Copy the audio data into our ring buffer.
+                WriteOutputData(inIOBufferFrameSize,
+                                inIOCycleInfo.mOutputTime.mSampleTime,
+                                ioMainBuffer);
+            }
 			break;
 
 		default:
@@ -1440,11 +1454,6 @@ void	BGM_Device::ReadInputData(UInt32 inIOBufferFrameSize, Float64 inSampleTime,
     };
 
     // Copy the audio data from our ring buffer into the provided buffer.
-    //
-    // We don't have to take the IO mutex for this because the host will try to keep the read and
-    // write heads far enough apart and, in the unlikely (or maybe impossible -- not sure) event
-    // that the read head overtakes the write head, CARingBuffer will stop us from reading
-    // old/invalid data from the ring buffer and write zeroes to the output buffer instead.
     CARingBufferError err =
             mLoopbackRingBuffer.Fetch(&abl,
                                       inIOBufferFrameSize,
