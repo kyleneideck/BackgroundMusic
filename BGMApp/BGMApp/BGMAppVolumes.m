@@ -17,7 +17,7 @@
 //  BGMAppVolumes.m
 //  BGMApp
 //
-//  Copyright © 2016-2018 Kyle Neideck
+//  Copyright © 2016-2020 Kyle Neideck
 //  Copyright © 2017 Andrew Tonner
 //
 
@@ -196,13 +196,14 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
     
     BGMAssert(button, "!button");
     BGMAssert(menuItem, "!menuItem");
-    
+
     CGFloat width = menuItem.view.frame.size.width;
-    CGFloat height = menuItem.view.frame.size.height;
-    
 #if DEBUG
-    const char* appName = [((NSRunningApplication*)menuItem.representedObject).localizedName UTF8String];
+    CGFloat height = menuItem.view.frame.size.height;
 #endif
+
+    const char* appName =
+        [((NSRunningApplication*)menuItem.representedObject).localizedName UTF8String];
 
     // Using this function (instead of just ==) shouldn't be necessary, but just in case.
     BOOL(^nearEnough)(CGFloat x, CGFloat y) = ^BOOL(CGFloat x, CGFloat y) {

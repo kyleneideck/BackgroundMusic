@@ -48,7 +48,7 @@ BGMAudioDevice::BGMAudioDevice(const CAHALAudioDevice& inDevice)
 :
     BGMAudioDevice(inDevice.GetObjectID())
 {
-};
+}
 
 BGMAudioDevice::~BGMAudioDevice()
 {

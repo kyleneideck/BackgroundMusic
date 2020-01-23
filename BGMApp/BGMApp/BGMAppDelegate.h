@@ -17,7 +17,7 @@
 //  BGMAppDelegate.h
 //  BGMApp
 //
-//  Copyright © 2016, 2017 Kyle Neideck
+//  Copyright © 2016, 2017, 2020 Kyle Neideck
 //
 //  Sets up and tears down the app.
 //
@@ -50,6 +50,7 @@ static NSInteger const kSeparatorBelowVolumesMenuItemTag = 4;
 @property (unsafe_unretained) IBOutlet NSTextView* aboutPanelLicenseView;
 
 @property (weak) IBOutlet NSMenuItem* autoPauseMenuItemUnwrapped;
+@property (weak) IBOutlet NSMenuItem* debugLoggingMenuItemUnwrapped;
 
 @property (readonly) BGMAudioDeviceManager* audioDevices;
 

@@ -17,7 +17,7 @@
 //  BGMStatusBarItem.m
 //  BGMApp
 //
-//  Copyright © 2019 Kyle Neideck
+//  Copyright © 2019, 2020 Kyle Neideck
 //
 
 // Self Include
@@ -48,10 +48,15 @@ static CGFloat const kVolumeIconAdditionalVerticalPadding = 0.075;
     NSImage* volumeIcon3SoundWaves;
 
     NSStatusItem* statusBarItem;
+    BGMDebugLoggingMenuItem* debugLoggingMenuItem;
+
     BGMVolumeChangeListener* volumeChangeListener;
+    id __nullable clickEventHandler;
 
     BGMStatusBarIcon _icon;
 }
+
+#pragma mark Initialisation
 
 - (instancetype) initWithMenu:(NSMenu*)bgmMenu
                  audioDevices:(BGMAudioDeviceManager*)devices
@@ -71,6 +76,10 @@ static CGFloat const kVolumeIconAdditionalVerticalPadding = 0.075;
 
         // Set the menu item to open the main menu.
         statusBarItem.menu = bgmMenu;
+
+        // Monitor click events so we can show extra options in the menu if the user was holding the
+        // option key.
+        clickEventHandler = [self addClickMonitor];
 
         // Set the accessibility label to "Background Music". (We intentionally don't set a title or
         // a tooltip.)
@@ -92,8 +101,25 @@ static CGFloat const kVolumeIconAdditionalVerticalPadding = 0.075;
     return self;
 }
 
+- (id __nullable) addClickMonitor {
+    NSEvent* __nullable (^handlerBlock)(NSEvent*) =
+        ^NSEvent* __nullable (NSEvent* event) {
+            [self statusBarItemWasClicked:event];
+            return event;
+        };
+
+    // TODO: I doubt this works well with VoiceOver.
+    return [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskLeftMouseDown
+                                                 handler:handlerBlock];
+}
+
 - (void) dealloc {
     delete volumeChangeListener;
+
+    if (clickEventHandler) {
+        [NSEvent removeMonitor:(id)clickEventHandler];
+        clickEventHandler = nil;
+    }
 }
 
 - (void) initIcons {
@@ -142,6 +168,8 @@ static CGFloat const kVolumeIconAdditionalVerticalPadding = 0.075;
     [volumeIcon3SoundWaves setTemplate:YES];
 }
 
+#pragma mark Accessors
+
 + (BOOL) buttonAvailable {
     // NSStatusItem doesn't have the "button" property on OS X 10.9.
     return (floor(NSAppKitVersionNumber) >= NSAppKitVersionNumber10_10);
@@ -187,6 +215,8 @@ static CGFloat const kVolumeIconAdditionalVerticalPadding = 0.075;
         }
     });
 }
+
+#pragma mark Volume Icon
 
 - (void) bgmDeviceVolumeDidChange {
     if (self.icon == BGMVolumeStatusBarIcon) {
@@ -249,6 +279,21 @@ static CGFloat const kVolumeIconAdditionalVerticalPadding = 0.075;
 
     DebugMsg("BGMStatusBarItem::updateVolumeStatusBarIcon: Set icon to %s",
              statusBarItem.image.name.UTF8String);
+}
+
+#pragma mark Debug Logging Menu Item
+
+- (void) statusBarItemWasClicked:(NSEvent* __nonnull)event {
+    if ((event.modifierFlags & NSEventModifierFlagOption) != 0) {
+        DebugMsg("BGMStatusBarItem::statusBarItemWasClicked: Option key held");
+        [debugLoggingMenuItem setMenuShowingExtraOptions:YES];
+    } else {
+        [debugLoggingMenuItem setMenuShowingExtraOptions:NO];
+    }
+}
+
+- (void) setDebugLoggingMenuItem:(BGMDebugLoggingMenuItem*)menuItem {
+    debugLoggingMenuItem = menuItem;
 }
 
 @end

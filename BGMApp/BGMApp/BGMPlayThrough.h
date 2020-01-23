@@ -17,7 +17,7 @@
 //  BGMPlayThrough.h
 //  BGMApp
 //
-//  Copyright © 2016, 2017 Kyle Neideck
+//  Copyright © 2016, 2017, 2020 Kyle Neideck
 //
 //  Reads audio from an input device and immediately writes it to an output device. We currently use this class with the input
 //  device always set to BGMDevice and the output device set to the one selected in the preferences menu.
@@ -41,10 +41,11 @@
 
 // Local Includes
 #include "BGMAudioDevice.h"
+#include "BGMPlayThroughRTLogger.h"
 
 // PublicUtility Includes
-#include "CARingBuffer.h"
 #include "CAMutex.h"
+#include "CARingBuffer.h"
 
 // STL Includes
 #include <atomic>
@@ -115,7 +116,8 @@ public:
     OSStatus            WaitForOutputDeviceToStart() noexcept;
     
 private:
-    void                ReleaseThreadsWaitingForOutputToStart() const;
+    /*! Real-time safe. */
+    void                ReleaseThreadsWaitingForOutputToStart();
     
 public:
     OSStatus            Stop();
@@ -156,15 +158,12 @@ private:
     
     // The IOProcs call this to update their IOState member. Also stops the IOProc if its state has been set to Stopping.
     // Returns true if it changes the state.
-    static bool         UpdateIOProcState(const char* __nullable callerName,
+    static bool         UpdateIOProcState(const char* inCallerName,
+                                          BGMPlayThroughRTLogger& inRTLogger,
                                           std::atomic<IOState>& inState,
                                           AudioDeviceIOProcID __nullable inIOProcID,
                                           BGMAudioDevice& inDevice,
                                           IOState& outNewState);
-    
-    static void         HandleRingBufferError(CARingBufferError err,
-                                              const char* methodName,
-                                              const char* callReturningErr);
     
 private:
     CARingBuffer        mBuffer;
@@ -200,7 +199,9 @@ private:
     
     // Subtract this from the output time to get the input time.
     Float64             mInToOutSampleOffset { 0.0 };
-    
+
+    BGMPlayThroughRTLogger mRTLogger;
+
 };
 
 #pragma clang assume_nonnull end

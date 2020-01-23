@@ -17,24 +17,23 @@
 //  Mock_CAHALAudioObject.cpp
 //  BGMAppUnitTests
 //
-//  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016, 2020 Kyle Neideck
 //
 
-// Self include
+// Self Include
 #include "CAHALAudioObject.h"
+
+// Local Includes
+#include "MockAudioObjects.h"
 
 // BGM Includes
 #include "BGM_Types.h"
 
-// System includes
-#include <CoreAudio/AudioHardware.h>
+// PublicUtility Includes
+#include "CACFString.h"
 
 
 #pragma clang diagnostic ignored "-Wunused-parameter"
-
-// The value of the music player bundle ID property. Tests should set this back to "" when they finish. (Has
-// to be static because we can't add to the real class's interface.)
-static CFStringRef playerBundleID = CFSTR("");
 
 CAHALAudioObject::CAHALAudioObject(AudioObjectID inObjectID)
 :
@@ -53,21 +52,89 @@ AudioObjectID	CAHALAudioObject::GetObjectID() const
 
 void	CAHALAudioObject::GetPropertyData(const AudioObjectPropertyAddress& inAddress, UInt32 inQualifierDataSize, const void* inQualifierData, UInt32& ioDataSize, void* outData) const
 {
-    if(inAddress.mSelector == kAudioDeviceCustomPropertyMusicPlayerBundleID)
+    switch(inAddress.mSelector)
     {
-        *reinterpret_cast<CFStringRef*>(outData) = playerBundleID;
+        case kAudioDeviceCustomPropertyMusicPlayerBundleID:
+            *reinterpret_cast<CFStringRef*>(outData) =
+                    MockAudioObjects::GetAudioDevice(GetObjectID())->
+                            GetPlayerBundleID().CopyCFString();
+            break;
+
+        case kAudioDevicePropertyStreams:
+            reinterpret_cast<AudioObjectID*>(outData)[0] = 1;
+            if(inAddress.mScope == kAudioObjectPropertyScopeGlobal)
+            {
+                reinterpret_cast<AudioObjectID*>(outData)[1] = 2;
+            }
+            break;
+
+        case kAudioDevicePropertyBufferFrameSize:
+            *reinterpret_cast<UInt32*>(outData) = 512;
+            break;
+
+        case kAudioDevicePropertyDeviceIsAlive:
+            *reinterpret_cast<UInt32*>(outData) = 1;
+            break;
+
+        case kAudioStreamPropertyVirtualFormat:
+        {
+            AudioStreamBasicDescription* outASBD =
+                    reinterpret_cast<AudioStreamBasicDescription*>(outData);
+            outASBD->mSampleRate = 44100.0;
+            outASBD->mFormatID = kAudioFormatLinearPCM;
+            outASBD->mFormatFlags =
+                    kAudioFormatFlagIsFloat | kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsPacked;
+            outASBD->mBytesPerPacket = 8;
+            outASBD->mFramesPerPacket = 1;
+            outASBD->mBytesPerFrame = 8;
+            outASBD->mChannelsPerFrame = 2;
+            outASBD->mBitsPerChannel = 32;
+            break;
+        }
+
+        default:
+            Throw(new CAException(kAudio_UnimplementedError));
     }
 }
 
 void	CAHALAudioObject::SetPropertyData(const AudioObjectPropertyAddress& inAddress, UInt32 inQualifierDataSize, const void* inQualifierData, UInt32 inDataSize, const void* inData)
 {
-    if(inAddress.mSelector == kAudioDeviceCustomPropertyMusicPlayerBundleID)
+    switch(inAddress.mSelector)
     {
-        playerBundleID = *reinterpret_cast<const CFStringRef*>(inData);
+        case kAudioDeviceCustomPropertyMusicPlayerBundleID:
+            MockAudioObjects::GetAudioDevice(GetObjectID())->SetPlayerBundleID(
+                    CACFString(*reinterpret_cast<const CFStringRef*>(inData), false));
+            break;
+        default:
+            break;
     }
 }
 
-#pragma mark Unimplemented methods
+UInt32	CAHALAudioObject::GetPropertyDataSize(const AudioObjectPropertyAddress& inAddress, UInt32 inQualifierDataSize, const void* inQualifierData) const
+{
+    switch(inAddress.mSelector)
+    {
+        case kAudioDevicePropertyStreams:
+            return (inAddress.mScope == kAudioObjectPropertyScopeGlobal ? 2 : 1) *
+                    sizeof(AudioObjectID);
+        default:
+            Throw(new CAException(kAudio_UnimplementedError));
+    }
+}
+
+void	CAHALAudioObject::AddPropertyListener(const AudioObjectPropertyAddress& inAddress, AudioObjectPropertyListenerProc inListenerProc, void* inClientData)
+{
+    MockAudioObjects::GetAudioObject(GetObjectID())->
+            mPropertiesWithListeners.insert(inAddress.mSelector);
+}
+
+void	CAHALAudioObject::RemovePropertyListener(const AudioObjectPropertyAddress& inAddress, AudioObjectPropertyListenerProc inListenerProc, void* inClientData)
+{
+    MockAudioObjects::GetAudioObject(GetObjectID())->
+            mPropertiesWithListeners.erase(inAddress.mSelector);
+}
+
+#pragma mark Unimplemented Methods
 
 void	CAHALAudioObject::SetObjectID(AudioObjectID inObjectID)
 {
@@ -140,21 +207,6 @@ bool	CAHALAudioObject::HasProperty(const AudioObjectPropertyAddress& inAddress) 
 }
 
 bool	CAHALAudioObject::IsPropertySettable(const AudioObjectPropertyAddress& inAddress) const
-{
-    Throw(new CAException(kAudio_UnimplementedError));
-}
-
-UInt32	CAHALAudioObject::GetPropertyDataSize(const AudioObjectPropertyAddress& inAddress, UInt32 inQualifierDataSize, const void* inQualifierData) const
-{
-    Throw(new CAException(kAudio_UnimplementedError));
-}
-
-void	CAHALAudioObject::AddPropertyListener(const AudioObjectPropertyAddress& inAddress, AudioObjectPropertyListenerProc inListenerProc, void* inClientData)
-{
-    Throw(new CAException(kAudio_UnimplementedError));
-}
-
-void	CAHALAudioObject::RemovePropertyListener(const AudioObjectPropertyAddress& inAddress, AudioObjectPropertyListenerProc inListenerProc, void* inClientData)
 {
     Throw(new CAException(kAudio_UnimplementedError));
 }

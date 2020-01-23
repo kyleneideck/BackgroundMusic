@@ -17,7 +17,7 @@
 //  BGMStatusBarItem.h
 //  BGMApp
 //
-//  Copyright © 2019 Kyle Neideck
+//  Copyright © 2019, 2020 Kyle Neideck
 //
 //  The button in the system status bar (the bar with volume, battery, clock, etc.) to show the main
 //  menu for the app. These are called "menu bar extras" in the Human Interface Guidelines.
@@ -25,6 +25,7 @@
 
 // Local Includes
 #import "BGMAudioDeviceManager.h"
+#import "BGMDebugLoggingMenuItem.h"
 
 // System Includes
 #import <Cocoa/Cocoa.h>
@@ -56,6 +57,10 @@ static BGMStatusBarIcon const kBGMStatusBarIconDefaultValue = BGMFermataStatusBa
 // advantage of indicating the volume level, but we can't make it the default because it looks the
 // same as the icon for the macOS volume status bar item.
 @property BGMStatusBarIcon icon;
+
+// If the user holds down the option key when they click the status bar icon, this menu item will be
+// shown in the main menu.
+- (void) setDebugLoggingMenuItem:(BGMDebugLoggingMenuItem*)menuItem;
 
 @end
 

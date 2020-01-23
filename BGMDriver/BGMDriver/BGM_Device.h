@@ -17,8 +17,9 @@
 //  BGM_Device.h
 //  BGMDriver
 //
-//  Copyright © 2016, 2017 Kyle Neideck
-//  Portions copyright (C) 2013 Apple Inc. All Rights Reserved.
+//  Copyright © 2016, 2017, 2019 Kyle Neideck
+//  Copyright © 2019 Gordon Childs
+//  Copyright (C) 2013 Apple Inc. All Rights Reserved.
 //
 //  Based largely on SA_Device.h from Apple's SimpleAudioDriver Plug-In sample code.
 //  https://developer.apple.com/library/mac/samplecode/AudioDriverExamples

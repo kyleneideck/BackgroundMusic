@@ -17,11 +17,17 @@
 //  Mock_CAHALAudioSystemObject.cpp
 //  BGMAppUnitTests
 //
-//  Copyright © 2017 Kyle Neideck
+//  Copyright © 2017, 2020 Kyle Neideck
 //
 
 // Self include
 #include "CAHALAudioSystemObject.h"
+
+// BGM Includes
+#include "BGM_Types.h"
+
+// Local Includes
+#include "MockAudioObjects.h"
 
 
 CAHALAudioSystemObject::CAHALAudioSystemObject()
@@ -36,19 +42,17 @@ CAHALAudioSystemObject::~CAHALAudioSystemObject()
 
 AudioObjectID	CAHALAudioSystemObject::GetAudioDeviceForUID(CFStringRef inUID) const
 {
-    AudioObjectID id = kAudioObjectUnknown;
+    auto device = MockAudioObjects::GetAudioDevice(inUID);
 
-    // Generate a deterministic and random-ish ID from the UID string. Ideally we would ensure the
-    // IDs are unique, but this is probably fine.
-    for(int i = 0; i < CFStringGetLength(inUID); i++)
+    if(device)
     {
-        id += 37 * CFStringGetCharacterAtIndex(inUID, i);
+        return device->GetObjectID();
     }
 
-    return id;
+    return kAudioObjectUnknown;
 }
 
-#pragma mark Unimplemented methods
+#pragma mark Unimplemented Methods
 
 #pragma clang diagnostic ignored "-Wunused-parameter"
 

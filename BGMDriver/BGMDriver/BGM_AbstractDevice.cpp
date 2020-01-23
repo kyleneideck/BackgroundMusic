@@ -18,7 +18,7 @@
 //  BGMDriver
 //
 //  Copyright © 2017 Kyle Neideck
-//  Portions copyright (C) 2013 Apple Inc. All Rights Reserved.
+//  Copyright (C) 2013 Apple Inc. All Rights Reserved.
 //
 
 // Self Include

@@ -17,7 +17,7 @@
 //  BGM_Utils.h
 //  SharedSource
 //
-//  Copyright © 2016-2018 Kyle Neideck
+//  Copyright © 2016-2020 Kyle Neideck
 //
 
 #ifndef SharedSource__BGM_Utils
@@ -41,13 +41,21 @@
 
 #pragma mark Macros
 
-// The Assert macro from CADebugMacros with support for format strings added.
-#define BGMAssert(inCondition, inMessage, ...)                                  \
-    if(!(inCondition))                                                          \
-    {                                                                           \
-        DebugMsg(inMessage, ## __VA_ARGS__);                                    \
-        __ASSERT_STOP;                                                          \
-    }
+// The Assert macro from CADebugMacros with support for format strings and line numbers added.
+#if DEBUG
+    #define BGMAssert(inCondition, inMessage, ...)                                  \
+        if(!(inCondition))                                                          \
+        {                                                                           \
+            DebugMsg("%s:%d:%s: " inMessage,                                        \
+                     __FILE__,                                                      \
+                     __LINE__,                                                      \
+                     __FUNCTION__,                                                  \
+                     ## __VA_ARGS__);                                               \
+            __ASSERT_STOP;                                                          \
+        }
+#else
+    #define BGMAssert(inCondition, inMessage, ...)
+#endif /* DEBUG */
 
 #define BGMAssertNonNull(expression) \
     BGMAssertNonNull2((expression), #expression)

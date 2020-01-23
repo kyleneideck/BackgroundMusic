@@ -18,7 +18,7 @@
 //  BGMDriver
 //
 //  Copyright © 2016 Kyle Neideck
-//  Portions copyright (C) 2013 Apple Inc. All Rights Reserved.
+//  Copyright (C) 2013 Apple Inc. All Rights Reserved.
 //
 //  Based largely on SA_Object.h from Apple's SimpleAudioDriver Plug-In sample code.
 //  https://developer.apple.com/library/mac/samplecode/AudioDriverExamples
@@ -46,7 +46,7 @@
 //
 //	This is the base class for objects managed by BGM_ObjectMap. It's only job is to ensure that
 //	objects of this type have the proper external semantics for a reference counted object. This
-//	means that the desctructor is protected so that these objects cannot be deleted directly. Also,
+//	means that the destructor is protected so that these objects cannot be deleted directly. Also,
 //	these objects many not make a copy of another object or be assigned from another object. Note
 //	that the reference count of the object is tracked and owned by the BGM_ObjectMap.
 //

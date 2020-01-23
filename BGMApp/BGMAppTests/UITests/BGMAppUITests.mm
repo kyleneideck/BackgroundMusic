@@ -17,7 +17,7 @@
 //  BGMAppUITests.mm
 //  BGMAppUITests
 //
-//  Copyright © 2017, 2018 Kyle Neideck
+//  Copyright © 2017, 2018, 2020 Kyle Neideck
 //
 //  You might want to use Xcode's UI test recording feature if you add new tests.
 //
@@ -29,6 +29,9 @@
 
 // Scripting Bridge Includes
 #import "BGMApp.h"
+
+// System Includes
+#import <XCTest/XCTest.h>
 
 
 // TODO: Skip these tests if macOS SDK 10.11 or higher isn't available.
@@ -99,13 +102,15 @@
     [menuItems[@"Quit Background Music"] click];
 
     // BGMApp should quit.
-    XCTAssert(!app.exists);
+    for (NSRunningApplication* runningApp : [[NSWorkspace sharedWorkspace] runningApplications]) {
+        XCTAssertFalse([[runningApp bundleIdentifier] isEqualToString:@kBGMAppBundleID]);
+    }
     
     [super tearDown];
 }
 
 - (void) testCycleOutputDevices {
-    const int NUM_CYCLES = 2;
+    const int NUM_CYCLES = 1;
 
     // sbApp lets us use AppleScript to query BGMApp and check the test has made the changes to its
     // settings we expect.

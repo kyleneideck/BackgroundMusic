@@ -1,3 +1,28 @@
+// This file is part of Background Music.
+//
+// Background Music is free software: you can redistribute it and/or
+// modify it under the terms of the GNU General Public License as
+// published by the Free Software Foundation, either version 2 of the
+// License, or (at your option) any later version.
+//
+// Background Music is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Background Music. If not, see <http://www.gnu.org/licenses/>.
+
+//
+//  CADebugMacros.h
+//  PublicUtility
+//
+//  Copyright (C) 2014 Apple Inc. All Rights Reserved.
+//  Copyright © 2016, 2020 Kyle Neideck
+//
+//  Original license header follows.
+//
+
 /*
      File: CADebugMacros.h
  Abstract: Part of CoreAudio Utility Classes
@@ -57,6 +82,8 @@
 	#include "CoreAudioTypes.h"
 #endif
 
+#include "CADebugPrintf.h"
+
 //=============================================================================
 //	CADebugMacros
 //=============================================================================
@@ -92,42 +119,41 @@
 
 #pragma mark	Basic Definitions
 
+//	basic debugging print routines
+#if	TARGET_OS_MAC && !TARGET_API_MAC_CARBON
+	extern void DebugStr(const unsigned char* debuggerMsg);
+	#define	DebugMessage(msg)	DebugStr("\p"msg)
+	#define DebugMessageN1(msg, N1)
+	#define DebugMessageN2(msg, N1, N2)
+	#define DebugMessageN3(msg, N1, N2, N3)
+#else
+	#if	(CoreAudio_FlushDebugMessages && !CoreAudio_UseSysLog) || defined(CoreAudio_UseSideFile)
+		#define	FlushRtn	,fflush(DebugPrintfFile)
+	#else
+		#define	FlushRtn
+	#endif
+
+	#if		CoreAudio_ThreadStampMessages
+		#include <pthread.h>
+		#include "CAHostTimeBase.h"
+		#if TARGET_RT_64_BIT
+			#define	DebugPrintfThreadIDFormat	"%16p"
+		#else
+			#define	DebugPrintfThreadIDFormat	"%8p"
+		#endif
+		#define	DebugMsg(inFormat, ...)	DebugPrintf("%17qd: " DebugPrintfThreadIDFormat " " inFormat, CAHostTimeBase::GetCurrentTimeInNanos(), pthread_self(), ## __VA_ARGS__) FlushRtn
+	#elif	CoreAudio_TimeStampMessages
+		#include "CAHostTimeBase.h"
+		#define	DebugMsg(inFormat, ...)	DebugPrintf("%17qd: " inFormat, CAHostTimeBase::GetCurrentTimeInNanos(), ## __VA_ARGS__) FlushRtn
+	#else
+		#define	DebugMsg(inFormat, ...)	DebugPrintf(inFormat, ## __VA_ARGS__) FlushRtn
+	#endif
+#endif
+
 #if	DEBUG || CoreAudio_Debug
 	// can be used to break into debugger immediately, also see CADebugger
 	#define BusError()		{ long* p=NULL; *p=0; }
-	
-	//	basic debugging print routines
-	#if	TARGET_OS_MAC && !TARGET_API_MAC_CARBON
-		extern void DebugStr(const unsigned char* debuggerMsg);
-		#define	DebugMessage(msg)	DebugStr("\p"msg)
-		#define DebugMessageN1(msg, N1)
-		#define DebugMessageN2(msg, N1, N2)
-		#define DebugMessageN3(msg, N1, N2, N3)
-	#else
-		#include "CADebugPrintf.h"
-		
-		#if	(CoreAudio_FlushDebugMessages && !CoreAudio_UseSysLog) || defined(CoreAudio_UseSideFile)
-			#define	FlushRtn	,fflush(DebugPrintfFile)
-		#else
-			#define	FlushRtn
-		#endif
-		
-		#if		CoreAudio_ThreadStampMessages
-			#include <pthread.h>
-			#include "CAHostTimeBase.h"
-			#if TARGET_RT_64_BIT
-				#define	DebugPrintfThreadIDFormat	"%16p"
-			#else
-				#define	DebugPrintfThreadIDFormat	"%8p"
-			#endif
-			#define	DebugMsg(inFormat, ...)	DebugPrintf("%17qd: " DebugPrintfThreadIDFormat " " inFormat, CAHostTimeBase::GetCurrentTimeInNanos(), pthread_self(), ## __VA_ARGS__) FlushRtn
-		#elif	CoreAudio_TimeStampMessages
-			#include "CAHostTimeBase.h"
-			#define	DebugMsg(inFormat, ...)	DebugPrintf("%17qd: " inFormat, CAHostTimeBase::GetCurrentTimeInNanos(), ## __VA_ARGS__) FlushRtn
-		#else
-			#define	DebugMsg(inFormat, ...)	DebugPrintf(inFormat, ## __VA_ARGS__) FlushRtn
-		#endif
-	#endif
+
 	void	DebugPrint(const char *fmt, ...);	// can be used like printf
 	#ifndef DEBUGPRINT
 		#define DEBUGPRINT(msg) DebugPrint msg		// have to double-parenthesize arglist (see Debugging.h)
@@ -172,7 +198,7 @@
 	#endif
 
 #else
-	#define	DebugMsg(inFormat, ...)
+
 	#ifndef DEBUGPRINT
 		#define DEBUGPRINT(msg)
 	#endif

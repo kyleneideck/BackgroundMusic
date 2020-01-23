@@ -1,3 +1,28 @@
+// This file is part of Background Music.
+//
+// Background Music is free software: you can redistribute it and/or
+// modify it under the terms of the GNU General Public License as
+// published by the Free Software Foundation, either version 2 of the
+// License, or (at your option) any later version.
+//
+// Background Music is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Background Music. If not, see <http://www.gnu.org/licenses/>.
+
+//
+//  CADebugPrintf.cpp
+//  PublicUtility
+//
+//  Copyright (C) 2014 Apple Inc. All Rights Reserved.
+//  Copyright © 2020 Kyle Neideck
+//
+//  Original license header follows.
+//
+
 /*
      File: CADebugPrintf.cpp
  Abstract: CADebugPrintf.h
@@ -51,39 +76,39 @@
 //	Self Include
 #include "CADebugPrintf.h"
 
-#if	DEBUG || CoreAudio_Debug
-
-	#if	TARGET_OS_WIN32
-		#include <stdarg.h>
-		#include <stdio.h>
-		#include <Windows.h>
-		extern "C"
-		int	CAWin32DebugPrintf(char* inFormat, ...)
-		{
+#if	TARGET_OS_WIN32
+	#include <stdarg.h>
+	#include <stdio.h>
+	#include <Windows.h>
+	extern "C"
+	int	CAWin32DebugPrintf(char* inFormat, ...)
+	{
+		if (BGMDebugLoggingIsEnabled()) {
 			char theMessage[1024];
 			va_list theArguments;
 			va_start(theArguments, inFormat);
 			_vsnprintf(theMessage, 1024, inFormat, theArguments);
 			va_end(theArguments);
 			OutputDebugString(theMessage);
-			return 0;
 		}
-	#endif
-	
-	#if defined(CoreAudio_UseSideFile)
-		#include <unistd.h>
-		FILE* sDebugPrintfSideFile = NULL;
-		extern "C"
-		void OpenDebugPrintfSideFile()
-		{
-			if(sDebugPrintfSideFile == NULL)
-			{
-				char theFileName[1024];
-				snprintf(theFileName, sizeof(theFileName), CoreAudio_UseSideFile, getpid());
-				sDebugPrintfSideFile = fopen(theFileName, "a+");
-				DebugPrintfRtn(DebugPrintfFileComma "\n------------------------------\n");
-			}
-		}
-	#endif
 
+		return 0;
+	}
 #endif
+
+#if defined(CoreAudio_UseSideFile)
+	#include <unistd.h>
+	FILE* sDebugPrintfSideFile = NULL;
+	extern "C"
+	void OpenDebugPrintfSideFile()
+	{
+		if(sDebugPrintfSideFile == NULL)
+		{
+			char theFileName[1024];
+			snprintf(theFileName, sizeof(theFileName), CoreAudio_UseSideFile, getpid());
+			sDebugPrintfSideFile = fopen(theFileName, "a+");
+			DebugPrintfRtn(DebugPrintfFileComma "\n------------------------------\n");
+		}
+	}
+#endif
+

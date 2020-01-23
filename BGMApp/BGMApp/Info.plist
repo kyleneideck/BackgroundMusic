@@ -33,7 +33,7 @@
 	<key>NSAppleScriptEnabled</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright © 2016-2019 Background Music contributors</string>
+	<string>Copyright © 2016-2020 Background Music contributors</string>
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
 	<key>NSMicrophoneUsageDescription</key>

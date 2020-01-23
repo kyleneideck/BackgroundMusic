@@ -17,9 +17,10 @@
 //  BGM_Device.cpp
 //  BGMDriver
 //
-//  Copyright © 2016, 2017 Kyle Neideck
+//  Copyright © 2016, 2017, 2019 Kyle Neideck
 //  Copyright © 2017 Andrew Tonner
-//  Portions copyright (C) 2013 Apple Inc. All Rights Reserved.
+//  Copyright © 2019 Gordon Childs
+//  Copyright (C) 2013 Apple Inc. All Rights Reserved.
 //
 //  Based largely on SA_Device.cpp from Apple's SimpleAudioDriver Plug-In sample code. Also uses a few sections from Apple's
 //  NullAudio.c sample code (found in the same sample project).

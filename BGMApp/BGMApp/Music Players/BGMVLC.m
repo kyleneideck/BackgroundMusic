@@ -18,7 +18,7 @@
 //  BGMApp
 //
 //  Copyright © 2016-2018 Kyle Neideck
-//  Portions copyright (C) 2012 Peter Ljunglöf. All rights reserved.
+//  Copyright (C) 2012 Peter Ljunglöf. All rights reserved.
 //
 
 // Self Include

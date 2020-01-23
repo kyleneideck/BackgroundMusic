@@ -17,7 +17,7 @@
 //  BGMAppDelegate.mm
 //  BGMApp
 //
-//  Copyright © 2016-2019 Kyle Neideck
+//  Copyright © 2016-2020 Kyle Neideck
 //
 
 // Self Include
@@ -28,6 +28,7 @@
 #import "BGMAppVolumesController.h"
 #import "BGMAutoPauseMusic.h"
 #import "BGMAutoPauseMenuItem.h"
+#import "BGMDebugLoggingMenuItem.h"
 #import "BGMMusicPlayers.h"
 #import "BGMOutputDeviceMenuSection.h"
 #import "BGMOutputVolumeMenuItem.h"
@@ -66,6 +67,7 @@ static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
     BGMAppVolumesController* appVolumes;
     BGMOutputDeviceMenuSection* outputDeviceMenuSection;
     BGMPreferencesMenu* prefsMenu;
+    BGMDebugLoggingMenuItem* debugLoggingMenuItem;
     BGMXPCListener* xpcListener;
     BGMPreferredOutputDevices* preferredOutputDevices;
 }
@@ -250,6 +252,11 @@ static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
                                               statusBarItem:statusBarItem
                                                  aboutPanel:self.aboutPanel
                                       aboutPanelLicenseView:self.aboutPanelLicenseView];
+
+    // Enable/disable debug logging. Hidden unless you option-click the status bar icon.
+    debugLoggingMenuItem =
+        [[BGMDebugLoggingMenuItem alloc] initWithMenuItem:self.debugLoggingMenuItemUnwrapped];
+    [statusBarItem setDebugLoggingMenuItem:debugLoggingMenuItem];
 
     // Handle events about the main menu. (See the NSMenuDelegate methods below.)
     self.bgmMenu.delegate = self;

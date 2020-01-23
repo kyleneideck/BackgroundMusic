@@ -26,21 +26,12 @@
       buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
+      shouldUseLaunchSchemeArgsEnv = "YES"
       enableAddressSanitizer = "YES"
-      language = ""
-      shouldUseLaunchSchemeArgsEnv = "YES">
-      <Testables>
-         <TestableReference
-            skipped = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "1C8034D91BDD073B00668E00"
-               BuildableName = "BGMDriverTests.xctest"
-               BlueprintName = "BGMDriverTests"
-               ReferencedContainer = "container:BGMDriver.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
-      </Testables>
+      enableASanStackUseAfterReturn = "YES"
+      enableUBSanitizer = "YES"
+      codeCoverageEnabled = "YES"
+      onlyGenerateCoverageForSpecifiedTargets = "YES">
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
@@ -50,15 +41,38 @@
             ReferencedContainer = "container:BGMDriver.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
-      <AdditionalOptions>
-      </AdditionalOptions>
+      <CodeCoverageTargets>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "1CB8B3631BBBB78D000E2DD1"
+            BuildableName = "Background Music Device.driver"
+            BlueprintName = "Background Music Device"
+            ReferencedContainer = "container:BGMDriver.xcodeproj">
+         </BuildableReference>
+      </CodeCoverageTargets>
+      <Testables>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "YES"
+            testExecutionOrdering = "random">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "1C8034D91BDD073B00668E00"
+               BuildableName = "BGMDriverTests.xctest"
+               BlueprintName = "BGMDriverTests"
+               ReferencedContainer = "container:BGMDriver.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+      </Testables>
    </TestAction>
    <LaunchAction
       buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       debugAsWhichUser = "root"
-      language = ""
+      enableAddressSanitizer = "YES"
+      enableASanStackUseAfterReturn = "YES"
+      enableUBSanitizer = "YES"
       launchStyle = "1"
       useCustomWorkingDirectory = "NO"
       ignoresPersistentStateOnLaunch = "NO"
@@ -85,8 +99,6 @@
             isEnabled = "YES">
          </EnvironmentVariable>
       </EnvironmentVariables>
-      <AdditionalOptions>
-      </AdditionalOptions>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"

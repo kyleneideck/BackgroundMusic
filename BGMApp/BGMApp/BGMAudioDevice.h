@@ -16,7 +16,7 @@
 //  BGMAudioDevice.h
 //  BGMApp
 //
-//  Copyright © 2017 Kyle Neideck
+//  Copyright © 2017, 2020 Kyle Neideck
 //
 //  A HAL audio device. Note that this class's only state is the AudioObjectID of the device.
 //
@@ -59,7 +59,8 @@ public:
                        operator AudioObjectID() const { return GetObjectID(); }
 
     /*!
-     @return True if this device is BGMDevice. (Specifically, the main instance of BGMDevice.)
+     @return True if this device is BGMDevice. (Specifically, the main instance of BGMDevice, not
+             the instance used for UI sounds.)
      @throws CAException If the HAL returns an error when queried.
      */
     bool               IsBGMDevice() const { return IsBGMDevice(false); };
