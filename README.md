@@ -29,7 +29,7 @@
 
 ## Auto-pause music
 
-**Background Music** automatically pauses your music player when a second audio source is playing, and unpauses the player when the second source has stopped. 
+**Background Music** automatically pauses your music player when a second audio source is playing and unpauses the player when the second source has stopped.
 
 The auto-pause feature currently supports following music players:
 
@@ -42,7 +42,7 @@ The auto-pause feature currently supports following music players:
 + [Swinsian](https://swinsian.com/)
 + [GPMDP](https://www.googleplaymusicdesktopplayer.com/) 
 
-Adding support for a new music player is usually straight-forward.<sup id="a1">[1](#f1)</sup> If you don't know how to program, or just don't feel
+Adding support for a new music player is usually straightforward.<sup id="a1">[1](#f1)</sup> If you don't know how to program, or just don't feel
 like it, feel free to [create an issue](https://github.com/kyleneideck/BackgroundMusic/issues/new). Otherwise, see
 [BGMMusicPlayer.h](BGMApp/BGMApp/Music%20Players/BGMMusicPlayer.h). 
 
@@ -94,12 +94,12 @@ brew tap homebrew/cask-versions
 brew cask install background-music-pre
 ```
 
-# Installing from Source
+# Installing from Source Code
 
-If you need the latest version of **Background Music**, you can download from the source on GitHub using the following options. Building should take less than a minute. You need [Xcode](https://developer.apple.com/xcode/download/) version 
+**Background Music** usually takes less than a minute to build. You need [Xcode](https://developer.apple.com/xcode/download/) version 
 8 or higher.
 
-### Option 1 
+### Option 1
 
 1. Open **Terminal**.
 2. Copy and paste the following command into **Terminal**:
@@ -122,11 +122,11 @@ include a checksum), and will ensure that a half-downloaded copy of `build_and_i
 1. Clone or [download](https://github.com/kyleneideck/BackgroundMusic/archive/master.zip) the project.
 2. If the project is in a zip, unzip it.
 3. Open **Terminal** and [change the directory](https://github.com/0nn0/terminal-mac-cheatsheet#core-commands) to the
-  directory containing the project.
+   directory containing the project.
 4. Run: `/bin/bash build_and_install.sh`.
 
-The script restarts the system audio process (coreaudiod) at the end of the installation, so you need to pause any
-applications playing audio.
+The script restarts the system audio process (coreaudiod) at the end of the installation, so pause any applications
+playing audio if you can.
 
 To manually build and install, see [MANUAL_INSTALL.md](https://github.com/kyleneideck/BackgroundMusic/blob/master/MANUAL-INSTALL.md).
 
@@ -156,7 +156,7 @@ If this does not work, you might have to uninstall. Consider filing a bug report
 
     - Set your volume to its maximum level and lower the volumes of other applications.
 
-- **VLC pauses iTunes or Spotify when playing, and stops Background Music from unpausing your music afterwards.** 
+- **VLC pauses iTunes or Spotify when playing, and stops Background Music from unpausing your music afterward.** 
 
     - Under VLC's preferences, select **Show All**. Navigate to **Interface > Main interfaces > macosx** and change *Control external music players* to either *Do nothing* or *Pause and resume iTunes/Spotify*. 
 
