@@ -19,7 +19,7 @@
 #
 # build_and_install.sh
 #
-# Copyright © 2016-2019 Kyle Neideck
+# Copyright © 2016-2020 Kyle Neideck
 # Copyright © 2016 Nick Jacques
 #
 # Builds and installs BGMApp, BGMDriver and BGMXPCHelper. Requires xcodebuild and Xcode.
@@ -117,13 +117,19 @@ echo -n > ${LOG_FILE}
 
 COREAUDIOD_PLIST="/System/Library/LaunchDaemons/com.apple.audio.coreaudiod.plist"
 
+# Output locations for installing. These are overwritten later if building or archiving.
+#
 # TODO: Should (can?) we use xcodebuild to get these from the Xcode project rather than duplicating
 #       them?
 APP_PATH="/Applications"
 APP_DIR="Background Music.app"
 DRIVER_PATH="/Library/Audio/Plug-Ins/HAL"
 DRIVER_DIR="Background Music Device.driver"
+# XPC_HELPER_OUTPUT_PATH is set below because it depends on the system (when installing).
 XPC_HELPER_DIR="BGMXPCHelper.xpc"
+
+# The root output directory when archiving.
+ARCHIVES_DIR="archives"
 
 GENERAL_ERROR_MSG="Internal script error. Probably a bug in this script."
 BUILD_FAILED_ERROR_MSG="A build command failed. Probably a compilation error."
@@ -154,6 +160,7 @@ usage() {
     echo "Usage: $0 [options]" >&2
     echo -e "\t-n            Don't clean before building/installing." >&2
     echo -e "\t-d            Debug build. (Release is the default.)" >&2
+    echo -e "\t-a            Build and archive, don't install. See Xcode docs for info about archiving." >&2
     echo -e "\t-b            Build only, don't install." >&2
     echo -e "\t-w            Ignore compiler warnings. (They're treated as errors by default.)" >&2
     echo -e "\t-x [options]  Extra options to pass to xcodebuild." >&2
@@ -236,13 +243,22 @@ show_spinner() {
 }
 
 parse_options() {
-    while getopts ":ndbwx:ch" opt; do
+    while getopts ":ndabwx:ch" opt; do
         case $opt in
             n)
                 CLEAN=""
                 ;;
             d)
                 CONFIGURATION="Debug"
+                ;;
+            a)
+                # The "archive" action makes a build for distribution. It's the same as the archive
+                # option in Xcode. It won't install.
+                XCODEBUILD_ACTION="archive"
+                # The dirs xcodebuild will put the archives in.
+                APP_PATH="$ARCHIVES_DIR/BGMApp.xcarchive"
+                XPC_HELPER_OUTPUT_PATH="$ARCHIVES_DIR/BGMApp.xcarchive"
+                DRIVER_PATH="$ARCHIVES_DIR/BGMDriver.xcarchive"
                 ;;
             b)
                 # Just build; don't install.
@@ -251,6 +267,7 @@ parse_options() {
                 # TODO: If these dirs were created by running this script without -b, they'll be
                 #       owned by root and xcodebuild will fail.
                 APP_PATH="./BGMApp/build"
+                XPC_HELPER_OUTPUT_PATH="./BGMApp/build"
                 DRIVER_PATH="./BGMDriver/build"
                 ;;
             w)
@@ -509,7 +526,7 @@ log_debug_info() {
              "(\"$(git show -s --format=%s HEAD 2>&1)\")" >> ${LOG_FILE}
 
         echo "Using xcodebuild: ${XCODEBUILD}" >> ${LOG_FILE}
-        echo "Using BGMXPCHelper path: ${XPC_HELPER_PATH}" >> ${LOG_FILE}
+        echo "Using BGMXPCHelper output path: ${XPC_HELPER_OUTPUT_PATH}" >> ${LOG_FILE}
 
         xcode-select --version >> ${LOG_FILE} 2>&1
         echo "Xcode path: $(xcode-select --print-path 2>&1)" >> ${LOG_FILE}
@@ -553,7 +570,7 @@ fi
 
 # Print initial message.
 if [[ "${XCODEBUILD_ACTION}" == "install" ]]; then
-    XPC_HELPER_PATH="$(BGMApp/BGMXPCHelper/safe_install_dir.sh)"
+    XPC_HELPER_OUTPUT_PATH="$(BGMApp/BGMXPCHelper/safe_install_dir.sh)"
 
     echo "$(bold_face About to install Background Music). Please pause all audio, if you can."
     [[ "${CONFIGURATION}" == "Debug" ]] && echo "Debug build."
@@ -561,12 +578,13 @@ if [[ "${XCODEBUILD_ACTION}" == "install" ]]; then
     echo "This script will install:"
     echo " - ${APP_PATH}/${APP_DIR}"
     echo " - ${DRIVER_PATH}/${DRIVER_DIR}"
-    echo " - ${XPC_HELPER_PATH}/${XPC_HELPER_DIR}"
+    echo " - ${XPC_HELPER_OUTPUT_PATH}/${XPC_HELPER_DIR}"
     echo " - /Library/LaunchDaemons/com.bearisdriving.BGM.XPCHelper.plist"
     echo
-elif [[ "${XCODEBUILD_ACTION}" == "build" ]]; then
-    XPC_HELPER_PATH="${APP_PATH}"
-
+elif [[ "${XCODEBUILD_ACTION}" == "archive" ]]; then
+    echo "$(bold_face Building and archiving Background Music...)"
+    echo
+else
     echo "$(bold_face Building Background Music...)"
     echo
 fi
@@ -597,8 +615,9 @@ if ! is_alive ${CHECK_XCODE_TASK_PID}; then
     enable_error_handling
 fi
 
+# Update the user's sudo timestamp if we're going to need to sudo at some point. This prompts the
+# user for their password.
 if [[ "${XCODEBUILD_ACTION}" == "install" ]]; then
-    # Update the user's sudo timestamp. (Prompts the user for their password.)
     # Don't call sudo -v if this is a Travis CI build.
     if ([[ -z ${TRAVIS:-} ]] || [[ "${TRAVIS}" != true ]]) && ! sudo -v; then
         echo "$(tput setaf 9)ERROR$(tput sgr0): This script must be run by a user with" \
@@ -617,15 +636,22 @@ while [[ ${NEED_TO_HANDLE_CHECK_XCODE_RESULT} -ne 0 ]]; do
     enable_error_handling
 done
 
-log_debug_info $*
+log_debug_info "$@"
 
+# Set some variables that control the compilation commands below.
 if [[ "${XCODEBUILD_ACTION}" == "install" ]]; then
     SUDO="sudo"
     ACTIONING="Installing"
+    DSTROOT_ARG="DSTROOT=/"
+elif [[ "${XCODEBUILD_ACTION}" == "archive" ]]; then
+    SUDO=""
+    ACTIONING="Building and archiving"
+    DSTROOT_ARG=""
 else
     # No need to sudo if we're only building.
     SUDO=""
     ACTIONING="Building"
+    DSTROOT_ARG=""
 fi
 
 # Enable AddressSanitizer in debug builds to catch memory bugs. Allow ENABLE_ASAN to be set as an
@@ -657,6 +683,26 @@ if [[ "${CLEAN}" != "" ]]; then
 BGMApp/build manually and running '$0 -n' to skip the cleaning step."
 fi
 
+# Prints the -archivePath option if we're archiving (i.e. making a .xcarchive). Does nothing if not.
+# Params:
+#  - The name for the archive. The .xcarchive extension will be added.
+archivePath() {
+    if [[ "${XCODEBUILD_ACTION}" == "archive" ]]; then
+        echo "-archivePath"
+        echo "$ARCHIVES_DIR/$1"
+    fi
+}
+
+# Prints the INSTALL_OWNER and INSTALL_GROUP arguments to use for the xcodebuild commands.
+ownershipArgs() {
+    if [[ "${XCODEBUILD_ACTION}" != "install" ]]; then
+        # Stop xcodebuild from trying to chown the files in the archive to root when making an
+        # archive, so we don't need to use sudo.
+        echo "INSTALL_OWNER="
+        echo "INSTALL_GROUP="
+    fi
+}
+
 # BGMDriver
 
 echo "[1/3] ${ACTIONING} the virtual audio device $(bold_face ${DRIVER_DIR}) to" \
@@ -664,13 +710,15 @@ echo "[1/3] ${ACTIONING} the virtual audio device $(bold_face ${DRIVER_DIR}) to"
      | tee -a ${LOG_FILE}
 
 (disable_error_handling
-    # Build and install BGMDriver.
+    # Build and, if requested, archive or install BGMDriver.
     ${SUDO} "${XCODEBUILD}" -scheme "Background Music Device" \
                             -configuration ${CONFIGURATION} \
                             -enableAddressSanitizer ${ENABLE_ASAN} \
+                            $(archivePath BGMDriver) \
                             BUILD_DIR=./build \
                             RUN_CLANG_STATIC_ANALYZER=0 \
-                            DSTROOT="/" \
+                            $(ownershipArgs) \
+                            ${DSTROOT_ARG} \
                             ${XCODEBUILD_OPTIONS} \
                             "${XCODEBUILD_ACTION}" >> ${LOG_FILE} 2>&1) &
 
@@ -678,17 +726,30 @@ show_spinner "${BUILD_FAILED_ERROR_MSG}"
 
 # BGMXPCHelper
 
-echo "[2/3] ${ACTIONING} $(bold_face ${XPC_HELPER_DIR}) to $(bold_face ${XPC_HELPER_PATH})" \
+echo "[2/3] ${ACTIONING} $(bold_face ${XPC_HELPER_DIR}) to $(bold_face ${XPC_HELPER_OUTPUT_PATH})" \
     | tee -a ${LOG_FILE}
 
+xpcHelperInstallPathArg() {
+    if [[ "${XCODEBUILD_ACTION}" == "install" ]]; then
+        echo "INSTALL_PATH=${XPC_HELPER_OUTPUT_PATH}"
+    fi
+}
+
+# The Xcode project file is configured so that xcodebuild will call post_install.sh after it
+# finishes building. It calls post_install.sh with the ACTION env var set to "install" when
+# XCODEBUILD_ACTION is set to "archive" here. The REAL_ACTION arg in this command is a workaround
+# that lets post_install.sh know when we're archiving.
 (disable_error_handling
     ${SUDO} "${XCODEBUILD}" -scheme BGMXPCHelper \
                             -configuration ${CONFIGURATION} \
                             -enableAddressSanitizer ${ENABLE_ASAN} \
+                            $(archivePath BGMXPCHelper) \
                             BUILD_DIR=./build \
                             RUN_CLANG_STATIC_ANALYZER=0 \
-                            DSTROOT="/" \
-                            INSTALL_PATH="${XPC_HELPER_PATH}" \
+                            $(xpcHelperInstallPathArg) \
+                            $(ownershipArgs) \
+                            REAL_ACTION="${XCODEBUILD_ACTION}" \
+                            ${DSTROOT_ARG} \
                             ${XCODEBUILD_OPTIONS} \
                             "${XCODEBUILD_ACTION}" >> ${LOG_FILE} 2>&1) &
 
@@ -703,9 +764,11 @@ echo "[3/3] ${ACTIONING} $(bold_face ${APP_DIR}) to $(bold_face ${APP_PATH})" \
     ${SUDO} "${XCODEBUILD}" -scheme "Background Music" \
                             -configuration ${CONFIGURATION} \
                             -enableAddressSanitizer ${ENABLE_ASAN} \
+                            $(archivePath BGMApp) \
                             BUILD_DIR=./build \
                             RUN_CLANG_STATIC_ANALYZER=0 \
-                            DSTROOT="/" \
+                            $(ownershipArgs) \
+                            ${DSTROOT_ARG} \
                             ${XCODEBUILD_OPTIONS} \
                             "${XCODEBUILD_ACTION}" >> ${LOG_FILE} 2>&1) &
 
@@ -764,6 +827,13 @@ if [[ "${XCODEBUILD_ACTION}" == "install" ]]; then
             sleep 1
         done) &
     show_spinner "${BGMAPP_FAILED_TO_START_ERROR_MSG}" 5
+elif [[ "${XCODEBUILD_ACTION}" == "archive" ]]; then
+    # Copy the dSYMs (debug symbols) into the correct directories in the archives. I haven't been
+    # able to figure out why Xcode isn't doing this automatically.
+    cp -r "BGMDriver/build/Release/Background Music Device.driver.dSYM" "$DRIVER_PATH/dSYMs"
+    cp -r "BGMApp/build/Release/BGMXPCHelper.xpc.dSYM" "$XPC_HELPER_OUTPUT_PATH/dSYMs"
+    mv "$APP_PATH/Products/Applications/Background Music.app/Contents/MacOS/Background Music.dSYM" \
+       "$APP_PATH/dSYMs"
 fi
 
 echo "Done."

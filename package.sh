@@ -19,11 +19,11 @@
 #
 # package.sh
 #
-# Copyright © 2017, 2018 Kyle Neideck
+# Copyright © 2017-2020 Kyle Neideck
 # Copyright © 2016, 2017 Takayama Fumihiko
 #
-# Build Background Music and package it into a .pkg file and a .zip of the debug symbols (dSYM).
-# Call this script with -d to use the debug build configuration.
+# Builds Background Music and packages it into a .pkg file. Call this script with -d to use the
+# debug build configuration.
 #
 # Based on https://github.com/tekezo/Karabiner-Elements/blob/master/make-package.sh
 #
@@ -47,16 +47,19 @@ set_permissions() {
 
 # --------------------------------------------------
 
-# Use the release configuration by default.
+# Use the release configuration and archive by default.
 debug_build=NO
-build_output_path="build/Release"
+bgmapp_build_output_path="archives/BGMApp.xcarchive/Products/Applications"
+bgmxpchelper_build_output_path="archives/BGMXPCHelper.xcarchive/Products/usr/local/libexec"
+bgmdriver_build_output_path="archives/BGMDriver.xcarchive/Products/Library/Audio/Plug-Ins/HAL"
 
 # Handle the options passed to this script.
 while getopts ":d" opt; do
     case $opt in
         d)
             debug_build=YES
-            build_output_path="build/Debug"
+            bgmapp_build_output_path="BGMApp/build/Debug"
+            bgmdriver_build_output_path="BGMDriver/build/Debug"
             ;;
         \?)
             echo "Invalid option: -$OPTARG" >&2
@@ -75,7 +78,7 @@ if [[ $debug_build == YES ]]; then
     ENABLE_ASAN=NO bash build_and_install.sh -b -d
     build_status=$?
 else
-    bash build_and_install.sh -b
+    bash build_and_install.sh -a
     build_status=$?
 fi
 
@@ -87,23 +90,17 @@ fi
 # Read the version string from the build.
 version="$(/usr/libexec/PlistBuddy \
     -c "Print CFBundleShortVersionString" \
-    "BGMApp/${build_output_path}/Background Music.app/Contents/Info.plist")"
+    "${bgmapp_build_output_path}/Background Music.app/Contents/Info.plist")"
 
 # Everything in out_dir at the end of this script will be released in the Travis CI builds.
 out_dir="Background-Music-$version"
 rm -rf "$out_dir"
 mkdir "$out_dir"
 
-if [[ $debug_build == NO ]]; then
-    # Separate the debug symbols and the .app bundle.
-    echo "Archiving debug symbols"
-
-    dsym_archive="$out_dir/Background Music.dSYM-$version.zip"
-    mv "BGMApp/${build_output_path}/Background Music.app/Contents/MacOS/Background Music.dSYM" \
-       "Background Music.dSYM"
-    zip -r "$dsym_archive" "Background Music.dSYM"
-    rm -r "Background Music.dSYM"
-fi
+# Put the archives in a zip file. This file is mainly useful because the debug symbols (dSYMs) are
+# in it.
+echo "Making archives zip"
+zip -r "$out_dir/background-music-xcarchives-$version.zip" "archives"
 
 # --------------------------------------------------
 
@@ -113,11 +110,11 @@ rm -rf "pkgroot"
 mkdir -p "pkgroot"
 
 mkdir -p "pkgroot/Library/Audio/Plug-Ins/HAL"
-cp -R "BGMDriver/${build_output_path}/Background Music Device.driver" \
+cp -R "${bgmdriver_build_output_path}/Background Music Device.driver" \
       "pkgroot/Library/Audio/Plug-Ins/HAL/"
 
 mkdir -p "pkgroot/Applications"
-cp -R "BGMApp/${build_output_path}/Background Music.app" "pkgroot/Applications"
+cp -R "${bgmapp_build_output_path}/Background Music.app" "pkgroot/Applications"
 
 scripts_dir="$(mktemp -d)"
 cp "pkg/preinstall" "$scripts_dir"
@@ -125,7 +122,7 @@ cp "pkg/postinstall" "$scripts_dir"
 cp "BGMApp/BGMXPCHelper/com.bearisdriving.BGM.XPCHelper.plist.template" "$scripts_dir"
 cp "BGMApp/BGMXPCHelper/safe_install_dir.sh" "$scripts_dir"
 cp "BGMApp/BGMXPCHelper/post_install.sh" "$scripts_dir"
-cp -R "BGMApp/${build_output_path}/BGMXPCHelper.xpc" "$scripts_dir"
+cp -R "${bgmxpchelper_build_output_path}/BGMXPCHelper.xpc" "$scripts_dir"
 
 set_permissions "pkgroot"
 chmod 755 "pkgroot/Applications/Background Music.app/Contents/MacOS/Background Music"
@@ -177,16 +174,8 @@ rm -rf "pkgres"
 rm -f "pkg/Distribution.xml"
 
 # Print checksums
-if [[ $debug_build == YES ]]; then
-    echo "MD5 checksum:"
-    md5 "$pkg"
-    echo "SHA256 checksum:"
-    shasum -a 256 "$pkg"
-else
-    echo "MD5 checksums:"
-    md5 {"$pkg","$dsym_archive"}
-    echo "SHA256 checksums:"
-    shasum -a 256 {"$pkg","$dsym_archive"}
-fi
-
+echo "MD5 checksum:"
+md5 "$pkg"
+echo "SHA256 checksum:"
+shasum -a 256 "$pkg"
 

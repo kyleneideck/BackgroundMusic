@@ -1710,6 +1710,7 @@
 		27379B991C7F57DB0084A24C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COPY_PHASE_STRIP = NO;
 				DEPLOYMENT_POSTPROCESSING = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
@@ -1723,12 +1724,14 @@
 				INSTALL_PATH = /usr/local/libexec;
 				PRODUCT_BUNDLE_IDENTIFIER = com.bearisdriving.BGM.XPCHelper;
 				PRODUCT_NAME = BGMXPCHelper;
+				STRIP_INSTALLED_PRODUCT = NO;
 			};
 			name = Debug;
 		};
 		27379B9A1C7F57DB0084A24C /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COPY_PHASE_STRIP = NO;
 				DEPLOYMENT_POSTPROCESSING = YES;
 				INFOPLIST_FILE = BGMXPCHelper/Info.plist;
 				INSTALL_GROUP = wheel;
@@ -1737,12 +1740,14 @@
 				LLVM_LTO = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.bearisdriving.BGM.XPCHelper;
 				PRODUCT_NAME = BGMXPCHelper;
+				STRIP_INSTALLED_PRODUCT = NO;
 			};
 			name = Release;
 		};
 		27379B9B1C7F57DB0084A24C /* DebugOpt */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COPY_PHASE_STRIP = NO;
 				DEPLOYMENT_POSTPROCESSING = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
@@ -1756,6 +1761,7 @@
 				INSTALL_PATH = /usr/local/libexec;
 				PRODUCT_BUNDLE_IDENTIFIER = com.bearisdriving.BGM.XPCHelper;
 				PRODUCT_NAME = BGMXPCHelper;
+				STRIP_INSTALLED_PRODUCT = NO;
 			};
 			name = DebugOpt;
 		};

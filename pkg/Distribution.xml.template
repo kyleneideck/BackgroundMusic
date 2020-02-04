@@ -39,7 +39,7 @@
         </must-close>
     </pkg-ref>
 
-    <background file="FermataIcon.pdf" alignment="bottomleft" />
+    <background file="FermataIcon.pdf" alignment="bottomleft" mime-type="application/pdf" />
 </installer-gui-script>
 
 

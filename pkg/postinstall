@@ -19,24 +19,29 @@
 #
 # postinstall
 #
-# Copyright © 2017-2019 Kyle Neideck
+# Copyright © 2017-2020 Kyle Neideck
 #
 
+# Make sure we use the built-in versions of programs, for consistency. Probably not necessary
+# because the installer will set $PATH in a similar way, but it doesn't hurt.
 PATH=/bin:/sbin:/usr/bin:/usr/sbin; export PATH
+
+function log {
+    logger "$@"
+    echo "$@"
+}
 
 coreaudiod_plist="/System/Library/LaunchDaemons/com.apple.audio.coreaudiod.plist"
 dest_volume="$3"
 xpc_helper_path="$(bash safe_install_dir.sh -y)"
 
-logger "Installing BGMXPCHelper to $xpc_helper_path"
+log "Installing BGMXPCHelper to $xpc_helper_path"
 cp -Rf "BGMXPCHelper.xpc" "$xpc_helper_path"
 
 # TODO: Fail the install and show an error message if this fails.
 bash "post_install.sh" "$xpc_helper_path" "BGMXPCHelper.xpc/Contents/MacOS/BGMXPCHelper" "."
 
 # TODO: Verify the installed files, their permissions, the _BGMXPCHelper user/group, etc.
-# TODO: Instead of just sleeping for 5 seconds, wait until coreaudiod is restarted and BGMDevice is
-#       ready to use.
 
 # The extra or-clauses are fallback versions of the command that restarts coreaudiod. Apparently
 # some of these commands don't work with older versions of launchctl, so I figure there's no
@@ -49,7 +54,28 @@ bash "post_install.sh" "$xpc_helper_path" "BGMXPCHelper.xpc/Contents/MacOS/BGMXP
     (launchctl unload "$coreaudiod_plist" &>/dev/null && \
         launchctl load "$coreaudiod_plist" &>/dev/null) || \
     killall coreaudiod &>/dev/null) && \
-    sleep 5
+    sleep 2
+
+# Wait until coreaudiod has restarted and BGMDevice is ready to use.
+retries=5
+while [[ $retries -gt 0 ]]; do
+    if ! system_profiler SPAudioDataType | grep "Background Music" >/dev/null 2>&1; then
+        retries=$((retries - 1))
+        if [[ $retries -gt 0 ]]; then
+            log "Background Music device not found. Trying again in 3 seconds..."
+            sleep 3
+        else
+            # TODO: We might be able to use <installation-check> to show error messages in the
+            #       installer GUI instead of just logging them. See
+            #       <https://developer.apple.com/library/archive/documentation/DeveloperTools/Reference/DistributionDefinitionRef/Chapters/Distribution_XML_Ref.html#//apple_ref/doc/uid/TP40005370-CH100-SW12>.
+            log "Background Music device not found. Installation failed."
+            exit 1
+        fi
+    else
+        # BGMDevice is installed and available, so we can continue the script.
+        retries=0
+    fi
+done
 
 # Try opening BGMApp using its bundle ID first so the installer can declare it as "relocatable".
 # That way, if the user moves BGMApp and then installs a newer version of Background Music, the
@@ -57,14 +83,37 @@ bash "post_install.sh" "$xpc_helper_path" "BGMXPCHelper.xpc/Contents/MacOS/BGMXP
 #
 # Use launchctl to make sure we don't run BGMApp as the installer user.
 #
-# If we can't open BGMApp, it very likely didn't install properly, so we fail the install.
+# If we can't open BGMApp, it's very likely it didn't install properly, so we fail the install.
 logged_in_user_id="$(id -u "${USER}")"
-launchctl asuser "${logged_in_user_id}" \
-    open -b com.bearisdriving.BGM.App || \
-    launchctl asuser "${logged_in_user_id}" \
-    open "${dest_volume}/Applications/Background Music.app" || \
-    osascript -e 'tell application "Background Music" to activate' || \
+did_open_bgmapp=false
+
+# TODO: If they have multiple copies of BGMApp, this might open one of the old ones.
+log "Opening Background Music.app by bundle ID"
+if launchctl asuser "${logged_in_user_id}" \
+        open -b com.bearisdriving.BGM.App; then
+    did_open_bgmapp=true
+fi
+
+if [[ $did_open_bgmapp != "true" ]]; then
+    log "Opening ${dest_volume}/Applications/Background Music.app"
+    if launchctl asuser "${logged_in_user_id}" \
+            open "${dest_volume}/Applications/Background Music.app"; then
+        did_open_bgmapp=true
+    fi
+fi
+
+if [[ $did_open_bgmapp != "true" ]]; then
+    log "Opening Background Music.app using AppleScript"
+    if osascript -e 'tell application "Background Music" to activate'; then
+        did_open_bgmapp=true
+    fi
+fi
+
+if [[ $did_open_bgmapp != "true" ]]; then
+    log "Failed to open Background Music.app"
+    # Fail the install.
     exit 1
+fi
 
 # The installer plays a sound when it finishes, so give BGMApp a second to launch.
 sleep 1

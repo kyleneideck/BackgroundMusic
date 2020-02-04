@@ -20,7 +20,7 @@
 # post_install.sh
 # BGMXPCHelper
 #
-# Copyright © 2016-2018 Kyle Neideck
+# Copyright © 2016-2020 Kyle Neideck
 #
 # Installs BGMXPCHelper's launchd plist file and "bootstraps" (registers/enables) it with launchd.
 #
@@ -68,7 +68,13 @@ fi
 # If DEPLOYMENT_POSTPROCESSING is true, xcodebuild calls this script even if you're just building
 # (and not also installing). I'm not sure why, as we have the "run script only when installing"
 # option enabled.
-if ! [[ -z ${ACTION} ]] && [[ "${ACTION}" != "install" ]]; then
+#
+# REAL_ACTION is a workaround for xcodebuild setting ACTION to "install" even if we're actually
+# making an archive.
+#
+# TODO: Archiving BGMXPCHelper from Xcode instead of using build_and_install.sh still fails.
+if ( ! [[ -z ${ACTION} ]] && [[ "${ACTION}" != "install" ]] ) || \
+        ( ! [[ -z ${REAL_ACTION} ]] && [[ "${REAL_ACTION}" == "archive" ]] ); then
     echo "$0 should only be called during an install. Exiting."
     exit 0
 fi
