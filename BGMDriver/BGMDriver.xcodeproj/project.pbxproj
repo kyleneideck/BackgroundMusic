@@ -88,6 +88,7 @@
 		19FE7B8CE9148B3D8D7517C6 /* BGM_Control.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BGM_Control.h; sourceTree = "<group>"; };
 		19FE7BC3396C4E50D21E1BC8 /* BGM_Control.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BGM_Control.cpp; sourceTree = "<group>"; };
 		19FE7E6DC2A1B61211D74782 /* BGM_MuteControl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BGM_MuteControl.cpp; sourceTree = "<group>"; };
+		1C09150523F010E8001EB0E1 /* set-version.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "set-version.sh"; sourceTree = "<group>"; };
 		1C0CB6A61C4E06C00084C15A /* CAAtomicStack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CAAtomicStack.h; path = PublicUtility/CAAtomicStack.h; sourceTree = "<group>"; };
 		1C0CB6A71C4E06F70084C15A /* CAAtomic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CAAtomic.h; path = PublicUtility/CAAtomic.h; sourceTree = "<group>"; };
 		1C0CB6A91C50A3AF0084C15A /* CAAutoDisposer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CAAutoDisposer.h; path = PublicUtility/CAAutoDisposer.h; sourceTree = "<group>"; };
@@ -203,6 +204,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		1C09150423F010E8001EB0E1 /* Scripts */ = {
+			isa = PBXGroup;
+			children = (
+				1C09150523F010E8001EB0E1 /* set-version.sh */,
+			);
+			name = Scripts;
+			path = ../SharedSource/Scripts;
+			sourceTree = "<group>";
+		};
 		1C0CB6AF1C642C600084C15A /* DeviceClients */ = {
 			isa = PBXGroup;
 			children = (
@@ -352,6 +362,7 @@
 				27D643B71C9FABF600737F6E /* BGM_Types.h */,
 				2771700E1CA0C16200AB34B4 /* BGM_Utils.h */,
 				275343BC1DE9B44900DF3858 /* BGM_Utils.cpp */,
+				1C09150423F010E8001EB0E1 /* Scripts */,
 				27D643C21C9FBC5800737F6E /* BGM_TestUtils.h */,
 				27D643B81C9FABF600737F6E /* BGMXPCProtocols.h */,
 			);
@@ -396,6 +407,7 @@
 				1CB8B3601BBBB78D000E2DD1 /* Sources */,
 				1CB8B3611BBBB78D000E2DD1 /* Frameworks */,
 				1CB8B3621BBBB78D000E2DD1 /* Resources */,
+				1C09150823F01E6D001EB0E1 /* Run Script - set-version.sh */,
 			);
 			buildRules = (
 			);
@@ -482,6 +494,27 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		1C09150823F01E6D001EB0E1 /* Run Script - set-version.sh */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Run Script - set-version.sh";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Append the git HEAD short ID to the build version for SNAPSHOT and DEBUG builds.\n\"$SRCROOT/../SharedSource/Scripts/set-version.sh\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		1C8034D61BDD073B00668E00 /* Sources */ = {
