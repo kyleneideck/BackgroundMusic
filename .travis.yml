@@ -88,6 +88,9 @@ script:
     fi
 # Install the .pkg.
   - sudo installer -pkg Background-Music-*/BackgroundMusic-*.pkg -target / -verbose -dumplog
+  - echo -en '/var/log/install.log\ntravis_fold:start:install.log\\r'
+  - cat /var/log/install.log
+  - echo -en 'travis_fold:end:install.log\\r'
 # Check the BGM dirs and files were installed again.
   - ls -la "/Applications/Background Music.app"
   - ls -la "/Library/Audio/Plug-Ins/HAL/Background Music Device.driver"

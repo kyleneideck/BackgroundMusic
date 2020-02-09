@@ -25,6 +25,10 @@
 # Builds Background Music and packages it into a .pkg file. Call this script with -d to use the
 # debug build configuration.
 #
+# Call it with -r expanded_package_dir to repackage a package expanded using
+#     pkgutil --expand-full original_package.pkg expanded_package_dir
+# This is useful after code signing the bundles in the expanded package.
+#
 # Based on https://github.com/tekezo/Karabiner-Elements/blob/master/make-package.sh
 #
 
@@ -35,8 +39,6 @@ PATH="/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin"; export PATH
 # Sets all dirs in $1 to 755 (rwxr-xr-x) and all files in $1 to 644 (rw-r--r--).
 set_permissions() {
     find "$1" -print0 | while read -d $'\0' filepath; do
-        filename="${filepath##*/}"
-
         if [ -d "$filepath" ]; then
             chmod -h 755 "$filepath"
         else
@@ -48,18 +50,28 @@ set_permissions() {
 # --------------------------------------------------
 
 # Use the release configuration and archive by default.
-debug_build=NO
+packaging_operation="make_release_package"
 bgmapp_build_output_path="archives/BGMApp.xcarchive/Products/Applications"
 bgmxpchelper_build_output_path="archives/BGMXPCHelper.xcarchive/Products/usr/local/libexec"
 bgmdriver_build_output_path="archives/BGMDriver.xcarchive/Products/Library/Audio/Plug-Ins/HAL"
+repackage_dir=""
 
 # Handle the options passed to this script.
-while getopts ":d" opt; do
+while getopts ":dr:h" opt; do
     case $opt in
         d)
-            debug_build=YES
+            packaging_operation="make_debug_package"
             bgmapp_build_output_path="BGMApp/build/Debug"
             bgmdriver_build_output_path="BGMDriver/build/Debug"
+            ;;
+        r)
+            packaging_operation="repackage"
+            repackage_dir="$(realpath "$OPTARG")"
+            ;;
+        h)
+            # Just print out the header from this file.
+            awk '/^# package.sh/,/^$/' "$0"
+            exit 0
             ;;
         \?)
             echo "Invalid option: -$OPTARG" >&2
@@ -68,8 +80,20 @@ while getopts ":d" opt; do
     esac
 done
 
+bgmapp_path="${bgmapp_build_output_path}/Background Music.app"
+bgmdriver_path="${bgmdriver_build_output_path}/Background Music Device.driver"
+bgmxpchelper_path="${bgmxpchelper_build_output_path}/BGMXPCHelper.xpc"
+
 # Build
-if [[ $debug_build == YES ]]; then
+if [[ $packaging_operation == "repackage" ]]; then
+    # Paths to the bundles in the expanded package that we're repackaging.
+    bgmapp_path="${repackage_dir}/Installer.pkg/Payload/Applications/Background Music.app"
+    bgmdriver_path="${repackage_dir}/Installer.pkg/Payload/Library/Audio/Plug-Ins/HAL/Background Music Device.driver"
+    bgmxpchelper_path="${repackage_dir}/Installer.pkg/Scripts/BGMXPCHelper.xpc"
+
+    # No need to build anything if we're repackaging.
+    build_status=0
+elif [[ $packaging_operation == "make_debug_package" ]]; then
     # Disable AddressSanitizer so we can distribute debug packages to users reporting bugs without
     # worrying about loading the AddressSanitizer dylib in coreaudiod.
     #
@@ -90,17 +114,19 @@ fi
 # Read the version string from the build.
 version="$(/usr/libexec/PlistBuddy \
     -c "Print CFBundleShortVersionString" \
-    "${bgmapp_build_output_path}/Background Music.app/Contents/Info.plist")"
+    "${bgmapp_path}/Contents/Info.plist")"
 
 # Everything in out_dir at the end of this script will be released in the Travis CI builds.
 out_dir="Background-Music-$version"
 rm -rf "$out_dir"
 mkdir "$out_dir"
 
-# Put the archives in a zip file. This file is mainly useful because the debug symbols (dSYMs) are
-# in it.
-echo "Making archives zip"
-zip -r "$out_dir/background-music-xcarchives-$version.zip" "archives"
+if [[ $packaging_operation == "make_release_package" ]]; then
+    # Put the archives in a zip file. This file is mainly useful because the debug symbols (dSYMs)
+    # are in it.
+    echo "Making archives zip"
+    zip -r --quiet "$out_dir/background-music-xcarchives-$version.zip" "archives"
+fi
 
 # --------------------------------------------------
 
@@ -110,48 +136,80 @@ rm -rf "pkgroot"
 mkdir -p "pkgroot"
 
 mkdir -p "pkgroot/Library/Audio/Plug-Ins/HAL"
-cp -R "${bgmdriver_build_output_path}/Background Music Device.driver" \
-      "pkgroot/Library/Audio/Plug-Ins/HAL/"
-
 mkdir -p "pkgroot/Applications"
-cp -R "${bgmapp_build_output_path}/Background Music.app" "pkgroot/Applications"
-
 scripts_dir="$(mktemp -d)"
-cp "pkg/preinstall" "$scripts_dir"
-cp "pkg/postinstall" "$scripts_dir"
-cp "BGMApp/BGMXPCHelper/com.bearisdriving.BGM.XPCHelper.plist.template" "$scripts_dir"
-cp "BGMApp/BGMXPCHelper/safe_install_dir.sh" "$scripts_dir"
-cp "BGMApp/BGMXPCHelper/post_install.sh" "$scripts_dir"
-cp -R "${bgmxpchelper_build_output_path}/BGMXPCHelper.xpc" "$scripts_dir"
 
-set_permissions "pkgroot"
-chmod 755 "pkgroot/Applications/Background Music.app/Contents/MacOS/Background Music"
-chmod 755 "pkgroot/Applications/Background Music.app/Contents/Resources/uninstall.sh"
-chmod 755 "pkgroot/Applications/Background Music.app/Contents/Resources/_uninstall-non-interactive.sh"
-chmod 755 "pkgroot/Library/Audio/Plug-Ins/HAL/Background Music Device.driver/Contents/MacOS/Background Music Device"
+if [[ $packaging_operation == "repackage" ]]; then
+    # When repackaging, only set the permissions of the dirs this script creates. The copied
+    # dirs/files should already have the right permissions and we don't want to break any code
+    # signatures.
+    set_permissions "pkgroot"
+    set_permissions "$scripts_dir"
 
-set_permissions "$scripts_dir"
-chmod 755 "$scripts_dir/preinstall"
-chmod 755 "$scripts_dir/postinstall"
-chmod 755 "$scripts_dir/BGMXPCHelper.xpc/Contents/MacOS/BGMXPCHelper"
+    repackage_scripts_dir="${repackage_dir}/Installer.pkg/Scripts"
+    cp "${repackage_scripts_dir}/preinstall" "$scripts_dir"
+    cp "${repackage_scripts_dir}/postinstall" "$scripts_dir"
+    cp "${repackage_scripts_dir}/com.bearisdriving.BGM.XPCHelper.plist.template" "$scripts_dir"
+    cp "${repackage_scripts_dir}/safe_install_dir.sh" "$scripts_dir"
+    cp "${repackage_scripts_dir}/post_install.sh" "$scripts_dir"
+else
+    cp "pkg/preinstall" "$scripts_dir"
+    cp "pkg/postinstall" "$scripts_dir"
+    cp "BGMApp/BGMXPCHelper/com.bearisdriving.BGM.XPCHelper.plist.template" "$scripts_dir"
+    cp "BGMApp/BGMXPCHelper/safe_install_dir.sh" "$scripts_dir"
+    cp "BGMApp/BGMXPCHelper/post_install.sh" "$scripts_dir"
+fi
 
+# Copy the bundles.
+cp -R "$bgmdriver_path" "pkgroot/Library/Audio/Plug-Ins/HAL/"
+cp -R "$bgmapp_path" "pkgroot/Applications"
+cp -R "$bgmxpchelper_path" "$scripts_dir"
+
+# Set the file/dir permissions.
+if [[ $packaging_operation != "repackage" ]]; then
+    set_permissions "pkgroot"
+    chmod 755 "pkgroot/Applications/Background Music.app/Contents/MacOS/Background Music"
+    chmod 755 "pkgroot/Applications/Background Music.app/Contents/Resources/uninstall.sh"
+    chmod 755 "pkgroot/Applications/Background Music.app/Contents/Resources/_uninstall-non-interactive.sh"
+    chmod 755 "pkgroot/Library/Audio/Plug-Ins/HAL/Background Music Device.driver/Contents/MacOS/Background Music Device"
+
+    set_permissions "$scripts_dir"
+    chmod 755 "$scripts_dir/preinstall"
+    chmod 755 "$scripts_dir/postinstall"
+    chmod 755 "$scripts_dir/BGMXPCHelper.xpc/Contents/MacOS/BGMXPCHelper"
+fi
+
+# Copy the package resources.
 rm -rf "pkgres"
 mkdir -p "pkgres"
-cp "Images/FermataIcon.pdf" "pkgres"
 
-sed "s/{{VERSION}}/$version/g" "pkg/Distribution.xml.template" > "pkg/Distribution.xml"
+if [[ $packaging_operation == "repackage" ]]; then
+    cp "${repackage_dir}/Resources/FermataIcon.pdf" "pkgres"
+    cp "${repackage_dir}/Distribution" "pkg/Distribution.xml"
+else
+    cp "Images/FermataIcon.pdf" "pkgres"
+    # Populate the Distribution.xml template and copy it. It only has one template variable so far.
+    sed "s/{{VERSION}}/$version/g" "pkg/Distribution.xml.template" > "pkg/Distribution.xml"
+fi
 
 # --------------------------------------------------
 
-# As a security check for releases, we manually build the same package locally, compare it to the
-# release built by Travis and then code sign it. (And then remove the code signature on a different
-# computer and check that the signed package still matches the one from Travis.) So we include
-# "unsigned" in the name to differentiate the two versions.
-pkg="$out_dir/BackgroundMusic-$version.unsigned.pkg"
+if [[ $packaging_operation == "repackage" ]]; then
+    # Include "repackaged" in the filename just to make it clear.
+    pkg="$out_dir/BackgroundMusic-$version.repackaged.pkg"
+else
+    # As a security check for releases, we manually build the same package locally, compare it to
+    # the release built by Travis and then code sign it. (And then remove the code signature on a
+    # different computer and check that it still matches the one from Travis.) So we include
+    # "unsigned" in the name to differentiate the two versions.
+    pkg="$out_dir/BackgroundMusic-$version.unsigned.pkg"
+fi
+
 pkg_identifier="com.bearisdriving.BGM"
 
-echo "Creating $pkg"
+echo "Creating .pkg installer: $pkg"
 
+# Build the "component package". (See `man pkgbuild`.)
 pkgbuild \
     --root "pkgroot" \
     --component-plist "pkg/pkgbuild.plist" \
@@ -161,6 +219,8 @@ pkgbuild \
     --install-location "/" \
     "$out_dir/Installer.pkg"
 
+# Build the .pkg installer. This is basically a wrapper around the Installer.pkg we just built that
+# adds the background image and the settings in Distribution.xml.
 productbuild \
     --distribution "pkg/Distribution.xml" \
     --identifier "$pkg_identifier" \
@@ -168,14 +228,22 @@ productbuild \
     --package-path "$out_dir" \
     "$pkg"
 
+# Clean up.
 rm -f "$out_dir/Installer.pkg"
 rm -rf "pkgroot"
 rm -rf "pkgres"
 rm -f "pkg/Distribution.xml"
 
-# Print checksums
-echo "MD5 checksum:"
+# Print checksums.
+echo "Checksums:"
 md5 "$pkg"
-echo "SHA256 checksum:"
+echo -n "SHA256 "
 shasum -a 256 "$pkg"
+
+if [[ $packaging_operation == "make_release_package" ]]; then
+    # Print the checksums of the archives zip.
+    md5 "$out_dir/background-music-xcarchives-$version.zip"
+    echo -n "SHA256 "
+    shasum -a 256 "$out_dir/background-music-xcarchives-$version.zip"
+fi
 

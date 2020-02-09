@@ -95,9 +95,10 @@ if launchctl asuser "${logged_in_user_id}" \
 fi
 
 if [[ $did_open_bgmapp != "true" ]]; then
-    log "Opening ${dest_volume}/Applications/Background Music.app"
+    dest_volume_no_trailing_slash="${dest_volume/%\//}"
+    log "Opening ${dest_volume_no_trailing_slash}/Applications/Background Music.app"
     if launchctl asuser "${logged_in_user_id}" \
-            open "${dest_volume}/Applications/Background Music.app"; then
+            open "${dest_volume_no_trailing_slash}/Applications/Background Music.app"; then
         did_open_bgmapp=true
     fi
 fi

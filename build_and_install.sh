@@ -257,7 +257,7 @@ parse_options() {
                 XCODEBUILD_ACTION="archive"
                 # The dirs xcodebuild will put the archives in.
                 APP_PATH="$ARCHIVES_DIR/BGMApp.xcarchive"
-                XPC_HELPER_OUTPUT_PATH="$ARCHIVES_DIR/BGMApp.xcarchive"
+                XPC_HELPER_OUTPUT_PATH="$ARCHIVES_DIR/BGMXPCHelper.xcarchive"
                 DRIVER_PATH="$ARCHIVES_DIR/BGMDriver.xcarchive"
                 ;;
             b)
@@ -827,6 +827,8 @@ if [[ "${XCODEBUILD_ACTION}" == "install" ]]; then
             sleep 1
         done) &
     show_spinner "${BGMAPP_FAILED_TO_START_ERROR_MSG}" 5
+
+    echo "Done."
 elif [[ "${XCODEBUILD_ACTION}" == "archive" ]]; then
     # Copy the dSYMs (debug symbols) into the correct directories in the archives. I haven't been
     # able to figure out why Xcode isn't doing this automatically.
@@ -835,7 +837,4 @@ elif [[ "${XCODEBUILD_ACTION}" == "archive" ]]; then
     mv "$APP_PATH/Products/Applications/Background Music.app/Contents/MacOS/Background Music.dSYM" \
        "$APP_PATH/dSYMs"
 fi
-
-echo "Done."
-
 
