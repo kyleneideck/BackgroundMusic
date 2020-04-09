@@ -144,9 +144,11 @@ To manually uninstall, see [MANUAL_UNINSTALL.md](https://github.com/kyleneideck/
 
 # Troubleshooting
 
-If **Background Music** crashes and your audio stops working, open **System Preferences > Sound** and change your
-system's default output device to something other than the **Background Music** device. If it already is, then
+If Background Music crashes and your audio stops working, open `System Preferences > Sound` and change your
+system's default output device to something other than the **Background Music device**. If it already is, then
 change the default device and then change it back again.
+
+If Background Music doesn't work or can't manipulate volume for specific meeting softwares, go to `System Preferences > Security & Privacy > Privacy > Microphone` and **allow microphone access for Background Music.** For meeting softwares, consider entries at `More Apps` such as `$APPNAME (Helper)` to manipulate current meeting volume.
 
 If this does not work, you might have to uninstall. Consider filing a bug report if you do.
 
