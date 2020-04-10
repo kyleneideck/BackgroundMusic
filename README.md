@@ -148,15 +148,23 @@ If Background Music crashes and your audio stops working, open `System Preferenc
 system's default output device to something other than the **Background Music device**. If it already is, then
 change the default device and then change it back again.
 
-If Background Music doesn't work or can't manipulate volume for specific meeting softwares, go to `System Preferences > Security & Privacy > Privacy > Microphone` and **allow microphone access for Background Music.** For meeting softwares, consider entries at `More Apps` such as `$APPNAME (Helper)` to manipulate current meeting volume.
+Make sure you allow "microphone access" when you first run Background Music. If you denied it, go to
+`System Preferences > Security & Privacy > Privacy > Microphone`, find Background Music in the list
+and check the box next to it. Background Music doesn't actually listen to your microphone. It needs
+the permission because it gets your system audio from its virtual input device, which macOS counts
+as a microphone. (We're working on it in [#177](/../../issues/177).)
 
-If this does not work, you might have to uninstall. Consider filing a bug report if you do.
+If the volume slider for an app isn't working, try looking in `More Apps` for entries like `Some
+App (Helper)`. For some meeting or video chat apps, you may need to do this to change the current
+meeting volume.
 
 ## Known issues and solutions
 
 - **Setting an application's volume above 50% can cause [clipping](https://en.wikipedia.org/wiki/Clipping_(audio)).**
 
     - Set your volume to its maximum level and lower the volumes of other applications.
+
+- **Only 2-channel (stereo) audio devices are currently supported for output.**
 
 - **VLC pauses iTunes or Spotify when playing, and stops Background Music from unpausing your music afterward.** 
 
@@ -175,8 +183,8 @@ If this does not work, you might have to uninstall. Consider filing a bug report
 - **Some applications play notification sounds that are only just long enough to trigger an auto-pause.**
     - Increase the `kPauseDelayNSec` constant in [BGMAutoPauseMusic.mm](/BGMApp/BGMApp/BGMAutoPauseMusic.mm). It will increase your music's overlap time over other audio, so don't increase it too much. See [#5](https://github.com/kyleneideck/BackgroundMusic/issues/5) for details.
 
-### Other issues 
-Some are in listed in [TODO.md](/TODO.md).
+Many other issues are in listed in [TODO.md](/TODO.md) and in [GitHub
+Issues](https://github.com/kyleneideck/BackgroundMusic/issues).
 
 # Related projects
 
@@ -197,6 +205,7 @@ Some are in listed in [TODO.md](/TODO.md).
   Mac OS X"
 - [Zirkonium](https://code.google.com/archive/p/zirkonium) - "An infrastructure and application for multi-channel sound
   spatialization on MacOS X."
+- [BlackHole](https://github.com/ExistentialAudio/BlackHole) - "a modern macOS virtual audio driver that allows applications to pass audio to other applications with zero additional latency."
 
 ### Non-free
 
