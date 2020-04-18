@@ -247,6 +247,7 @@
 /* Begin PBXFileReference section */
 		19FE70CF6C93F5007940CE91 /* BGMMusic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGMMusic.h; path = "Music Players/BGMMusic.h"; sourceTree = "<group>"; };
 		19FE7179EBFA116F3861E79D /* BGMVolumeChangeListener.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BGMVolumeChangeListener.cpp; sourceTree = "<group>"; };
+		19FE71BCD79E7246F7345C16 /* BGMThreadSafetyAnalysis.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BGMThreadSafetyAnalysis.h; sourceTree = "<group>"; };
 		19FE72A176FD500FB4C1F5C6 /* BGMPlayThroughRTLogger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BGMPlayThroughRTLogger.h; sourceTree = "<group>"; };
 		19FE73389459BF65748F531F /* BGMDebugLogging.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = BGMDebugLogging.c; path = PublicUtility/BGMDebugLogging.c; sourceTree = "<group>"; };
 		19FE73822ADD50BA9120AB05 /* BGMMusic.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BGMMusic.m; path = "Music Players/BGMMusic.m"; sourceTree = "<group>"; };
@@ -548,6 +549,7 @@
 				1C1962E31BC94E15008A4DF7 /* CARingBuffer.h */,
 				19FE7908A33FA7BD97B432D9 /* BGMDebugLogging.h */,
 				19FE73389459BF65748F531F /* BGMDebugLogging.c */,
+				19FE71BCD79E7246F7345C16 /* BGMThreadSafetyAnalysis.h */,
 			);
 			name = PublicUtility;
 			sourceTree = "<group>";
@@ -1448,6 +1450,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_USE_OPTIMIZATION_PROFILE = NO;
+				CLANG_WARN_ATOMIC_IMPLICIT_SEQ_CST = YES;
 				CODE_SIGN_ENTITLEMENTS = "BGMApp/BGMApp-Debug.entitlements";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
@@ -1460,7 +1463,10 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.bearisdriving.BGM.App;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRIP_STYLE = "non-global";
-				WARNING_CFLAGS = "-Wpartial-availability";
+				WARNING_CFLAGS = (
+					"-Wpartial-availability",
+					"-Wthread-safety",
+				);
 			};
 			name = DebugOpt;
 		};
@@ -1633,6 +1639,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_USE_OPTIMIZATION_PROFILE = NO;
+				CLANG_WARN_ATOMIC_IMPLICIT_SEQ_CST = YES;
 				CODE_SIGN_ENTITLEMENTS = "BGMApp/BGMApp-Debug.entitlements";
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
@@ -1645,7 +1652,10 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.bearisdriving.BGM.App;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRIP_STYLE = "non-global";
-				WARNING_CFLAGS = "-Wpartial-availability";
+				WARNING_CFLAGS = (
+					"-Wpartial-availability",
+					"-Wthread-safety",
+				);
 			};
 			name = Debug;
 		};
@@ -1654,6 +1664,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_USE_OPTIMIZATION_PROFILE = NO;
+				CLANG_WARN_ATOMIC_IMPLICIT_SEQ_CST = YES;
 				CODE_SIGN_ENTITLEMENTS = BGMApp/BGMApp.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEAD_CODE_STRIPPING = YES;
@@ -1679,6 +1690,7 @@
 				WARNING_CFLAGS = (
 					"-Wno-profile-instr-out-of-date",
 					"-Wpartial-availability",
+					"-Wthread-safety",
 				);
 			};
 			name = Release;

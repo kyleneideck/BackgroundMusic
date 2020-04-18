@@ -214,6 +214,16 @@ void BGMPlayThroughRTLogger::LogUnexpectedIOStateAfterStopping(const char* inCal
     });
 }
 
+void BGMPlayThroughRTLogger::LogRingBufferUnavailable(const char* inCallerName, bool inGotLock)
+{
+    LogAsync(mRingBufferUnavailable, [&]()
+    {
+        // Store the data to include in the log message.
+        mRingBufferUnavailable.callerName = inCallerName;
+        mRingBufferUnavailable.gotLock = inGotLock;
+    });
+}
+
 void BGMPlayThroughRTLogger::LogIfRingBufferError(CARingBufferError inError,
                                                   std::atomic<CARingBufferError>& outError)
 {
@@ -276,7 +286,7 @@ void BGMPlayThroughRTLogger::LogSync_Warning(const char* inFormat, ...)
     mNumWarningMessagesLogged++;
 #endif
 
-    LogWarning(inFormat, args);
+    vLogWarning(inFormat, args);
 
     va_end(args);
 }
@@ -291,10 +301,10 @@ void BGMPlayThroughRTLogger::LogSync_Error(const char* inFormat, ...)
 
     if(!mContinueOnErrorLogged)
     {
-        LogError(inFormat, args);
+        vLogError(inFormat, args);
     }
 #else
-    LogError(inFormat, args);
+    vLogError(inFormat, args);
 #endif
 
     va_end(args);
@@ -321,6 +331,7 @@ void BGMPlayThroughRTLogger::LogMessages()
     LogSync_NoSamplesReady();
     LogSync_ExceptionStoppingIOProc();
     LogSync_UnexpectedIOStateAfterStopping();
+    LogSync_RingBufferUnavailable();
     LogSync_RingBufferError(mRingBufferStoreError, "InputDeviceIOProc");
     LogSync_RingBufferError(mRingBufferFetchError, "OutputDeviceIOProc");
 }
@@ -402,6 +413,19 @@ void BGMPlayThroughRTLogger::LogSync_UnexpectedIOStateAfterStopping()
     }
 }
 
+void BGMPlayThroughRTLogger::LogSync_RingBufferUnavailable()
+{
+    if(mRingBufferUnavailable.shouldLogMessage)
+    {
+        LogSync_Warning("BGMPlayThrough::%s: Ring buffer unavailable. %s",
+                        mRingBufferUnavailable.callerName,
+                        mRingBufferUnavailable.gotLock ?
+                            "No buffer currently allocated." :
+                            "Buffer locked for allocation/deallocation by another thread.");
+        mRingBufferUnavailable.shouldLogMessage = false;
+    }
+}
+
 void BGMPlayThroughRTLogger::LogSync_RingBufferError(
         std::atomic<CARingBufferError>& ioRingBufferError,
         const char* inMethodName)
@@ -471,6 +495,7 @@ bool BGMPlayThroughRTLogger::WaitUntilLoggerThreadIdle()
             mDroppedFrames.shouldLogMessage ||
             mNoSamplesReady.shouldLogMessage ||
             mUnexpectedIOStateAfterStopping.shouldLogMessage ||
+            mRingBufferUnavailable.shouldLogMessage ||
             mExceptionStoppingIOProc.shouldLogMessage ||
             mRingBufferStoreError != kCARingBufferError_OK ||
             mRingBufferFetchError != kCARingBufferError_OK)

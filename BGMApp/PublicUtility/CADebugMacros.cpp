@@ -1,3 +1,28 @@
+// This file is part of Background Music.
+//
+// Background Music is free software: you can redistribute it and/or
+// modify it under the terms of the GNU General Public License as
+// published by the Free Software Foundation, either version 2 of the
+// License, or (at your option) any later version.
+//
+// Background Music is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Background Music. If not, see <http://www.gnu.org/licenses/>.
+
+//
+//  CADebugMacros.cpp
+//  PublicUtility
+//
+//  Copyright (C) 2014 Apple Inc. All Rights Reserved.
+//  Copyright © 2016, 2017, 2020 Kyle Neideck
+//
+//  Original license header follows.
+//
+
 /*
      File: CADebugMacros.cpp
  Abstract: CADebugMacros.h
@@ -46,7 +71,6 @@
 */
 #include "CADebugMacros.h"
 #include <stdio.h>
-#include <stdarg.h>
 #if TARGET_API_MAC_OSX
 	#include <syslog.h>
 #endif
@@ -67,14 +91,12 @@ void	LogError(const char *fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);
-    // BGM edit: vprintf leaves args in an undefined state, which can cause a crash in
-    //           vsyslog. Also added CADebuggerStop(). Original code commented out below.
-//#if DEBUG
-//	vprintf(fmt, args);
-//#endif
-//#if TARGET_API_MAC_OSX
-//	vsyslog(LOG_ERR, fmt, args);
-//#endif
+    vLogError(fmt, args);
+    va_end(args);
+}
+
+void    vLogError(const char *fmt, va_list args)
+{
 #if (DEBUG || !TARGET_API_MAC_OSX) && !CoreAudio_UseSysLog
     printf("[ERROR] ");
     vprintf(fmt, args);
@@ -82,25 +104,22 @@ void	LogError(const char *fmt, ...)
 #else
     vsyslog(LOG_ERR, fmt, args);
 #endif
+
 #if DEBUG
     CADebuggerStop();
 #endif
-    // BGM edit end
-	va_end(args);
 }
 
 void	LogWarning(const char *fmt, ...)
 {
 	va_list args;
     va_start(args, fmt);
-    // BGM edit: vprintf leaves args in an undefined state, which can cause a crash in
-    //           vsyslog. Also added CADebuggerStop(). Original code commented out below.
-//#if DEBUG
-//	vprintf(fmt, args);
-//#endif
-//#if TARGET_API_MAC_OSX
-//	vsyslog(LOG_WARNING, fmt, args);
-//#endif
+    vLogWarning(fmt, args);
+    va_end(args);
+}
+
+void    vLogWarning(const char *fmt, va_list args)
+{
 #if (DEBUG || !TARGET_API_MAC_OSX) && !CoreAudio_UseSysLog
     printf("[WARNING] ");
     vprintf(fmt, args);
@@ -108,9 +127,8 @@ void	LogWarning(const char *fmt, ...)
 #else
     vsyslog(LOG_WARNING, fmt, args);
 #endif
+
 #if DEBUG
     //CADebuggerStop(); // TODO: Add a toggle for this to the project file (under "Preprocessor Macros"). Default to off.
 #endif
-    // BGM edit end
-	va_end(args);
 }

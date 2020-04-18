@@ -84,6 +84,8 @@
 
 #include "CADebugPrintf.h"
 
+#include <stdarg.h>
+
 //=============================================================================
 //	CADebugMacros
 //=============================================================================
@@ -220,9 +222,11 @@
 #define DebugMessageN8(msg, N1, N2, N3, N4, N5, N6, N7, N8)		DebugMsg(msg, N1, N2, N3, N4, N5, N6, N7, N8)
 #define DebugMessageN9(msg, N1, N2, N3, N4, N5, N6, N7, N8, N9)	DebugMsg(msg, N1, N2, N3, N4, N5, N6, N7, N8, N9)
 
-// BGM edit: Added __printflike.
+// BGM edit: Added __printflike and va_list versions.
 void	LogError(const char *fmt, ...) __printflike(1, 2);			// writes to syslog (and stderr if debugging)
+void    vLogError(const char *fmt, va_list args);
 void	LogWarning(const char *fmt, ...) __printflike(1, 2);		// writes to syslog (and stderr if debugging)
+void    vLogWarning(const char *fmt, va_list args);
 
 #define	NO_ACTION	(void)0
 

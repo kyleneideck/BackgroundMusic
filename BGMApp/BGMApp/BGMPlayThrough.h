@@ -46,10 +46,12 @@
 // PublicUtility Includes
 #include "CAMutex.h"
 #include "CARingBuffer.h"
+#include "BGMThreadSafetyAnalysis.h"
 
 // STL Includes
 #include <atomic>
 #include <algorithm>
+#include <memory>
 
 // System Includes
 #include <mach/semaphore.h>
@@ -79,7 +81,8 @@ public:
     
 private:
     /*! @throws CAException */
-    void                Init(BGMAudioDevice inInputDevice, BGMAudioDevice inOutputDevice);
+    void                Init(BGMAudioDevice inInputDevice, BGMAudioDevice inOutputDevice)
+                            REQUIRES(mStateMutex);
 
 public:
     /*! @throws CAException */
@@ -88,7 +91,8 @@ public:
     void                Deactivate();
 
 private:
-    void                AllocateBuffer();
+    void                AllocateBuffer() REQUIRES(mStateMutex);
+    void                DeallocateBuffer();
 
     /*! @throws CAException */
     void                CreateIOProcIDs();
@@ -98,7 +102,7 @@ private:
         @return True if both IOProcs are stopped.
         @nonthreadsafe
      */
-    bool                CheckIOProcsAreStopped() const noexcept; // TODO: REQUIRES(mStateMutex);
+    bool                CheckIOProcsAreStopped() const noexcept REQUIRES(mStateMutex);
 	
 public:
     /*!
@@ -148,7 +152,10 @@ private:
                                            AudioBufferList*        outOutputData,
                                            const AudioTimeStamp*   inOutputTime,
                                            void* __nullable        inClientData);
-    
+
+    /*! Fills the given ABL with zeroes to make it silent. */
+    static inline void  FillWithSilence(AudioBufferList* ioBuffer);
+
     // The state of an IOProc. Used by the IOProc to tell other threads when it's finished starting. Used by other
     // threads to tell the IOProc to stop itself. (Probably used for other things as well.)
     enum class          IOState
@@ -166,16 +173,37 @@ private:
                                           IOState& outNewState);
     
 private:
-    CARingBuffer        mBuffer;
+    std::unique_ptr<CARingBuffer>    mBuffer PT_GUARDED_BY(mBufferInputMutex)
+                                        PT_GUARDED_BY(mBufferOutputMutex) { nullptr };
     
     AudioDeviceIOProcID __nullable mInputDeviceIOProcID { nullptr };
     AudioDeviceIOProcID __nullable mOutputDeviceIOProcID { nullptr };
     
     BGMAudioDevice      mInputDevice { kAudioObjectUnknown };
     BGMAudioDevice      mOutputDevice { kAudioObjectUnknown };
-    
-    CAMutex             mStateMutex { "Playthrough state" };
-    
+
+    // mStateMutex is the general purpose mutex. mBufferInputMutex and mBufferOutputMutex are
+    // just used to make sure mBuffer, the ring buffer, is allocated when the IOProcs access it. See
+    // the comments in the IOProcs for details.
+    //
+    // If a thread might lock more than one of these mutexes, it *must* take them in this order:
+    //     1. mStateMutex
+    //     2. mBufferInputMutex
+    //     3. mBufferOutputMutex
+    //
+    // The ACQUIRED_BEFORE annotations don't do anything yet. From clang's docs: "ACQUIRED_BEFORE(…)
+    // and ACQUIRED_AFTER(…) are currently unimplemented. To be fixed in a future update." After
+    // they've fixed that, the compiler will enforce the ordering statically.
+    //
+    // TODO: We can't use std::shared_lock because we're still on C++11, but we could use std::lock
+    //       to help ensure the locks are always taken in the right order.
+    // TODO: It would be better to have a separate class for the buffer and its mutexes.
+    CAMutex             mStateMutex ACQUIRED_BEFORE(mBufferInputMutex)
+                            ACQUIRED_BEFORE(mBufferOutputMutex) { "Playthrough state" };
+    CAMutex             mBufferInputMutex ACQUIRED_BEFORE(mBufferOutputMutex)
+                            { "Playthrough ring buffer input" };
+    CAMutex             mBufferOutputMutex { "Playthrough ring buffer output" };
+
     // Signalled when the output IOProc runs. We use it to tell BGMDriver when the output device is ready to receive audio data.
     semaphore_t         mOutputDeviceIOProcSemaphore { SEMAPHORE_NULL };
     

@@ -99,7 +99,8 @@ public:
     /*! For BGMPlayThrough::UpdateIOProcState. Not thread-safe. */
     void                    LogUnexpectedIOStateAfterStopping(const char* inCallerName,
                                                               int inIOState);
-
+    /*! For BGMPlayThrough::InputDeviceIOProc and BGMPlayThrough::OutputDeviceIOProc. */
+    void                    LogRingBufferUnavailable(const char* inCallerName, bool inGotLock);
     /*! For BGMPlayThrough::OutputDeviceIOProc. */
     void                    LogIfRingBufferError_Fetch(CARingBufferError inError)
                             {
@@ -134,6 +135,7 @@ private:
     void                    LogSync_NoSamplesReady();
     void                    LogSync_ExceptionStoppingIOProc();
     void                    LogSync_UnexpectedIOStateAfterStopping();
+    void                    LogSync_RingBufferUnavailable();
     void                    LogSync_RingBufferError(
                                 std::atomic<CARingBufferError>& ioRingBufferError,
                                 const char* inMethodName);
@@ -172,6 +174,12 @@ private:
         Float64 inToOutSampleOffset;
         std::atomic<bool> shouldLogMessage { false };
     } mNoSamplesReady;
+
+    struct {
+        const char* callerName;
+        bool gotLock;
+        std::atomic<bool> shouldLogMessage { false };
+    } mRingBufferUnavailable;
 
     // For BGMPlayThrough::UpdateIOProcState
     struct {

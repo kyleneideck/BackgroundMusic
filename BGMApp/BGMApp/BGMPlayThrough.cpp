@@ -28,7 +28,6 @@
 #include "BGM_Utils.h"
 
 // PublicUtility Includes
-#include "CAAtomic.h"
 #include "CAHALAudioSystemObject.h"
 #include "CAPropertyAddress.h"
 
@@ -57,9 +56,20 @@ BGMPlayThrough::BGMPlayThrough(BGMAudioDevice inInputDevice, BGMAudioDevice inOu
 
 BGMPlayThrough::~BGMPlayThrough()
 {
+    CAMutex::Locker stateLocker(mStateMutex);
+
     BGMLogAndSwallowExceptionsMsg("BGMPlayThrough::~BGMPlayThrough", "Deactivate", [&]() {
         Deactivate();
     });
+
+    // If one of the IOProcs failed to stop, CoreAudio could (at least in theory) still call it
+    // after this point. This isn't a solution, but calling DeallocateBuffer instead of letting it
+    // deallocate itself should at least make the error less likely to cause a segfault, since
+    // DeallocateBuffer takes the buffer locks and sets mBuffer to null.
+    //
+    // TODO: It probably wouldn't be too hard to fix this properly by giving the IOProcs weak refs
+    //       to the BGMPlayThrough object instead of raw pointers.
+    DeallocateBuffer();
     
     if(mOutputDeviceIOProcSemaphore != SEMAPHORE_NULL)
     {
@@ -97,7 +107,7 @@ void    BGMPlayThrough::Init(BGMAudioDevice inInputDevice, BGMAudioDevice inOutp
     catch (...)
     {
         // Clean up.
-        mBuffer.Deallocate();
+        DeallocateBuffer();
         throw;
     }
 }
@@ -178,7 +188,7 @@ void    BGMPlayThrough::Deactivate()
         DebugMsg("BGMPlayThrough::Deactivate: Deactivating playthrough");
         
         bool inputDeviceIsBGMDevice = true;
-        
+
         CATry
         inputDeviceIsBGMDevice = mInputDevice.IsBGMDeviceInstance();
         CACatch
@@ -231,13 +241,29 @@ void    BGMPlayThrough::AllocateBuffer()
         Throw(CAException(kAudioHardwareUnsupportedOperationError));
     }
     
+    // Need to lock the buffer mutexes to make sure the IOProcs aren't accessing it. The order is
+    // important here. We always lock them in the same order to prevent deadlocks.
+    CAMutex::Locker lockerInput(mBufferInputMutex);
+    CAMutex::Locker lockerOutput(mBufferOutputMutex);
+
+    mBuffer = std::unique_ptr<CARingBuffer>(new CARingBuffer);
+
     // The calculation for the size of the buffer is from Apple's CAPlayThrough.cpp sample code
     //
     // TODO: Test playthrough with hardware with more than 2 channels per frame, a sample (virtual) format other than
     //       32-bit floats and/or an IO buffer size other than 512 frames
-    mBuffer.Allocate(outputFormat[0].mChannelsPerFrame,
-                     outputFormat[0].mBytesPerFrame,
-                     mOutputDevice.GetIOBufferSize() * 20);
+    mBuffer->Allocate(outputFormat[0].mChannelsPerFrame,
+                      outputFormat[0].mBytesPerFrame,
+                      mOutputDevice.GetIOBufferSize() * 20);
+}
+
+void    BGMPlayThrough::DeallocateBuffer()
+{
+    // Need to lock the buffer mutexes to make sure the IOProcs aren't accessing it. The order is
+    // important here. We always lock them in the same order to prevent deadlocks.
+    CAMutex::Locker lockerInput(mBufferInputMutex);
+    CAMutex::Locker lockerOutput(mBufferOutputMutex);
+    mBuffer = nullptr;  // Note that the buffer's destructor will deallocate it.
 }
 
 void    BGMPlayThrough::CreateIOProcIDs()
@@ -865,6 +891,10 @@ void    BGMPlayThrough::HandleBGMDeviceIsRunning(BGMPlayThrough* refCon)
                 isRunningSomewhereOtherThanBGMApp =
                     IsRunningSomewhereOtherThanBGMApp(refCon->mInputDevice);
             });
+
+            DebugMsg("BGMPlayThrough::HandleBGMDeviceIsRunning: "
+                     "BGMDevice is %srunning somewhere other than BGMApp",
+                     isRunningSomewhereOtherThanBGMApp ? "" : " not");
             
             if(isRunningSomewhereOtherThanBGMApp)
             {
@@ -910,8 +940,8 @@ bool    BGMPlayThrough::IsRunningSomewhereOtherThanBGMApp(const BGMAudioDevice& 
 
 #pragma mark IOProcs
 
-// Note that the IOProcs will very likely not run on the same thread and that they intentionally don't
-// lock any mutexes.
+// Note that the IOProcs will very likely not run on the same thread and that they intentionally
+// only lock mutexes around their use of mBuffer.
 
 // static
 OSStatus    BGMPlayThrough::InputDeviceIOProc(AudioObjectID           inDevice,
@@ -950,15 +980,30 @@ OSStatus    BGMPlayThrough::InputDeviceIOProc(AudioObjectID           inDevice,
     
     UInt32 framesToStore = inInputData->mBuffers[0].mDataByteSize / (SizeOf32(Float32) * 2);
 
-    CARingBufferError err =
-        refCon->mBuffer.Store(inInputData,
-                              framesToStore,
-                              static_cast<CARingBuffer::SampleTime>(inInputTime->mSampleTime));
-    refCon->mRTLogger.LogIfRingBufferError_Store(err);
+    // See the comments in OutputDeviceIOProc where it locks mBufferOutputMutex.
+    CAMutex::Tryer tryer(refCon->mBufferInputMutex);
 
-    CAMemoryBarrier();
-    refCon->mLastInputSampleTime = inInputTime->mSampleTime;
-    
+    // Disable a warning about accessing mBuffer without holding both mBufferInputMutex and
+    // mBufferOutputMutex. Explained further in OutputDeviceIOProc.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wthread-safety"
+    if(tryer.HasLock() && refCon->mBuffer)
+    {
+        CARingBufferError err =
+                refCon->mBuffer->Store(inInputData,
+                                       framesToStore,
+                                       static_cast<CARingBuffer::SampleTime>(
+                                               inInputTime->mSampleTime));
+#pragma clang diagnostic pop
+        refCon->mRTLogger.LogIfRingBufferError_Store(err);
+
+        refCon->mLastInputSampleTime = inInputTime->mSampleTime;
+    }
+    else
+    {
+        refCon->mRTLogger.LogRingBufferUnavailable("InputDeviceIOProc", tryer.HasLock());
+    }
+
     return noErr;
 }
 
@@ -987,6 +1032,7 @@ OSStatus    BGMPlayThrough::OutputDeviceIOProc(AudioObjectID           inDevice,
     if(state == IOState::Stopped || state == IOState::Stopping)
     {
         // Return early, since we just asked to stop. (Or something really weird is going on.)
+        FillWithSilence(outOutputData);
         return noErr;
     }
     
@@ -1006,8 +1052,7 @@ OSStatus    BGMPlayThrough::OutputDeviceIOProc(AudioObjectID           inDevice,
     if(refCon->mLastInputSampleTime == -1)
     {
         // Return early, since we don't have any data to output yet.
-        //
-        // TODO: Write silence to outOutputData here
+        FillWithSilence(outOutputData);
         return noErr;
     }
     
@@ -1028,45 +1073,88 @@ OSStatus    BGMPlayThrough::OutputDeviceIOProc(AudioObjectID           inDevice,
         static_cast<CARingBuffer::SampleTime>(refCon->mLastInputSampleTime);
     
     UInt32 framesToOutput = outOutputData->mBuffers[0].mDataByteSize / (SizeOf32(Float32) * 2);
-    
-    // Very occasionally (at least for me) our read head gets ahead of input, i.e. we haven't received any new input since
-    // this IOProc was last called, and we have to recalculate its position. I figure this might be caused by clock drift
-    // but I'm really not sure. It also happens if the input or output sample times are restarted from zero.
-    //
-    // We also recalculate the offset if the read head is outside of the ring buffer. This happens for example when you plug
-    // in or unplug headphones, which causes the output sample times to be restarted from zero.
-    //
-    // The vast majority of the time, just using lastInputSampleTime as the read head time instead of the one we calculate
-    // would work fine (and would also account for the above).
-    SInt64 bufferStartTime, bufferEndTime;
-    CARingBufferError err = refCon->mBuffer.GetTimeBounds(bufferStartTime, bufferEndTime);
-    bool outOfBounds = false;
-    if(err == kCARingBufferError_OK)
-    {
-        outOfBounds = (readHeadSampleTime < bufferStartTime) || (readHeadSampleTime - framesToOutput > bufferEndTime);
-    }
-    if(lastInputSampleTime < readHeadSampleTime || outOfBounds)
-    {
-        refCon->mRTLogger.LogNoSamplesReady(lastInputSampleTime,
-                                            readHeadSampleTime,
-                                            refCon->mInToOutSampleOffset);
 
-        // Recalculate the in-to-out offset and read head
-        refCon->mInToOutSampleOffset = inOutputTime->mSampleTime - lastInputSampleTime;
-        readHeadSampleTime = static_cast<CARingBuffer::SampleTime>(inOutputTime->mSampleTime - refCon->mInToOutSampleOffset);
-    }
+    // When the input and output devices are set, during start up or because the user changed the
+    // output device, this class (re)allocates the ring buffer (mBuffer). We try to take this
+    // lock before accessing the buffer to make sure it's allocated.
+    //
+    // If we don't get the lock, another thread must be allocating or deallocating it, so we just
+    // give up. We can't avoid audio glitches while changing devices anyway. This class tries to
+    // make sure the IOProcs aren't running when it allocates the buffer, but it can't guarantee
+    // that.
+    //
+    // Note that this is only realtime safe because we only try to lock the mutex. If another
+    // thread has the mutex, it will be a non-realtime thread, so we can't wait for it.
+    CAMutex::Tryer tryer(refCon->mBufferOutputMutex);
 
-    // Copy the frames from the ring buffer
-    err = refCon->mBuffer.Fetch(outOutputData, framesToOutput, readHeadSampleTime);
-    // TODO: Not sure what else we should do to handle these errors, if anything. There's code in
-    //       Apple's CAPlayThrough.cpp sample code that handles them. (Look for
-    //       "kCARingBufferError_OK" around line 707.) Should be easy enough to use, but it's more
-    //       complicated that just directly copying it.
-    refCon->mRTLogger.LogIfRingBufferError_Fetch(err);
+    // Disable a warning about accessing mBuffer without holding both mBufferInputMutex and
+    // mBufferOutputMutex. The input IOProc always writes ahead of where the output IOProc will read
+    // in a given IO cycle, so it's safe for them to read and write at the same time.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wthread-safety"
+    if(tryer.HasLock() && refCon->mBuffer)
+    {
+        // Very occasionally (at least for me) our read head gets ahead of input, i.e. we haven't
+        // received any new input since this IOProc was last called, and we have to recalculate its
+        // position. I figure this might be caused by clock drift but I'm really not sure. It also
+        // happens if the input or output sample times are restarted from zero.
+        //
+        // We also recalculate the offset if the read head is outside of the ring buffer. This
+        // happens for example when you plug in or unplug headphones, which causes the output sample
+        // times to be restarted from zero.
+        //
+        // The vast majority of the time, just using lastInputSampleTime as the read head time
+        // instead of the one we calculate would work fine (and would also account for the above).
+        SInt64 bufferStartTime, bufferEndTime;
+        CARingBufferError err = refCon->mBuffer->GetTimeBounds(bufferStartTime, bufferEndTime);
+        bool outOfBounds = false;
+
+        if(err == kCARingBufferError_OK)
+        {
+            outOfBounds = (readHeadSampleTime < bufferStartTime)
+                    || (readHeadSampleTime - framesToOutput > bufferEndTime);
+        }
+
+        if(lastInputSampleTime < readHeadSampleTime || outOfBounds)
+        {
+            refCon->mRTLogger.LogNoSamplesReady(lastInputSampleTime,
+                                                readHeadSampleTime,
+                                                refCon->mInToOutSampleOffset);
+
+            // Recalculate the in-to-out offset and read head.
+            refCon->mInToOutSampleOffset = inOutputTime->mSampleTime - lastInputSampleTime;
+            readHeadSampleTime = static_cast<CARingBuffer::SampleTime>(
+                    inOutputTime->mSampleTime - refCon->mInToOutSampleOffset);
+        }
+
+        // Copy the frames from the ring buffer.
+        err = refCon->mBuffer->Fetch(outOutputData, framesToOutput, readHeadSampleTime);
+        refCon->mRTLogger.LogIfRingBufferError_Fetch(err);
+
+        if(err != kCARingBufferError_OK)
+        {
+            FillWithSilence(outOutputData);
+        }
+    }
+    else
+    {
+        refCon->mRTLogger.LogRingBufferUnavailable("OutputDeviceIOProc", tryer.HasLock());
+        FillWithSilence(outOutputData);
+    }
+#pragma clang diagnostic pop
 
     refCon->mLastOutputSampleTime = inOutputTime->mSampleTime;
     
     return noErr;
+}
+
+// static
+inline void BGMPlayThrough::FillWithSilence(AudioBufferList* ioBuffer)
+{
+    for(UInt32 i = 0; i < ioBuffer->mNumberBuffers; i++)
+    {
+        memset(ioBuffer->mBuffers[i].mData, 0, ioBuffer->mBuffers[i].mDataByteSize);
+    }
 }
 
 // static

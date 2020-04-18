@@ -98,6 +98,11 @@
     [self assertLoggedOneWarningMessage];
 }
 
+- (void) testLogRingBufferUnavailable {
+    logger->LogRingBufferUnavailable("OutputDeviceIOProc", false);
+    [self assertLoggedOneWarningMessage];
+}
+
 - (void) testLogIfRingBufferError_Fetch_noError {
     logger->LogIfRingBufferError_Fetch(kCARingBufferError_OK);
     [self assertLoggedNoMessages];
