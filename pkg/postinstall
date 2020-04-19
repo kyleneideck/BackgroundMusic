@@ -33,13 +33,19 @@ function log {
 
 coreaudiod_plist="/System/Library/LaunchDaemons/com.apple.audio.coreaudiod.plist"
 dest_volume="$3"
-xpc_helper_path="$(bash safe_install_dir.sh -y)"
+xpc_helper_install_path="$(bash safe_install_dir.sh -y)"
 
-log "Installing BGMXPCHelper to $xpc_helper_path"
-cp -Rf "BGMXPCHelper.xpc" "$xpc_helper_path"
+log "Installing BGMXPCHelper to $xpc_helper_install_path"
+
+# Delete the old version first, if any, to work around a macOS bug where a codesigned Mach-O binary
+# can fail verification if you overwrite the old version instead of replacing it. Apparently the
+# kernel caches some codesigning info that doesn't get updated. See
+# <https://forums.developer.apple.com/thread/126187>.
+rm -rf "${xpc_helper_install_path}/BGMXPCHelper.xpc"
+cp -Rf "BGMXPCHelper.xpc" "$xpc_helper_install_path"
 
 # TODO: Fail the install and show an error message if this fails.
-bash "post_install.sh" "$xpc_helper_path" "BGMXPCHelper.xpc/Contents/MacOS/BGMXPCHelper" "."
+bash "post_install.sh" "$xpc_helper_install_path" "BGMXPCHelper.xpc/Contents/MacOS/BGMXPCHelper" "."
 
 # TODO: Verify the installed files, their permissions, the _BGMXPCHelper user/group, etc.
 
