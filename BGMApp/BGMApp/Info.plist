@@ -46,5 +46,11 @@
 	</array>
 	<key>OSAScriptingDefinition</key>
 	<string>BGMApp.sdef</string>
+    <!--
+    Hopefully this will keep Background Music from using the discrete GPU on multi-GPU systems,
+    which wastes energy. I don't have any hardware I could easily test this on, so it's untested.
+    -->
+	<key>NSSupportsAutomaticGraphicsSwitching</key>
+	<true/>
 </dict>
 </plist>
