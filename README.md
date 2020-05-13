@@ -111,10 +111,10 @@ brew cask install background-music-pre
 ```
 
 <details><summary>More info...</summary>
-<p>
+
 This command uses `/bin/bash` instead of `bash` in case someone has a nonstandard Bash in their `$PATH`. However, it doesn't do this for `tar` or `curl`. In addition, `build_and_install.sh` doesn't call programs by absolute paths. This command also uses `gzcat - | tar x` instead of `tar xz` because `gzcat` will also check the file's integrity (gzip files
 include a checksum), and will ensure that a half-downloaded copy of `build_and_install.sh` doesn't run.
-</p>
+
 </details>
 
 ### Option 2
