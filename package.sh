@@ -34,6 +34,10 @@
 
 # TODO: Code signing. See `man productbuild`.
 
+set -o nounset
+set -o errexit
+set -o pipefail
+
 PATH="/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin"; export PATH
 
 # Sets all dirs in $1 to 755 (rwxr-xr-x) and all files in $1 to 644 (rw-r--r--).
@@ -51,18 +55,12 @@ set_permissions() {
 
 # Use the release configuration and archive by default.
 packaging_operation="make_release_package"
-bgmapp_build_output_path="archives/BGMApp.xcarchive/Products/Applications"
-bgmxpchelper_build_output_path="archives/BGMXPCHelper.xcarchive/Products/usr/local/libexec"
-bgmdriver_build_output_path="archives/BGMDriver.xcarchive/Products/Library/Audio/Plug-Ins/HAL"
-repackage_dir=""
 
 # Handle the options passed to this script.
 while getopts ":dr:h" opt; do
     case $opt in
         d)
             packaging_operation="make_debug_package"
-            bgmapp_build_output_path="BGMApp/build/Debug"
-            bgmdriver_build_output_path="BGMDriver/build/Debug"
             ;;
         r)
             packaging_operation="repackage"
@@ -80,20 +78,17 @@ while getopts ":dr:h" opt; do
     esac
 done
 
-bgmapp_path="${bgmapp_build_output_path}/Background Music.app"
-bgmdriver_path="${bgmdriver_build_output_path}/Background Music Device.driver"
-bgmxpchelper_path="${bgmxpchelper_build_output_path}/BGMXPCHelper.xpc"
-
-# Build
 if [[ $packaging_operation == "repackage" ]]; then
-    # Paths to the bundles in the expanded package that we're repackaging.
+    # No need to build anything if we're repackaging.
+    build_status=0
+
+    # Set the paths to the bundles in the expanded package that we're repackaging.
     bgmapp_path="${repackage_dir}/Installer.pkg/Payload/Applications/Background Music.app"
     bgmdriver_path="${repackage_dir}/Installer.pkg/Payload/Library/Audio/Plug-Ins/HAL/Background Music Device.driver"
     bgmxpchelper_path="${repackage_dir}/Installer.pkg/Scripts/BGMXPCHelper.xpc"
-
-    # No need to build anything if we're repackaging.
-    build_status=0
 elif [[ $packaging_operation == "make_debug_package" ]]; then
+    # Build using the debug configuration.
+    #
     # Disable AddressSanitizer so we can distribute debug packages to users reporting bugs without
     # worrying about loading the AddressSanitizer dylib in coreaudiod.
     #
@@ -101,9 +96,20 @@ elif [[ $packaging_operation == "make_debug_package" ]]; then
     #       DebugOpt configuration instead of Debug)?
     ENABLE_ASAN=NO bash build_and_install.sh -b -d
     build_status=$?
+
+    # Set the paths to the build products (i.e. the bundles).
+    bgmapp_path="BGMApp/build/Debug/Background Music.app"
+    bgmdriver_path="BGMDriver/build/Debug/Background Music Device.driver"
+    bgmxpchelper_path="BGMApp/build/Debug/BGMXPCHelper.xpc"
 else
+    # Build and archive. (It uses the release config when archiving.)
     bash build_and_install.sh -a
     build_status=$?
+
+    # Set the paths to the build products (i.e. the bundles). Note that these are in the archives.
+    bgmapp_path="archives/BGMApp.xcarchive/Products/Applications/Background Music.app"
+    bgmdriver_path="archives/BGMDriver.xcarchive/Products/Library/Audio/Plug-Ins/HAL/Background Music Device.driver"
+    bgmxpchelper_path="archives/BGMXPCHelper.xcarchive/Products/usr/local/libexec/BGMXPCHelper.xpc"
 fi
 
 # Exit if the build failed.
