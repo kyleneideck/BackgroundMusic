@@ -99,11 +99,10 @@ script:
   - ls -la "/Library/Audio/Plug-Ins/HAL/Background Music Device.driver"
   - ls -la "/usr/local/libexec/BGMXPCHelper.xpc" || ls -la "/Library/Application Support/Background Music/BGMXPCHelper.xpc"
   - ls -la "/Library/LaunchDaemons/com.bearisdriving.BGM.XPCHelper.plist"
-# Print the log file from the build package.sh did.
-# Do this last because it's a long log file and we might run out of space.
-  - echo -en 'build_and_install.log for the package\ntravis_fold:start:pkg-build-log\\r'
-  - cat build_and_install.log
-  - echo -en 'travis_fold:end:pkg-build-log\\r'
+# Also deploy (i.e. attach to the GitHub release) the log file from the build package.sh did. If we
+# just printed it, we'd run out of space and the build would be killed. The release is created as a
+# draft initially, so we can remove the log file before making the release public.
+  - cp build_and_install.log Background-Music-*
 # Post on IRC when Travis builds finish.
 notifications:
   irc: "irc.freenode.org#backgroundmusic"
