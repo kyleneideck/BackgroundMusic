@@ -662,6 +662,13 @@ else
     ENABLE_ASAN="${ENABLE_ASAN:-NO}"
 fi
 
+enableUBSanArg() {
+    if [[ -n "$ENABLE_UBSAN" ]]; then
+        echo "-enableUndefinedBehaviorSanitizer"
+        echo "$ENABLE_UBSAN"
+    fi
+}
+
 # Clean all projects. Done separately to workaround what I think is a bug in Xcode 10.0. If you just
 # add "clean" to the other xcodebuild commands, they seem to fail because of the DSTROOT="/" arg.
 if [[ "${CLEAN}" != "" ]]; then
@@ -714,6 +721,7 @@ echo "[1/3] ${ACTIONING} the virtual audio device $(bold_face ${DRIVER_DIR}) to"
     ${SUDO} "${XCODEBUILD}" -scheme "Background Music Device" \
                             -configuration ${CONFIGURATION} \
                             -enableAddressSanitizer ${ENABLE_ASAN} \
+                            $(enableUBSanArg) \
                             $(archivePath BGMDriver) \
                             BUILD_DIR=./build \
                             RUN_CLANG_STATIC_ANALYZER=0 \
@@ -743,6 +751,7 @@ xpcHelperInstallPathArg() {
     ${SUDO} "${XCODEBUILD}" -scheme BGMXPCHelper \
                             -configuration ${CONFIGURATION} \
                             -enableAddressSanitizer ${ENABLE_ASAN} \
+                            $(enableUBSanArg) \
                             $(archivePath BGMXPCHelper) \
                             BUILD_DIR=./build \
                             RUN_CLANG_STATIC_ANALYZER=0 \
@@ -764,6 +773,7 @@ echo "[3/3] ${ACTIONING} $(bold_face ${APP_DIR}) to $(bold_face ${APP_PATH})" \
     ${SUDO} "${XCODEBUILD}" -scheme "Background Music" \
                             -configuration ${CONFIGURATION} \
                             -enableAddressSanitizer ${ENABLE_ASAN} \
+                            $(enableUBSanArg) \
                             $(archivePath BGMApp) \
                             BUILD_DIR=./build \
                             RUN_CLANG_STATIC_ANALYZER=0 \

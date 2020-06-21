@@ -89,12 +89,14 @@ if [[ $packaging_operation == "repackage" ]]; then
 elif [[ $packaging_operation == "make_debug_package" ]]; then
     # Build using the debug configuration.
     #
-    # Disable AddressSanitizer so we can distribute debug packages to users reporting bugs without
-    # worrying about loading the AddressSanitizer dylib in coreaudiod.
+    # Disable AddressSanitizer and UndefinedBehaviorSanitizer so we can distribute debug packages to
+    # users without worrying about loading the AddressSanitizer and UndefinedBehaviorSanitizer
+    # dylibs in coreaudiod. We've also had issues loading those dylibs in the other binaries when
+    # the binaries were built on other systems.
     #
     # TODO: Would debug packages be more useful if they were built with optimization (i.e. using the
     #       DebugOpt configuration instead of Debug)?
-    ENABLE_ASAN=NO bash build_and_install.sh -b -d
+    ENABLE_ASAN=NO ENABLE_UBSAN=NO bash build_and_install.sh -b -d
     build_status=$?
 
     # Set the paths to the build products (i.e. the bundles).
