@@ -2,10 +2,13 @@ language: objective-c
 matrix:
   include:
     - os: osx
+      osx_image: xcode12
+      sudo: required
+      env: DEPLOY=true
+    - os: osx
       osx_image: xcode11.3
       xcode_sdk: macosx10.14
       sudo: required
-      env: DEPLOY=true
     - os: osx
       osx_image: xcode10.1
       xcode_sdk: macosx10.14
@@ -16,10 +19,6 @@ matrix:
       sudo: required
     - os: osx
       osx_image: xcode9.4
-      xcode_sdk: macosx10.13
-      sudo: required
-    - os: osx
-      osx_image: xcode9.2
       xcode_sdk: macosx10.13
       sudo: required
       # Fails to compile in 8.3, but it isn't clear from the logs why it fails.

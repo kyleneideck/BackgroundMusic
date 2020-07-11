@@ -663,7 +663,7 @@ else
 fi
 
 enableUBSanArg() {
-    if [[ -n "$ENABLE_UBSAN" ]]; then
+    if [[ "${ENABLE_UBSAN+}" != "" ]]; then
         echo "-enableUndefinedBehaviorSanitizer"
         echo "$ENABLE_UBSAN"
     fi
