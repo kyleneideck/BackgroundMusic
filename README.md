@@ -12,7 +12,7 @@
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[Application volume](#application-volume)<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[Recording system audio](#recording-system-audio)<br/> 
 [Download](#download)<br/> 
-[Build and Install](#build-and-install)</br>
+[Build and Install](#installing-from-source-code)</br>
 [Uninstall](#uninstall)<br/>
 [Troubleshooting](#troubleshooting)<br/> 
 [Related Projects](#related-projects)<br/> 
