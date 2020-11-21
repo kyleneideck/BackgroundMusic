@@ -35,7 +35,7 @@
 
 #pragma clang assume_nonnull begin
 
-static const UInt64 REMOTE_CALL_DEFAULT_TIMEOUT_SECS = 30;
+static const UInt64 REMOTE_CALL_DEFAULT_TIMEOUT_SECS = 1;
 
 static NSXPCConnection* CreateXPCHelperConnection()
 {
