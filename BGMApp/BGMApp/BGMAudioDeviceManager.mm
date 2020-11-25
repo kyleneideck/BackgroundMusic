@@ -378,8 +378,14 @@
     
     @try {
         gotLock = [stateLock tryLock];
-        
-        if (gotLock) {
+
+        BOOL isBigSur = NO;
+        if (@available(macOS 11.0, *)) {
+            isBigSur = YES;
+        }
+
+        // Always start playthrough asynchronously. Temp workaround for deadlock on Big Sur.
+        if (!isBigSur && gotLock) {
             BGMPlayThrough& pt = (forUISoundsDevice ? playThrough_UISounds : playThrough);
 
             // Playthrough might not have been notified that BGMDevice is starting yet, so make sure

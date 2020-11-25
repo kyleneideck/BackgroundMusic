@@ -20,6 +20,7 @@
 //  Copyright © 2016, 2017, 2019 Kyle Neideck
 //  Copyright © 2017 Andrew Tonner
 //  Copyright © 2019 Gordon Childs
+//  Copyright © 2020 Aleksey Yurkevich
 //  Copyright (C) 2013 Apple Inc. All Rights Reserved.
 //
 //  Based largely on SA_Device.cpp from Apple's SimpleAudioDriver Plug-In sample code. Also uses a few sections from Apple's
