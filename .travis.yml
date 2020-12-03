@@ -14,10 +14,6 @@ matrix:
       xcode_sdk: macosx10.14
       sudo: required
     - os: osx
-      osx_image: xcode10
-      xcode_sdk: macosx10.14
-      sudo: required
-    - os: osx
       osx_image: xcode9.4
       xcode_sdk: macosx10.13
       sudo: required

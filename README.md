@@ -65,6 +65,9 @@ the **Background Music** device. You can create the aggregate device using the *
 
 You can download the current version of **Background Music** using the following options. We also have [snapshot builds](https://github.com/kyleneideck/BackgroundMusic/releases).
 
+| ⚠️ Version 0.3.2 doesn't work on macOS Big Sur. Try this snapshot version: [0.4.0-SNAPSHOT-c0ab98b](https://github.com/kyleneideck/BackgroundMusic/releases/tag/0.4.0-SNAPSHOT-c0ab98b) |
+|-------------  |
+
 ### Option 1
 
 Download **version 0.3.2**: 
@@ -209,7 +212,8 @@ Issues](https://github.com/kyleneideck/BackgroundMusic/issues).
 
 ### Non-free
 
-- [Audio Hijack](https://rogueamoeba.com/audiohijack/) - "Capture Audio From Anywhere on Your Mac"
+- [Audio Hijack](https://rogueamoeba.com/audiohijack/), [SoundSource](https://rogueamoeba.com/soundsource/) - "Capture
+  Audio From Anywhere on Your Mac", "Get truly powerful control over all the audio on your Mac!"
 - [Sound Siphon](https://staticz.com/soundsiphon/), [Sound Control](https://staticz.com/soundcontrol/) - System/app audio recording, per-app volumes, system audio equaliser
 - [SoundBunny](https://www.prosofteng.com/soundbunny-mac-volume-control/) - "Control application volume independently."
 - [Boom 2](http://www.globaldelight.com/boom/index.php) - "The Best Volume Booster & Equalizer For Mac"
