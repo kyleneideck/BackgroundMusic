@@ -87,7 +87,7 @@ BackgroundMusic-0.3.2.pkg</a> (571 KB)
 Install using [Homebrew](https://brew.sh/) by running the following command in **Terminal**:
 
 ```bash
-brew cask install background-music
+brew install --cask background-music
 ```
 
 If you want the snapshot version, run:
