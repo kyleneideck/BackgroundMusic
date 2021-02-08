@@ -94,7 +94,7 @@ If you want the snapshot version, run:
 
 ```bash
 brew tap homebrew/cask-versions
-brew cask install background-music-pre
+brew install --cask background-music-pre
 ```
 
 # Installing from Source Code
