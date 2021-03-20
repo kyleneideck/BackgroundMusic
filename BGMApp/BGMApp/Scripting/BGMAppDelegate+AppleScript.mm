@@ -30,6 +30,7 @@
 #import "CAHALAudioSystemObject.h"
 #import "CAAutoDisposer.h"
 
+const AudioObjectPropertyScope kScope                   = kAudioDevicePropertyScopeOutput;
 
 #pragma clang assume_nonnull begin
 
@@ -43,7 +44,7 @@
                  [key UTF8String]);
     }
 
-    return [@[@"selectedOutputDevice", @"outputDevices"] containsObject:key];
+    return [@[@"selectedOutputDevice", @"outputDevices", @"mainVolume", @"applications"] containsObject:key];
 }
 
 - (BGMASOutputDevice*) selectedOutputDevice {
@@ -81,6 +82,29 @@
     }
 
     return outputDevices;
+}
+
+- (double) mainVolume {
+    BGMAudioDevice bgmDevice = [self.audioDevices bgmDevice];
+    return bgmDevice.GetVolumeControlScalarValue(kScope, kMasterChannel);
+}
+
+- (void) setMainVolume:(double)mainVolume {
+    BGMAudioDevice bgmDevice = [self.audioDevices bgmDevice];
+    bgmDevice.SetMasterVolumeScalar(kScope, (Float32)mainVolume);
+}
+
+- (NSArray<BGMASApplication*>*) applications {
+    NSArray<NSRunningApplication*>* apps = [[NSWorkspace sharedWorkspace] runningApplications];
+    NSMutableArray<BGMASApplication*>* applications = [NSMutableArray arrayWithCapacity:[apps count]];
+
+    for (UInt32 i = 0; i < [apps count]; i++) {
+        BGMASApplication *app = [[BGMASApplication alloc] initWithApplication:apps[i] volumeController:self.appVolumes parentSpecifier:[self objectSpecifier] index:i];
+
+        [applications addObject:app];
+    }
+
+    return applications;
 }
 
 @end

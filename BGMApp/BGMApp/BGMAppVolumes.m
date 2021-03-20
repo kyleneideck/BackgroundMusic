@@ -124,6 +124,79 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
     }
 }
 
+- (NSMenuItem*) getMenuItemForApp:(NSRunningApplication*)app {
+    NSInteger lastAppVolumeMenuItemIndex = [self lastMenuItemIndex] - 2;
+
+    for (NSInteger i = [self firstMenuItemIndex]; i <= lastAppVolumeMenuItemIndex; i++) {
+        NSMenuItem* item = [bgmMenu itemAtIndex:i];
+        NSRunningApplication* itemApp = item.representedObject;
+        BGMAssert(itemApp, "!itemApp for %s", item.title.UTF8String);
+
+        if ([itemApp isEqual:app]) {
+            return item;
+        }
+    }
+    for (NSInteger i = 0; i < [moreAppsMenu numberOfItems]; i++) {
+        NSMenuItem* item = [moreAppsMenu itemAtIndex:i];
+        NSRunningApplication* itemApp = item.representedObject;
+        BGMAssert(itemApp, "!itemApp for %s", item.title.UTF8String);
+
+        if ([itemApp isEqual:app]) {
+            return item;
+        }
+    }
+
+    return nil;
+}
+
+- (BGMAppVolumeAndPan) getVolumeAndPanForApp:(NSRunningApplication*)app {
+    BGMAppVolumeAndPan result = {
+        .volume = -1,
+        .pan = -1
+    };
+
+    NSMenuItem *item = [self getMenuItemForApp:app];
+
+    if (item == nil) {
+        return result;
+    }
+
+    for (NSView* subview in item.view.subviews) {
+        // Get the volume.
+        if ([subview isKindOfClass:[BGMAVM_VolumeSlider class]]) {
+            result.volume = [(BGMAVM_VolumeSlider*)subview intValue];
+        }
+
+        // Get the pan position.
+        if ([subview isKindOfClass:[BGMAVM_PanSlider class]]) {
+            result.pan = [(BGMAVM_PanSlider*)subview intValue];
+        }
+    }
+
+    return result;
+}
+
+- (void) setVolumeAndPan:(BGMAppVolumeAndPan)volumeAndPan forApp:(NSRunningApplication*)app {
+    NSMenuItem *item = [self getMenuItemForApp:app];
+
+    if (item == nil) {
+        return;
+    }
+
+    for (NSView* subview in item.view.subviews) {
+        // Get the volume.
+        if (volumeAndPan.volume != -1 && [subview isKindOfClass:[BGMAVM_VolumeSlider class]]) {
+            [(BGMAVM_VolumeSlider*)subview setRelativeVolume:volumeAndPan.volume];
+        }
+
+        // Get the pan position.
+        if (volumeAndPan.pan != -1 && [subview isKindOfClass:[BGMAVM_PanSlider class]]) {
+            [(BGMAVM_PanSlider*)subview setPanPosition:volumeAndPan.pan];
+        }
+    }
+
+}
+
 // Create a blank menu item to copy as a template.
 - (NSMenuItem*) createBlankAppVolumeMenuItem {
     NSMenuItem* menuItem = [[NSMenuItem alloc] initWithTitle:@"" action:nil keyEquivalent:@""];

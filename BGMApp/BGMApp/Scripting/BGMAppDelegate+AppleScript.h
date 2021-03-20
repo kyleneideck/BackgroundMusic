@@ -24,6 +24,7 @@
 
 // Local Includes
 #import "BGMASOutputDevice.h"
+#import "BGMASApplication.h"
 
 // System Includes
 #import <Foundation/Foundation.h>
@@ -37,6 +38,8 @@
 
 @property BGMASOutputDevice* selectedOutputDevice;
 @property (readonly) NSArray<BGMASOutputDevice*>* outputDevices;
+@property double mainVolume;
+@property (readonly) NSArray<BGMASApplication*>* applications;
 
 @end
 

@@ -40,11 +40,6 @@
 
 #pragma clang assume_nonnull begin
 
-typedef struct BGMAppVolumeAndPan {
-    int volume;
-    int pan;
-} BGMAppVolumeAndPan;
-
 @implementation BGMAppVolumesController {
     // The App Volumes UI.
     BGMAppVolumes* appVolumes;
@@ -101,6 +96,20 @@ typedef struct BGMAppVolumeAndPan {
                                initialVolume:initial.volume
                                   initialPan:initial.pan];
         }
+    }
+}
+
+- (BGMAppVolumeAndPan) getVolumeAndPanForApp:(NSRunningApplication *)app {
+    return [appVolumes getVolumeAndPanForApp:app];
+}
+
+- (void) setVolumeAndPan:(BGMAppVolumeAndPan)volumeAndPan forApp:(NSRunningApplication*)app {
+    [appVolumes setVolumeAndPan:volumeAndPan forApp:app];
+    if (volumeAndPan.volume != -1) {
+        [self setVolume:volumeAndPan.volume forAppWithProcessID:app.processIdentifier bundleID:app.bundleIdentifier];
+    }
+    if (volumeAndPan.pan != -1) {
+        [self setPanPosition:volumeAndPan.pan forAppWithProcessID:app.processIdentifier bundleID:app.bundleIdentifier];
     }
 }
 
