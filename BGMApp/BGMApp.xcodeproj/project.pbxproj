@@ -226,6 +226,7 @@
 		27FB8C301DE4758A0084DB9D /* BGMPlayThrough.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962E51BC94E91008A4DF7 /* BGMPlayThrough.cpp */; };
 		27FB8C311DE4758A0084DB9D /* BGM_Utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27FB8C2E1DE468320084DB9D /* BGM_Utils.cpp */; };
 		9E129A412602AE620005851B /* BGMASApplication.m in Sources */ = {isa = PBXBuildFile; fileRef = 9E129A402602AE620005851B /* BGMASApplication.m */; };
+		9E542C7026057FBA0016C0B5 /* BGMASApplication.m in Sources */ = {isa = PBXBuildFile; fileRef = 9E129A402602AE620005851B /* BGMASApplication.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -1224,6 +1225,7 @@
 				1CD989361ECFFC9E0014BBBF /* CACFDictionary.cpp in Sources */,
 				1CD989371ECFFC9E0014BBBF /* CACFNumber.cpp in Sources */,
 				1CD989381ECFFC9E0014BBBF /* CACFString.cpp in Sources */,
+				9E542C7026057FBA0016C0B5 /* BGMASApplication.m in Sources */,
 				1CD989391ECFFC9E0014BBBF /* CADebugger.cpp in Sources */,
 				1CD9893A1ECFFC9E0014BBBF /* CADebugMacros.cpp in Sources */,
 				1CD9893B1ECFFC9E0014BBBF /* CADebugPrintf.cpp in Sources */,
