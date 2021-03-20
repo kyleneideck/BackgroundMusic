@@ -92,6 +92,7 @@ const AudioObjectPropertyScope kScope                   = kAudioDevicePropertySc
 - (void) setMainVolume:(double)mainVolume {
     BGMAudioDevice bgmDevice = [self.audioDevices bgmDevice];
     bgmDevice.SetMasterVolumeScalar(kScope, (Float32)mainVolume);
+    [self.outputVolumeSlider setFloatValue:(float)mainVolume];
 }
 
 - (NSArray<BGMASApplication*>*) applications {
