@@ -27,6 +27,7 @@
                       type="boolean"
                       access="rw"
                       description="Is this the device to be used for audio output?">
+		<synonym name="default"/>
                 <cocoa key="selected"/>
             </property>
         </class>
