@@ -20,7 +20,8 @@
 //  Copyright © 2017 Kyle Neideck
 //  Created by Marcus Wu on 3/17/21.
 //
-//  An AppleScript class for volume and pan settings on for running applications.
+//  An AppleScript class for volume and pan settings for running applications.
+//
 
 
 // Local Includes
