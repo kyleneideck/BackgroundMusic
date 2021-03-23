@@ -14,7 +14,7 @@
 // along with Background Music. If not, see <http://www.gnu.org/licenses/>.
 
 //
-//  BGMASApplication.mm
+//  BGMASApplication.m
 //  BGMApp
 //
 //  Copyright © 2021 Marcus Wu
