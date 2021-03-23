@@ -184,7 +184,7 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
     }
 
     for (NSView* subview in item.view.subviews) {
-        // Get the volume.
+        // Set the volume.
         if (volumeAndPan.volume != -1 && [subview isKindOfClass:[BGMAVM_VolumeSlider class]]) {
             [(BGMAVM_VolumeSlider*)subview setRelativeVolume:volumeAndPan.volume];
         }
@@ -520,4 +520,3 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
 }
 
 @end
-
