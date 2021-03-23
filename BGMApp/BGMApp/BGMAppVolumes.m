@@ -189,7 +189,7 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
             [(BGMAVM_VolumeSlider*)subview setRelativeVolume:volumeAndPan.volume];
         }
 
-        // Get the pan position.
+        // Set the pan position.
         if (volumeAndPan.pan != -1 && [subview isKindOfClass:[BGMAVM_PanSlider class]]) {
             [(BGMAVM_PanSlider*)subview setPanPosition:volumeAndPan.pan];
         }
