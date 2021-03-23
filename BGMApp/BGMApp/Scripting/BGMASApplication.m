@@ -17,8 +17,7 @@
 //  BGMASApplication.mm
 //  BGMApp
 //
-//  Copyright © 2017 Kyle Neideck
-//  Created by Marcus Wu on 3/17/21.
+//  Copyright © 2021 Marcus Wu
 //
 
 // Self Include
