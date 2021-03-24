@@ -18,6 +18,7 @@
 //  BGMApp
 //
 //  Copyright © 2017 Kyle Neideck
+//  Copyright © 2021 Marcus Wu
 //
 
 // Local Includes

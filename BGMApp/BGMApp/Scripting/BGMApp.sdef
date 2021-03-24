@@ -48,6 +48,14 @@
                 <cocoa key="name"/>
             </property>
 
+            <property name="bundleID"
+                      code="bdid"
+                      description="The bundle ID of the application, e.g. 'com.somecompany.coolapp'."
+                      type="text"
+                      access="r">
+                <cocoa key="bundleID"/>
+            </property>
+
             <property name="vol"
                       code="pVol"
                       type="integer"

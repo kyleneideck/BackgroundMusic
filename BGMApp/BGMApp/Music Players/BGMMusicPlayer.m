@@ -92,7 +92,11 @@
 
 + (NSArray<id<BGMMusicPlayer>>*) createInstancesWithDefaults:(BGMUserDefaults*)userDefaults {
     #pragma unused (userDefaults)
+    // TODO: Fix this warning properly.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wobjc-literal-conversion"
     return @[ [self new] ];
+#pragma clang diagnostic pop
 }
 
 - (NSImage* __nullable) icon {

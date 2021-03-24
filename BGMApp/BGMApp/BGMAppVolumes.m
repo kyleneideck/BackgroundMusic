@@ -19,6 +19,7 @@
 //
 //  Copyright © 2016-2020 Kyle Neideck
 //  Copyright © 2017 Andrew Tonner
+//  Copyright © 2021 Marcus Wu
 //
 
 // Self Include

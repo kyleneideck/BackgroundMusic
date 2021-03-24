@@ -18,6 +18,7 @@
 //  BGMApp
 //
 //  Copyright © 2021 Marcus Wu
+//  Copyright © 2021 Kyle Neideck
 //
 //  An AppleScript class for volume and pan settings for running applications.
 //
@@ -41,6 +42,7 @@ NS_ASSUME_NONNULL_BEGIN
                                index:(int)i;
 
 @property (readonly) NSString* name;
+@property (readonly) NSString* bundleID;
 @property int volume;
 @property int pan;
 @end

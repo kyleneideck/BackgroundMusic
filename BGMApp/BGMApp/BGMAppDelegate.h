@@ -18,6 +18,7 @@
 //  BGMApp
 //
 //  Copyright © 2016, 2017, 2020 Kyle Neideck
+//  Copyright © 2021 Marcus Wu
 //
 //  Sets up and tears down the app.
 //

@@ -18,6 +18,7 @@
 //  BGMApp
 //
 //  Copyright © 2021 Marcus Wu
+//  Copyright © 2021 Kyle Neideck
 //
 
 // Self Include
@@ -46,6 +47,10 @@
 
 - (NSString*) name {
     return [NSString stringWithFormat:@"%@", [application localizedName]];
+}
+
+- (NSString*) bundleID {
+    return [NSString stringWithFormat:@"%@", [application bundleIdentifier]];
 }
 
 - (int) volume {
