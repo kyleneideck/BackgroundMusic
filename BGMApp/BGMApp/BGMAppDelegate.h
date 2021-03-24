@@ -24,6 +24,7 @@
 
 // Local Includes
 #import "BGMAudioDeviceManager.h"
+#import "BGMAppVolumesController.h"
 
 // System Includes
 #import <Cocoa/Cocoa.h>
@@ -53,6 +54,7 @@ static NSInteger const kSeparatorBelowVolumesMenuItemTag = 4;
 @property (weak) IBOutlet NSMenuItem* debugLoggingMenuItemUnwrapped;
 
 @property (readonly) BGMAudioDeviceManager* audioDevices;
+@property BGMAppVolumesController* appVolumes;
 
 @end
 

@@ -64,7 +64,6 @@ static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
     BGMAutoPauseMenuItem* autoPauseMenuItem;
     BGMMusicPlayers* musicPlayers;
     BGMSystemSoundsVolume* systemSoundsVolume;
-    BGMAppVolumesController* appVolumes;
     BGMOutputDeviceMenuSection* outputDeviceMenuSection;
     BGMPreferencesMenu* prefsMenu;
     BGMDebugLoggingMenuItem* debugLoggingMenuItem;
@@ -73,6 +72,7 @@ static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
 }
 
 @synthesize audioDevices = audioDevices;
+@synthesize appVolumes = appVolumes;
 
 - (void) awakeFromNib {
     [super awakeFromNib];

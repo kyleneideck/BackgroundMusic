@@ -225,6 +225,8 @@
 		27FB8C2F1DE468320084DB9D /* BGM_Utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27FB8C2E1DE468320084DB9D /* BGM_Utils.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGM_Utils.cpp"; }; };
 		27FB8C301DE4758A0084DB9D /* BGMPlayThrough.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C1962E51BC94E91008A4DF7 /* BGMPlayThrough.cpp */; };
 		27FB8C311DE4758A0084DB9D /* BGM_Utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27FB8C2E1DE468320084DB9D /* BGM_Utils.cpp */; };
+		9E129A412602AE620005851B /* BGMASApplication.m in Sources */ = {isa = PBXBuildFile; fileRef = 9E129A402602AE620005851B /* BGMASApplication.m */; };
+		9E542C7026057FBA0016C0B5 /* BGMASApplication.m in Sources */ = {isa = PBXBuildFile; fileRef = 9E129A402602AE620005851B /* BGMASApplication.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -433,6 +435,8 @@
 		27F7D48F1D2483B100821C4B /* BGMDecibel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BGMDecibel.m; path = "Music Players/BGMDecibel.m"; sourceTree = "<group>"; };
 		27F7D4911D2484A300821C4B /* Decibel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Decibel.h; path = "Music Players/Decibel.h"; sourceTree = "<group>"; };
 		27FB8C2E1DE468320084DB9D /* BGM_Utils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BGM_Utils.cpp; path = ../SharedSource/BGM_Utils.cpp; sourceTree = "<group>"; };
+		9E129A3F2602AE620005851B /* BGMASApplication.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = BGMASApplication.h; path = Scripting/BGMASApplication.h; sourceTree = "<group>"; };
+		9E129A402602AE620005851B /* BGMASApplication.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = BGMASApplication.m; path = Scripting/BGMASApplication.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -562,6 +566,8 @@
 				1C2FC31D1EC723A100A76592 /* BGMASOutputDevice.h */,
 				1C2FC31A1EC7238A00A76592 /* BGMASOutputDevice.mm */,
 				1C2FC2FF1EB4D6E700A76592 /* BGMApp.sdef */,
+				9E129A3F2602AE620005851B /* BGMASApplication.h */,
+				9E129A402602AE620005851B /* BGMASApplication.m */,
 			);
 			name = Scripting;
 			sourceTree = "<group>";
@@ -1152,6 +1158,7 @@
 				1C837DD81F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm in Sources */,
 				1C9258472090287F00B8D3A6 /* BGMGooglePlayMusicDesktopPlayerConnection.m in Sources */,
 				1C1963011BCAC0F6008A4DF7 /* CACFString.cpp in Sources */,
+				9E129A412602AE620005851B /* BGMASApplication.m in Sources */,
 				1C1962E71BC94E91008A4DF7 /* BGMPlayThrough.cpp in Sources */,
 				1C8D8304204238DB00A838F2 /* BGMSwinsian.m in Sources */,
 				1C1962FA1BCAC061008A4DF7 /* CADebugMacros.cpp in Sources */,
@@ -1218,6 +1225,7 @@
 				1CD989361ECFFC9E0014BBBF /* CACFDictionary.cpp in Sources */,
 				1CD989371ECFFC9E0014BBBF /* CACFNumber.cpp in Sources */,
 				1CD989381ECFFC9E0014BBBF /* CACFString.cpp in Sources */,
+				9E542C7026057FBA0016C0B5 /* BGMASApplication.m in Sources */,
 				1CD989391ECFFC9E0014BBBF /* CADebugger.cpp in Sources */,
 				1CD9893A1ECFFC9E0014BBBF /* CADebugMacros.cpp in Sources */,
 				1CD9893B1ECFFC9E0014BBBF /* CADebugPrintf.cpp in Sources */,

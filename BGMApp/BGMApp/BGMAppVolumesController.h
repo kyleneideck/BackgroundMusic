@@ -29,6 +29,11 @@
 
 #pragma clang assume_nonnull begin
 
+typedef struct BGMAppVolumeAndPan {
+    int volume;
+    int pan;
+} BGMAppVolumeAndPan;
+
 @interface BGMAppVolumesController : NSObject
 
 - (id) initWithMenu:(NSMenu*)menu
@@ -44,6 +49,9 @@ forAppWithProcessID:(pid_t)processID
 - (void) setPanPosition:(SInt32)pan
     forAppWithProcessID:(pid_t)processID
                bundleID:(NSString* __nullable)bundleID;
+
+- (BGMAppVolumeAndPan) getVolumeAndPanForApp:(NSRunningApplication *)app;
+- (void) setVolumeAndPan:(BGMAppVolumeAndPan)volumeAndPan forApp:(NSRunningApplication*)app;
 
 @end
 

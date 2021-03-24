@@ -44,6 +44,9 @@
 
 - (void) removeAllAppVolumeMenuItems;
 
+- (BGMAppVolumeAndPan) getVolumeAndPanForApp:(NSRunningApplication*)app;
+- (void) setVolumeAndPan:(BGMAppVolumeAndPan)volumeAndPan forApp:(NSRunningApplication*)app;
+
 @end
 
 // Protocol for the UI custom classes
