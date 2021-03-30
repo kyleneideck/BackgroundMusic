@@ -18,6 +18,7 @@
 //  BGMApp
 //
 //  Copyright © 2017 Kyle Neideck
+//  Copyright © 2021 Marcus Wu
 //
 
 // Local Includes
@@ -28,6 +29,11 @@
 
 
 #pragma clang assume_nonnull begin
+
+typedef struct BGMAppVolumeAndPan {
+    int volume;
+    int pan;
+} BGMAppVolumeAndPan;
 
 @interface BGMAppVolumesController : NSObject
 
@@ -44,6 +50,9 @@ forAppWithProcessID:(pid_t)processID
 - (void) setPanPosition:(SInt32)pan
     forAppWithProcessID:(pid_t)processID
                bundleID:(NSString* __nullable)bundleID;
+
+- (BGMAppVolumeAndPan) getVolumeAndPanForApp:(NSRunningApplication *)app;
+- (void) setVolumeAndPan:(BGMAppVolumeAndPan)volumeAndPan forApp:(NSRunningApplication*)app;
 
 @end
 

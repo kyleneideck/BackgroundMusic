@@ -18,6 +18,7 @@
 //  BGMApp
 //
 //  Copyright © 2016-2020 Kyle Neideck
+//  Copyright © 2021 Marcus Wu
 //
 
 // Self Include
@@ -64,7 +65,6 @@ static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
     BGMAutoPauseMenuItem* autoPauseMenuItem;
     BGMMusicPlayers* musicPlayers;
     BGMSystemSoundsVolume* systemSoundsVolume;
-    BGMAppVolumesController* appVolumes;
     BGMOutputDeviceMenuSection* outputDeviceMenuSection;
     BGMPreferencesMenu* prefsMenu;
     BGMDebugLoggingMenuItem* debugLoggingMenuItem;
@@ -73,6 +73,7 @@ static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
 }
 
 @synthesize audioDevices = audioDevices;
+@synthesize appVolumes = appVolumes;
 
 - (void) awakeFromNib {
     [super awakeFromNib];

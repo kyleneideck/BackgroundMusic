@@ -18,12 +18,14 @@
 //  BGMApp
 //
 //  Copyright © 2016, 2017, 2020 Kyle Neideck
+//  Copyright © 2021 Marcus Wu
 //
 //  Sets up and tears down the app.
 //
 
 // Local Includes
 #import "BGMAudioDeviceManager.h"
+#import "BGMAppVolumesController.h"
 
 // System Includes
 #import <Cocoa/Cocoa.h>
@@ -53,6 +55,7 @@ static NSInteger const kSeparatorBelowVolumesMenuItemTag = 4;
 @property (weak) IBOutlet NSMenuItem* debugLoggingMenuItemUnwrapped;
 
 @property (readonly) BGMAudioDeviceManager* audioDevices;
+@property BGMAppVolumesController* appVolumes;
 
 @end
 

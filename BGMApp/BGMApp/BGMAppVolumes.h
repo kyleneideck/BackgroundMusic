@@ -18,6 +18,7 @@
 //  BGMApp
 //
 //  Copyright © 2016, 2017 Kyle Neideck
+//  Copyright © 2021 Marcus Wu
 //
 
 // Local Includes
@@ -43,6 +44,9 @@
 - (void) removeMenuItemForApp:(NSRunningApplication*)app;
 
 - (void) removeAllAppVolumeMenuItems;
+
+- (BGMAppVolumeAndPan) getVolumeAndPanForApp:(NSRunningApplication*)app;
+- (void) setVolumeAndPan:(BGMAppVolumeAndPan)volumeAndPan forApp:(NSRunningApplication*)app;
 
 @end
 

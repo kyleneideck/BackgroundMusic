@@ -19,7 +19,7 @@
 #
 # postinstall
 #
-# Copyright © 2017-2020 Kyle Neideck
+# Copyright © 2017-2021 Kyle Neideck
 #
 
 # Make sure we use the built-in versions of programs, for consistency. Probably not necessary
@@ -83,48 +83,63 @@ while [[ $retries -gt 0 ]]; do
     fi
 done
 
-# Try opening BGMApp using its bundle ID first so the installer can declare it as "relocatable".
-# That way, if the user moves BGMApp and then installs a newer version of Background Music, the
-# installer will try to find the old version of BGMApp and put the new one in the same place.
+# Launch BGMApp.
 #
-# Use launchctl to make sure we don't run BGMApp as the installer user.
-#
-# If we can't open BGMApp, it's very likely it didn't install properly, so we fail the install.
+# Allow a few retries because it seems to sometimes fail intermittently in CI builds. For example,
+# <https://travis-ci.org/github/kyleneideck/BackgroundMusic/jobs/764126689>. From the error
+# messages, it looks like BGMApp isn't always registered with Launch Services by this point.
 logged_in_user_id="$(id -u "${USER}")"
 did_open_bgmapp=false
+retries=5
 
-# TODO: If they have multiple copies of BGMApp, this might open one of the old ones.
-log "Opening Background Music.app by bundle ID"
-if launchctl asuser "${logged_in_user_id}" \
-        open -b com.bearisdriving.BGM.App; then
-    did_open_bgmapp=true
-fi
+while [[ $did_open_bgmapp != "true" ]] && [[ $retries -gt 0 ]]; do
+    retries=$((retries - 1))
 
-if [[ $did_open_bgmapp != "true" ]]; then
-    dest_volume_no_trailing_slash="${dest_volume/%\//}"
-    log "Opening ${dest_volume_no_trailing_slash}/Applications/Background Music.app"
+    # Try opening BGMApp using its bundle ID first so the installer can declare it as "relocatable".
+    # That way, if the user moves BGMApp and then installs a newer version of Background Music, the
+    # installer will try to find the old version of BGMApp and put the new one in the same place.
+    #
+    # Use launchctl to make sure we don't run BGMApp as the installer user.
+    #
+    # TODO: If they have multiple copies of BGMApp, this might open one of the old ones.
+    log "Opening Background Music.app by bundle ID"
     if launchctl asuser "${logged_in_user_id}" \
-            open "${dest_volume_no_trailing_slash}/Applications/Background Music.app"; then
+            open -b com.bearisdriving.BGM.App; then
         did_open_bgmapp=true
     fi
-fi
 
-if [[ $did_open_bgmapp != "true" ]]; then
-    log "Opening Background Music.app using AppleScript"
-    if osascript -e 'tell application "Background Music" to activate'; then
-        did_open_bgmapp=true
+    if [[ $did_open_bgmapp != "true" ]]; then
+        dest_volume_no_trailing_slash="${dest_volume/%\//}"
+        log "Opening ${dest_volume_no_trailing_slash}/Applications/Background Music.app"
+        if launchctl asuser "${logged_in_user_id}" \
+                open "${dest_volume_no_trailing_slash}/Applications/Background Music.app"; then
+            did_open_bgmapp=true
+        fi
     fi
-fi
 
+    if [[ $did_open_bgmapp != "true" ]]; then
+        log "Opening Background Music.app using AppleScript"
+        if osascript -e 'tell application "Background Music" to activate'; then
+            did_open_bgmapp=true
+        fi
+    fi
+
+    if [[ $did_open_bgmapp != "true" ]]; then
+        log "Failed to open Background Music.app. Will retry shortly."
+        sleep 1
+    fi
+done
+
+# If we couldn't open BGMApp, it probably didn't install properly, but it's not certain, so don't
+# fail the install.
 if [[ $did_open_bgmapp != "true" ]]; then
-    log "Failed to open Background Music.app"
-    # Fail the install.
-    exit 1
+    log "Failed to open Background Music.app. Giving up."
 fi
 
 # The installer plays a sound when it finishes, so give BGMApp a second to launch.
 sleep 1
 
 exit 0
+
 
 

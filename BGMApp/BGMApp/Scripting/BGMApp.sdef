@@ -9,8 +9,7 @@
         <class name="output device"
                code="aDev"
                description="A hardware device that can play audio"
-               plural="output devices"
-               inherits="item">
+               plural="output devices">
             <synonym name="audio device"/>
 
             <cocoa class="BGMASOutputDevice"/>
@@ -19,14 +18,58 @@
                       code="pnam"
                       description="The name of the output device."
                       type="text"
-                      access="r"/>
+                      access="r">
+                <cocoa key="name"/>
+            </property>
 
             <property name="selected"
                       code="Slcd"
                       type="boolean"
                       access="rw"
                       description="Is this the device to be used for audio output?">
-                <synonym name="default"/>
+		<synonym name="default"/>
+                <cocoa key="selected"/>
+            </property>
+        </class>
+
+        <class name="audio application"
+               code="aApp"
+               description="An application that can play audio"
+               plural="audio applications">
+            <synonym name="audio app"/>
+
+            <cocoa class="BGMASApplication"/>
+
+            <property name="name"
+                      code="pnam"
+                      description="The name of the application."
+                      type="text"
+                      access="r">
+                <cocoa key="name"/>
+            </property>
+
+            <property name="bundleID"
+                      code="bdid"
+                      description="The bundle ID of the application, e.g. 'com.somecompany.coolapp'."
+                      type="text"
+                      access="r">
+                <cocoa key="bundleID"/>
+            </property>
+
+            <property name="vol"
+                      code="pVol"
+                      type="integer"
+                      access="rw"
+                      description="The volume setting of the application">
+                <cocoa key="volume"/>
+            </property>
+
+            <property name="pan"
+                      code="pPan"
+                      type="integer"
+                      access="rw"
+                      description="The pan setting of the application">
+                <cocoa key="pan"/>
             </property>
         </class>
 
@@ -48,10 +91,22 @@
 
                 <cocoa key="selectedOutputDevice"/>
             </property>
+            <property name="output volume"
+                type="real"
+                code="oVol"
+                access="rw"
+                description="The main output volume">
+                <synonym name="main volume"/>
+
+                <cocoa key="mainVolume"/>
+            </property>
 
             <!-- Unintuitively, this is for the array of output devices. -->
             <element type="output device" access="r">
                 <cocoa key="outputDevices"/>
+            </element>
+            <element type="audio application" access="r">
+                <cocoa key="applications"/>
             </element>
         </class>
     </suite>

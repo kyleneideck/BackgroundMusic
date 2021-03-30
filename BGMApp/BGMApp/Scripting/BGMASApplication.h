@@ -14,35 +14,37 @@
 // along with Background Music. If not, see <http://www.gnu.org/licenses/>.
 
 //
-//  BGMAppDelegate+AppleScript.h
+//  BGMASApplication.h
 //  BGMApp
 //
-//  Copyright © 2017 Kyle Neideck
 //  Copyright © 2021 Marcus Wu
+//  Copyright © 2021 Kyle Neideck
+//
+//  An AppleScript class for volume and pan settings for running applications.
 //
 
-#import "BGMAppDelegate.h"
 
 // Local Includes
-#import "BGMASOutputDevice.h"
-#import "BGMASApplication.h"
+#import "BGMAppVolumesController.h"
 
 // System Includes
 #import <Foundation/Foundation.h>
+#import <Cocoa/Cocoa.h>
 
 
-#pragma clang assume_nonnull begin
+NS_ASSUME_NONNULL_BEGIN
 
-@interface BGMAppDelegate (AppleScript)
+@interface BGMASApplication : NSObject
 
-- (BOOL) application:(NSApplication*)sender delegateHandlesKey:(NSString*)key;
+- (instancetype) initWithApplication:(NSRunningApplication*)app
+                          volumeController:(BGMAppVolumesController*)volumeController
+                     parentSpecifier:(NSScriptObjectSpecifier* __nullable)parentSpecifier
+                               index:(int)i;
 
-@property BGMASOutputDevice* selectedOutputDevice;
-@property (readonly) NSArray<BGMASOutputDevice*>* outputDevices;
-@property double mainVolume;
-@property (readonly) NSArray<BGMASApplication*>* applications;
-
+@property (readonly) NSString* name;
+@property (readonly) NSString* bundleID;
+@property int volume;
+@property int pan;
 @end
 
-#pragma clang assume_nonnull end
-
+NS_ASSUME_NONNULL_END

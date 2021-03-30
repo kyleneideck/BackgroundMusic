@@ -2,7 +2,7 @@ language: objective-c
 matrix:
   include:
     - os: osx
-      osx_image: xcode12
+      osx_image: xcode12.2
       sudo: required
       env: DEPLOY=true
     - os: osx
@@ -85,9 +85,9 @@ script:
 # TODO: Debug packages are failing to install on Travis, but I can't reproduce the problem locally,
 #       so temporarily allow debug builds to pass even if the install fails.
   - sudo installer -pkg Background-Music-*/BackgroundMusic-*.pkg -target / -verbose -dumplog || [[ "$TRAVIS_TAG" =~ .*DEBUG.* ]]
-# Print the installer logs. This only prints the current day's logs.
+# Print the installer logs. This trims the start of the log to save space.
   - echo -en '/var/log/install.log\ntravis_fold:start:install.log\\r'
-  - grep -A 9999 $(date +%Y-%m-%d) /var/log/install.log
+  - grep -E -A 9999 -B 20 'Background.?Music' /var/log/install.log
   - echo -en 'travis_fold:end:install.log\\r'
 # Check the BGM dirs and files were installed again.
   - ls -la "/Applications/Background Music.app"
