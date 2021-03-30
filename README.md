@@ -5,7 +5,7 @@
 # Background Music
 ##### macOS audio utility
 
-<img src="Images/README/Screenshot.png" width="340" height="342" />
+<img src="Images/README/Screenshot.png" width="340" height="443" />
 
 [Overview](#overview)<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[Auto-pause music](#auto-pause-music)<br/>
