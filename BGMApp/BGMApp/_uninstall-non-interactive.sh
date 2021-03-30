@@ -20,7 +20,7 @@
 # _uninstall-non-interactive.sh
 #
 # Copyright © 2016 Nick Jacques
-# Copyright © 2016, 2017 Kyle Neideck
+# Copyright © 2016, 2017, 2021 Kyle Neideck
 #
 # Removes BGMApp, BGMDriver and BGMXPCHelper from the system immediately. Run by uninstall.sh and the Homebrew formula.
 #
@@ -43,8 +43,9 @@ driver_path="/Library/Audio/Plug-Ins/HAL/Background Music Device.driver"
 xpc_path1="/usr/local/libexec/BGMXPCHelper.xpc"
 xpc_path2="/Library/Application Support/Background Music/BGMXPCHelper.xpc"
 
-# Check that files/directories are at most this big before we delete them, just to be safe.
-max_size_mb_for_rm=15
+# Check that files/directories are at most this big before we delete them, just to be safe. Note that the bundles can
+# include debug symbols, e.g. if you use build_and_install.sh, which makes them a lot bigger.
+max_size_mb_for_rm=30
 
 file_paths=("${app_path}" "${driver_path}" "${xpc_path1}" "${xpc_path2}")
 
