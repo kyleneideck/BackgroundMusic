@@ -17,7 +17,7 @@
 //  BGM_TestUtils.h
 //  SharedSource
 //
-//  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016, 2021 Kyle Neideck
 //
 
 #ifndef __SharedSource__BGM_TestUtils__
@@ -37,6 +37,7 @@
 template<typename ExpectedException>
 void BGMShouldThrow(XCTestCase* self, const std::function<void()>& f)
 {
+#pragma unused (self)
     try
     {
         f();
