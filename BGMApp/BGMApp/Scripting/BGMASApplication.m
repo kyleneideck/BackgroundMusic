@@ -60,7 +60,7 @@
 - (void) setVolume:(int)vol {
     BGMAppVolumeAndPan volume = {
         .volume = vol,
-        .pan = -1
+        .pan = INT_MIN
     };
     [appVolumesController setVolumeAndPan:volume forApp:application];
 }

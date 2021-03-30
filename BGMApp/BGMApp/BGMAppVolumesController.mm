@@ -106,10 +106,10 @@
 
 - (void) setVolumeAndPan:(BGMAppVolumeAndPan)volumeAndPan forApp:(NSRunningApplication*)app {
     [appVolumes setVolumeAndPan:volumeAndPan forApp:app];
-    if (volumeAndPan.volume != -1) {
+    if (volumeAndPan.volume != -1 {
         [self setVolume:volumeAndPan.volume forAppWithProcessID:app.processIdentifier bundleID:app.bundleIdentifier];
     }
-    if (volumeAndPan.pan != -1) {
+    if (volumeAndPan.pan != INT_MIN) {
         [self setPanPosition:volumeAndPan.pan forAppWithProcessID:app.processIdentifier bundleID:app.bundleIdentifier];
     }
 }
@@ -118,7 +118,7 @@
                                  fromVolumes:(const CACFArray&)volumes {
     BGMAppVolumeAndPan volumeAndPan = {
         .volume = -1,
-        .pan = -1
+        .pan = INT_MIN
     };
 
     for (UInt32 i = 0; i < volumes.GetNumberItems(); i++) {

@@ -36,7 +36,7 @@
                   bgmMenu:(NSMenu*)inMenu
             appVolumeView:(NSView*)inView;
 
-// Pass -1 for initialVolume or initialPan to leave the volume/pan at its default level.
+// Pass -1 for initialVolume or INT_MAX for initialPan to leave the volume/pan at its default level.
 - (void) insertMenuItemForApp:(NSRunningApplication*)app
                 initialVolume:(int)volume
                    initialPan:(int)pan;
