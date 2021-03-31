@@ -27,7 +27,7 @@ matrix:
 #     - master
 install:
 # Install Apple's NullAudio device. Travis' VMs don't have any audio devices installed.
-  - sudo xcodebuild -project BGMApp/BGMAppTests/NullAudio/AudioDriverExamples.xcodeproj -target NullAudio DSTROOT="/" install
+  - sudo xcodebuild -quiet -project BGMApp/BGMAppTests/NullAudio/AudioDriverExamples.xcodeproj -target NullAudio DSTROOT="/" install
   - sudo launchctl kickstart -kp system/com.apple.audio.coreaudiod || sudo killall coreaudiod
 script:
 # Build in a case-sensitive disk image to catch failures that only happen on case-sensitive filesystems.
@@ -60,9 +60,9 @@ script:
 # Run the tests.
 # The echo commands put the output into a fold in the Travis logs.
   - echo -en 'Unit Tests\ntravis_fold:start:tests\\r'
-  - xcodebuild -workspace BGM.xcworkspace -scheme 'Background Music Device' test
-  - xcodebuild -workspace BGM.xcworkspace -scheme 'Background Music' test
-  - xcodebuild -workspace BGM.xcworkspace -scheme 'BGMXPCHelper' test
+  - xcodebuild -quiet -workspace BGM.xcworkspace -scheme 'Background Music Device' test
+  - xcodebuild -quiet -workspace BGM.xcworkspace -scheme 'Background Music' test
+  - xcodebuild -quiet -workspace BGM.xcworkspace -scheme 'BGMXPCHelper' test
   - echo -en 'travis_fold:end:tests\\r'
 # Uninstall Background Music.
   - yes | ./uninstall.sh
