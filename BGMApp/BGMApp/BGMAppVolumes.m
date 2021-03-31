@@ -153,7 +153,7 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
 - (BGMAppVolumeAndPan) getVolumeAndPanForApp:(NSRunningApplication*)app {
     BGMAppVolumeAndPan result = {
         .volume = -1,
-        .pan = INT_MIN
+        .pan = kAppPanNoValue
     };
 
     NSMenuItem *item = [self getMenuItemForApp:app];
@@ -191,7 +191,7 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
         }
 
         // Set the pan position.
-        if (volumeAndPan.pan != INT_MIN && [subview isKindOfClass:[BGMAVM_PanSlider class]]) {
+        if (volumeAndPan.pan != kAppPanNoValue && [subview isKindOfClass:[BGMAVM_PanSlider class]]) {
             [(BGMAVM_PanSlider*)subview setPanPosition:volumeAndPan.pan];
         }
     }
@@ -217,7 +217,7 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
         }
 
         // Set the pan position.
-        if (pan != INT_MIN && [subview isKindOfClass:[BGMAVM_PanSlider class]]) {
+        if (pan != kAppPanNoValue && [subview isKindOfClass:[BGMAVM_PanSlider class]]) {
             [(BGMAVM_PanSlider*)subview setPanPosition:pan];
         }
     }
