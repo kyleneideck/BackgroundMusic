@@ -106,7 +106,7 @@
 
 - (void) setVolumeAndPan:(BGMAppVolumeAndPan)volumeAndPan forApp:(NSRunningApplication*)app {
     [appVolumes setVolumeAndPan:volumeAndPan forApp:app];
-    if (volumeAndPan.volume != -1 {
+    if (volumeAndPan.volume != -1) {
         [self setVolume:volumeAndPan.volume forAppWithProcessID:app.processIdentifier bundleID:app.bundleIdentifier];
     }
     if (volumeAndPan.pan != INT_MIN) {
