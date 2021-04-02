@@ -109,7 +109,7 @@
     if (volumeAndPan.volume != -1) {
         [self setVolume:volumeAndPan.volume forAppWithProcessID:app.processIdentifier bundleID:app.bundleIdentifier];
     }
-    if (volumeAndPan.pan != -1) {
+    if (volumeAndPan.pan != kAppPanNoValue) {
         [self setPanPosition:volumeAndPan.pan forAppWithProcessID:app.processIdentifier bundleID:app.bundleIdentifier];
     }
 }
@@ -118,7 +118,7 @@
                                  fromVolumes:(const CACFArray&)volumes {
     BGMAppVolumeAndPan volumeAndPan = {
         .volume = -1,
-        .pan = -1
+        .pan = kAppPanNoValue
     };
 
     for (UInt32 i = 0; i < volumes.GetNumberItems(); i++) {

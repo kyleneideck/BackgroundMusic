@@ -163,6 +163,7 @@ enum BGMDeviceAudibleState : SInt32
 #define kAppPanLeftRawValue   -100
 #define kAppPanCenterRawValue 0
 #define kAppPanRightRawValue  100
+#define kAppPanNoValue INT_MIN
 
 // kAudioDeviceCustomPropertyEnabledOutputControls indices
 enum

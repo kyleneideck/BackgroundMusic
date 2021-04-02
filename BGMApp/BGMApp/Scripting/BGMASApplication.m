@@ -24,6 +24,9 @@
 // Self Include
 #import "BGMASApplication.h"
 
+// Local Includes
+#import "BGM_Types.h"
+
 @implementation BGMASApplication {
     NSScriptObjectSpecifier* parentSpecifier;
     NSRunningApplication *application;
@@ -60,7 +63,7 @@
 - (void) setVolume:(int)vol {
     BGMAppVolumeAndPan volume = {
         .volume = vol,
-        .pan = -1
+        .pan = kAppPanNoValue
     };
     [appVolumesController setVolumeAndPan:volume forApp:application];
 }
