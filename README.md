@@ -65,7 +65,7 @@ the **Background Music** device. You can create the aggregate device using the *
 
 You can download the current version of **Background Music** using the following options. We also have [snapshot builds](https://github.com/kyleneideck/BackgroundMusic/releases).
 
-| ⚠️ Version 0.3.2 doesn't work on macOS Big Sur. Try this snapshot version: [0.4.0-SNAPSHOT-c0ab98b](https://github.com/kyleneideck/BackgroundMusic/releases/tag/0.4.0-SNAPSHOT-c0ab98b) |
+| ⚠️ Version 0.3.2 doesn't work on macOS Big Sur. Try this snapshot version: [0.4.0-SNAPSHOT-b38f6dd](https://github.com/kyleneideck/BackgroundMusic/releases/tag/0.4.0-SNAPSHOT-b38f6dd) |
 |-------------  |
 
 ### Option 1
