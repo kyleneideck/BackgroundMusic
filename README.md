@@ -186,7 +186,7 @@ meeting volume.
 - **Some applications play notification sounds that are only just long enough to trigger an auto-pause.**
     - Increase the `kPauseDelayNSec` constant in [BGMAutoPauseMusic.mm](/BGMApp/BGMApp/BGMAutoPauseMusic.mm). It will increase your music's overlap time over other audio, so don't increase it too much. See [#5](https://github.com/kyleneideck/BackgroundMusic/issues/5) for details.
 
-Many other issues are in listed in [TODO.md](/TODO.md) and in [GitHub
+Many other issues are listed in [TODO.md](/TODO.md) and in [GitHub
 Issues](https://github.com/kyleneideck/BackgroundMusic/issues).
 
 # Related projects
