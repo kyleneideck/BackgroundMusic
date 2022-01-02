@@ -20,7 +20,7 @@
 
 # Overview
 
-+ Automatically pause/unpause your music player when other audio sources are playing/stopped
++ Automatically pause/play your music player when other audio sources are playing/paused
 + Per-application volume control
 + Record system audio
 + No restart required to install
@@ -29,7 +29,7 @@
 
 ## Auto-pause music
 
-**Background Music** automatically pauses your music player when a second audio source is playing and unpauses the player when the second source has stopped.
+**Background Music** automatically pauses your music player when a second audio source is playing and starts playing automatically when the second source has stopped.
 
 The auto-pause feature currently supports following music players:
 
