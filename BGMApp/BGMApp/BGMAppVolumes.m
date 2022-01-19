@@ -284,7 +284,16 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
         return fabs(x - y) < 0.01;  // We don't need much precision.
     };
     
-    if (nearEnough(button.frameCenterRotation, 0.0)) {
+    bool allSubviewsShowing = true;
+    for (NSView* subview in menuItem.view.subviews) {
+        if (subview.hidden) {
+            allSubviewsShowing = false;
+            break;
+        }
+        //DebugMsg("BGMAppVolumes:: subview hash / hidden: (%lu) / (%hhd)", (unsigned long)subview.hash, subview.hidden);
+    }
+
+    if (allSubviewsShowing) {
         // Hide extra controls
         DebugMsg("BGMAppVolumes::showHideExtraControls: Hiding extra controls (%s)", appName);
         
