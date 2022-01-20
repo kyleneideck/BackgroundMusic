@@ -175,7 +175,7 @@ bool    BGM_AudibleState::BufferIsAudible(UInt32 inIOBufferFrameSize, const Floa
     // Check each frame to see if any are audible. This could be much more accurate, but seems to
     // work well enough for now.
     //
-    // The trade off here is between pausing the music player at the wrong time and unpausing it at
+    // The trade-off here is between pausing the music player at the wrong time and unpausing it at
     // the wrong time. If a short sound (e.g. a UI alert) plays but has a long, barely-audible tail,
     // we might not detect the silence quickly enough and pause the music player. Similarly, if
     // we've paused the music player and there's a period of near-silence in the new audio, we might

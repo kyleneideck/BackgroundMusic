@@ -326,7 +326,7 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
         menuItem.view.frameSize = NSMakeSize(width, appVolumeViewFullHeight);
         // Turn the button rightside up so the arrowhead points up.
         button.frameCenterRotation = 0.0;
-        // Move the button down slightly, back to it's original position.
+        // Move the button down slightly, back to its original position.
         [button setFrameOrigin:NSMakePoint(button.frame.origin.x, button.frame.origin.y + 1)];
 
         // Set all of the UI elements in the menu item to "not hidden" for accessibility clients.

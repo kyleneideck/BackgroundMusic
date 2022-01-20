@@ -68,8 +68,8 @@
 //	not need to worry about being thread safe while Activate() is in progress.
 //
 //	Subclasses of this class must also implement Deactivate(). This method is called when the object
-//	is at the end of it's lifecycle. Once Deactivate() has been called, the object may no longer
-//	perform active opertions, including Deactivating other objects. This is based on the notion that
+//	is at the end of its lifecycle. Once Deactivate() has been called, the object may no longer
+//	perform active operations, including Deactivating other objects. This is based on the notion that
 //	all the objects have a definite point at which they are considered dead to the outside world.
 //	For example, an AudioDevice object is dead if it's hardware is unplugged. The point of death is
 //	the notification the owner of the device gets to signal that it has been unplugged. Note that it

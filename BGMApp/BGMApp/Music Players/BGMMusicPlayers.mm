@@ -146,7 +146,7 @@
 - (void) initSelectedMusicPlayerFromBGMDevice {
     // When the selected music player setting hasn't been stored in user defaults yet, we get the music player
     // bundle ID from the driver and look for the music player with that bundle ID. This is mainly done for
-    // backwards compatability.
+    // backwards compatibility.
     
     NSString* __nullable bundleID =
         (__bridge_transfer NSString* __nullable)[audioDevices bgmDevice].GetMusicPlayerBundleID();

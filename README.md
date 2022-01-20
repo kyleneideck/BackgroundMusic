@@ -201,7 +201,7 @@ Issues](https://github.com/kyleneideck/BackgroundMusic/issues).
 - [llaudio](https://github.com/mountainstorm/llaudio) - "An old piece of work to reverse engineer the Mac OSX
   user/kernel audio interface. Shows how to read audio straight out of the kernel as you would on Darwin (where most the
   OSX goodness is missing)"
-- [mute.fm](http://www.mute.fm), [GitHub](https://github.com/jaredsohn/mutefm) (Windows) - Auto-pause music
+- [mute.fm](http://www.mutefm.com), [GitHub](https://github.com/jaredsohn/mutefm) (Windows) - Auto-pause music
 - [Jack OS X](http://www.jackosx.com) - "A Jack audio connection kit implementation for Mac OS X"
 - [PulseAudio OS X](https://github.com/zonque/PulseAudioOSX) - "PulseAudio for Mac OS X"
 - [Sound Pusher](https://github.com/q-p/SoundPusher) - "Virtual audio device, real-time encoder and SPDIF forwarder for
@@ -216,7 +216,7 @@ Issues](https://github.com/kyleneideck/BackgroundMusic/issues).
   Audio From Anywhere on Your Mac", "Get truly powerful control over all the audio on your Mac!"
 - [Sound Siphon](https://staticz.com/soundsiphon/), [Sound Control](https://staticz.com/soundcontrol/) - System/app audio recording, per-app volumes, system audio equaliser
 - [SoundBunny](https://www.prosofteng.com/soundbunny-mac-volume-control/) - "Control application volume independently."
-- [Boom 2](http://www.globaldelight.com/boom/index.php) - "The Best Volume Booster & Equalizer For Mac"
+- [Boom 2](https://www.globaldelight.com/boom/) - "The Best Volume Booster & Equalizer For Mac"
 
 ## License
 

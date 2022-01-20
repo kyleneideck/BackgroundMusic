@@ -153,11 +153,11 @@ void*	BGM_Create(CFAllocatorRef inAllocator, CFUUIDRef inRequestedTypeUUID)
 {
 	//	This is the CFPlugIn factory function. Its job is to create the implementation for the given
 	//	type provided that the type is supported. Because this driver is simple and all its
-	//	initialization is handled via static initalization when the bundle is loaded, all that
+	//	initialization is handled via static initialization when the bundle is loaded, all that
 	//	needs to be done is to return the AudioServerPlugInDriverRef that points to the driver's
 	//	interface. A more complicated driver would create any base line objects it needs to satisfy
 	//	the IUnknown methods that are used to discover that actual interface to talk to the driver.
-	//	The majority of the driver's initilization should be handled in the Initialize() method of
+	//	The majority of the driver's initialization should be handled in the Initialize() method of
 	//	the driver's AudioServerPlugInDriverInterface.
 	
 	#pragma unused(inAllocator)
@@ -196,7 +196,7 @@ static HRESULT	BGM_QueryInterface(void* inDriver, REFIID inUUID, LPVOID* outInte
     	ThrowIf(theRequestedUUID == NULL, CAException(kAudioHardwareIllegalOperationError), "BGM_QueryInterface: failed to create the CFUUIDRef");
 
 		//	AudioServerPlugIns only support two interfaces, IUnknown (which has to be supported by all
-		//	CFPlugIns and AudioServerPlugInDriverInterface (which is the actual interface the HAL will
+		//	CFPlugIns) and AudioServerPlugInDriverInterface (which is the actual interface the HAL will
 		//	use).
 		ThrowIf(!CFEqual(theRequestedUUID, IUnknownUUID) && !CFEqual(theRequestedUUID, kAudioServerPlugInDriverInterfaceUUID), CAException(E_NOINTERFACE), "BGM_QueryInterface: requested interface is unsupported");
 		ThrowIf(gAudioServerPlugInDriverRefCount == UINT32_MAX, CAException(E_NOINTERFACE), "BGM_QueryInterface: the ref count is maxxed out");
@@ -268,7 +268,7 @@ static OSStatus	BGM_Initialize(AudioServerPlugInDriverRef inDriver, AudioServerP
 	//	The job of this method is, as the name implies, to get the driver initialized. One specific
 	//	thing that needs to be done is to store the AudioServerPlugInHostRef so that it can be used
 	//	later. Note that when this call returns, the HAL will scan the various lists the driver
-	//	maintains (such as the device list) to get the inital set of objects the driver is
+	//	maintains (such as the device list) to get the initial set of objects the driver is
 	//	publishing. So, there is no need to notifiy the HAL about any objects created as part of the
 	//	execution of this method.
 
@@ -397,7 +397,7 @@ static OSStatus	BGM_RemoveDeviceClient(AudioServerPlugInDriverRef inDriver, Audi
 
 static OSStatus	BGM_PerformDeviceConfigurationChange(AudioServerPlugInDriverRef inDriver, AudioObjectID inDeviceObjectID, UInt64 inChangeAction, void* inChangeInfo)
 {
-	//	This method is called to tell the device that it can perform the configuation change that it
+	//	This method is called to tell the device that it can perform the configuration change that it
 	//	had requested via a call to the host method, RequestDeviceConfigurationChange(). The
 	//	arguments, inChangeAction and inChangeInfo are the same as what was passed to
 	//	RequestDeviceConfigurationChange().

@@ -132,7 +132,7 @@ private:
     // as one at a later time.
     pid_t                               mMusicPlayerProcessIDProperty = 0;
     
-    // The value of the kAudioDeviceCustomPropertyMusicPlayerBundleID property, or the empty string it it's
+    // The value of the kAudioDeviceCustomPropertyMusicPlayerBundleID property, or the empty string if it's
     // unset/null. UTF8 encoding.
     //
     // As with mMusicPlayerProcessID, we keep a copy of the bundle ID the user sets for the music player

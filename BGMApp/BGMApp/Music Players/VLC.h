@@ -221,7 +221,7 @@ typedef enum VLCEnum VLCEnum;
 @property NSInteger audioVolume;  // The volume of the current playlist item from 0 to 4, where 4 is 400%
 @property NSInteger currentTime;  // The current time of the current playlist item in seconds.
 @property (readonly) NSInteger durationOfCurrentItem;  // The duration of the current playlist item in seconds.
-@property BOOL fullscreenMode;  // indicates wheter fullscreen is enabled or not
+@property BOOL fullscreenMode;  // indicates whether fullscreen is enabled or not
 @property (readonly) BOOL muted;  // Is VLC currently muted?
 @property (copy, readonly) NSString *nameOfCurrentItem;  // Name of the current playlist item.
 @property (copy, readonly) NSString *pathOfCurrentItem;  // Path to the current playlist item.

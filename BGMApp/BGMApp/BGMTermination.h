@@ -19,7 +19,7 @@
 //
 //  Copyright © 2017 Kyle Neideck
 //
-//  Cleans up if BGMApp crashes because of an uncaught C++ or Objective C exception, or is sent
+//  Cleans up if BGMApp crashes because of an uncaught C++ or Objective-C exception, or is sent
 //  SIGINT/SIGTERM/SIGQUIT. Currently, it just changes the default output device from BGMDevice to
 //  the real output device and records debug info for some types of crashes.
 //
