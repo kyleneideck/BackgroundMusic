@@ -53,7 +53,7 @@ class BGM_ClientTasks;
 //  removed by the HAL we add it to a map of past clients to keep track of settings specific to that
 //  client. (Currently only the client's volume.)
 //
-//  Since the maps are read from during IO, this class has to to be real-time safe when accessing
+//  Since the maps are read from during IO, this class has to be real-time safe when accessing
 //  them. So each map has an identical "shadow" map, which we use to buffer updates.
 //
 //  To update the clients we lock the shadow maps, modify them, have BGM_TaskQueue's real-time

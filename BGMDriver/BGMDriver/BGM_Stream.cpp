@@ -287,7 +287,7 @@ void    BGM_Stream::GetPropertyData(AudioObjectID inObjectID,
             break;
 
         case kAudioStreamPropertyLatency:
-            // This property returns any additonal presentation latency the stream has.
+            // This property returns any additional presentation latency the stream has.
             ThrowIf(inDataSize < sizeof(UInt32),
                     CAException(kAudioHardwareBadPropertySizeError),
                     "BGM_Stream::GetPropertyData: not enough space for the return "

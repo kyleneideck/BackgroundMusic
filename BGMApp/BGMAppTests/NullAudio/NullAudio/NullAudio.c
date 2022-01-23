@@ -299,11 +299,11 @@ void*	NullAudio_Create(CFAllocatorRef inAllocator, CFUUIDRef inRequestedTypeUUID
 {
 	//	This is the CFPlugIn factory function. Its job is to create the implementation for the given
 	//	type provided that the type is supported. Because this driver is simple and all its
-	//	initialization is handled via static iniitalization when the bundle is loaded, all that
+	//	initialization is handled via static initialization when the bundle is loaded, all that
 	//	needs to be done is to return the AudioServerPlugInDriverRef that points to the driver's
 	//	interface. A more complicated driver would create any base line objects it needs to satisfy
 	//	the IUnknown methods that are used to discover that actual interface to talk to the driver.
-	//	The majority of the driver's initilization should be handled in the Initialize() method of
+	//	The majority of the driver's initialization should be handled in the Initialize() method of
 	//	the driver's AudioServerPlugInDriverInterface.
 	
 	#pragma unused(inAllocator)
@@ -338,7 +338,7 @@ static HRESULT	NullAudio_QueryInterface(void* inDriver, REFIID inUUID, LPVOID* o
 	FailWithAction(theRequestedUUID == NULL, theAnswer = kAudioHardwareIllegalOperationError, Done, "NullAudio_QueryInterface: failed to create the CFUUIDRef");
 
 	//	AudioServerPlugIns only support two interfaces, IUnknown (which has to be supported by all
-	//	CFPlugIns and AudioServerPlugInDriverInterface (which is the actual interface the HAL will
+	//	CFPlugIns) and AudioServerPlugInDriverInterface (which is the actual interface the HAL will
 	//	use).
 	if(CFEqual(theRequestedUUID, IUnknownUUID) || CFEqual(theRequestedUUID, kAudioServerPlugInDriverInterfaceUUID))
 	{
@@ -415,7 +415,7 @@ static OSStatus	NullAudio_Initialize(AudioServerPlugInDriverRef inDriver, AudioS
 	//	The job of this method is, as the name implies, to get the driver initialized. One specific
 	//	thing that needs to be done is to store the AudioServerPlugInHostRef so that it can be used
 	//	later. Note that when this call returns, the HAL will scan the various lists the driver
-	//	maintains (such as the device list) to get the inital set of objects the driver is
+	//	maintains (such as the device list) to get the initial set of objects the driver is
 	//	publishing. So, there is no need to notifiy the HAL about any objects created as part of the
 	//	execution of this method.
 
@@ -553,7 +553,7 @@ Done:
 
 static OSStatus	NullAudio_PerformDeviceConfigurationChange(AudioServerPlugInDriverRef inDriver, AudioObjectID inDeviceObjectID, UInt64 inChangeAction, void* inChangeInfo)
 {
-	//	This method is called to tell the device that it can perform the configuation change that it
+	//	This method is called to tell the device that it can perform the configuration change that it
 	//	had requested via a call to the host method, RequestDeviceConfigurationChange(). The
 	//	arguments, inChangeAction and inChangeInfo are the same as what was passed to
 	//	RequestDeviceConfigurationChange().
@@ -1546,7 +1546,7 @@ static OSStatus	NullAudio_GetBoxPropertyData(AudioServerPlugInDriverRef inDriver
 			break;
 			
 		case kAudioObjectPropertyIdentify:
-			//	This is used to highling the device in the UI, but it's value has no meaning
+			//	This is used to highling the device in the UI, but its value has no meaning
 			FailWithAction(inDataSize < sizeof(UInt32), theAnswer = kAudioHardwareBadPropertySizeError, Done, "NullAudio_GetBoxPropertyData: not enough space for the return value of kAudioObjectPropertyIdentify for the box");
 			*((UInt32*)outData) = 0;
 			*outDataSize = sizeof(UInt32);
@@ -1696,9 +1696,9 @@ static OSStatus	NullAudio_SetBoxPropertyData(AudioServerPlugInDriverRef inDriver
 			break;
 			
 		case kAudioObjectPropertyIdentify:
-			//	since we don't have any actual hardware to flash, we will schedule a notificaiton for
+			//	since we don't have any actual hardware to flash, we will schedule a notification for
 			//	this property off into the future as a testing thing. Note that a real implementation
-			//	of this property should only send the notificaiton if the hardware wants the app to
+			//	of this property should only send the notification if the hardware wants the app to
 			//	flash it's UI for the device.
 			{
 				syslog(LOG_NOTICE, "The identify property has been set on the Box implemented by the NullAudio driver.");
@@ -2216,7 +2216,7 @@ static OSStatus	NullAudio_GetDevicePropertyData(AudioServerPlugInDriverRef inDri
 
 		case kAudioDevicePropertyDeviceIsAlive:
 			//	This property returns whether or not the device is alive. Note that it is
-			//	note uncommon for a device to be dead but still momentarily availble in the
+			//	note uncommon for a device to be dead but still momentarily available in the
 			//	device list. In the case of this device, it will always be alive.
 			FailWithAction(inDataSize < sizeof(UInt32), theAnswer = kAudioHardwareBadPropertySizeError, Done, "NullAudio_GetDevicePropertyData: not enough space for the return value of kAudioDevicePropertyDeviceIsAlive for the device");
 			*((UInt32*)outData) = 1;
@@ -2763,7 +2763,7 @@ static OSStatus	NullAudio_GetStreamPropertyData(AudioServerPlugInDriverRef inDri
 
 		case kAudioStreamPropertyStartingChannel:
 			//	This property returns the absolute channel number for the first channel in
-			//	the stream. For exmaple, if a device has two output streams with two
+			//	the stream. For example, if a device has two output streams with two
 			//	channels each, then the starting channel number for the first stream is 1
 			//	and ths starting channel number fo the second stream is 3.
 			FailWithAction(inDataSize < sizeof(UInt32), theAnswer = kAudioHardwareBadPropertySizeError, Done, "NullAudio_GetStreamPropertyData: not enough space for the return value of kAudioStreamPropertyStartingChannel for the stream");
@@ -2772,7 +2772,7 @@ static OSStatus	NullAudio_GetStreamPropertyData(AudioServerPlugInDriverRef inDri
 			break;
 
 		case kAudioStreamPropertyLatency:
-			//	This property returns any additonal presentation latency the stream has.
+			//	This property returns any additional presentation latency the stream has.
 			FailWithAction(inDataSize < sizeof(UInt32), theAnswer = kAudioHardwareBadPropertySizeError, Done, "NullAudio_GetStreamPropertyData: not enough space for the return value of kAudioStreamPropertyStartingChannel for the stream");
 			*((UInt32*)outData) = 0;
 			*outDataSize = sizeof(UInt32);

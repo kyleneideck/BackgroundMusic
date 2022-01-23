@@ -83,7 +83,7 @@ void BGMTermination::SetUpTerminationCleanUp(BGMAudioDeviceManager* inAudioDevic
     StartExitSignalsThread();
 
     // Wrap the default handler for std::terminate, which is called if BGMApp crashes because of an
-    // uncaught C++ or Objective C exception, so we can clean up first.
+    // uncaught C++ or Objective-C exception, so we can clean up first.
     sOriginalTerminateHandler = std::get_terminate();
 
     std::set_terminate([] {

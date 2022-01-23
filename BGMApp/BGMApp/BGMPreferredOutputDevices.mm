@@ -113,7 +113,7 @@ NSString* const kAudioSystemSettingsPlist =
     // BGMApp's stored preferred devices to fill in the rest optimistically. This doesn't help us
     // tell when to switch to a newly connected device, but it should improve our chances of
     // switching to the best device if the current output device is disconnected.
-    NSArray<NSDictionary*>* preferredOutputDeviceInfos = @[];
+    NSArray<NSDictionary*>* _Nonnull preferredOutputDeviceInfos = @[];
 
     // If we can't read the Plist, we only know that the current systemwide default device is the
     // most-preferred device that's currently connected.
