@@ -84,7 +84,7 @@ check_dir() {
         [[ $((0$(stat -f '%Lp' .) & 0022)) -eq 0 ]]; do
         # ...go upwards until we reach the root directory.
         cd ..
-        if [[ "${PWD}" == / ]]; then
+        if [[ "${PWD}" -ef / ]]; then
             DIR_IS_SAFE=1
             break
         fi
