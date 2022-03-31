@@ -519,7 +519,6 @@ log_debug_info() {
         uname -mrsv >> ${LOG_FILE} 2>&1
 
         /bin/bash --version >> ${LOG_FILE} 2>&1
-        /usr/bin/env python --version >> ${LOG_FILE} 2>&1
 
         echo "On git branch: $(git rev-parse --abbrev-ref HEAD 2>&1)" >> ${LOG_FILE}
         echo "Most recent commit: $(git rev-parse HEAD 2>&1)" \
