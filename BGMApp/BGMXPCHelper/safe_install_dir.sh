@@ -71,7 +71,7 @@ check_dir() {
     pushd . > /dev/null
 
     # Normalize the path and follow symlinks.
-    REAL_PATH=$(python -c "import os,sys; print(os.path.realpath(sys.argv[1]))" "$1")
+    REAL_PATH=$(cd "$1" && pwd -P)
     cd "${REAL_PATH}"
 
     DIR_IS_SAFE=0
