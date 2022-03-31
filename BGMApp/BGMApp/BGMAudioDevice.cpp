@@ -81,7 +81,7 @@ bool    BGMAudioDevice::HasSettableMasterVolume(AudioObjectPropertyScope inScope
 bool    BGMAudioDevice::HasSettableVirtualMasterVolume(AudioObjectPropertyScope inScope) const
 {
     AudioObjectPropertyAddress virtualMasterVolumeAddress = {
-        kAudioHardwareServiceDeviceProperty_VirtualMasterVolume,
+        kAudioHardwareServiceDeviceProperty_VirtualMainVolume,
         inScope,
         kAudioObjectPropertyElementMaster
     };
@@ -220,7 +220,7 @@ bool    BGMAudioDevice::GetVirtualMasterVolumeScalar(AudioObjectPropertyScope in
                                                      Float32& outVirtualMasterVolume) const
 {
     AudioObjectPropertyAddress virtualMasterVolumeAddress = {
-        kAudioHardwareServiceDeviceProperty_VirtualMasterVolume,
+        kAudioHardwareServiceDeviceProperty_VirtualMainVolume,
         inScope,
         kAudioObjectPropertyElementMaster
     };
@@ -265,7 +265,7 @@ bool    BGMAudioDevice::SetVirtualMasterVolumeScalar(AudioObjectPropertyScope in
         bool didGetVirtualMasterBalance = GetVirtualMasterBalance(inScope, virtualMasterBalance);
 
         AudioObjectPropertyAddress virtualMasterVolumeAddress = {
-            kAudioHardwareServiceDeviceProperty_VirtualMasterVolume,
+            kAudioHardwareServiceDeviceProperty_VirtualMainVolume,
             inScope,
             kAudioObjectPropertyElementMaster
         };
@@ -277,7 +277,7 @@ bool    BGMAudioDevice::SetVirtualMasterVolumeScalar(AudioObjectPropertyScope in
 
         // Reset the balance
         AudioObjectPropertyAddress virtualMasterBalanceAddress = {
-            kAudioHardwareServiceDeviceProperty_VirtualMasterBalance,
+            kAudioHardwareServiceDeviceProperty_VirtualMainBalance,
             inScope,
             kAudioObjectPropertyElementMaster
         };
@@ -310,7 +310,7 @@ bool    BGMAudioDevice::GetVirtualMasterBalance(AudioObjectPropertyScope inScope
                                                 Float32& outVirtualMasterBalance) const
 {
     AudioObjectPropertyAddress virtualMasterBalanceAddress = {
-        kAudioHardwareServiceDeviceProperty_VirtualMasterBalance,
+        kAudioHardwareServiceDeviceProperty_VirtualMainBalance,
         inScope,
         kAudioObjectPropertyElementMaster
     };

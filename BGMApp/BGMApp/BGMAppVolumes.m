@@ -281,9 +281,11 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
         [((NSRunningApplication*)menuItem.representedObject).localizedName UTF8String];
 
     // Using this function (instead of just ==) shouldn't be necessary, but just in case.
+#if DEBUG
     BOOL(^nearEnough)(CGFloat x, CGFloat y) = ^BOOL(CGFloat x, CGFloat y) {
         return fabs(x - y) < 0.01;  // We don't need much precision.
     };
+#endif
     
     bool allSubviewsShowing = true;
     for (NSView* subview in menuItem.view.subviews) {
