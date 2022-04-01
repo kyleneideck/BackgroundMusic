@@ -8,7 +8,7 @@ on:
       - $default-branch
       - gh-actions
     tags:
-      - *
+      - '*'
   pull_request:
     branches:
       - $default-branch
