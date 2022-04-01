@@ -14,14 +14,15 @@ on:
       - $default-branch
 
 jobs:
-  build-test-release:
-    runs-on: ${{ matrix.conf.os }}
+  # Build and test in the same job because the UI tests expect BGMDriver to be installed.
+  build-and-test:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
     strategy:
       matrix:
-        conf:
-          # TODO: Add older macOS versions.
-          - os: macos-latest
-            release: true
+        # TODO: Add older macOS versions.
+        os:
+          - macos-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -50,7 +51,10 @@ jobs:
           sudo cp -r . /Volumes/bgmbuild
           cd /Volumes/bgmbuild
       - name: Install Background Music.
-        run: yes | ./build_and_install.sh
+        run: |
+          # `sudo` and `tput` expect this to be set.
+          export TERM=xterm-256color
+          yes | ./build_and_install.sh
       - name: Print the log file.
         run: |
           # Put it in a fold because it's so long. TODO: Is this necessary?
@@ -112,9 +116,14 @@ jobs:
             exit 1
           fi
           if ls -la "/Library/LaunchDaemons/com.bearisdriving.BGM.XPCHelper.plist"; then exit 1; fi
+  release:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
       - name: Build the .pkg installer.
-        if: matrix.conf.release
         run: |
+          # `sudo` and `tput` expect this to be set.
+          export TERM=xterm-256color
           # If this build is for a tag with "DEBUG" in its name, build a debug package. (More
           # detailed logging, no optimization, etc.)
           if [[ "$GITHUB_REF" =~ .*DEBUG.* ]]; then
@@ -131,7 +140,6 @@ jobs:
             fi
           fi
       - name: Install the .pkg.
-        if: matrix.conf.release
         run: >-
           sudo installer
             -pkg Background-Music-*/BackgroundMusic-*.pkg
@@ -140,14 +148,12 @@ jobs:
             -dumplog
           #|| [[ "$GITHUB_REF" =~ .*DEBUG.* ]]
       - name: Print the installer logs.
-        if: matrix.conf.release
         run: |
           echo '::group::install.log'
           # This trims the start of the log to save space.
           grep -E -A 9999 -B 20 'Background.?Music' /var/log/install.log
           echo '::endgroup::'
       - name: Check the BGM dirs and files were installed again.
-        if: matrix.conf.release
         run: |
           ls -la "/Applications/Background Music.app"
           ls -la "/Library/Audio/Plug-Ins/HAL/Background Music Device.driver"
@@ -155,20 +161,17 @@ jobs:
             || ls -la "/Library/Application Support/Background Music/BGMXPCHelper.xpc"
           ls -la "/Library/LaunchDaemons/com.bearisdriving.BGM.XPCHelper.plist"
       - name: Upload the .pkg installer.
-        if: matrix.conf.release
         uses: actions/upload-artifact@v3
         with:
           name: pkg-installer
           path: Background-Music-*
       - name: Upload the log file from the package.sh build.
-        if: matrix.conf.release
         uses: actions/upload-artifact@v3
         with:
           name: build-and-install-log-for-pkg
           path: build_and_install.log
       - name: Upload the dsyms (debug symbols).
         # TODO: Check this works.
-        if: matrix.conf.release
         uses: actions/upload-artifact@v3
         with:
           name: archives
