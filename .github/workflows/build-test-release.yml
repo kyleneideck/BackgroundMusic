@@ -19,7 +19,7 @@ jobs:
     strategy:
       matrix:
         conf:
-# TODO: Add older macOS versions.
+          # TODO: Add older macOS versions.
           - os: macos-latest
             release: true
     steps:
@@ -36,7 +36,7 @@ jobs:
 #          sudo launchctl kickstart -kp system/com.apple.audio.coreaudiod || sudo
 #          killall coreaudiod
       - name: Work in a case-sensitive disk image.
-# This lets us catch failures that only happen on case-sensitive filesystems.
+        # This lets us catch failures that only happen on case-sensitive filesystems.
         run: |
           hdiutil create \
             -type SPARSEBUNDLE \
@@ -53,18 +53,19 @@ jobs:
         run: yes | ./build_and_install.sh
       - name: Print the log file.
         run: |
-# Put it in a fold because it's so long. TODO: Is this necessary?
-          echo ::group::build_and_install.log
+          # Put it in a fold because it's so long. TODO: Is this necessary?
+          echo '::group::build_and_install.log'
           cat build_and_install.log
-          echo ::endgroup::
+          echo '::endgroup::'
       - name: Log some checksums.
         run: 'find */build/Release/*/ -type f -exec md5 {} \;'
       - name: Log the installed audio devices and their IDs.
         run: |
           system_profiler SPAudioDataType
           say -a '?'
-      - name: Check the BGM dirs and files were installed. (These fail if the dir/file isn't found.)
+      - name: Check the BGM dirs and files were installed.
         run: |
+          # These commands fail if the dir/file isn't found.
           ls -la "/Applications/Background Music.app"
           ls -la "/Library/Audio/Plug-Ins/HAL/Background Music Device.driver"
           ls -la "/usr/local/libexec/BGMXPCHelper.xpc" \
@@ -79,27 +80,27 @@ jobs:
 #        run: BGMApp/BGMAppTests/UITests/travis-skip.py
       - name: Run the tests.
         run: \
-          echo ::group::BGMDriver Tests
+          echo '::group::BGMDriver Tests'
           xcodebuild \
             -quiet \
             -workspace BGM.xcworkspace \
             -scheme 'Background Music Device' \
             test
-          echo ::endgroup::
-          echo ::group::BGMApp Tests
+          echo '::endgroup::'
+          echo '::group::BGMApp Tests'
           xcodebuild \
             -quiet \
             -workspace BGM.xcworkspace \
             -scheme 'Background Music' \
             test
-          echo ::endgroup::
-          echo ::group::BGMXPCHelper Tests
+          echo '::endgroup::'
+          echo '::group::BGMXPCHelper Tests'
           xcodebuild \
             -quiet \
             -workspace BGM.xcworkspace \
             -scheme 'BGMXPCHelper' \
             test
-          echo ::endgroup::
+          echo '::endgroup::'
       - name: Uninstall Background Music.
         run: yes | ./uninstall.sh
       - name: Check the BGM dirs and files were removed.
@@ -114,12 +115,12 @@ jobs:
       - name: Build the .pkg installer.
         if: matrix.conf.release
         run: |
-# If this build is for a tag with "DEBUG" in its name, build a debug package. (More detailed
-# logging, no optimization, etc.)
+          # If this build is for a tag with "DEBUG" in its name, build a debug package. (More
+          # detailed logging, no optimization, etc.)
           if [[ "$GITHUB_REF" =~ .*DEBUG.* ]]; then
             if ! ./package.sh -d; then
-# Print the build logs if it fails.
-# TODO: We upload this file in a later step, so this might not be necessary.
+              # Print the build logs if it fails.
+              # TODO: We upload this file in a later step, so this might not be necessary.
               cat build_and_install.log
               exit 1
             fi
@@ -141,10 +142,10 @@ jobs:
       - name: Print the installer logs.
         if: matrix.conf.release
         run: |
-          echo ::group::install.log
-# This trims the start of the log to save space.
+          echo '::group::install.log'
+          # This trims the start of the log to save space.
           grep -E -A 9999 -B 20 'Background.?Music' /var/log/install.log
-          echo ::endgroup::
+          echo '::endgroup::'
       - name: Check the BGM dirs and files were installed again.
         if: matrix.conf.release
         run: |
@@ -166,7 +167,7 @@ jobs:
           name: build-and-install-log-for-pkg
           path: build_and_install.log
       - name: Upload the dsyms (debug symbols).
-# TODO: Check this works.
+        # TODO: Check this works.
         if: matrix.conf.release
         uses: actions/upload-artifact@v3
         with:
