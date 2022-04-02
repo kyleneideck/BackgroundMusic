@@ -50,11 +50,14 @@ jobs:
             bgmbuild.dmg
           sudo cp -r . /Volumes/bgmbuild
           cd /Volumes/bgmbuild
+      - name: Install coreutils for actions/runner/issues/884 workaround.
+        # See https://github.com/actions/runner/issues/884#issuecomment-1018851327
+        run: brew install coreutils
       - name: Install Background Music.
         run: |
           # `sudo` and `tput` expect this to be set.
           export TERM=xterm-256color
-          yes | sudo ./build_and_install.sh
+          genv --default-signal=PIPE yes | sudo ./build_and_install.sh
       - name: Print the log file.
         run: |
           # Put it in a fold because it's so long. TODO: Is this necessary?
@@ -106,7 +109,7 @@ jobs:
             test
           echo '::endgroup::'
       - name: Uninstall Background Music.
-        run: yes | sudo ./uninstall.sh
+        run: genv --default-signal=PIPE yes | sudo ./uninstall.sh
       - name: Check the BGM dirs and files were removed.
         run: |
           if ls -la "/Applications/Background Music.app"; then exit 1; fi
@@ -142,13 +145,15 @@ jobs:
             fi
           fi
       - name: Install the .pkg.
+        # TODO: On TravisCI, this was failing for debug builds. We couldn't figure out why, so we
+        #       might have to ignore that:
+        # || [[ "$GITHUB_REF" =~ .*DEBUG.* ]]
         run: >-
           sudo installer
             -pkg Background-Music-*/BackgroundMusic-*.pkg
             -target /
             -verbose
             -dumplog
-          #|| [[ "$GITHUB_REF" =~ .*DEBUG.* ]]
       - name: Print the installer logs.
         run: |
           echo '::group::install.log'
