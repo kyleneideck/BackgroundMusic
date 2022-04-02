@@ -54,7 +54,7 @@ jobs:
         run: |
           # `sudo` and `tput` expect this to be set.
           export TERM=xterm-256color
-          yes | ./build_and_install.sh
+          yes | sudo ./build_and_install.sh
       - name: Print the log file.
         run: |
           # Put it in a fold because it's so long. TODO: Is this necessary?
@@ -106,7 +106,7 @@ jobs:
             test
           echo '::endgroup::'
       - name: Uninstall Background Music.
-        run: yes | ./uninstall.sh
+        run: yes | sudo ./uninstall.sh
       - name: Check the BGM dirs and files were removed.
         run: |
           if ls -la "/Applications/Background Music.app"; then exit 1; fi
@@ -120,6 +120,8 @@ jobs:
     runs-on: macos-latest
     timeout-minutes: 30
     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
       - name: Build the .pkg installer.
         run: |
           # `sudo` and `tput` expect this to be set.
@@ -127,14 +129,14 @@ jobs:
           # If this build is for a tag with "DEBUG" in its name, build a debug package. (More
           # detailed logging, no optimization, etc.)
           if [[ "$GITHUB_REF" =~ .*DEBUG.* ]]; then
-            if ! ./package.sh -d; then
+            if ! sudo ./package.sh -d; then
               # Print the build logs if it fails.
               # TODO: We upload this file in a later step, so this might not be necessary.
               cat build_and_install.log
               exit 1
             fi
           else
-            if ! ./package.sh; then
+            if ! sudo ./package.sh; then
               cat build_and_install.log
               exit 1
             fi
