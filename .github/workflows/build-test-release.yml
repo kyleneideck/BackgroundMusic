@@ -17,7 +17,7 @@ jobs:
   # Build and test in the same job because the UI tests expect BGMDriver to be installed.
   build-and-test:
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 45
+    timeout-minutes: 30
     strategy:
       matrix:
         # TODO: Add older macOS versions.
@@ -53,12 +53,13 @@ jobs:
       - name: Install coreutils for actions/runner/issues/884 workaround.
         # See https://github.com/actions/runner/issues/884#issuecomment-1018851327
         run: brew install coreutils
-      - name: Install Background Music.
+      - name: Build and install Background Music.
         run: |
           # `sudo` and `tput` expect this to be set.
           export TERM=xterm-256color
           genv --default-signal=PIPE yes | sudo ./build_and_install.sh
       - name: Print the log file.
+        if: always()
         run: |
           # Put it in a fold because it's so long. TODO: Is this necessary?
           echo '::group::build_and_install.log'
@@ -82,9 +83,8 @@ jobs:
         run: >-
           osascript -e 'tell application "Background Music" to quit'
           || killall "Background Music"
-# TODO: Reenable this if it turns out we need it. (Likely.)
-#      - name: Skip the UI tests until GitHub Actions supports them.
-#        run: BGMApp/BGMAppTests/UITests/travis-skip.py
+      - name: Skip the UI tests until GitHub Actions supports them.
+        run: BGMApp/BGMAppTests/UITests/travis-skip.py
       - name: Run the tests.
         run: |
           echo '::group::BGMDriver Tests'
@@ -121,7 +121,7 @@ jobs:
           if ls -la "/Library/LaunchDaemons/com.bearisdriving.BGM.XPCHelper.plist"; then exit 1; fi
   release:
     runs-on: macos-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -155,12 +155,14 @@ jobs:
             -verbose \
             -dumplog
       - name: Print the installer logs.
+        if: always()
         run: |
           echo '::group::install.log'
           # This trims the start of the log to save space.
           grep -E -A 9999 -B 20 'Background.?Music' /var/log/install.log
           echo '::endgroup::'
       - name: Check the BGM dirs and files were installed again.
+        if: always()
         run: |
           ls -la "/Applications/Background Music.app"
           ls -la "/Library/Audio/Plug-Ins/HAL/Background Music Device.driver"
@@ -173,6 +175,7 @@ jobs:
           name: pkg-installer
           path: Background-Music-*
       - name: Upload the log file from the package.sh build.
+        if: always()
         uses: actions/upload-artifact@v3
         with:
           name: build-and-install-log-for-pkg
