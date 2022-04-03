@@ -86,7 +86,7 @@ jobs:
 #      - name: Skip the UI tests until GitHub Actions supports them.
 #        run: BGMApp/BGMAppTests/UITests/travis-skip.py
       - name: Run the tests.
-        run: \
+        run: |
           echo '::group::BGMDriver Tests'
           xcodebuild \
             -quiet \
@@ -148,11 +148,11 @@ jobs:
         # TODO: On TravisCI, this was failing for debug builds. We couldn't figure out why, so we
         #       might have to ignore that:
         # || [[ "$GITHUB_REF" =~ .*DEBUG.* ]]
-        run: >-
-          sudo installer
-            -pkg Background-Music-*/BackgroundMusic-*.pkg
-            -target /
-            -verbose
+        run: |
+          sudo installer \
+            -pkg Background-Music-*/BackgroundMusic-*.pkg \
+            -target / \
+            -verbose \
             -dumplog
       - name: Print the installer logs.
         run: |
