@@ -241,7 +241,9 @@ BGMBackgroundMusicDevice::ResponsibleBundleIDsOf(CACFString inParentBundleID)
         // Skype
         { "com.skype.skype", { "com.skype.skype.Helper" } },
         // Google Chrome
-        { "com.google.Chrome", { "com.google.Chrome.helper" } }
+        { "com.google.Chrome", { "com.google.Chrome.helper" } },
+        // Microsoft Edge
+        { "com.microsoft.edgemac", { "com.microsoft.edgemac.helper" } }
     };
 
     // Parallels' VM "dock helper" apps have bundle IDs like
