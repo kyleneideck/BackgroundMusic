@@ -1,4 +1,3 @@
-# Based on the .travis.yml file.
 # TODO: Split this into multiple .yml files? Multiple jobs?
 name: Build, Test and Release
 
@@ -26,16 +25,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-# TODO: This part is commented out for now so we can check whether we need it for GitHub Actions. If
-#       the VMs do have an audio device, we can probably delete NullAudio.
-#      - name: |
-#          Install Apple's NullAudio device. The CI VMs probably don't have any audio devices installed.
-#        run: >-
-#          sudo xcodebuild -quiet -project
-#          BGMApp/BGMAppTests/NullAudio/AudioDriverExamples.xcodeproj -target
-#          NullAudio DSTROOT="/" install &&
-#          sudo launchctl kickstart -kp system/com.apple.audio.coreaudiod || sudo
-#          killall coreaudiod
       - name: Work in a case-sensitive disk image.
         # This lets us catch failures that only happen on case-sensitive filesystems.
         run: |
@@ -60,11 +49,7 @@ jobs:
           genv --default-signal=PIPE yes | sudo ./build_and_install.sh
       - name: Print the log file.
         if: always()
-        run: |
-          # Put it in a fold because it's so long. TODO: Is this necessary?
-          echo '::group::build_and_install.log'
-          cat build_and_install.log
-          echo '::endgroup::'
+        run: cat build_and_install.log
       - name: Log some checksums.
         run: 'find */build/Release/*/ -type f -exec md5 {} \;'
       - name: Log the installed audio devices and their IDs.
@@ -83,8 +68,6 @@ jobs:
         run: >-
           osascript -e 'tell application "Background Music" to quit'
           || killall "Background Music"
-      - name: Skip the UI tests until GitHub Actions supports them.
-        run: BGMApp/BGMAppTests/UITests/travis-skip.py
       - name: Run the tests.
         run: |
           echo '::group::BGMDriver Tests'
@@ -135,17 +118,9 @@ jobs:
           # If this build is for a tag with "DEBUG" in its name, build a debug package. (More
           # detailed logging, no optimization, etc.)
           if [[ "$GITHUB_REF" =~ .*DEBUG.* ]]; then
-            if ! sudo ./package.sh -d; then
-              # Print the build logs if it fails.
-              # TODO: We upload this file in a later step, so this might not be necessary.
-              cat build_and_install.log
-              exit 1
-            fi
+            sudo ./package.sh -d
           else
-            if ! sudo ./package.sh; then
-              cat build_and_install.log
-              exit 1
-            fi
+            sudo ./package.sh
           fi
       - name: Install the .pkg.
         # Delete archives/ first because it contains a copy of Background Music.app.
@@ -157,8 +132,8 @@ jobs:
         # package.sh puts the archives in a zipfile next to the .pkg, so we can still upload them.
         #
         # TODO: On TravisCI, this was failing for debug builds. We couldn't figure out why, so we
-        #       might have to ignore that:
-        # || [[ "$GITHUB_REF" =~ .*DEBUG.* ]]
+        #       might have to ignore that with
+        #       || [[ "$GITHUB_REF" =~ .*DEBUG.* ]]
         run: |
           sudo rm -rf archives
           sudo installer \
@@ -170,7 +145,7 @@ jobs:
         if: always()
         # This trims the start of the log to save space.
         run: grep -E -A 9999 -B 20 'Background.?Music' /var/log/install.log
-      - name: Check the BGM dirs and files were installed again.
+      - name: Check the BGM dirs and files were installed.
         if: always()
         run: |
           ls -la "/Applications/Background Music.app"

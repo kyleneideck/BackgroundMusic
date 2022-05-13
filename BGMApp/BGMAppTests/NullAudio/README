@@ -1,6 +1,0 @@
-TravisCI's OS X VMs don't have any audio devices installed by default, so we
-install Apple's NullAudio sample driver before the tests run. Otherwise the
-tests would fail because BGMApp currently crashes on launch if you don't have
-any audio devices.
-
-

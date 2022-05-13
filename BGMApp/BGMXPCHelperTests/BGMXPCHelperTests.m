@@ -69,7 +69,7 @@
         dispatch_semaphore_signal(replySemaphore);
     } forUISoundsDevice:NO];
 
-    // Very long timeout to make it less likely to fail on Travis CI when there's high contention.
+    // Very long timeout to make it less likely to fail in CI builds when there's high contention.
     if (0 != dispatch_semaphore_wait(replySemaphore, dispatch_time(DISPATCH_TIME_NOW, 5 * 60 * NSEC_PER_SEC))) {
         XCTFail(@"Timed out waiting for BGMXPCHelper");
     }

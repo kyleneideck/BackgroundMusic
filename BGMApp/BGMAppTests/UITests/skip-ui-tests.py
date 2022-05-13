@@ -16,20 +16,12 @@
 # along with Background Music. If not, see <http://www.gnu.org/licenses/>.
 
 #
-# travis-skip.py
+# skip-ui-tests.py
 # BGMAppUITests
 #
 # Copyright (c) 2017 Kyle Neideck
 #
-# Skip the UI tests in Travis builds because they aren't supported.
-#
-# We can't run the tests on Travis because Xcode needs permission to use the Accessibility API
-# to control BGMApp. There's no way to set that up programmatically without disabling SIP and
-# Travis doesn't support that.
-#
-# See https://github.com/travis-ci/travis-ci/issues/5819
-#
-# TODO: Figure out a better way to do this.
+# Disables the UI tests. This is mainly useful on CI systems that don't support UI tests.
 #
 
 import xml.etree.ElementTree as ET
@@ -45,5 +37,4 @@ tree.getroot().findall(UI_REF_XPATH)[0].set("skipped", "YES")
 
 # Save the scheme.
 tree.write(SCHEME_FILE)
-
 

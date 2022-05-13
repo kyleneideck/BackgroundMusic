@@ -124,7 +124,7 @@ version="$(/usr/libexec/PlistBuddy \
     -c "Print CFBundleShortVersionString" \
     "${bgmapp_path}/Contents/Info.plist")"
 
-# Everything in out_dir at the end of this script will be released in the Travis CI builds.
+# Everything in out_dir at the end of this script will be released in the CI builds.
 out_dir="Background-Music-$version"
 rm -rf "$out_dir"
 mkdir "$out_dir"
