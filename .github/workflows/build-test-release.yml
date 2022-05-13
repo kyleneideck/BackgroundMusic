@@ -148,10 +148,19 @@ jobs:
             fi
           fi
       - name: Install the .pkg.
+        # Delete archives/ first because it contains a copy of Background Music.app.
+        # Background Music.app is "relocatable", which means that if the user moves it and then
+        # installs a new version, macOS will put the new version in the same place. This makes sure
+        # the installer puts Background Music.app in /Applications (and the build won't fail when we
+        # check that later).
+        #
+        # package.sh puts the archives in a zipfile next to the .pkg, so we can still upload them.
+        #
         # TODO: On TravisCI, this was failing for debug builds. We couldn't figure out why, so we
         #       might have to ignore that:
         # || [[ "$GITHUB_REF" =~ .*DEBUG.* ]]
         run: |
+          sudo rm -rf archives
           sudo installer \
             -pkg Background-Music-*/BackgroundMusic-*.pkg \
             -target / \
@@ -169,7 +178,8 @@ jobs:
           ls -la "/usr/local/libexec/BGMXPCHelper.xpc" \
             || ls -la "/Library/Application Support/Background Music/BGMXPCHelper.xpc"
           ls -la "/Library/LaunchDaemons/com.bearisdriving.BGM.XPCHelper.plist"
-      - name: Upload the .pkg installer.
+      - name: Upload the .pkg installer and archives.
+        if: always()
         uses: actions/upload-artifact@v3
         with:
           name: pkg-installer
@@ -180,12 +190,6 @@ jobs:
         with:
           name: build-and-install-log-for-pkg
           path: build_and_install.log
-      - name: Upload the dsyms (debug symbols).
-        # TODO: Check this works.
-        uses: actions/upload-artifact@v3
-        with:
-          name: archives
-          path: archives
 # TODO: Create a GitHub release. This is the Travis YAML that was handling it:
 # deploy:
 #  provider: releases
