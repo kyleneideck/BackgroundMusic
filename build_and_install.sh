@@ -19,7 +19,7 @@
 #
 # build_and_install.sh
 #
-# Copyright © 2016-2020 Kyle Neideck
+# Copyright © 2016-2022 Kyle Neideck
 # Copyright © 2016 Nick Jacques
 #
 # Builds and installs BGMApp, BGMDriver and BGMXPCHelper. Requires xcodebuild and Xcode.
@@ -671,6 +671,11 @@ enableUBSanArg() {
 # Clean all projects. Done separately to workaround what I think is a bug in Xcode 10.0. If you just
 # add "clean" to the other xcodebuild commands, they seem to fail because of the DSTROOT="/" arg.
 if [[ "${CLEAN}" != "" ]]; then
+    if [[ "${XCODEBUILD_ACTION}" == "archive" ]]; then
+        # Delete any previous archives to force Xcode to rebuild them.
+        /bin/rm -rf "${ARCHIVES_DIR}" >> ${LOG_FILE} 2>&1
+    fi
+
     # Disable the -e shell option and error trap for build commands so we can handle errors
     # differently.
     (disable_error_handling

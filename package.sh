@@ -19,7 +19,7 @@
 #
 # package.sh
 #
-# Copyright © 2017-2020 Kyle Neideck
+# Copyright © 2017-2022 Kyle Neideck
 # Copyright © 2016, 2017 Takayama Fumihiko
 #
 # Builds Background Music and packages it into a .pkg file. Call this script with -d to use the
@@ -138,6 +138,14 @@ fi
 
 # --------------------------------------------------
 
+echo "Compiling ListInputDevices"
+
+if ! [[ $packaging_operation == "repackage" ]]; then
+    swiftc pkg/ListInputDevices.swift -o pkg/ListInputDevices
+fi
+
+# --------------------------------------------------
+
 echo "Copying Files"
 
 rm -rf "pkgroot"
@@ -157,12 +165,14 @@ if [[ $packaging_operation == "repackage" ]]; then
     repackage_scripts_dir="${repackage_dir}/Installer.pkg/Scripts"
     cp "${repackage_scripts_dir}/preinstall" "$scripts_dir"
     cp "${repackage_scripts_dir}/postinstall" "$scripts_dir"
+    cp "${repackage_scripts_dir}/ListInputDevices" "$scripts_dir"
     cp "${repackage_scripts_dir}/com.bearisdriving.BGM.XPCHelper.plist.template" "$scripts_dir"
     cp "${repackage_scripts_dir}/safe_install_dir.sh" "$scripts_dir"
     cp "${repackage_scripts_dir}/post_install.sh" "$scripts_dir"
 else
     cp "pkg/preinstall" "$scripts_dir"
     cp "pkg/postinstall" "$scripts_dir"
+    mv "pkg/ListInputDevices" "$scripts_dir"
     cp "BGMApp/BGMXPCHelper/com.bearisdriving.BGM.XPCHelper.plist.template" "$scripts_dir"
     cp "BGMApp/BGMXPCHelper/safe_install_dir.sh" "$scripts_dir"
     cp "BGMApp/BGMXPCHelper/post_install.sh" "$scripts_dir"
@@ -184,6 +194,7 @@ if [[ $packaging_operation != "repackage" ]]; then
     set_permissions "$scripts_dir"
     chmod 755 "$scripts_dir/preinstall"
     chmod 755 "$scripts_dir/postinstall"
+    chmod 755 "$scripts_dir/ListInputDevices"
     chmod 755 "$scripts_dir/BGMXPCHelper.xpc/Contents/MacOS/BGMXPCHelper"
 fi
 
@@ -207,9 +218,9 @@ if [[ $packaging_operation == "repackage" ]]; then
     pkg="$out_dir/BackgroundMusic-$version.repackaged.pkg"
 else
     # As a security check for releases, we manually build the same package locally, compare it to
-    # the release built by Travis and then code sign it. (And then remove the code signature on a
-    # different computer and check that it still matches the one from Travis.) So we include
-    # "unsigned" in the name to differentiate the two versions.
+    # the release built in CI and then code sign it. (And then remove the code signature on a
+    # different computer and check that it still matches the one from CI.) So we include "unsigned"
+    # in the name to differentiate the two versions.
     pkg="$out_dir/BackgroundMusic-$version.unsigned.pkg"
 fi
 

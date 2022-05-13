@@ -19,7 +19,7 @@
 #
 # postinstall
 #
-# Copyright © 2017-2021 Kyle Neideck
+# Copyright © 2017-2022 Kyle Neideck
 #
 
 # Make sure we use the built-in versions of programs, for consistency. Probably not necessary
@@ -65,7 +65,21 @@ bash "post_install.sh" "$xpc_helper_install_path" "BGMXPCHelper.xpc/Contents/Mac
 # Wait until coreaudiod has restarted and BGMDevice is ready to use.
 retries=5
 while [[ $retries -gt 0 ]]; do
-    if ! system_profiler SPAudioDataType | grep "Background Music" >/dev/null 2>&1; then
+    device_list="$(system_profiler SPAudioDataType)"
+
+    # The system_profiler command above doesn't work on GitHub Actions, so also try this
+    # alternative, which does. I haven't looked into the root cause, so this may be necessary for
+    # other systems as well.
+    input_device_list="$(./ListInputDevices)"
+
+    # "BGMDevice" is the UID, which is a stable identifier. device_list doesn't include the UIDs, so
+    # we have to check for BGMDevice's name.
+    if [[ "$device_list" =~ "Background Music" ]] || \
+        [[ "$input_device_list" =~ "BGMDevice" ]]; then
+        log "Background Music device is installed and available."
+        # Break out of the loop.
+        retries=0
+    else
         retries=$((retries - 1))
         if [[ $retries -gt 0 ]]; then
             log "Background Music device not found. Trying again in 3 seconds..."
@@ -75,11 +89,12 @@ while [[ $retries -gt 0 ]]; do
             #       installer GUI instead of just logging them. See
             #       <https://developer.apple.com/library/archive/documentation/DeveloperTools/Reference/DistributionDefinitionRef/Chapters/Distribution_XML_Ref.html#//apple_ref/doc/uid/TP40005370-CH100-SW12>.
             log "Background Music device not found. Installation failed."
+            log "Audio devices:"
+            log "$device_list"
+            log "Audio input devices:"
+            log "$input_device_list"
             exit 1
         fi
-    else
-        # BGMDevice is installed and available, so we can continue the script.
-        retries=0
     fi
 done
 
