@@ -109,7 +109,10 @@ jobs:
             test
           echo '::endgroup::'
       - name: Uninstall Background Music.
-        run: genv --default-signal=PIPE yes | sudo ./uninstall.sh
+        run: |
+          # `tput` expects this to be set.
+          export TERM=xterm-256color
+          genv --default-signal=PIPE yes | sudo ./uninstall.sh
       - name: Check the BGM dirs and files were removed.
         run: |
           if ls -la "/Applications/Background Music.app"; then exit 1; fi
@@ -156,11 +159,8 @@ jobs:
             -dumplog
       - name: Print the installer logs.
         if: always()
-        run: |
-          echo '::group::install.log'
-          # This trims the start of the log to save space.
-          grep -E -A 9999 -B 20 'Background.?Music' /var/log/install.log
-          echo '::endgroup::'
+        # This trims the start of the log to save space.
+        run: grep -E -A 9999 -B 20 'Background.?Music' /var/log/install.log
       - name: Check the BGM dirs and files were installed again.
         if: always()
         run: |

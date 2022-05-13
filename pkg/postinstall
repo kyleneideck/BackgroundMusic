@@ -75,6 +75,16 @@ while [[ $retries -gt 0 ]]; do
             #       installer GUI instead of just logging them. See
             #       <https://developer.apple.com/library/archive/documentation/DeveloperTools/Reference/DistributionDefinitionRef/Chapters/Distribution_XML_Ref.html#//apple_ref/doc/uid/TP40005370-CH100-SW12>.
             log "Background Music device not found. Installation failed."
+            log "Audio devices:"
+            log $(system_profiler SPAudioDataType)
+            log "Audio input devices:"
+            log $(echo 'import AVFoundation
+                let discoverySession = AVCaptureDevice.DiscoverySession(
+                    deviceTypes: [ .builtInMicrophone, .externalUnknown ],
+                    mediaType: .audio,
+                    position: .unspecified
+                )
+                print(discoverySession.devices)' | swift -)
             exit 1
         fi
     else
