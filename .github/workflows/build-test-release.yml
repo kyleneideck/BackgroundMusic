@@ -91,6 +91,12 @@ jobs:
             -scheme 'BGMXPCHelper' \
             test
           echo '::endgroup::'
+      - name: Upload the test results.
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: BGMTests.xcresult
+          path: /Users/runner/Library/Developer/Xcode/DerivedData/*/Logs/Test/*.xcresult
       - name: Uninstall Background Music.
         run: |
           # `tput` expects this to be set.
