@@ -131,16 +131,21 @@ static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
                                  completionHandler:^(BOOL granted) {
             dispatch_async(dispatch_get_main_queue(), ^{
                 if (granted) {
-                    DebugMsg("BGMAppDelegate::applicationDidFinishLaunching: "
-                             "Permission granted");
+                    DebugMsg("BGMAppDelegate::applicationDidFinishLaunching: Permission granted");
                     [self continueLaunchAfterInputDevicePermissionGranted];
                 } else {
-                    NSLog(@"BGMAppDelegate::applicationDidFinishLaunching: "
-                          "Permission denied");
-                    // TODO: If they don't accept, Background Music won't work
-                    //       at all and the only way to fix it is in System
-                    //       Preferences, so we should show an error dialog
-                    //       with instructions.
+                    NSLog(@"BGMAppDelegate::applicationDidFinishLaunching: Permission denied");
+                    // If they don't accept, Background Music won't work at all and the only way to
+                    // fix it is in System Preferences, so show an error dialog with instructions.
+                    //
+                    // TODO: It would be nice if this dialog had a shortcut to open the System
+                    //       Preferences panel. See showSetDeviceAsDefaultError.
+                    [self showErrorMessage:@"Background Music needs permission to use microphones."
+                           informativeText:@"It uses a virtual microphone to access your system's "
+                                            "audio.\n\nYou can grant the permission by going to "
+                                            "System Preferences > Security and Privacy > "
+                                            "Microphone and checking the box for Background Music."
+                 exitAfterMessageDismissed:YES];
                 }
             });
         }];
