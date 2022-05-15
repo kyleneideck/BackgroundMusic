@@ -71,11 +71,13 @@ jobs:
         run: |
           echo '::group::BGMDriver Tests'
           xcodebuild \
+            -quiet \
             -workspace BGM.xcworkspace \
             -scheme 'Background Music Device' \
             test
           echo '::group::BGMXPCHelper Tests'
           xcodebuild \
+            -quiet \
             -workspace BGM.xcworkspace \
             -scheme 'BGMXPCHelper' \
             test
@@ -89,6 +91,7 @@ jobs:
                          composedMessage contains[cd] "Background Music" or
                          composedMessage contains "BGM"' > app.log &
           xcodebuild \
+            -quiet \
             -workspace BGM.xcworkspace \
             -scheme 'Background Music' \
             test

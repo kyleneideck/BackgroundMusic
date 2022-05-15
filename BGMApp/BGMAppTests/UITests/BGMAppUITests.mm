@@ -85,20 +85,20 @@
 
     [self acceptMicrophoneAuthorizationDialog];
 
-     if (![icon waitForExistenceWithTimeout:1.0]) {
+     if (![icon waitForExistenceWithTimeout:20.0]) {
         // The status bar icon/button has this type when using older versions of XCTest, so try
         // both. (Actually, it might depend on the macOS or Xcode version. I'm not sure.)
         XCUIElement* iconOldType =
                 [app.menuBars childrenMatchingType:XCUIElementTypeMenuBarItem].element;
-         if ([iconOldType waitForExistenceWithTimeout:5.0]) {
+         if ([iconOldType waitForExistenceWithTimeout:20.0]) {
              NSLog(@"icon = iconOldType");
              icon = iconOldType;
          }
     }
 
     // Wait for the initial elements.
-    XCTAssert([app waitForExistenceWithTimeout:10.0]);
-    XCTAssert([icon waitForExistenceWithTimeout:10.0]);
+    XCTAssert([app waitForExistenceWithTimeout:20.0]);
+    XCTAssert([icon waitForExistenceWithTimeout:20.0]);
 }
 
 // Clicks the OK button in the "Background Music wants to use the microphone" dialog.
@@ -108,11 +108,18 @@
     NSLog(@"UserNotificationCenter: %@", unc);
     XCUIElement* okButton = unc.dialogs.buttons[@"OK"];
 
-    XCTAssert([okButton waitForExistenceWithTimeout:10.0]);
+    XCTAssert([okButton waitForExistenceWithTimeout:20.0]);
 
     // This click is failing on GH Actions. No idea why, so try a sleep.
-    (void)[XCTWaiter waitForExpectations:@[[XCTestExpectation new]] timeout:2.0];
+    (void)[XCTWaiter waitForExpectations:@[[XCTestExpectation new]] timeout:5.0];
     [okButton click];
+
+    int retries = 10;
+    while (retries > 0 && [okButton waitForExistenceWithTimeout:3.0]) {
+        NSLog(@"Microphone authorization dialog is still open. Trying to click OK again.");
+        [okButton click];
+        retries--;
+    }
 }
 
 - (void) tearDown {
