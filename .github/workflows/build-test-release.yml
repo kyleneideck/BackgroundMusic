@@ -83,10 +83,10 @@ jobs:
           echo '::endgroup::'
           echo '::group::BGMApp Tests'
           log stream --info \
-            --predicate 'process == "coreaudiod" or \
-                         process == "Background Music" or \
-                         process == "BGMXPCHelper" or \
-                         composedMessage contains[cd] "Background Music" or \
+            --predicate 'process == "coreaudiod" or
+                         process == "Background Music" or
+                         process == "BGMXPCHelper" or
+                         composedMessage contains[cd] "Background Music" or
                          composedMessage contains "BGM"' > app.log &
           xcodebuild \
             -workspace BGM.xcworkspace \
