@@ -110,6 +110,8 @@
 
     XCTAssert([okButton waitForExistenceWithTimeout:10.0]);
 
+    // This click is failing on GH Actions. No idea why, so try a sleep.
+    (void)[XCTWaiter waitForExpectations:@[[XCTestExpectation new]] timeout:2.0];
     [okButton click];
 }
 

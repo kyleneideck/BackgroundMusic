@@ -4,13 +4,12 @@ name: Build, Test and Release
 on:
   push:
     branches:
-      - $default-branch
-      - gh-actions
+      - '*'
     tags:
       - '*'
   pull_request:
     branches:
-      - $default-branch
+      - '*'
 
 jobs:
   # Build and test in the same job because the UI tests expect BGMDriver to be installed.
@@ -72,31 +71,36 @@ jobs:
         run: |
           echo '::group::BGMDriver Tests'
           xcodebuild \
-            -quiet \
             -workspace BGM.xcworkspace \
             -scheme 'Background Music Device' \
             test
-          echo '::endgroup::'
-          echo '::group::BGMApp Tests'
-          xcodebuild \
-            -quiet \
-            -workspace BGM.xcworkspace \
-            -scheme 'Background Music' \
-            test
-          echo '::endgroup::'
           echo '::group::BGMXPCHelper Tests'
           xcodebuild \
-            -quiet \
             -workspace BGM.xcworkspace \
             -scheme 'BGMXPCHelper' \
+            test
+          echo '::endgroup::'
+          echo '::endgroup::'
+          echo '::group::BGMApp Tests'
+          log stream --info \
+            --predicate 'process == "coreaudiod" or \
+                         process == "Background Music" or \
+                         process == "BGMXPCHelper" or \
+                         composedMessage contains[cd] "Background Music" or \
+                         composedMessage contains "BGM"' > app.log &
+          xcodebuild \
+            -workspace BGM.xcworkspace \
+            -scheme 'Background Music' \
             test
           echo '::endgroup::'
       - name: Upload the test results.
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: BGMTests.xcresult
-          path: /Users/runner/Library/Developer/Xcode/DerivedData/*/Logs/Test/*.xcresult
+          name: bgm-test-results
+          path: |
+            /Users/runner/Library/Developer/Xcode/DerivedData/*/Logs/Test/*.xcresult
+            app.log
       - name: Uninstall Background Music.
         run: |
           # `tput` expects this to be set.
@@ -111,79 +115,79 @@ jobs:
             exit 1
           fi
           if ls -la "/Library/LaunchDaemons/com.bearisdriving.BGM.XPCHelper.plist"; then exit 1; fi
-  release:
-    runs-on: macos-latest
-    timeout-minutes: 15
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Build the .pkg installer.
-        run: |
-          # `sudo` and `tput` expect this to be set.
-          export TERM=xterm-256color
-          # If this build is for a tag with "DEBUG" in its name, build a debug package. (More
-          # detailed logging, no optimization, etc.)
-          if [[ "$GITHUB_REF" =~ .*DEBUG.* ]]; then
-            sudo ./package.sh -d
-          else
-            sudo ./package.sh
-          fi
-      - name: Install the .pkg.
-        # Delete archives/ first because it contains a copy of Background Music.app.
-        # Background Music.app is "relocatable", which means that if the user moves it and then
-        # installs a new version, macOS will put the new version in the same place. This makes sure
-        # the installer puts Background Music.app in /Applications (and the build won't fail when we
-        # check that later).
-        #
-        # package.sh puts the archives in a zipfile next to the .pkg, so we can still upload them.
-        #
-        # TODO: On TravisCI, this was failing for debug builds. We couldn't figure out why, so we
-        #       might have to ignore that with
-        #       || [[ "$GITHUB_REF" =~ .*DEBUG.* ]]
-        run: |
-          sudo rm -rf archives
-          sudo installer \
-            -pkg Background-Music-*/BackgroundMusic-*.pkg \
-            -target / \
-            -verbose \
-            -dumplog
-      - name: Print the installer logs.
-        if: always()
-        # This trims the start of the log to save space.
-        run: grep -E -A 9999 -B 20 'Background.?Music' /var/log/install.log
-      - name: Check the BGM dirs and files were installed.
-        if: always()
-        run: |
-          ls -la "/Applications/Background Music.app"
-          ls -la "/Library/Audio/Plug-Ins/HAL/Background Music Device.driver"
-          ls -la "/usr/local/libexec/BGMXPCHelper.xpc" \
-            || ls -la "/Library/Application Support/Background Music/BGMXPCHelper.xpc"
-          ls -la "/Library/LaunchDaemons/com.bearisdriving.BGM.XPCHelper.plist"
-      - name: Upload the .pkg installer and archives.
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: pkg-installer
-          path: Background-Music-*
-      - name: Upload the log file from the package.sh build.
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: build-and-install-log-for-pkg
-          path: build_and_install.log
-# TODO: Create a GitHub release. This is the Travis YAML that was handling it:
-# deploy:
-#  provider: releases
-#  api_key:
-#    secure: j5Gd[...]
-#  file_glob: true
-#  file: Background-Music-*/*
-#  skip_cleanup: true
-#  name: $TRAVIS_TAG
-#  prerelease: true
-#  draft: true
-#  on:
-#    repo: kyleneideck/BackgroundMusic
-#    tags: true
-#    # TODO: Use "condition" to build master and tags?
-#    condition: $DEPLOY = true
+#  release:
+#    runs-on: macos-latest
+#    timeout-minutes: 15
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v3
+#      - name: Build the .pkg installer.
+#        run: |
+#          # `sudo` and `tput` expect this to be set.
+#          export TERM=xterm-256color
+#          # If this build is for a tag with "DEBUG" in its name, build a debug package. (More
+#          # detailed logging, no optimization, etc.)
+#          if [[ "$GITHUB_REF" =~ .*DEBUG.* ]]; then
+#            sudo ./package.sh -d
+#          else
+#            sudo ./package.sh
+#          fi
+#      - name: Install the .pkg.
+#        # Delete archives/ first because it contains a copy of Background Music.app.
+#        # Background Music.app is "relocatable", which means that if the user moves it and then
+#        # installs a new version, macOS will put the new version in the same place. This makes sure
+#        # the installer puts Background Music.app in /Applications (and the build won't fail when we
+#        # check that later).
+#        #
+#        # package.sh puts the archives in a zipfile next to the .pkg, so we can still upload them.
+#        #
+#        # TODO: On TravisCI, this was failing for debug builds. We couldn't figure out why, so we
+#        #       might have to ignore that with
+#        #       || [[ "$GITHUB_REF" =~ .*DEBUG.* ]]
+#        run: |
+#          sudo rm -rf archives
+#          sudo installer \
+#            -pkg Background-Music-*/BackgroundMusic-*.pkg \
+#            -target / \
+#            -verbose \
+#            -dumplog
+#      - name: Print the installer logs.
+#        if: always()
+#        # This trims the start of the log to save space.
+#        run: grep -E -A 9999 -B 20 'Background.?Music' /var/log/install.log
+#      - name: Check the BGM dirs and files were installed.
+#        if: always()
+#        run: |
+#          ls -la "/Applications/Background Music.app"
+#          ls -la "/Library/Audio/Plug-Ins/HAL/Background Music Device.driver"
+#          ls -la "/usr/local/libexec/BGMXPCHelper.xpc" \
+#            || ls -la "/Library/Application Support/Background Music/BGMXPCHelper.xpc"
+#          ls -la "/Library/LaunchDaemons/com.bearisdriving.BGM.XPCHelper.plist"
+#      - name: Upload the .pkg installer and archives.
+#        if: always()
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: pkg-installer
+#          path: Background-Music-*
+#      - name: Upload the log file from the package.sh build.
+#        if: always()
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: build-and-install-log-for-pkg
+#          path: build_and_install.log
+## TODO: Create a GitHub release. This is the Travis YAML that was handling it:
+## deploy:
+##  provider: releases
+##  api_key:
+##    secure: j5Gd[...]
+##  file_glob: true
+##  file: Background-Music-*/*
+##  skip_cleanup: true
+##  name: $TRAVIS_TAG
+##  prerelease: true
+##  draft: true
+##  on:
+##    repo: kyleneideck/BackgroundMusic
+##    tags: true
+##    # TODO: Use "condition" to build master and tags?
+##    condition: $DEPLOY = true
