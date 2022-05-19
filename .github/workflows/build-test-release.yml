@@ -75,6 +75,8 @@ jobs:
             -workspace BGM.xcworkspace \
             -scheme 'Background Music Device' \
             test
+          echo '::endgroup::'
+
           echo '::group::BGMXPCHelper Tests'
           xcodebuild \
             -quiet \
@@ -82,14 +84,23 @@ jobs:
             -scheme 'BGMXPCHelper' \
             test
           echo '::endgroup::'
-          echo '::endgroup::'
+
+          # Grant BGMApp authorization to use input devices.
+          # This is necessary for the UI tests because accepting the "Background Music would like to
+          # use the microphone" dialog programmatically isn't reliable.
+          dbPath="$HOME/Library/Application Support/com.apple.TCC/TCC.db"
+          values="'kTCCServiceMicrophone','com.bearisdriving.BGM.App',0,2,2,1,NULL,NULL,NULL,'UNUSED',NULL,0,1652845317"
+          sqlQuery="INSERT OR IGNORE INTO access VALUES($values);"
+          sudo sqlite3 "$dbPath" "$sqlQuery"
+
           echo '::group::BGMApp Tests'
-          log stream --info \
-            --predicate 'process == "coreaudiod" or
-                         process == "Background Music" or
-                         process == "BGMXPCHelper" or
-                         composedMessage contains[cd] "Background Music" or
-                         composedMessage contains "BGM"' > app.log &
+          # TODO: Commented out in case it uses too much CPU.
+          # log stream --info \
+          #   --predicate 'process == "coreaudiod" or
+          #                process == "Background Music" or
+          #                process == "BGMXPCHelper" or
+          #                composedMessage contains[cd] "Background Music" or
+          #                composedMessage contains "BGM"' > app.log &
           xcodebuild \
             -quiet \
             -workspace BGM.xcworkspace \
@@ -104,6 +115,8 @@ jobs:
           path: |
             /Users/runner/Library/Developer/Xcode/DerivedData/*/Logs/Test/*.xcresult
             app.log
+            /Users/runner/Library/Logs/CrashReporter/*
+            /Users/runner/Library/Logs/DiagnosticReports/*
       - name: Uninstall Background Music.
         run: |
           # `tput` expects this to be set.
