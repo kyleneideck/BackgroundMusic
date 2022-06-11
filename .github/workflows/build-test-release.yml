@@ -67,6 +67,8 @@ jobs:
         run: >-
           osascript -e 'tell application "Background Music" to quit'
           || killall "Background Music"
+      - name: Skip the UI tests. (They don't work on GitHub Actions yet.)
+        run: BGMApp/BGMAppTests/UITests/skip-ui-tests.py
       - name: Run the tests.
         run: |
           echo '::group::BGMDriver Tests'
@@ -88,10 +90,14 @@ jobs:
           # Grant BGMApp authorization to use input devices.
           # This is necessary for the UI tests because accepting the "Background Music would like to
           # use the microphone" dialog programmatically isn't reliable.
-          dbPath="$HOME/Library/Application Support/com.apple.TCC/TCC.db"
-          values="'kTCCServiceMicrophone','com.bearisdriving.BGM.App',0,2,2,1,NULL,NULL,NULL,'UNUSED',NULL,0,1652845317"
-          sqlQuery="INSERT OR IGNORE INTO access VALUES($values);"
-          sudo sqlite3 "$dbPath" "$sqlQuery"
+          # TODO: Commented out because we would need to generate the csreq (codesign signature)
+          #       value to match the BGMApp bundle the tests will run against.
+          # dbPath="$HOME/Library/Application Support/com.apple.TCC/TCC.db"
+          # values="'kTCCServiceMicrophone','com.bearisdriving.BGM.App',0,2,2,1,X'FADE0C000000004800000001000000070000000800000014545ABE68FAF437700B14984BB24117EDDA1BBF2C0000000800000014386FB63B9CD6BA6E83CEDEAF4EDEE177C1FAEA92',NULL,NULL,'UNUSED',NULL,0,1652845317"
+          # sqlQuery="INSERT OR IGNORE INTO access VALUES($values);"
+          # sqlite3 "$dbPath" "$sqlQuery" || (echo "Failed to modify $dbPath"; exit 1)
+          # # Log the added TCC.db entry.
+          # sqlite3 "$dbPath" "select * from access where client like '%BGM%';"
 
           echo '::group::BGMApp Tests'
           # TODO: Commented out in case it uses too much CPU.
