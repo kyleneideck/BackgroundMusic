@@ -90,7 +90,7 @@ Install using [Homebrew](https://brew.sh/) by running the following command in *
 brew install --cask background-music
 ```
 
-If you want the snapshot version, run:
+If you want the latest snapshot version, run:
 
 ```bash
 brew tap homebrew/cask-versions
@@ -100,7 +100,7 @@ brew install --cask background-music-pre
 # Installing from Source Code
 
 **Background Music** usually takes less than a minute to build. You need [Xcode](https://developer.apple.com/xcode/download/) version 
-8 or higher.
+10 or higher.
 
 ### Option 1
 
@@ -220,7 +220,7 @@ Issues](https://github.com/kyleneideck/BackgroundMusic/issues).
 
 ## License
 
-Copyright © 2016-2021 [Background Music contributors](https://github.com/kyleneideck/BackgroundMusic/graphs/contributors).
+Copyright © 2016-2022 [Background Music contributors](https://github.com/kyleneideck/BackgroundMusic/graphs/contributors).
 Licensed under [GPLv2](https://www.gnu.org/licenses/gpl-2.0.html), or any later version.
 
 **Background Music** includes code from:

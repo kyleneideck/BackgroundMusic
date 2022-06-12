@@ -76,7 +76,7 @@
 
     // Make the "Background Music wants to use the microphone" dialog appear every time so the test
     // doesn't need logic to handle both cases.
-    // TODO: Commented out to check if CI builds can grant access by modifying TCC.db.
+    // TODO: Commented out until acceptMicrophoneAuthorizationDialog work again. See below.
     // if (@available(macOS 10.15.4, *)) {
     //     [app resetAuthorizationStatusForResource:XCUIProtectedResourceMicrophone];
     // }
@@ -84,18 +84,19 @@
     // Launch BGMApp.
     [app launch];
 
-    // TODO: Commented out to check if CI builds can grant access by modifying TCC.db.
+    // TODO: This doesn't seem to be working on macOS 12.4 (21F79). You can click OK manually for
+    //       now.
     // [self acceptMicrophoneAuthorizationDialog];
 
-     if (![icon waitForExistenceWithTimeout:20.0]) {
+    if (![icon waitForExistenceWithTimeout:20.0]) {
         // The status bar icon/button has this type when using older versions of XCTest, so try
         // both. (Actually, it might depend on the macOS or Xcode version. I'm not sure.)
         XCUIElement* iconOldType =
-                [app.menuBars childrenMatchingType:XCUIElementTypeMenuBarItem].element;
-         if ([iconOldType waitForExistenceWithTimeout:20.0]) {
-             NSLog(@"icon = iconOldType");
-             icon = iconOldType;
-         }
+            [app.menuBars childrenMatchingType:XCUIElementTypeMenuBarItem].element;
+        if ([iconOldType waitForExistenceWithTimeout:20.0]) {
+            NSLog(@"icon = iconOldType");
+            icon = iconOldType;
+        }
     }
 
     // Wait for the initial elements.
