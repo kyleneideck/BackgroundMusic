@@ -617,8 +617,7 @@ fi
 # Update the user's sudo timestamp if we're going to need to sudo at some point. This prompts the
 # user for their password.
 if [[ "${XCODEBUILD_ACTION}" == "install" ]]; then
-    # Don't call sudo -v if this is a Travis CI build.
-    if ([[ -z ${TRAVIS:-} ]] || [[ "${TRAVIS}" != true ]]) && ! sudo -v; then
+    if ! sudo -v; then
         echo "$(tput setaf 9)ERROR$(tput sgr0): This script must be run by a user with" \
              "administrator (sudo) privileges." >&2
         exit 1

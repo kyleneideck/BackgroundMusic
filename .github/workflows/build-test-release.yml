@@ -1,17 +1,15 @@
-# Based on the .travis.yml file.
 # TODO: Split this into multiple .yml files? Multiple jobs?
 name: Build, Test and Release
 
 on:
   push:
     branches:
-      - $default-branch
-      - gh-actions
+      - '*'
     tags:
       - '*'
   pull_request:
     branches:
-      - $default-branch
+      - '*'
 
 jobs:
   # Build and test in the same job because the UI tests expect BGMDriver to be installed.
@@ -26,16 +24,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-# TODO: This part is commented out for now so we can check whether we need it for GitHub Actions. If
-#       the VMs do have an audio device, we can probably delete NullAudio.
-#      - name: |
-#          Install Apple's NullAudio device. The CI VMs probably don't have any audio devices installed.
-#        run: >-
-#          sudo xcodebuild -quiet -project
-#          BGMApp/BGMAppTests/NullAudio/AudioDriverExamples.xcodeproj -target
-#          NullAudio DSTROOT="/" install &&
-#          sudo launchctl kickstart -kp system/com.apple.audio.coreaudiod || sudo
-#          killall coreaudiod
       - name: Work in a case-sensitive disk image.
         # This lets us catch failures that only happen on case-sensitive filesystems.
         run: |
@@ -60,11 +48,7 @@ jobs:
           genv --default-signal=PIPE yes | sudo ./build_and_install.sh
       - name: Print the log file.
         if: always()
-        run: |
-          # Put it in a fold because it's so long. TODO: Is this necessary?
-          echo '::group::build_and_install.log'
-          cat build_and_install.log
-          echo '::endgroup::'
+        run: cat build_and_install.log
       - name: Log some checksums.
         run: 'find */build/Release/*/ -type f -exec md5 {} \;'
       - name: Log the installed audio devices and their IDs.
@@ -83,8 +67,8 @@ jobs:
         run: >-
           osascript -e 'tell application "Background Music" to quit'
           || killall "Background Music"
-      - name: Skip the UI tests until GitHub Actions supports them.
-        run: BGMApp/BGMAppTests/UITests/travis-skip.py
+      - name: Skip the UI tests. (They don't work on GitHub Actions yet.)
+        run: BGMApp/BGMAppTests/UITests/skip-ui-tests.py
       - name: Run the tests.
         run: |
           echo '::group::BGMDriver Tests'
@@ -94,13 +78,7 @@ jobs:
             -scheme 'Background Music Device' \
             test
           echo '::endgroup::'
-          echo '::group::BGMApp Tests'
-          xcodebuild \
-            -quiet \
-            -workspace BGM.xcworkspace \
-            -scheme 'Background Music' \
-            test
-          echo '::endgroup::'
+
           echo '::group::BGMXPCHelper Tests'
           xcodebuild \
             -quiet \
@@ -108,6 +86,43 @@ jobs:
             -scheme 'BGMXPCHelper' \
             test
           echo '::endgroup::'
+
+          # Grant BGMApp authorization to use input devices.
+          # This is necessary for the UI tests because accepting the "Background Music would like to
+          # use the microphone" dialog programmatically isn't reliable.
+          # TODO: Commented out because we would need to generate the csreq (codesign signature)
+          #       value to match the BGMApp bundle the tests will run against.
+          # dbPath="$HOME/Library/Application Support/com.apple.TCC/TCC.db"
+          # values="'kTCCServiceMicrophone','com.bearisdriving.BGM.App',0,2,2,1,X'FADE0C000000004800000001000000070000000800000014545ABE68FAF437700B14984BB24117EDDA1BBF2C0000000800000014386FB63B9CD6BA6E83CEDEAF4EDEE177C1FAEA92',NULL,NULL,'UNUSED',NULL,0,1652845317"
+          # sqlQuery="INSERT OR IGNORE INTO access VALUES($values);"
+          # sqlite3 "$dbPath" "$sqlQuery" || (echo "Failed to modify $dbPath"; exit 1)
+          # # Log the added TCC.db entry.
+          # sqlite3 "$dbPath" "select * from access where client like '%BGM%';"
+
+          echo '::group::BGMApp Tests'
+          # TODO: Commented out in case it uses too much CPU.
+          # log stream --info \
+          #   --predicate 'process == "coreaudiod" or
+          #                process == "Background Music" or
+          #                process == "BGMXPCHelper" or
+          #                composedMessage contains[cd] "Background Music" or
+          #                composedMessage contains "BGM"' > app.log &
+          xcodebuild \
+            -quiet \
+            -workspace BGM.xcworkspace \
+            -scheme 'Background Music' \
+            test
+          echo '::endgroup::'
+      - name: Upload the test results.
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: bgm-test-results
+          path: |
+            /Users/runner/Library/Developer/Xcode/DerivedData/*/Logs/Test/*.xcresult
+            app.log
+            /Users/runner/Library/Logs/CrashReporter/*
+            /Users/runner/Library/Logs/DiagnosticReports/*
       - name: Uninstall Background Music.
         run: |
           # `tput` expects this to be set.
@@ -135,30 +150,23 @@ jobs:
           # If this build is for a tag with "DEBUG" in its name, build a debug package. (More
           # detailed logging, no optimization, etc.)
           if [[ "$GITHUB_REF" =~ .*DEBUG.* ]]; then
-            if ! sudo ./package.sh -d; then
-              # Print the build logs if it fails.
-              # TODO: We upload this file in a later step, so this might not be necessary.
-              cat build_and_install.log
-              exit 1
-            fi
+            sudo ./package.sh -d
           else
-            if ! sudo ./package.sh; then
-              cat build_and_install.log
-              exit 1
-            fi
+            sudo ./package.sh
           fi
       - name: Install the .pkg.
         # Delete archives/ first because it contains a copy of Background Music.app.
         # Background Music.app is "relocatable", which means that if the user moves it and then
         # installs a new version, macOS will put the new version in the same place. This makes sure
-        # the installer puts Background Music.app in /Applications (and the build won't fail when we
-        # check that later).
+        # the installer puts Background Music.app in /Applications so the build won't fail when we
+        # check that later.
         #
-        # package.sh puts the archives in a zipfile next to the .pkg, so we can still upload them.
+        # package.sh puts the archives in a zipfile next to the .pkg, so we can still upload them
+        # after deleting the directory here.
         #
         # TODO: On TravisCI, this was failing for debug builds. We couldn't figure out why, so we
-        #       might have to ignore that:
-        # || [[ "$GITHUB_REF" =~ .*DEBUG.* ]]
+        #       might have to ignore that with
+        #       || [[ "$GITHUB_REF" =~ .*DEBUG.* ]]
         run: |
           sudo rm -rf archives
           sudo installer \
@@ -170,7 +178,7 @@ jobs:
         if: always()
         # This trims the start of the log to save space.
         run: grep -E -A 9999 -B 20 'Background.?Music' /var/log/install.log
-      - name: Check the BGM dirs and files were installed again.
+      - name: Check the BGM dirs and files were installed.
         if: always()
         run: |
           ls -la "/Applications/Background Music.app"

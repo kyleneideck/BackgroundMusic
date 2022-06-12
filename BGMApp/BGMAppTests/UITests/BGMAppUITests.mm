@@ -17,7 +17,7 @@
 //  BGMAppUITests.mm
 //  BGMAppUITests
 //
-//  Copyright © 2017, 2018, 2020 Kyle Neideck
+//  Copyright © 2017, 2018, 2020, 2022 Kyle Neideck
 //
 //  You might want to use Xcode's UI test recording feature if you add new tests.
 //
@@ -34,7 +34,6 @@
 #import <XCTest/XCTest.h>
 
 
-// TODO: Skip these tests if macOS SDK 10.11 or higher isn't available.
 // TODO: Mock BGMDevice and music players.
 
 #if __clang_major__ >= 9
@@ -75,22 +74,54 @@
     // would fail to start because of a bug in Xcode.
     app.launchArguments = @[ @"--no-persistent-data", @"--show-dock-icon" ];
 
+    // Make the "Background Music wants to use the microphone" dialog appear every time so the test
+    // doesn't need logic to handle both cases.
+    // TODO: Commented out to check if CI builds can grant access by modifying TCC.db.
+    // if (@available(macOS 10.15.4, *)) {
+    //     [app resetAuthorizationStatusForResource:XCUIProtectedResourceMicrophone];
+    // }
+
     // Launch BGMApp.
     [app launch];
 
-     if (![icon waitForExistenceWithTimeout:1.0]) {
+    // TODO: Commented out to check if CI builds can grant access by modifying TCC.db.
+    // [self acceptMicrophoneAuthorizationDialog];
+
+     if (![icon waitForExistenceWithTimeout:20.0]) {
         // The status bar icon/button has this type when using older versions of XCTest, so try
         // both. (Actually, it might depend on the macOS or Xcode version. I'm not sure.)
         XCUIElement* iconOldType =
                 [app.menuBars childrenMatchingType:XCUIElementTypeMenuBarItem].element;
-         if (![iconOldType waitForExistenceWithTimeout:5.0]) {
+         if ([iconOldType waitForExistenceWithTimeout:20.0]) {
+             NSLog(@"icon = iconOldType");
              icon = iconOldType;
          }
     }
 
     // Wait for the initial elements.
-    XCTAssert([app waitForExistenceWithTimeout:10.0]);
-    XCTAssert([icon waitForExistenceWithTimeout:10.0]);
+    XCTAssert([app waitForExistenceWithTimeout:20.0]);
+    XCTAssert([icon waitForExistenceWithTimeout:20.0]);
+}
+
+// Clicks the OK button in the "Background Music wants to use the microphone" dialog.
+- (void) acceptMicrophoneAuthorizationDialog {
+    XCUIApplication* unc =
+        [[XCUIApplication alloc] initWithBundleIdentifier:@"com.apple.UserNotificationCenter"];
+    NSLog(@"UserNotificationCenter: %@", unc);
+    XCUIElement* okButton = unc.dialogs.buttons[@"OK"];
+
+    XCTAssert([okButton waitForExistenceWithTimeout:20.0]);
+
+    // This click is failing on GH Actions. No idea why, so try a sleep.
+    (void)[XCTWaiter waitForExpectations:@[[XCTestExpectation new]] timeout:5.0];
+    [okButton click];
+
+    int retries = 10;
+    while (retries > 0 && [okButton waitForExistenceWithTimeout:3.0]) {
+        NSLog(@"Microphone authorization dialog is still open. Trying to click OK again.");
+        [okButton click];
+        retries--;
+    }
 }
 
 - (void) tearDown {
@@ -102,9 +133,7 @@
     [menuItems[@"Quit Background Music"] click];
 
     // BGMApp should quit.
-    for (NSRunningApplication* runningApp : [[NSWorkspace sharedWorkspace] runningApplications]) {
-        XCTAssertFalse([[runningApp bundleIdentifier] isEqualToString:@kBGMAppBundleID]);
-    }
+    XCTAssertTrue([app waitForState:XCUIApplicationStateNotRunning timeout:10.0]);
     
     [super tearDown];
 }

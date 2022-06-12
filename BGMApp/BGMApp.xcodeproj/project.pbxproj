@@ -72,7 +72,7 @@
 		1C62FE5223D3EB2E00B9B68E /* Mock_CAHALAudioDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C62FE4A23D3EB2E00B9B68E /* Mock_CAHALAudioDevice.cpp */; };
 		1C62FE5323D3EB2E00B9B68E /* MockAudioDevice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C62FE4B23D3EB2E00B9B68E /* MockAudioDevice.cpp */; };
 		1C62FE5523D423D700B9B68E /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1C62FE5423D423D700B9B68E /* XCTest.framework */; };
-		1C62FE5823D4278300B9B68E /* travis-skip.py in Resources */ = {isa = PBXBuildFile; fileRef = 1C62FE5623D4278300B9B68E /* travis-skip.py */; };
+		1C62FE5823D4278300B9B68E /* skip-ui-tests.py in Resources */ = {isa = PBXBuildFile; fileRef = 1C62FE5623D4278300B9B68E /* skip-ui-tests.py */; };
 		1C687A6B23B889E000834B75 /* BGMPlayThroughRTLoggerTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C687A6A23B889E000834B75 /* BGMPlayThroughRTLoggerTests.mm */; };
 		1C780FF21FEF6C3B00497FAD /* BGMSystemSoundsVolume.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C780FF11FEF6C3B00497FAD /* BGMSystemSoundsVolume.mm */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMSystemSoundsVolume.mm"; }; };
 		1C780FF31FEF6C3B00497FAD /* BGMSystemSoundsVolume.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C780FF11FEF6C3B00497FAD /* BGMSystemSoundsVolume.mm */; };
@@ -327,7 +327,7 @@
 		1C62FE4C23D3EB2E00B9B68E /* MockAudioObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MockAudioObject.h; path = BGMAppTests/UnitTests/Mocks/MockAudioObject.h; sourceTree = SOURCE_ROOT; };
 		1C62FE4D23D3EB2E00B9B68E /* MockAudioObjects.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MockAudioObjects.h; path = BGMAppTests/UnitTests/Mocks/MockAudioObjects.h; sourceTree = SOURCE_ROOT; };
 		1C62FE5423D423D700B9B68E /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Platforms/MacOSX.platform/Developer/Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
-		1C62FE5623D4278300B9B68E /* travis-skip.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = "travis-skip.py"; path = "UITests/travis-skip.py"; sourceTree = "<group>"; };
+		1C62FE5623D4278300B9B68E /* skip-ui-tests.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = "skip-ui-tests.py"; path = "UITests/skip-ui-tests.py"; sourceTree = "<group>"; };
 		1C62FE5923D44FC000B9B68E /* BGMApp-Debug.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.entitlements; path = "BGMApp-Debug.entitlements"; sourceTree = "<group>"; };
 		1C687A6A23B889E000834B75 /* BGMPlayThroughRTLoggerTests.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = BGMPlayThroughRTLoggerTests.mm; path = UnitTests/BGMPlayThroughRTLoggerTests.mm; sourceTree = "<group>"; };
 		1C780FF01FEF6C3B00497FAD /* BGMSystemSoundsVolume.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BGMSystemSoundsVolume.h; sourceTree = "<group>"; };
@@ -770,7 +770,7 @@
 			children = (
 				1CCC4F5F1E5840EF008053E4 /* BGMAppUITests-Info.plist */,
 				1CCC4F491E581C0D008053E4 /* BGMAppUnitTests-Info.plist */,
-				1C62FE5623D4278300B9B68E /* travis-skip.py */,
+				1C62FE5623D4278300B9B68E /* skip-ui-tests.py */,
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";
@@ -1030,7 +1030,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1C62FE5823D4278300B9B68E /* travis-skip.py in Resources */,
+				1C62FE5823D4278300B9B68E /* skip-ui-tests.py in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -17,7 +17,7 @@
 //  BGMAppDelegate.mm
 //  BGMApp
 //
-//  Copyright © 2016-2020 Kyle Neideck
+//  Copyright © 2016-2022 Kyle Neideck
 //  Copyright © 2021 Marcus Wu
 //
 
@@ -118,6 +118,48 @@ static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
     preferredOutputDevices =
         [[BGMPreferredOutputDevices alloc] initWithDevices:audioDevices userDefaults:userDefaults];
 
+    // Skip this if we're compiling on a version of macOS before 10.14 as won't compile and it
+    // isn't needed.
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400  // MAC_OS_X_VERSION_10_14
+    if (@available(macOS 10.14, *)) {
+        // On macOS 10.14+ we need to get the user's permission to use input devices before we can
+        // use BGMDevice for playthrough (see BGMPlayThrough), so we wait until they've given it
+        // before making BGMDevice the default device. This way, if the user is playing audio when
+        // they open Background Music, we won't interrupt it while we're waiting for them to click
+        // OK.
+        [AVCaptureDevice requestAccessForMediaType:AVMediaTypeAudio
+                                 completionHandler:^(BOOL granted) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (granted) {
+                    DebugMsg("BGMAppDelegate::applicationDidFinishLaunching: Permission granted");
+                    [self continueLaunchAfterInputDevicePermissionGranted];
+                } else {
+                    NSLog(@"BGMAppDelegate::applicationDidFinishLaunching: Permission denied");
+                    // If they don't accept, Background Music won't work at all and the only way to
+                    // fix it is in System Preferences, so show an error dialog with instructions.
+                    //
+                    // TODO: It would be nice if this dialog had a shortcut to open the System
+                    //       Preferences panel. See showSetDeviceAsDefaultError.
+                    [self showErrorMessage:@"Background Music needs permission to use microphones."
+                           informativeText:@"It uses a virtual microphone to access your system's "
+                                            "audio.\n\nYou can grant the permission by going to "
+                                            "System Preferences > Security and Privacy > "
+                                            "Microphone and checking the box for Background Music."
+                 exitAfterMessageDismissed:YES];
+                }
+            });
+        }];
+    }
+    else
+#endif
+    {
+        // We can change the device immediately on older versions of macOS because they don't
+        // require user permission for input devices.
+        [self continueLaunchAfterInputDevicePermissionGranted];
+    }
+}
+
+- (void) continueLaunchAfterInputDevicePermissionGranted {
     // Choose an output device for BGMApp to use to play audio.
     if (![self setInitialOutputDevice]) {
         return;
@@ -135,16 +177,16 @@ static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
 
     autoPauseMusic = [[BGMAutoPauseMusic alloc] initWithAudioDevices:audioDevices
                                                         musicPlayers:musicPlayers];
-    
+
     [self setUpMainMenu];
-    
+
     xpcListener = [[BGMXPCListener alloc] initWithAudioDevices:audioDevices
                                   helperConnectionErrorHandler:^(NSError* error) {
-                                      NSLog(@"BGMAppDelegate::applicationDidFinishLaunching: (helperConnectionErrorHandler) "
-                                             "BGMXPCHelper connection error: %@",
-                                            error);
-                                      [self showXPCHelperErrorMessage:error];
-                                  }];
+        NSLog(@"BGMAppDelegate::continueLaunchAfterInputDevicePermissionGranted: "
+              "(helperConnectionErrorHandler) BGMXPCHelper connection error: %@",
+              error);
+        [self showXPCHelperErrorMessage:error];
+    }];
 }
 
 // Returns NO if (and only if) BGMApp is about to terminate because of a fatal error.
@@ -182,51 +224,13 @@ static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
 
 // Sets the "Background Music" virtual audio device (BGMDevice) as the user's default audio device.
 - (void) setBGMDeviceAsDefault {
-    void (^setDefaultDevice)() = ^{
-        NSError* error = [audioDevices setBGMDeviceAsOSDefault];
+    NSError* error = [audioDevices setBGMDeviceAsOSDefault];
 
-        if (error) {
-            [self showSetDeviceAsDefaultError:error
-                                      message:@"Could not set the Background Music device as your"
-                                               "default audio device."
-                              informativeText:@"You might be able to change it yourself."];
-        }
-    };
-
-    // Skip this if we're compiling on a version of macOS before 10.14 as won't compile and it
-    // isn't needed.
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400  // MAC_OS_X_VERSION_10_14
-    if (@available(macOS 10.14, *)) {
-        // On macOS 10.14+ we need to get the user's permission to use input devices before we can
-        // use BGMDevice for playthrough (see BGMPlayThrough), so we wait until they've given it
-        // before making BGMDevice the default device. This way, if the user is playing audio when
-        // they open Background Music, we won't interrupt it while we're waiting for them to click
-        // OK.
-        //
-        // TODO: This isn't a perfect solution because, if the user takes too long to accept,
-        //       BGMPlayThrough will try to use BGMDevice again and log some errors.
-        [AVCaptureDevice requestAccessForMediaType:AVMediaTypeAudio
-                                 completionHandler:^(BOOL granted) {
-                                     if (granted) {
-                                         DebugMsg("BGMAppDelegate::setBGMDeviceAsDefault: "
-                                                  "Permission granted");
-                                         setDefaultDevice();
-                                     } else {
-                                         NSLog(@"BGMAppDelegate::setBGMDeviceAsDefault: "
-                                               "Permission denied");
-                                         // TODO: If they don't accept, Background Music won't work
-                                         //       at all and the only way to fix it is in System
-                                         //       Preferences, so we should show an error dialog
-                                         //       with instructions.
-                                     }
-                                 }];
-    }
-    else
-#endif
-    {
-        // We can change the device immediately on older versions of macOS because they don't
-        // require user permission for input devices.
-        setDefaultDevice();
+    if (error) {
+        [self showSetDeviceAsDefaultError:error
+                                  message:@"Could not set the Background Music device as your"
+                                           "default audio device."
+                          informativeText:@"You might be able to change it yourself."];
     }
 }
 

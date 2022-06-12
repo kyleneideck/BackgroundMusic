@@ -211,36 +211,53 @@ NSString* const __nonnull      kGenericOutputDeviceName = @"Output Device";
 // datasource, the device's name is set as this menu item's tooltip. Falls back to a generic name if
 // the device returns an error when queried.
 - (void) updateLabelAndToolTip {
-    BOOL didSetLabel = NO;
-
-    try {
-        if (outputDevice.HasDataSourceControl(kScope, kMasterChannel)) {
-            // The device has datasources, so use the current datasource's name like macOS does.
-            UInt32 dataSourceID = outputDevice.GetCurrentDataSourceID(kScope, kMasterChannel);
-
-            deviceLabel.stringValue =
-                (__bridge_transfer NSString*)outputDevice.CopyDataSourceNameForID(kScope,
-                                                                                  kMasterChannel,
-                                                                                  dataSourceID);
-            didSetLabel = YES;  // So we know not to change the text if setting the tooltip fails.
-
-            // Set the tooltip of the menu item (the container) rather than the label because menu
-            // items' tooltips will still appear when a different app is focused and, as far as I
-            // know, BGMApp should never be the foreground app.
-            self.toolTip = (__bridge_transfer NSString*)outputDevice.CopyName();
-        } else {
-            deviceLabel.stringValue = (__bridge_transfer NSString*)outputDevice.CopyName();
-            self.toolTip = nil;
-        }
-    } catch (const CAException& e) {
-        BGMLogException(e);
-
-        // The device returned an error, so set the label to a generic device name, since we don't
-        // want to leave it set to the previous device's name.
+    if (outputDevice.GetObjectID() == kAudioObjectUnknown) {
+        DebugMsg("BGMOutputVolumeMenuItem::updateLabelAndToolTip: Output device unknown. Using the "
+                 "generic label.");
         self.toolTip = nil;
+        deviceLabel.stringValue = kGenericOutputDeviceName;
+    } else {
+        BOOL didSetLabel = NO;
 
-        if (!didSetLabel) {
-            deviceLabel.stringValue = kGenericOutputDeviceName;
+        DebugMsg("BGMOutputVolumeMenuItem::updateLabelAndToolTip: Output device: %u",
+                 outputDevice.GetObjectID());
+
+        try {
+            if (outputDevice.HasDataSourceControl(kScope, kMasterChannel)) {
+                DebugMsg("BGMOutputVolumeMenuItem::updateLabelAndToolTip: Getting data source ID");
+                // The device has datasources, so use the current datasource's name like macOS does.
+                UInt32 dataSourceID = outputDevice.GetCurrentDataSourceID(kScope, kMasterChannel);
+
+                DebugMsg("BGMOutputVolumeMenuItem::updateLabelAndToolTip: "
+                         "Getting name for data source %u",
+                         dataSourceID);
+                deviceLabel.stringValue =
+                    (__bridge_transfer NSString*)outputDevice.CopyDataSourceNameForID(
+                        kScope, kMasterChannel, dataSourceID);
+
+                // So we know not to change the text if setting the tooltip fails.
+                didSetLabel = YES;
+
+                DebugMsg("BGMOutputVolumeMenuItem::updateLabelAndToolTip: Getting device name");
+                // Set the tooltip of the menu item (the container) rather than the label because
+                // menu items' tooltips will still appear when a different app is focused and, as
+                // far as I know, BGMApp should never be the foreground app.
+                self.toolTip = (__bridge_transfer NSString*)outputDevice.CopyName();
+            } else {
+                DebugMsg("BGMOutputVolumeMenuItem::updateLabelAndToolTip: Getting device name");
+                deviceLabel.stringValue = (__bridge_transfer NSString*)outputDevice.CopyName();
+                self.toolTip = nil;
+            }
+        } catch (const CAException& e) {
+            BGMLogException(e);
+
+            // The device returned an error, so set the label to a generic device name, since we
+            // don't want to leave it set to the previous device's name.
+            self.toolTip = nil;
+
+            if (!didSetLabel) {
+                deviceLabel.stringValue = kGenericOutputDeviceName;
+            }
         }
     }
 
