@@ -22,7 +22,7 @@ assignees: ''
 
 **Versions**
 > Please complete the following information.
- - Background Music: [e.g. "0.3.2" or "0.4.0-SNAPSHOT-c0ab98b". `Preferences > About Background Music`]
+ - Background Music: [e.g. "0.4.0" or "0.4.0-SNAPSHOT-c0ab98b". `Preferences > About Background Music`]
  - macOS: [e.g. "11.3 Beta (20E5172i)" or "Big Sur". ` > About This Mac`]
 
 **Hardware**
