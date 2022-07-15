@@ -10,13 +10,14 @@
 [Overview](#overview)<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[Auto-pause music](#auto-pause-music)<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[Application volume](#application-volume)<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[Recording system audio](#recording-system-audio)<br/> 
-[Download](#download)<br/> 
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[Recording system audio](#recording-system-audio)<br/>
+[Download](#download)<br/>
+[Run / Configure](#run--configure)<br/>
 [Build and Install](#installing-from-source-code)</br>
 [Uninstall](#uninstall)<br/>
-[Troubleshooting](#troubleshooting)<br/> 
-[Related Projects](#related-projects)<br/> 
-[License](#license)<br/>  
+[Troubleshooting](#troubleshooting)<br/>
+[Related Projects](#related-projects)<br/>
+[License](#license)<br/>
 
 # Overview
 
@@ -40,11 +41,11 @@ The auto-pause feature currently supports following music players:
 + [Decibel](https://sbooth.org/Decibel/)
 + [Hermes](http://hermesapp.org/)
 + [Swinsian](https://swinsian.com/)
-+ [GPMDP](https://www.googleplaymusicdesktopplayer.com/) 
++ [GPMDP](https://www.googleplaymusicdesktopplayer.com/)
 
 Adding support for a new music player is usually straightforward.<sup id="a1">[1](#f1)</sup> If you don't know how to program, or just don't feel
 like it, feel free to [create an issue](https://github.com/kyleneideck/BackgroundMusic/issues/new). Otherwise, see
-[BGMMusicPlayer.h](BGMApp/BGMApp/Music%20Players/BGMMusicPlayer.h). 
+[BGMMusicPlayer.h](BGMApp/BGMApp/Music%20Players/BGMMusicPlayer.h).
 
 ## Application volume
 
@@ -67,9 +68,9 @@ You can download the current version of **Background Music** using the following
 
 ### Option 1
 
-Download **version 0.4.0**: 
+Download **version 0.4.0**:
 
-<a href="https://github.com/kyleneideck/BackgroundMusic/releases/download/v0.4.0/BackgroundMusic-0.4.0.pkg"><img 
+<a href="https://github.com/kyleneideck/BackgroundMusic/releases/download/v0.4.0/BackgroundMusic-0.4.0.pkg"><img
 src="Images/README/pkg-icon.png" width="32" height="32" align="absmiddle" />
 BackgroundMusic-0.4.0.pkg</a> (895 KB)
 
@@ -94,9 +95,18 @@ brew tap homebrew/cask-versions
 brew install --cask background-music-pre
 ```
 
+# Run / Configure
+
+Just run `Applications > Background Music.app`! **Background Music** sets itself as your default output device under
+`System Preferences > Sound` when it starts up (and sets it back on Quit).
+
+### Launch at Startup (Optional)
+
+Add **Background Music** to `System Preferences > Users & Groups > Current User > Login Items`.
+
 # Installing from Source Code
 
-**Background Music** usually takes less than a minute to build. You need [Xcode](https://developer.apple.com/xcode/download/) version 
+**Background Music** usually takes less than a minute to build. You need [Xcode](https://developer.apple.com/xcode/download/) version
 10 or higher.
 
 ### Option 1
@@ -166,15 +176,15 @@ meeting volume.
 
 - **Only 2-channel (stereo) audio devices are currently supported for output.**
 
-- **VLC pauses iTunes or Spotify when playing, and stops Background Music from unpausing your music afterward.** 
+- **VLC pauses iTunes or Spotify when playing, and stops Background Music from unpausing your music afterward.**
 
-    - Under VLC's preferences, select **Show All**. Navigate to **Interface > Main interfaces > macosx** and change *Control external music players* to either *Do nothing* or *Pause and resume iTunes/Spotify*. 
+    - Under VLC's preferences, select **Show All**. Navigate to **Interface > Main interfaces > macosx** and change *Control external music players* to either *Do nothing* or *Pause and resume iTunes/Spotify*.
 
-- **Skype pauses iTunes during calls.** 
+- **Skype pauses iTunes during calls.**
 
     - To disable this, uncheck *Pause iTunes during calls* on the **General** tab of **Skype**'s preferences.
 
-- **Plugging in or unplugging headphones when Background Music isn't running causes silence in the system audio.** 
+- **Plugging in or unplugging headphones when Background Music isn't running causes silence in the system audio.**
     - Navigate to **System Preferences > Sound**. Click the **Output** tab and change your default output device to something other than the **Background Music** device. Alternatively, press **Option + Click** on the sound icon within the menu bar to select a different output device. This happens when macOS remembers that the **Background Music** device was your default audio device the last time you used (or didn't use) headphones.
 
 - **[A Chrome bug](https://bugs.chromium.org/p/chromium/issues/detail?id=557620) stops Chrome from switching to the Background Music device after you open Background Music.**
