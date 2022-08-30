@@ -26,6 +26,7 @@
 
 // Local Includes
 #import "BGM_Utils.h"
+#import "BGMAppVolumes.h"
 #import "BGMAppVolumesController.h"
 #import "BGMAutoPauseMusic.h"
 #import "BGMAutoPauseMenuItem.h"
@@ -231,6 +232,66 @@ static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
                                   message:@"Could not set the Background Music device as your"
                                            "default audio device."
                           informativeText:@"You might be able to change it yourself."];
+    }
+}
+
+- (void) menuWillOpen:(NSMenu*)menu {
+    if (@available(macOS 10.16, *)) {
+        // Set menu offset and check for any active menu items
+        float menuOffset = 12.0;
+        for (NSMenuItem* menuItem in self.bgmMenu.itemArray) {
+            if (menuItem.state == NSControlStateValueOn && menuItem.indentationLevel == 0) {
+                menuOffset += 10;
+                break;
+            }
+        }
+        
+        // Align volume output device and slider
+        for (NSView* subview in self.outputVolumeView.subviews) {
+            CGRect newSubview = subview.frame;
+            newSubview.origin.x = menuOffset;
+            subview.frame = newSubview;
+        }
+
+        // Align system sounds and app volumes
+        double appIconTitleOffset = 0;
+        for (NSMenuItem* menuItem in self.bgmMenu.itemArray) {
+            if (menuItem.view.subviews.count == 7 || menuItem.view.subviews.count == 3) {
+                NSTextField* appTitle;
+                NSImageView* appIcon;
+                
+                for (NSView* subview in menuItem.view.subviews) {
+                    if (menuItem.view.subviews.count == 3) {
+                        // System sounds
+                        if ([subview isKindOfClass:[NSTextField class]]) {
+                            appTitle = (NSTextField*)subview;
+                        }
+                        if ([subview isKindOfClass:[NSImageView class]]) {
+                            appIcon = (NSImageView*)subview;
+                        }
+                    } else if (menuItem.view.subviews.count == 7) {
+                        // App volumes
+                        if ([subview isKindOfClass:[BGMAVM_AppNameLabel class]]) {
+                            appTitle = (NSTextField*)subview;
+                        }
+                        if ([subview isKindOfClass:[BGMAVM_AppIcon class]]) {
+                            appIcon = (NSImageView*)subview;
+                        }
+                    }
+                }
+ 
+                if (appIconTitleOffset == 0) {
+                    appIconTitleOffset = appTitle.frame.origin.x - appIcon.frame.origin.x;
+                }
+                
+                CGRect newAppIcon = appIcon.frame;
+                newAppIcon.origin.x = menuOffset;
+                appIcon.frame = newAppIcon;
+                CGRect newAppTitle = appTitle.frame;
+                newAppTitle.origin.x = menuOffset + appIconTitleOffset;
+                appTitle.frame = newAppTitle;
+            }
+        }
     }
 }
 
