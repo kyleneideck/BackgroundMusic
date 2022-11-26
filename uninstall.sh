@@ -63,7 +63,7 @@ if [ "$user_prompt" == "y" ] || [ "$user_prompt" == "Y" ]; then
   # Invalidate sudo ticket
   sudo -k
 
-  # Open System Preferences and go to Sound > Output.
+  # Open System Settings and go to Sound > Output.
   osascript -e 'tell application id "com.apple.systempreferences"
                   activate
                   reveal anchor "output" of pane id "com.apple.preference.sound"

@@ -153,7 +153,7 @@ sleep 3
 
 # TODO: What if they only have one audio device?
 echo ""
-echo "${bold}Done! Toggle your audio output device in the Sound section of System Preferences to finish" \
+echo "${bold}Done! Toggle your audio output device in the Sound section of System Settings to finish" \
      "uninstalling. (Or just restart your computer.)${normal}"
 
 

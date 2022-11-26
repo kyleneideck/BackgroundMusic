@@ -16,7 +16,7 @@
   ```shell
   sudo killall coreaudiod
   ```
-- Go to the Sound section in System Preferences and change your default output device at least once. (If you only have
+- Go to the Sound section in System Settings and change your default output device at least once. (If you only have
   one device now, either use `Audio MIDI Setup.app` to create a temporary aggregate device, restart any audio apps that
   have stopped working or just restart your system.)
   

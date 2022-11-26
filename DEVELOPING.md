@@ -13,7 +13,7 @@ the virtual device to the real output device and a few other things. The virtual
 ## Summary
 
 From the user's perspective, BGMDevice appears as one input device and one output device, both named "Background Music".
-They're shown in `System Preferences > Sound` along with the real audio devices.
+They're shown in `System Settings > Sound` along with the real audio devices.
 
 When you start BGMApp, it sets BGMDevice as your system's default output device so the system (i.e. Core Audio) will
 start sending all<sup id="a2">[2](#f2)</sup> your audio data to BGMDriver. BGMDriver plays that audio on BGMDevice's
