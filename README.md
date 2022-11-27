@@ -98,11 +98,11 @@ brew install --cask background-music-pre
 # Run / Configure
 
 Just run `Applications > Background Music.app`! **Background Music** sets itself as your default output device under
-`System Preferences > Sound` when it starts up (and sets it back on Quit).
+`System Settings > Sound` when it starts up (and sets it back on Quit).
 
 ### Launch at Startup (Optional)
 
-Add **Background Music** to `System Preferences > Users & Groups > Current User > Login Items`.
+Add **Background Music** to `System Settings > Users & Groups > Current User > Login Items`.
 
 # Installing from Source Code
 
@@ -154,12 +154,12 @@ To manually uninstall, see [MANUAL_UNINSTALL.md](https://github.com/kyleneideck/
 
 # Troubleshooting
 
-If Background Music crashes and your audio stops working, open `System Preferences > Sound` and change your
+If Background Music crashes and your audio stops working, open `System Settings > Sound` and change your
 system's default output device to something other than the **Background Music device**. If it already is, then
 change the default device and then change it back again.
 
 Make sure you allow "microphone access" when you first run Background Music. If you denied it, go to
-`System Preferences > Security & Privacy > Privacy > Microphone`, find Background Music in the list
+`System Settings > Security & Privacy > Privacy > Microphone`, find Background Music in the list
 and check the box next to it. Background Music doesn't actually listen to your microphone. It needs
 the permission because it gets your system audio from its virtual input device, which macOS counts
 as a microphone. (We're working on it in [#177](/../../issues/177).)
@@ -185,7 +185,7 @@ meeting volume.
     - To disable this, uncheck *Pause iTunes during calls* on the **General** tab of **Skype**'s preferences.
 
 - **Plugging in or unplugging headphones when Background Music isn't running causes silence in the system audio.**
-    - Navigate to **System Preferences > Sound**. Click the **Output** tab and change your default output device to something other than the **Background Music** device. Alternatively, press **Option + Click** on the sound icon within the menu bar to select a different output device. This happens when macOS remembers that the **Background Music** device was your default audio device the last time you used (or didn't use) headphones.
+    - Navigate to **System Settings > Sound**. Click the **Output** tab and change your default output device to something other than the **Background Music** device. Alternatively, press **Option + Click** on the sound icon within the menu bar to select a different output device. This happens when macOS remembers that the **Background Music** device was your default audio device the last time you used (or didn't use) headphones.
 
 - **[A Chrome bug](https://bugs.chromium.org/p/chromium/issues/detail?id=557620) stops Chrome from switching to the Background Music device after you open Background Music.**
     - Chrome's audio will still play, but **Background Music** won't be aware of it.

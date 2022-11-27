@@ -136,7 +136,7 @@ BUILD_FAILED_ERROR_MSG="A build command failed. Probably a compilation error."
 BGMAPP_FAILED_TO_START_ERROR_MSG="Background Music (${APP_PATH}/${APP_DIR}) didn't seem to start \
 up. It might just be taking a while.
 
-If it didn't install correctly, you'll need to open the Sound control panel in System Preferences \
+If it didn't install correctly, you'll need to open the Sound control panel in System Settings \
 and change your output device at least once. Your sound probably won't work until you do. (Or you \
 restart your computer.)
 
