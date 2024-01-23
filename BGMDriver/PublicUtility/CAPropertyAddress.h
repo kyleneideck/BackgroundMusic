@@ -101,6 +101,8 @@ public:
 
 //  STL Helpers
 public:
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated"
 	struct EqualTo : public std::binary_function<AudioObjectPropertyAddress, AudioObjectPropertyAddress, bool>
 	{
 		bool	operator()(const AudioObjectPropertyAddress& inAddress1, const AudioObjectPropertyAddress& inAddress2) const								{ return IsSameAddress(inAddress1, inAddress2); }
@@ -120,6 +122,7 @@ public:
 	{
 		bool	operator()(const AudioObjectPropertyAddress& inAddress1, const AudioObjectPropertyAddress& inAddress2) const								{ return IsCongruentLessThanAddress(inAddress1, inAddress2); }
 	};
+#pragma clang diagnostic pop
 
 };
 

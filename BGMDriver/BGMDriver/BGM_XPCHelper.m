@@ -17,7 +17,7 @@
 //  BGM_XPCHelper.m
 //  BGMDriver
 //
-//  Copyright © 2016, 2017, 2020 Kyle Neideck
+//  Copyright © 2016, 2017, 2020, 2024 Kyle Neideck
 //  Copyright © 2020 Aleksey Yurkevich
 //
 
@@ -38,7 +38,7 @@
 
 static const UInt64 REMOTE_CALL_DEFAULT_TIMEOUT_SECS = 30;
 
-static NSXPCConnection* CreateXPCHelperConnection()
+static NSXPCConnection* CreateXPCHelperConnection(void)
 {
     // Create a connection to BGMXPCHelper's Mach service. If it isn't already running, launchd will start BGMXPCHelper when we send
     // a message to this connection.

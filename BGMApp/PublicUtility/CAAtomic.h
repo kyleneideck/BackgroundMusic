@@ -66,6 +66,8 @@ full barrier.
 	#include <libkern/OSAtomic.h>
 #endif
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated"
 inline void CAMemoryBarrier() 
 {
 #if TARGET_OS_WIN32
@@ -196,6 +198,8 @@ inline bool CAAtomicTestAndSetBarrier(int bitToSet, void* theAddress)
 #endif
 }
 
+#pragma clang diagnostic pop
+
 // int32_t flavors -- for C++ only since we can't overload in C
 // CFBase.h defines SInt32 as signed int which is similar to int32_t. If CFBase.h is included, then
 // this will generate redefinition error. But on Mac, CFBase.h, still includes MacTypes.h where
@@ -243,6 +247,9 @@ inline int32_t CAAtomicDecrement32Barrier(volatile int32_t* theValue)
 }
 #endif // __cplusplus && !__LP64__
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated"
+
 #if __LP64__
 inline bool CAAtomicCompareAndSwap64Barrier( int64_t __oldValue, int64_t __newValue, volatile int64_t *__theValue )
 {
@@ -259,6 +266,8 @@ inline bool CAAtomicCompareAndSwapPtrBarrier(void *__oldValue, void *__newValue,
 #endif
 }
 
+#pragma clang diagnostic pop
+
 /* Spinlocks.  These use memory barriers as required to synchronize access to shared
  * memory protected by the lock.  The lock operation spins, but employs various strategies
  * to back off if the lock is held, making it immune to most priority-inversion livelocks.
@@ -272,6 +281,9 @@ typedef int32_t CASpinLock;
 bool    CASpinLockTry( volatile CASpinLock *__lock );
 void    CASpinLockLock( volatile CASpinLock *__lock );
 void    CASpinLockUnlock( volatile CASpinLock *__lock );
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated"
 
 inline void    CASpinLockLock( volatile CASpinLock *__lock )
 {
@@ -301,5 +313,6 @@ inline bool    CASpinLockTry( volatile CASpinLock *__lock )
 #endif
 }
 
+#pragma clang diagnostic pop
 
 #endif // __CAAtomic_h__

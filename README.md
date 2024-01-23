@@ -62,7 +62,7 @@ the **Background Music** device. You can create the aggregate device using the *
 
 # Download
 
-**Requires macOS 10.10+**.
+**Requires macOS 10.13+**.
 
 You can download the current version of **Background Music** using the following options. We also have [snapshot builds](https://github.com/kyleneideck/BackgroundMusic/releases).
 

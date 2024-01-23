@@ -17,7 +17,7 @@
 //  BGMDebugLogging.c
 //  PublicUtility
 //
-//  Copyright © 2020 Kyle Neideck
+//  Copyright © 2020, 2024 Kyle Neideck
 //
 
 // Self Include
@@ -36,7 +36,7 @@
 
 // We don't bother synchronising accesses of gDebugLoggingIsEnabled because it isn't really
 // necessary and would complicate code that accesses it on realtime threads.
-int BGMDebugLoggingIsEnabled()
+int BGMDebugLoggingIsEnabled(void)
 {
     return gDebugLoggingIsEnabled;
 }
