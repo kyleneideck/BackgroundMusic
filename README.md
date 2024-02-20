@@ -102,7 +102,7 @@ Just run `Applications > Background Music.app`! **Background Music** sets itself
 
 ### Launch at Startup (Optional)
 
-Add **Background Music** to `System Settings > Users & Groups > Current User > Login Items`.
+Add **Background Music** to `System Settings > General > Login Items`.
 
 # Installing from Source Code
 
