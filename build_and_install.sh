@@ -19,7 +19,7 @@
 #
 # build_and_install.sh
 #
-# Copyright © 2016-2022 Kyle Neideck
+# Copyright © 2016-2022, 2024 Kyle Neideck
 # Copyright © 2016 Nick Jacques
 #
 # Builds and installs BGMApp, BGMDriver and BGMXPCHelper. Requires xcodebuild and Xcode.
@@ -641,6 +641,16 @@ if [[ "${XCODEBUILD_ACTION}" == "install" ]]; then
     SUDO="sudo"
     ACTIONING="Installing"
     DSTROOT_ARG="DSTROOT=/"
+    # Work around an Xcode (15.2) bug where xcodebuild incorrectly detects a dependency cycle if
+    # DSTROOT is set to /.
+    for v in /Volumes/*; do
+        if [[ "$(realpath "$v")" == "/" ]]; then
+            DSTROOT_ARG="DSTROOT=$v"
+            echo "Set DSTROOT_ARG to ${DSTROOT_ARG} to work around an Xcode bug." >> ${LOG_FILE}
+            break
+        fi
+    done
+    echo "DSTROOT_ARG: ${DSTROOT_ARG}." >> ${LOG_FILE}
 elif [[ "${XCODEBUILD_ACTION}" == "archive" ]]; then
     SUDO=""
     ACTIONING="Building and archiving"
