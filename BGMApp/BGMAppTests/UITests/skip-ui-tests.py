@@ -1,4 +1,4 @@
-#!/usr/bin/python2.7
+#!/usr/bin/env python3
 
 # This file is part of Background Music.
 #
@@ -19,7 +19,7 @@
 # skip-ui-tests.py
 # BGMAppUITests
 #
-# Copyright (c) 2017 Kyle Neideck
+# Copyright (c) 2017, 2024 Kyle Neideck
 #
 # Disables the UI tests. This is mainly useful on CI systems that don't support UI tests.
 #
