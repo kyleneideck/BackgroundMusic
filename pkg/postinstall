@@ -19,7 +19,7 @@
 #
 # postinstall
 #
-# Copyright © 2017-2022 Kyle Neideck
+# Copyright © 2017-2022, 2024 Kyle Neideck
 #
 
 # Make sure we use the built-in versions of programs, for consistency. Probably not necessary
@@ -53,13 +53,14 @@ bash "post_install.sh" "$xpc_helper_install_path" "BGMXPCHelper.xpc/Contents/Mac
 # some of these commands don't work with older versions of launchctl, so I figure there's no
 # harm in trying a bunch of different ways (which should all work).
 (sudo launchctl kickstart -k system/com.apple.audio.coreaudiod &>/dev/null || \
-    launchctl kill SIGTERM system/com.apple.audio.coreaudiod &>/dev/null || \
-    launchctl kill TERM system/com.apple.audio.coreaudiod &>/dev/null || \
-    launchctl kill 15 system/com.apple.audio.coreaudiod &>/dev/null || \
-    launchctl kill -15 system/com.apple.audio.coreaudiod &>/dev/null || \
-    (launchctl unload "$coreaudiod_plist" &>/dev/null && \
-        launchctl load "$coreaudiod_plist" &>/dev/null) || \
-    killall coreaudiod &>/dev/null) && \
+    sudo launchctl kill SIGTERM system/com.apple.audio.coreaudiod &>/dev/null || \
+    sudo launchctl kill TERM system/com.apple.audio.coreaudiod &>/dev/null || \
+    sudo launchctl kill 15 system/com.apple.audio.coreaudiod &>/dev/null || \
+    sudo launchctl kill -15 system/com.apple.audio.coreaudiod &>/dev/null || \
+    sudo killall coreaudiod &>/dev/null || \
+    (sudo launchctl unload "$coreaudiod_plist" &>/dev/null && \
+        sudo launchctl load "$coreaudiod_plist" &>/dev/null)
+    ) && \
     sleep 2
 
 # Wait until coreaudiod has restarted and BGMDevice is ready to use.

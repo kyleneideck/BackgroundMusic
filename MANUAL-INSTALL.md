@@ -38,12 +38,13 @@
   (Audio will stop working until the next step, so you might want to pause any running audio apps.)
 
   ```shell
-  sudo launchctl kickstart -kp system/com.apple.audio.coreaudiod
+  sudo killall coreaudiod
   ```
+
   or, if that fails
 
   ```shell
-  sudo killall coreaudiod
+  sudo launchctl kickstart -kp system/com.apple.audio.coreaudiod
   ```
 - Run `Background Music.app`.
 
