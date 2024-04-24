@@ -21,6 +21,7 @@
 #
 # Copyright © 2017-2022 Kyle Neideck
 # Copyright © 2016, 2017 Takayama Fumihiko
+# Copyright © 2023 modue sp. z o.o.
 #
 # Builds Background Music and packages it into a .pkg file. Call this script with -d to use the
 # debug build configuration.
@@ -141,7 +142,12 @@ fi
 echo "Compiling ListInputDevices"
 
 if ! [[ $packaging_operation == "repackage" ]]; then
-    swiftc pkg/ListInputDevices.swift -o pkg/ListInputDevices
+    echo "Compiling ListInputDevices"
+    swiftc pkg/ListInputDevices.swift -o pkg/ListInputDevices-x86_64 -target x86_64-apple-macos13.0
+    swiftc pkg/ListInputDevices.swift -o pkg/ListInputDevices-arm64 -target arm64-apple-macos13.0
+    # Combine the x86_64 and arm64 binaries into a universal binary.
+    lipo -create pkg/ListInputDevices-x86_64 pkg/ListInputDevices-arm64 -output pkg/ListInputDevices
+    rm pkg/ListInputDevices-x86_64 pkg/ListInputDevices-arm64
 fi
 
 # --------------------------------------------------

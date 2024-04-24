@@ -20,6 +20,7 @@
 # postinstall
 #
 # Copyright © 2017-2022, 2024 Kyle Neideck
+# Copyright © 2023 modue sp. z o.o.
 #
 
 # Make sure we use the built-in versions of programs, for consistency. Probably not necessary
@@ -43,6 +44,15 @@ log "Installing BGMXPCHelper to $xpc_helper_install_path"
 # <https://forums.developer.apple.com/thread/126187>.
 rm -rf "${xpc_helper_install_path}/BGMXPCHelper.xpc"
 cp -Rf "BGMXPCHelper.xpc" "$xpc_helper_install_path"
+
+# Remove the quarantine attribute from BGMXPCHelper. Since macOS 14.0, this is needed to keep
+# Gatekeeper from trying to show a permission prompt when BGMXPCHelper is launched. That would
+# fail because BGMXPCHelper is a daemon, and Gatekeeper would prevent it from launching.
+#
+# TODO: I think, ideally, we should use the new Service Management API to install BGMXPCHelper,
+#       which would probably avoid this issue. See
+#       <https://developer.apple.com/documentation/servicemanagement/updating_your_app_package_installer_to_use_the_new_service_management_api>.
+sudo xattr -d com.apple.quarantine "${xpc_helper_install_path}/BGMXPCHelper.xpc"
 
 # TODO: Fail the install and show an error message if this fails.
 bash "post_install.sh" "$xpc_helper_install_path" "BGMXPCHelper.xpc/Contents/MacOS/BGMXPCHelper" "."
