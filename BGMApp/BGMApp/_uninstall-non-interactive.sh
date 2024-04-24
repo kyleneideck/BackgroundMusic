@@ -140,13 +140,13 @@ sleep 2
 # don't work with older versions of launchctl, so I figure there's no harm in trying a bunch of different ways until
 # one works.
 (sudo launchctl kickstart -k system/com.apple.audio.coreaudiod &>/dev/null || \
+  sudo killall coreaudiod &>/dev/null || \
   sudo launchctl kill SIGTERM system/com.apple.audio.coreaudiod &>/dev/null || \
   sudo launchctl kill TERM system/com.apple.audio.coreaudiod &>/dev/null || \
   sudo launchctl kill 15 system/com.apple.audio.coreaudiod &>/dev/null || \
   sudo launchctl kill -15 system/com.apple.audio.coreaudiod &>/dev/null || \
   (sudo launchctl unload "${coreaudiod_plist}" &>/dev/null && \
-    sudo launchctl load "${coreaudiod_plist}" &>/dev/null) || \
-  sudo killall coreaudiod &>/dev/null)
+    sudo launchctl load "${coreaudiod_plist}" &>/dev/null))
 
 echo "..."
 sleep 3
