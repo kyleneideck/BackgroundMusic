@@ -17,7 +17,7 @@
 //  BGM_Types.h
 //  SharedSource
 //
-//  Copyright © 2016, 2017, 2019 Kyle Neideck
+//  Copyright © 2016, 2017, 2019, 2024 Kyle Neideck
 //
 
 #ifndef SharedSource__BGM_Types
@@ -36,6 +36,7 @@
 
 static const char* const kBGMProjectURL = "https://github.com/kyleneideck/BackgroundMusic";
 static const char* const kBGMIssueTrackerURL = "https://github.com/kyleneideck/BackgroundMusic/issues";
+static const char* const kBGMContributorsURL = "https://github.com/kyleneideck/BackgroundMusic/graphs/contributors";
 
 #pragma mark IDs
 

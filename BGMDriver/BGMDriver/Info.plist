@@ -19,7 +19,7 @@
 	<key>CFBundlePackageType</key>
 	<string>BNDL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.4.0</string>
+	<string>0.4.2</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
@@ -37,7 +37,7 @@
 		</array>
 	</dict>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright © 2016-2022 Background Music contributors</string>
+	<string>Copyright © 2016-2024 Background Music contributors</string>
 	<key>NSPrincipalClass</key>
 	<string></string>
 </dict>

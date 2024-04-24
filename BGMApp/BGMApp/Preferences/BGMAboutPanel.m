@@ -17,7 +17,7 @@
 //  BGMAboutPanel.m
 //  BGMApp
 //
-//  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016, 2024 Kyle Neideck
 //
 
 // Self Include
@@ -35,6 +35,7 @@ NS_ASSUME_NONNULL_BEGIN
 static NSInteger const kVersionLabelTag = 1;
 static NSInteger const kCopyrightLabelTag = 2;
 static NSInteger const kProjectWebsiteLabelTag = 3;
+static NSInteger const kContributorsLabelTag = 4;
 
 @implementation BGMAboutPanel {
     NSPanel* aboutPanel;
@@ -42,6 +43,7 @@ static NSInteger const kProjectWebsiteLabelTag = 3;
     NSTextField* versionLabel;
     NSTextField* copyrightLabel;
     NSTextField* websiteLabel;
+    NSTextField* contributorsLabel;
     
     NSTextView* licenseView;
 }
@@ -53,6 +55,7 @@ static NSInteger const kProjectWebsiteLabelTag = 3;
         versionLabel = [[aboutPanel contentView] viewWithTag:kVersionLabelTag];
         copyrightLabel = [[aboutPanel contentView] viewWithTag:kCopyrightLabelTag];
         websiteLabel = [[aboutPanel contentView] viewWithTag:kProjectWebsiteLabelTag];
+        contributorsLabel = [[aboutPanel contentView] viewWithTag:kContributorsLabelTag];
         
         licenseView = inLicenseView;
         
@@ -83,7 +86,10 @@ static NSInteger const kProjectWebsiteLabelTag = 3;
             [[bundle infoDictionary] objectForKey:@"NSHumanReadableCopyright"];
         
         if (copyrightNotice) {
-            copyrightLabel.stringValue = (NSString*)copyrightNotice;
+            // Remove the part that we replace with a link.
+            copyrightLabel.stringValue =
+                [((NSString*)copyrightNotice) stringByReplacingOccurrencesOfString:contributorsLabel.stringValue
+                                                                        withString:@""];
         }
         
         // Project website link label
@@ -96,6 +102,18 @@ static NSInteger const kProjectWebsiteLabelTag = 3;
             [[NSAttributedString alloc] initWithString:projectURL
                                             attributes:@{ NSLinkAttributeName: projectURL,
                                                           NSFontAttributeName: linkFont }];
+        
+        // Contributors link label
+        // TODO: Proper credits (i.e. in the app instead of just a link)
+        contributorsLabel.selectable = YES;
+        contributorsLabel.allowsEditingTextAttributes = YES;
+        
+        NSString* contributorsURL = [NSString stringWithUTF8String:kBGMContributorsURL];
+        NSFont* cLinkFont = contributorsLabel.font ? contributorsLabel.font : [NSFont labelFontOfSize:0.0];
+        contributorsLabel.attributedStringValue =
+            [[NSAttributedString alloc] initWithString:contributorsLabel.stringValue
+                                            attributes:@{ NSLinkAttributeName: contributorsURL,
+                                                          NSFontAttributeName: cLinkFont }];
         
         // Load the text of the license into the text view
         NSString* __nullable licensePath = [bundle pathForResource:@"LICENSE" ofType:nil];

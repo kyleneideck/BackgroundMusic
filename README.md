@@ -227,7 +227,7 @@ Issues](https://github.com/kyleneideck/BackgroundMusic/issues).
 
 ## License
 
-Copyright © 2016-2022 [Background Music contributors](https://github.com/kyleneideck/BackgroundMusic/graphs/contributors).
+Copyright © 2016-2024 [Background Music contributors](https://github.com/kyleneideck/BackgroundMusic/graphs/contributors).
 Licensed under [GPLv2](https://www.gnu.org/licenses/gpl-2.0.html), or any later version.
 
 **Background Music** includes code from:
