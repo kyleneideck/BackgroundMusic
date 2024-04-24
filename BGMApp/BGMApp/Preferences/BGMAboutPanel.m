@@ -140,9 +140,25 @@ static NSInteger const kContributorsLabelTag = 4;
 
 - (void) show {
     DebugMsg("BGMAboutPanel::showAboutPanel: Opening \"About Background Music\" panel");
-    [NSApp activateIgnoringOtherApps:YES];
+    
+    // We have to make aboutPanel visible before calling [NSApp activateIgnoringOtherApps:YES]
+    // or the app won't be activated the first time (not sure why it only happens the first
+    // time) and aboutPanel won't open. WindowServer logs this explanation:
+    // 0[SetFrontProcessWithInfo]: CPS: Rejecting the request for pid 1234 due to the activation count being 0; launch ts=19302059379458, current time=19314267188375, window count = 0.
     [aboutPanel setIsVisible:YES];
     [aboutPanel makeKeyAndOrderFront:self];
+    
+    // On macOS 14.4, aboutPanel needs "Release When Closed" unchecked in MainMenu.xib. Otherwise,
+    // aboutPanel will never open again if you click the close button.
+    
+    // This is deprecated for NSApplication.activate, but that stops aboutPanel from ever being shown.
+    [NSApp activateIgnoringOtherApps:YES];
+    
+    DebugMsg("BGMAboutPanel::showAboutPanel: Finished opening panel. "
+             "aboutPanel.isVisible %d, aboutPanel.isKeyWindow %d, NSApp.isActive %d",
+             aboutPanel.isVisible,
+             aboutPanel.isKeyWindow,
+             NSApp.isActive);
 }
 
 @end

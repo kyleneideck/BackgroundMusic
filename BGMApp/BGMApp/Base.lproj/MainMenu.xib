@@ -148,8 +148,8 @@
             </subviews>
             <point key="canvasLocation" x="117" y="-45"/>
         </customView>
-        <window allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" restorable="NO" hidesOnDeactivate="YES" visibleAtLaunch="NO" animationBehavior="default" id="Cf4-3V-gl1" customClass="NSPanel">
-            <windowStyleMask key="styleMask" titled="YES" closable="YES" utility="YES"/>
+        <window allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" restorable="NO" hidesOnDeactivate="YES" releasedWhenClosed="NO" visibleAtLaunch="NO" animationBehavior="default" id="Cf4-3V-gl1" customClass="NSPanel">
+            <windowStyleMask key="styleMask" titled="YES" closable="YES" utility="YES" nonactivatingPanel="YES"/>
             <windowPositionMask key="initialPositionMask" topStrut="YES"/>
             <rect key="contentRect" x="248" y="350" width="1002" height="335"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1512" height="920"/>
