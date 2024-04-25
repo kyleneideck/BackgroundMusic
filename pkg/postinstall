@@ -32,6 +32,13 @@ function log {
     echo "$@"
 }
 
+function log_output {
+    while read line
+    do
+        log "$line"
+    done < /dev/stdin
+}
+
 coreaudiod_plist="/System/Library/LaunchDaemons/com.apple.audio.coreaudiod.plist"
 dest_volume="$3"
 xpc_helper_install_path="$(bash safe_install_dir.sh -y)"
@@ -52,7 +59,9 @@ cp -Rf "BGMXPCHelper.xpc" "$xpc_helper_install_path"
 # TODO: I think, ideally, we should use the new Service Management API to install BGMXPCHelper,
 #       which would probably avoid this issue. See
 #       <https://developer.apple.com/documentation/servicemanagement/updating_your_app_package_installer_to_use_the_new_service_management_api>.
-sudo xattr -d com.apple.quarantine "${xpc_helper_install_path}/BGMXPCHelper.xpc"
+log "Removing com.apple.quarantine attribute from BGMXPCHelper."
+sudo xattr -dr com.apple.quarantine "${xpc_helper_install_path}/BGMXPCHelper.xpc" 2>&1 | log_output
+ls -lah@ "${xpc_helper_install_path}/BGMXPCHelper.xpc" 2>&1 | log_output
 
 # TODO: Fail the install and show an error message if this fails.
 bash "post_install.sh" "$xpc_helper_install_path" "BGMXPCHelper.xpc/Contents/MacOS/BGMXPCHelper" "."
