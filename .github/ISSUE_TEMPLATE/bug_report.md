@@ -22,7 +22,7 @@ assignees: ''
 
 **Versions**
 > Please complete the following information.
- - Background Music: [e.g. "0.4.0" or "0.4.0-SNAPSHOT-c0ab98b". `Preferences > About Background Music`]
+ - Background Music: [e.g. "0.4.3" or "0.4.0-SNAPSHOT-c0ab98b". `Preferences > About Background Music`]
  - macOS: [e.g. "11.3 Beta (20E5172i)" or "Big Sur". ` > About This Mac`]
 
 **Hardware**
@@ -43,8 +43,7 @@ assignees: ''
 > Tips
 > (Delete this section before posting.)
 >  - https://github.com/kyleneideck/BackgroundMusic#troubleshooting
->  - Try the latest SNAPSHOT version from https://github.com/kyleneideck/BackgroundMusic/releases
->     - Especially if you're using macOS Big Sur.
->  - If your bug is one of common issues, consider leaving a comment or a +1 (👍) on an existing issue:
+>  - Try the latest SNAPSHOT version from https://github.com/kyleneideck/BackgroundMusic/releases (if it's newer than the latest non-SNAPSHOT release).
+>  - If your bug is one of these common issues, consider leaving a comment or a +1 (👍) on an existing issue:
 >     - Background Music currently only supports audio devices with two channels. Bluetooth devices often only have one.
 >     - Volumes having no effect for certain apps: Microsoft Teams ([workaround](https://github.com/kyleneideck/BackgroundMusic/issues/268#issuecomment-604977210)), Zoom ([workaround](https://github.com/kyleneideck/BackgroundMusic/issues/396#issuecomment-741992157)), Discord ([workaround](https://github.com/kyleneideck/BackgroundMusic/issues/210#issuecomment-507048957), [see also](https://github.com/kyleneideck/BackgroundMusic/issues/267#issuecomment-617327850)), Chrome (sometimes)
