@@ -17,7 +17,7 @@
 
     <pkg-ref id="com.bearisdriving.BGM"/>
 
-    <options customize="never" require-scripts="false" />
+    <options customize="never" require-scripts="false" hostArchitectures="arm64,x86_64" />
 
     <choices-outline>
         <line choice="default">
