@@ -243,7 +243,9 @@ BGMBackgroundMusicDevice::ResponsibleBundleIDsOf(CACFString inParentBundleID)
         // Google Chrome
         { "com.google.Chrome", { "com.google.Chrome.helper" } },
         // Microsoft Edge
-        { "com.microsoft.edgemac", { "com.microsoft.edgemac.helper" } }
+        { "com.microsoft.edgemac", { "com.microsoft.edgemac.helper" } },
+        // Arc
+        { "company.thebrowser.Browser", { "company.thebrowser.browser.helper" } }
     };
 
     // Parallels' VM "dock helper" apps have bundle IDs like
