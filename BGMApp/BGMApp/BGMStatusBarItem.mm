@@ -125,10 +125,17 @@ static CGFloat const kVolumeIconAdditionalVerticalPadding = 0.075;
 - (void) initIcons {
     // Load the icons.
     fermataIcon = [NSImage imageNamed:@"FermataIcon"];
-    volumeIcon0SoundWaves = [NSImage imageNamed:@"Volume0"];
-    volumeIcon1SoundWave = [NSImage imageNamed:@"Volume1"];
-    volumeIcon2SoundWaves = [NSImage imageNamed:@"Volume2"];
-    volumeIcon3SoundWaves = [NSImage imageNamed:@"Volume3"];
+    if (@available(macOS 11.0, *)) {
+        volumeIcon0SoundWaves = [NSImage imageWithSystemSymbolName:@"speaker.fill" accessibilityDescription:nil];
+        volumeIcon1SoundWave = [NSImage imageWithSystemSymbolName:@"speaker.wave.1.fill" accessibilityDescription:nil];
+        volumeIcon2SoundWaves = [NSImage imageWithSystemSymbolName:@"speaker.wave.2.fill" accessibilityDescription:nil];
+        volumeIcon3SoundWaves = [NSImage imageWithSystemSymbolName:@"speaker.wave.3.fill" accessibilityDescription:nil];
+    } else {
+        volumeIcon0SoundWaves = [NSImage imageNamed:@"Volume0"];
+        volumeIcon1SoundWave = [NSImage imageNamed:@"Volume1"];
+        volumeIcon2SoundWaves = [NSImage imageNamed:@"Volume2"];
+        volumeIcon3SoundWaves = [NSImage imageNamed:@"Volume3"];
+    }
 
     // Set the icons' sizes.
     NSRect statusBarItemFrame;
