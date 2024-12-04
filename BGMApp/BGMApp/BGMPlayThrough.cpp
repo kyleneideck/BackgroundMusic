@@ -933,9 +933,8 @@ void    BGMPlayThrough::HandleBGMDeviceIsRunningSomewhereOtherThanBGMApp(BGMPlay
 // static
 bool    BGMPlayThrough::IsRunningSomewhereOtherThanBGMApp(const BGMAudioDevice& inBGMDevice)
 {
-    return CFBooleanGetValue(
-        static_cast<CFBooleanRef>(
-            inBGMDevice.GetPropertyData_CFType(kBGMRunningSomewhereOtherThanBGMAppAddress)));
+    auto type = inBGMDevice.GetPropertyData_CFType(kBGMRunningSomewhereOtherThanBGMAppAddress);
+    return type && CFBooleanGetValue(static_cast<CFBooleanRef>(type));
 }
 
 #pragma mark IOProcs
