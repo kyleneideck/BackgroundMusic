@@ -894,7 +894,7 @@ void    BGMPlayThrough::HandleBGMDeviceIsRunning(BGMPlayThrough* refCon)
 
             DebugMsg("BGMPlayThrough::HandleBGMDeviceIsRunning: "
                      "BGMDevice is %srunning somewhere other than BGMApp",
-                     isRunningSomewhereOtherThanBGMApp ? "" : " not");
+                     isRunningSomewhereOtherThanBGMApp ? "" : "not ");
             
             if(isRunningSomewhereOtherThanBGMApp)
             {
