@@ -57,6 +57,8 @@ BGMAudioDevice::~BGMAudioDevice()
 bool    BGMAudioDevice::CanBeOutputDeviceInBGMApp() const
 {
     CFStringRef uid = CopyDeviceUID();
+    assert(uid != nullptr);
+
     bool isNullDevice = CFEqual(uid, CFSTR(kBGMNullDeviceUID));
     CFRelease(uid);
 
@@ -340,6 +342,9 @@ bool    BGMAudioDevice::IsBGMDevice(bool inIncludeUISoundsInstance) const
     {
         // Check the device's UID to see whether it's BGMDevice.
         CFStringRef uid = CopyDeviceUID();
+        if (uid == nullptr) {
+            return isBGMDevice;
+        }
 
         isBGMDevice =
             CFEqual(uid, CFSTR(kBGMDeviceUID)) ||
