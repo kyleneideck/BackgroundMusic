@@ -134,11 +134,8 @@ public:
 	const AudioObjectPropertyAddress*		GetItems() const																		{ return &(*mAddressList.begin()); }
 	AudioObjectPropertyAddress*				GetItems()																				{ return &(*mAddressList.begin()); }
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated"
 	bool									HasItem(const AudioObjectPropertyAddress& inAddress) const								{ AddressList::const_iterator theIterator = std::find_if(mAddressList.begin(), mAddressList.end(), [&inAddress](const CAPropertyAddress& addr) { return CAPropertyAddress::IsCongruentAddress(addr, inAddress); }); return theIterator != mAddressList.end(); }
 	bool									HasExactItem(const AudioObjectPropertyAddress& inAddress) const							{ AddressList::const_iterator theIterator = std::find_if(mAddressList.begin(), mAddressList.end(), [&inAddress](const CAPropertyAddress& addr) { return CAPropertyAddress::IsSameAddress(addr, inAddress); }); return theIterator != mAddressList.end(); }
-#pragma clang diagnostic pop
 
 	void									AppendItem(const AudioObjectPropertyAddress& inAddress)									{ mAddressList.push_back(inAddress); }
 	void									AppendUniqueItem(const AudioObjectPropertyAddress& inAddress)							{ if(!HasItem(inAddress)) { mAddressList.push_back(inAddress); } }
