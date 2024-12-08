@@ -98,32 +98,6 @@ public:
 	static bool			IsCongruentElement(AudioObjectPropertyElement inElement1, AudioObjectPropertyElement inElement2)									{ return (inElement1 == inElement2) || (inElement1 == kAudioObjectPropertyElementWildcard) || (inElement2 == kAudioObjectPropertyElementWildcard); }
 	static bool			IsCongruentAddress(const AudioObjectPropertyAddress& inAddress1, const AudioObjectPropertyAddress& inAddress2)						{ return IsCongruentScope(inAddress1.mScope, inAddress2.mScope) && IsCongruentSelector(inAddress1.mSelector, inAddress2.mSelector) && IsCongruentElement(inAddress1.mElement, inAddress2.mElement); }
 	static bool			IsCongruentLessThanAddress(const AudioObjectPropertyAddress& inAddress1, const AudioObjectPropertyAddress& inAddress2)				{ bool theAnswer = false; if(!IsCongruentScope(inAddress1.mScope, inAddress2.mScope)) { theAnswer = inAddress1.mScope < inAddress2.mScope; } else if(!IsCongruentSelector(inAddress1.mSelector, inAddress2.mSelector)) { theAnswer = inAddress1.mSelector < inAddress2.mSelector; } else if(!IsCongruentElement(inAddress1.mElement, inAddress2.mElement)) { theAnswer = inAddress1.mElement < inAddress2.mElement; } return theAnswer; }
-
-//  STL Helpers
-public:
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated"
-	struct EqualTo : public std::binary_function<AudioObjectPropertyAddress, AudioObjectPropertyAddress, bool>
-	{
-		bool	operator()(const AudioObjectPropertyAddress& inAddress1, const AudioObjectPropertyAddress& inAddress2) const								{ return IsSameAddress(inAddress1, inAddress2); }
-	};
-
-	struct LessThan : public std::binary_function<AudioObjectPropertyAddress, AudioObjectPropertyAddress, bool>
-	{
-		bool	operator()(const AudioObjectPropertyAddress& inAddress1, const AudioObjectPropertyAddress& inAddress2) const								{ return IsLessThanAddress(inAddress1, inAddress2); }
-	};
-
-	struct CongruentEqualTo : public std::binary_function<AudioObjectPropertyAddress, AudioObjectPropertyAddress, bool>
-	{
-		bool	operator()(const AudioObjectPropertyAddress& inAddress1, const AudioObjectPropertyAddress& inAddress2) const								{ return IsCongruentAddress(inAddress1, inAddress2); }
-	};
-
-	struct CongruentLessThan : public std::binary_function<AudioObjectPropertyAddress, AudioObjectPropertyAddress, bool>
-	{
-		bool	operator()(const AudioObjectPropertyAddress& inAddress1, const AudioObjectPropertyAddress& inAddress2) const								{ return IsCongruentLessThanAddress(inAddress1, inAddress2); }
-	};
-#pragma clang diagnostic pop
-
 };
 
 //==================================================================================================
@@ -160,11 +134,8 @@ public:
 	const AudioObjectPropertyAddress*		GetItems() const																		{ return &(*mAddressList.begin()); }
 	AudioObjectPropertyAddress*				GetItems()																				{ return &(*mAddressList.begin()); }
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated"
-	bool									HasItem(const AudioObjectPropertyAddress& inAddress) const								{ AddressList::const_iterator theIterator = std::find_if(mAddressList.begin(), mAddressList.end(), std::bind1st(CAPropertyAddress::CongruentEqualTo(), inAddress)); return theIterator != mAddressList.end(); }
-	bool									HasExactItem(const AudioObjectPropertyAddress& inAddress) const							{ AddressList::const_iterator theIterator = std::find_if(mAddressList.begin(), mAddressList.end(), std::bind1st(CAPropertyAddress::EqualTo(), inAddress)); return theIterator != mAddressList.end(); }
-#pragma clang diagnostic pop
+	bool									HasItem(const AudioObjectPropertyAddress& inAddress) const								{ AddressList::const_iterator theIterator = std::find_if(mAddressList.begin(), mAddressList.end(), [&inAddress](const CAPropertyAddress& addr) { return CAPropertyAddress::IsCongruentAddress(addr, inAddress); }); return theIterator != mAddressList.end(); }
+	bool									HasExactItem(const AudioObjectPropertyAddress& inAddress) const							{ AddressList::const_iterator theIterator = std::find_if(mAddressList.begin(), mAddressList.end(), [&inAddress](const CAPropertyAddress& addr) { return CAPropertyAddress::IsSameAddress(addr, inAddress); }); return theIterator != mAddressList.end(); }
 
 	void									AppendItem(const AudioObjectPropertyAddress& inAddress)									{ mAddressList.push_back(inAddress); }
 	void									AppendUniqueItem(const AudioObjectPropertyAddress& inAddress)							{ if(!HasItem(inAddress)) { mAddressList.push_back(inAddress); } }
@@ -172,7 +143,7 @@ public:
 	void									InsertItemAtIndex(UInt32 inIndex, const AudioObjectPropertyAddress& inAddress)			{ if(inIndex < mAddressList.size()) { AddressList::iterator theIterator = mAddressList.begin(); std::advance(theIterator, static_cast<int>(inIndex)); mAddressList.insert(theIterator, inAddress); } else { mAddressList.push_back(inAddress); } }
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated"
-	void									EraseExactItem(const AudioObjectPropertyAddress& inAddress)								{ AddressList::iterator theIterator = std::find_if(mAddressList.begin(), mAddressList.end(), std::bind1st(CAPropertyAddress::EqualTo(), inAddress)); if(theIterator != mAddressList.end()) { mAddressList.erase(theIterator); } }
+	void									EraseExactItem(const AudioObjectPropertyAddress& inAddress)								{ AddressList::iterator theIterator = std::find_if(mAddressList.begin(), mAddressList.end(), [&inAddress](const CAPropertyAddress& addr) { return CAPropertyAddress::IsSameAddress(addr, inAddress); }); if(theIterator != mAddressList.end()) { mAddressList.erase(theIterator); } }
 #pragma clang diagnostic pop
 	void									EraseItemAtIndex(UInt32 inIndex)														{ if(inIndex < mAddressList.size()) { AddressList::iterator theIterator = mAddressList.begin(); std::advance(theIterator, static_cast<int>(inIndex)); mAddressList.erase(theIterator); } }
 	void									EraseAllItems()																			{ mAddressList.clear(); }
