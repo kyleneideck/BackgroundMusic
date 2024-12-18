@@ -24,6 +24,10 @@
 #import "BGMAppDelegate.h"
 
 // Local Includes
+#import "BGMAudioDeviceManager.h"
+#import "BGMAppVolumesController.h"
+
+// Local Includes
 #import "BGMASOutputDevice.h"
 #import "BGMASApplication.h"
 

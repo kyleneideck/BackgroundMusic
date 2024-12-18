@@ -23,13 +23,11 @@
 //  Sets up and tears down the app.
 //
 
-// Local Includes
-#import "BGMAudioDeviceManager.h"
-#import "BGMAppVolumesController.h"
-
 // System Includes
 #import <Cocoa/Cocoa.h>
 
+@class BGMAudioDeviceManager;
+@class BGMAppVolumesController;
 
 // Tags for UI elements in MainMenu.xib
 static NSInteger const kVolumesHeadingMenuItemTag = 3;
