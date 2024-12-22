@@ -88,13 +88,6 @@ Install using [Homebrew](https://brew.sh/) by running the following command in *
 brew install --cask background-music
 ```
 
-If you want the latest snapshot version, run:
-
-```bash
-brew tap homebrew/cask-versions
-brew install --cask background-music-pre
-```
-
 # Run / Configure
 
 Just run `Applications > Background Music.app`! **Background Music** sets itself as your default output device under
