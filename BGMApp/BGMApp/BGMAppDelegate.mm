@@ -177,7 +177,8 @@ static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
                                                     userDefaults:userDefaults];
 
     autoPauseMusic = [[BGMAutoPauseMusic alloc] initWithAudioDevices:audioDevices
-                                                        musicPlayers:musicPlayers];
+                                                        musicPlayers:musicPlayers
+                                                        userDefaults:userDefaults];
 
     [self setUpMainMenu];
 
@@ -317,7 +318,8 @@ static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
                                                musicPlayers:musicPlayers
                                               statusBarItem:statusBarItem
                                                  aboutPanel:self.aboutPanel
-                                      aboutPanelLicenseView:self.aboutPanelLicenseView];
+                                      aboutPanelLicenseView:self.aboutPanelLicenseView
+                                               userDefaults:userDefaults];
 
     // Enable/disable debug logging. Hidden unless you option-click the status bar icon.
     debugLoggingMenuItem =

@@ -27,6 +27,9 @@
 #import "BGMAutoPauseMusicPrefs.h"
 #import "BGMAboutPanel.h"
 
+// System Includes
+#import <math.h>
+
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -47,6 +50,15 @@ static NSInteger const kAboutPanelMenuItemTag  = 4;
 
     // The About Background Music window
     BGMAboutPanel* aboutPanel;
+    
+    // Delay preferences
+    NSMenuItem* pauseDelayMenuItem;
+    NSMenuItem* maxUnpauseDelayMenuItem;
+    NSSlider* pauseDelaySlider;
+    NSSlider* maxUnpauseDelaySlider;
+    NSTextField* pauseDelayLabel;
+    NSTextField* maxUnpauseDelayLabel;
+    BGMUserDefaults* userDefaults;
 }
 
 - (id) initWithBGMMenu:(NSMenu*)inBGMMenu
@@ -54,7 +66,8 @@ static NSInteger const kAboutPanelMenuItemTag  = 4;
           musicPlayers:(BGMMusicPlayers*)inMusicPlayers
          statusBarItem:(BGMStatusBarItem*)inStatusBarItem
             aboutPanel:(NSPanel*)inAboutPanel
- aboutPanelLicenseView:(NSTextView*)inAboutPanelLicenseView {
+ aboutPanelLicenseView:(NSTextView*)inAboutPanelLicenseView
+          userDefaults:(BGMUserDefaults*)inUserDefaults {
     if ((self = [super init])) {
         NSMenu* prefsMenu = [[inBGMMenu itemWithTag:kPreferencesMenuItemTag] submenu];
         
@@ -83,6 +96,10 @@ static NSInteger const kAboutPanelMenuItemTag  = 4;
         NSMenuItem* aboutMenuItem = [prefsMenu itemWithTag:kAboutPanelMenuItemTag];
         [aboutMenuItem setTarget:aboutPanel];
         [aboutMenuItem setAction:@selector(show)];
+        
+        // Set up delay preferences
+        userDefaults = inUserDefaults;
+        [self setupDelayPreferences:prefsMenu];
     }
     
     return self;
@@ -109,6 +126,162 @@ static NSInteger const kAboutPanelMenuItemTag  = 4;
     // Select/deselect the menu items.
     bgmIconMenuItem.state = NSOffState;
     volumeIconMenuItem.state = NSOnState;
+}
+
+- (void) setupDelayPreferences:(NSMenu*)prefsMenu {
+    // Create delay preference menu items dynamically
+    
+    // Add separator
+    [prefsMenu addItem:[NSMenuItem separatorItem]];
+    
+    // Add "Auto-pause Delays" header
+    NSMenuItem* delaysHeader = [[NSMenuItem alloc] initWithTitle:@"Auto-pause Delays" action:nil keyEquivalent:@""];
+    delaysHeader.enabled = NO;
+    [prefsMenu addItem:delaysHeader];
+    
+    // Create pause delay menu item with slider
+    pauseDelayMenuItem = [[NSMenuItem alloc] initWithTitle:@"" action:nil keyEquivalent:@""];
+    NSView* pauseDelayView = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 280, 25)];
+    
+    // Pause delay label
+    NSTextField* pauseDelayTitleLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(10, 5, 100, 15)];
+    pauseDelayTitleLabel.stringValue = @"Pause Delay:";
+    pauseDelayTitleLabel.editable = NO;
+    pauseDelayTitleLabel.bordered = NO;
+    pauseDelayTitleLabel.backgroundColor = [NSColor clearColor];
+    pauseDelayTitleLabel.font = [NSFont menuFontOfSize:13];
+    [pauseDelayView addSubview:pauseDelayTitleLabel];
+    
+    // Pause delay slider
+    pauseDelaySlider = [[NSSlider alloc] initWithFrame:NSMakeRect(115, 5, 100, 15)];
+    [pauseDelayView addSubview:pauseDelaySlider];
+    
+    // Pause delay value label
+    pauseDelayLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(220, 5, 55, 15)];
+    pauseDelayLabel.editable = NO;
+    pauseDelayLabel.bordered = NO;
+    pauseDelayLabel.backgroundColor = [NSColor clearColor];
+    pauseDelayLabel.font = [NSFont menuFontOfSize:11];
+    [pauseDelayView addSubview:pauseDelayLabel];
+    
+    pauseDelayMenuItem.view = pauseDelayView;
+    [prefsMenu addItem:pauseDelayMenuItem];
+    
+    // Create max unpause delay menu item with slider
+    maxUnpauseDelayMenuItem = [[NSMenuItem alloc] initWithTitle:@"" action:nil keyEquivalent:@""];
+    NSView* maxUnpauseDelayView = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 280, 25)];
+    
+    // Max unpause delay label
+    NSTextField* maxUnpauseDelayTitleLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(10, 5, 100, 15)];
+    maxUnpauseDelayTitleLabel.stringValue = @"Max Unpause:";
+    maxUnpauseDelayTitleLabel.editable = NO;
+    maxUnpauseDelayTitleLabel.bordered = NO;
+    maxUnpauseDelayTitleLabel.backgroundColor = [NSColor clearColor];
+    maxUnpauseDelayTitleLabel.font = [NSFont menuFontOfSize:13];
+    [maxUnpauseDelayView addSubview:maxUnpauseDelayTitleLabel];
+    
+    // Max unpause delay slider
+    maxUnpauseDelaySlider = [[NSSlider alloc] initWithFrame:NSMakeRect(115, 5, 100, 15)];
+    [maxUnpauseDelayView addSubview:maxUnpauseDelaySlider];
+    
+    // Max unpause delay value label
+    maxUnpauseDelayLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(220, 5, 55, 15)];
+    maxUnpauseDelayLabel.editable = NO;
+    maxUnpauseDelayLabel.bordered = NO;
+    maxUnpauseDelayLabel.backgroundColor = [NSColor clearColor];
+    maxUnpauseDelayLabel.font = [NSFont menuFontOfSize:11];
+    [maxUnpauseDelayView addSubview:maxUnpauseDelayLabel];
+    
+    maxUnpauseDelayMenuItem.view = maxUnpauseDelayView;
+    [prefsMenu addItem:maxUnpauseDelayMenuItem];
+    
+    // Initialize the delay sliders with current values and targets
+    [self initDelaySliders];
+}
+
+- (void) initDelaySliders {
+    // Configure pause delay slider with logarithmic scale (0ms to 10000ms)
+    // Slider range 0-100 maps logarithmically to 0-10000ms
+    pauseDelaySlider.minValue = 0;
+    pauseDelaySlider.maxValue = 100;
+    pauseDelaySlider.integerValue = [self msToSliderValue:userDefaults.pauseDelayMS];
+    pauseDelaySlider.target = self;
+    pauseDelaySlider.action = @selector(pauseDelaySliderChanged:);
+    
+    // Configure max unpause delay slider with logarithmic scale (0ms to 10000ms)
+    // Slider range 0-100 maps logarithmically to 0-10000ms
+    maxUnpauseDelaySlider.minValue = 0;
+    maxUnpauseDelaySlider.maxValue = 100;
+    maxUnpauseDelaySlider.integerValue = [self msToSliderValue:userDefaults.maxUnpauseDelayMS];
+    maxUnpauseDelaySlider.target = self;
+    maxUnpauseDelaySlider.action = @selector(maxUnpauseDelaySliderChanged:);
+    
+    // Update labels with current values
+    [self updatePauseDelayLabel];
+    [self updateMaxUnpauseDelayLabel];
+}
+
+- (void) pauseDelaySliderChanged:(NSSlider*)sender {
+    NSUInteger delayMS = [self sliderValueToMS:sender.integerValue];
+    userDefaults.pauseDelayMS = delayMS;
+    [self updatePauseDelayLabel];
+}
+
+- (void) maxUnpauseDelaySliderChanged:(NSSlider*)sender {
+    NSUInteger delayMS = [self sliderValueToMS:sender.integerValue];
+    userDefaults.maxUnpauseDelayMS = delayMS;
+    [self updateMaxUnpauseDelayLabel];
+}
+
+
+- (void) updatePauseDelayLabel {
+    NSUInteger delayMS = userDefaults.pauseDelayMS;
+    if (delayMS == 0) {
+        pauseDelayLabel.stringValue = @"Off";
+    } else {
+        pauseDelayLabel.stringValue = [NSString stringWithFormat:@"%lums", (unsigned long)delayMS];
+    }
+}
+
+- (void) updateMaxUnpauseDelayLabel {
+    NSUInteger delayMS = userDefaults.maxUnpauseDelayMS;
+    if (delayMS == 0) {
+        maxUnpauseDelayLabel.stringValue = @"Off";
+    } else {
+        maxUnpauseDelayLabel.stringValue = [NSString stringWithFormat:@"%lums", (unsigned long)delayMS];
+    }
+}
+
+// Logarithmic conversion methods for better control at small values
+// Maps slider value (0-100) to milliseconds (0-10000) logarithmically
+- (NSUInteger) sliderValueToMS:(NSInteger)sliderValue {
+    if (sliderValue <= 0) {
+        return 0;
+    }
+    
+    // Logarithmic mapping: slider 0-100 -> ms 0-10000
+    // Formula: ms = (10^(sliderValue/50) - 1) * (10000/99)
+    // This gives finer control at small values and coarser control at large values
+    double normalizedSlider = (double)sliderValue / 100.0; // 0-1
+    double logValue = pow(10.0, normalizedSlider * 2.0) - 1.0; // 0-99
+    NSUInteger ms = (NSUInteger)(logValue * (10000.0 / 99.0));
+    
+    return MIN(ms, 10000); // Cap at 10000ms
+}
+
+// Maps milliseconds (0-10000) to slider value (0-100) logarithmically
+- (NSInteger) msToSliderValue:(NSUInteger)ms {
+    if (ms == 0) {
+        return 0;
+    }
+    
+    // Inverse of the logarithmic mapping
+    // Formula: sliderValue = 50 * log10((ms * 99/10000) + 1)
+    double normalizedMS = (double)ms / 10000.0; // 0-1
+    double logInput = (normalizedMS * 99.0) + 1.0; // 1-100
+    double sliderValue = (log10(logInput) / 2.0) * 100.0; // 0-100
+    
+    return (NSInteger)MIN(MAX(sliderValue, 0), 100);
 }
 
 @end

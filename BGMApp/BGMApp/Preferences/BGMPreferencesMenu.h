@@ -27,6 +27,7 @@
 #import "BGMAudioDeviceManager.h"
 #import "BGMMusicPlayers.h"
 #import "BGMStatusBarItem.h"
+#import "BGMUserDefaults.h"
 
 // System Includes
 #import <Cocoa/Cocoa.h>
@@ -41,7 +42,8 @@ NS_ASSUME_NONNULL_BEGIN
           musicPlayers:(BGMMusicPlayers*)inMusicPlayers
          statusBarItem:(BGMStatusBarItem*)inStatusBarItem
             aboutPanel:(NSPanel*)inAboutPanel
- aboutPanelLicenseView:(NSTextView*)inAboutPanelLicenseView;
+ aboutPanelLicenseView:(NSTextView*)inAboutPanelLicenseView
+          userDefaults:(BGMUserDefaults*)inUserDefaults;
 
 @end
 
