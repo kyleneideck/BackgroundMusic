@@ -23,7 +23,7 @@ jobs:
           - macos-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Work in a case-sensitive disk image.
         # This lets us catch failures that only happen on case-sensitive filesystems.
         run: |
@@ -115,7 +115,7 @@ jobs:
           echo '::endgroup::'
       - name: Upload the test results.
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: bgm-test-results
           path: |
@@ -142,7 +142,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Build the .pkg installer.
         run: |
           # `sudo` and `tput` expect this to be set.
@@ -188,13 +188,13 @@ jobs:
           ls -la "/Library/LaunchDaemons/com.bearisdriving.BGM.XPCHelper.plist"
       - name: Upload the .pkg installer and archives.
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: pkg-installer
           path: Background-Music-*
       - name: Upload the log file from the package.sh build.
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: build-and-install-log-for-pkg
           path: build_and_install.log
