@@ -26,6 +26,7 @@
 // Local Includes
 #import "BGMAudioDeviceManager.h"
 #import "BGMMusicPlayers.h"
+#import "BGMUserDefaults.h"
 
 // System Includes
 #import <Foundation/Foundation.h>
@@ -35,7 +36,7 @@
 
 @interface BGMAutoPauseMusic : NSObject
 
-- (id) initWithAudioDevices:(BGMAudioDeviceManager*)inAudioDevices musicPlayers:(BGMMusicPlayers*)inMusicPlayers;
+- (id) initWithAudioDevices:(BGMAudioDeviceManager*)inAudioDevices musicPlayers:(BGMMusicPlayers*)inMusicPlayers userDefaults:(BGMUserDefaults*)inUserDefaults;
 
 - (void) enable;
 - (void) disable;

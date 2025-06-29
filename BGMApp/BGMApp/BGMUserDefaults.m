@@ -34,6 +34,8 @@ static NSString* const kDefaultKeyAutoPauseMusicEnabled = @"AutoPauseMusicEnable
 static NSString* const kDefaultKeySelectedMusicPlayerID = @"SelectedMusicPlayerID";
 static NSString* const kDefaultKeyPreferredDeviceUIDs   = @"PreferredDeviceUIDs";
 static NSString* const kDefaultKeyStatusBarIcon         = @"StatusBarIcon";
+static NSString* const kDefaultKeyPauseDelayMS          = @"PauseDelayMS";
+static NSString* const kDefaultKeyMaxUnpauseDelayMS     = @"MaxUnpauseDelayMS";
 
 // Labels for Keychain Data
 static NSString* const kKeychainLabelGPMDPAuthCode =
@@ -57,7 +59,11 @@ static NSString* const kKeychainLabelGPMDPAuthCode =
         // here so we know when it's never been set. (If it hasn't, we try using BGMDevice's
         // kAudioDeviceCustomPropertyMusicPlayerBundleID property to tell which music player should
         // be selected. See BGMMusicPlayers.)
-        NSDictionary* defaultsDict = @{ kDefaultKeyAutoPauseMusicEnabled: @YES };
+        NSDictionary* defaultsDict = @{ 
+            kDefaultKeyAutoPauseMusicEnabled: @YES,
+            kDefaultKeyPauseDelayMS: @1500,
+            kDefaultKeyMaxUnpauseDelayMS: @3500
+        };
 
         if (defaults) {
             [defaults registerDefaults:defaultsDict];
@@ -87,6 +93,34 @@ static NSString* const kKeychainLabelGPMDPAuthCode =
 
 - (void) setAutoPauseMusicEnabled:(BOOL)autoPauseMusicEnabled {
     [self setBool:kDefaultKeyAutoPauseMusicEnabled to:autoPauseMusicEnabled];
+}
+
+#pragma mark Auto-pause Delays
+
+- (NSUInteger) pauseDelayMS {
+    NSInteger delay = [self getInt:kDefaultKeyPauseDelayMS or:1500];
+    // Clamp to reasonable range: 0ms to 10000ms
+    delay = MAX(0, MIN(10000, delay));
+    return (NSUInteger)delay;
+}
+
+- (void) setPauseDelayMS:(NSUInteger)pauseDelayMS {
+    // Clamp to reasonable range: 0ms to 10000ms
+    NSUInteger clampedDelay = MAX(0, MIN(10000, pauseDelayMS));
+    [self setInt:kDefaultKeyPauseDelayMS to:(NSInteger)clampedDelay];
+}
+
+- (NSUInteger) maxUnpauseDelayMS {
+    NSInteger delay = [self getInt:kDefaultKeyMaxUnpauseDelayMS or:3500];
+    // Clamp to reasonable range: 0ms to 10000ms
+    delay = MAX(0, MIN(10000, delay));
+    return (NSUInteger)delay;
+}
+
+- (void) setMaxUnpauseDelayMS:(NSUInteger)maxUnpauseDelayMS {
+    // Clamp to reasonable range: 0ms to 10000ms
+    NSUInteger clampedDelay = MAX(0, MIN(10000, maxUnpauseDelayMS));
+    [self setInt:kDefaultKeyMaxUnpauseDelayMS to:(NSInteger)clampedDelay];
 }
 
 - (NSArray<NSString*>*) preferredDeviceUIDs {

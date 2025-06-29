@@ -35,23 +35,6 @@
 #include <mach/mach_time.h>
 
 
-// How long to wait before pausing/unpausing. This is so short sounds can play without awkwardly causing a short period of silence,
-// and other audio can have short periods of silence without causing music to play and quickly pause again. Of course, it's a
-// trade-off against how long the music will overlap the other audio before it gets paused and how long the music will stay paused
-// after a sound that was only slightly longer than the pause delay.
-static UInt64 const kPauseDelayNSec = 1500 * NSEC_PER_MSEC;
-// The delay before unpausing the music player is proportional to how long we paused it for, bounded by these limits. This makes it
-// a bit less annoying when a sound is just long enough to cause an auto-pause.
-//
-// I haven't spent much time experimenting with different values for these constants, so they could probably be improved a fair
-// bit.
-//
-// TODO: Would it be worth listening for kAudioDeviceCustomPropertyDeviceIsRunningSomewhereOtherThanBGMApp so we can unpause
-//       immediately if we haven't been paused for long and the non-music-player client stops IO? That would usually indicate that
-//       it doesn't intend to start playing audio again soon. We'd also have to deal with music players that don't stop IO when
-//       they're paused.
-static UInt64 const kMaxUnpauseDelayNSec = 3500 * NSEC_PER_MSEC;
-static UInt64 const kMinUnpauseDelayNSec = kMaxUnpauseDelayNSec / 10;
 // We multiply the time spent paused by this factor to calculate the delay before we consider unpausing.
 static Float32 const kUnpauseDelayWeightingFactor = 0.1f;
 
@@ -60,6 +43,7 @@ static Float32 const kUnpauseDelayWeightingFactor = 0.1f;
     
     BGMAudioDeviceManager* audioDevices;
     BGMMusicPlayers* musicPlayers;
+    BGMUserDefaults* userDefaults;
     
     dispatch_queue_t listenerQueue;
     // Have to keep track of the listener block we add so we can remove it later.
@@ -76,10 +60,11 @@ static Float32 const kUnpauseDelayWeightingFactor = 0.1f;
     UInt64 wentAudible;
 }
 
-- (id) initWithAudioDevices:(BGMAudioDeviceManager*)inAudioDevices musicPlayers:(BGMMusicPlayers*)inMusicPlayers {
+- (id) initWithAudioDevices:(BGMAudioDeviceManager*)inAudioDevices musicPlayers:(BGMMusicPlayers*)inMusicPlayers userDefaults:(BGMUserDefaults*)inUserDefaults {
     if ((self = [super init])) {
         audioDevices = inAudioDevices;
         musicPlayers = inMusicPlayers;
+        userDefaults = inUserDefaults;
         
         enabled = NO;
         wePaused = NO;
@@ -135,6 +120,7 @@ static Float32 const kUnpauseDelayWeightingFactor = 0.1f;
                 } else if (audibleState == kBGMDeviceIsSilentExceptMusic) {
                     // If we pause the music player and then the user unpauses it before the other audio stops, we need to set
                     // wePaused to false at some point before the other audio starts again so we know we should pause
+                    DebugMsg("BGMAutoPauseMusic: Device is silent except music, resetting wePaused flag");
                     wePaused = NO;
                 }
                 // TODO: Add a fourth audible state, something like "AudibleAndMusicPlaying", and check it here to
@@ -153,8 +139,23 @@ static Float32 const kUnpauseDelayWeightingFactor = 0.1f;
     wentAudible = now;
     UInt64 startedPauseDelay = now;
     
+    UInt64 pauseDelayMS = userDefaults.pauseDelayMS;
+    
+    // If pause delay is 0, pause immediately (no delay)
+    if (pauseDelayMS == 0) {
+        DebugMsg("BGMAutoPauseMusic::queuePauseBlock: Pause delay is 0, pausing immediately");
+        
+        // Pause immediately if device is audible and we haven't already paused
+        if (!wePaused && ([self deviceAudibleState] == kBGMDeviceIsAudible)) {
+            wePaused = ([musicPlayers.selectedMusicPlayer pause] || wePaused);
+        }
+        return;
+    }
+    
+    UInt64 pauseDelayNSec = pauseDelayMS * NSEC_PER_MSEC;
+    
     DebugMsg("BGMAutoPauseMusic::queuePauseBlock: Dispatching pause block at %llu", now);
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kPauseDelayNSec),
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, pauseDelayNSec),
                    pauseUnpauseMusicQueue,
                    ^{
                        BOOL stillAudible = ([self deviceAudibleState] == kBGMDeviceIsAudible);
@@ -178,6 +179,27 @@ static Float32 const kUnpauseDelayWeightingFactor = 0.1f;
     wentSilent = now;
     UInt64 startedUnpauseDelay = now;
     
+    // Get user-configurable max delay
+    UInt64 maxUnpauseDelayMS = userDefaults.maxUnpauseDelayMS;
+    
+    // If max unpause delay is 0, unpause immediately (no delay)
+    if (maxUnpauseDelayMS == 0) {
+        DebugMsg("BGMAutoPauseMusic::queueUnpauseBlock: Max unpause delay is 0, unpausing immediately");
+        
+        // Unpause immediately if we were the one who paused and device is still silent
+        BGMDeviceAudibleState currentState = [self deviceAudibleState];
+        DebugMsg("BGMAutoPauseMusic::queueUnpauseBlock: Immediate unpause - wePaused=%s, currentState=%s", 
+                 wePaused ? "YES" : "NO", 
+                 currentState == kBGMDeviceIsSilent ? "Silent" : 
+                 (currentState == kBGMDeviceIsAudible ? "Audible" : "SilentExceptMusic"));
+        
+        if (wePaused && (currentState == kBGMDeviceIsSilent)) {
+            wePaused = NO;
+            [musicPlayers.selectedMusicPlayer unpause];
+        }
+        return;
+    }
+    
     // Unpause sooner if we've only been paused for a short time. This is so a notification sound causing an auto-pause is
     // less of an interruption.
     //
@@ -191,9 +213,11 @@ static Float32 const kUnpauseDelayWeightingFactor = 0.1f;
     mach_timebase_info(&info);
     unpauseDelayNsec = unpauseDelayNsec * info.numer / info.denom;
     
-    // Clamp.
-    unpauseDelayNsec = std::min(kMaxUnpauseDelayNSec, unpauseDelayNsec);
-    unpauseDelayNsec = std::max(kMinUnpauseDelayNSec, unpauseDelayNsec);
+    // Clamp using user-configurable max delay and calculated min delay.
+    UInt64 maxUnpauseDelayNSec = maxUnpauseDelayMS * NSEC_PER_MSEC;
+    UInt64 minUnpauseDelayNSec = maxUnpauseDelayNSec / 10;
+    unpauseDelayNsec = std::min(maxUnpauseDelayNSec, unpauseDelayNsec);
+    unpauseDelayNsec = std::max(minUnpauseDelayNSec, unpauseDelayNsec);
     
     DebugMsg("BGMAutoPauseMusic::queueUnpauseBlock: Dispatched unpause block at %llu. unpauseDelayNsec=%llu",
              now,
@@ -202,17 +226,22 @@ static Float32 const kUnpauseDelayWeightingFactor = 0.1f;
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, unpauseDelayNsec),
                    pauseUnpauseMusicQueue,
                    ^{
-                       BOOL stillSilent = ([self deviceAudibleState] == kBGMDeviceIsSilent);
+                       BGMDeviceAudibleState currentState = [self deviceAudibleState];
+                       BOOL stillSilent = (currentState == kBGMDeviceIsSilent);
+                       BOOL isLatestUnpause = (startedUnpauseDelay == wentSilent);
                        
-                       DebugMsg("BGMAutoPauseMusic::queueUnpauseBlock: Running unpause block dispatched at %llu.%s%s wentSilent=%llu",
+                       DebugMsg("BGMAutoPauseMusic::queueUnpauseBlock: Running unpause block dispatched at %llu. wePaused=%s, isLatest=%s, currentState=%s, wentSilent=%llu",
                                 startedUnpauseDelay,
-                                wePaused ? "" : " Not unpausing because we weren't the one who paused.",
-                                stillSilent ? "" : " Not unpausing because the device isn't silent.",
+                                wePaused ? "YES" : "NO",
+                                isLatestUnpause ? "YES" : "NO",
+                                currentState == kBGMDeviceIsSilent ? "Silent" : 
+                                (currentState == kBGMDeviceIsAudible ? "Audible" : "SilentExceptMusic"),
                                 wentSilent);
                        
                        // Unpause if we were the one who paused. Also check that this is the most recent unpause block and the
                        // device is still silent, which means the audible state hasn't changed since this block was queued.
-                       if (wePaused && (startedUnpauseDelay == wentSilent) && stillSilent) {
+                       if (wePaused && isLatestUnpause && stillSilent) {
+                           DebugMsg("BGMAutoPauseMusic::queueUnpauseBlock: Unpausing music player");
                            wePaused = NO;
                            [musicPlayers.selectedMusicPlayer unpause];
                        }

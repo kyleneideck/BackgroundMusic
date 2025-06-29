@@ -60,6 +60,11 @@
 // exception is thrown.
 @property NSString* __nullable googlePlayMusicDesktopPlayerPermanentAuthCode;
 
+// Auto-pause delay settings in milliseconds. These control how long to wait before pausing/unpausing
+// music when other audio starts/stops playing.
+@property NSUInteger pauseDelayMS;
+@property NSUInteger maxUnpauseDelayMS;
+
 @end
 
 #pragma clang assume_nonnull end

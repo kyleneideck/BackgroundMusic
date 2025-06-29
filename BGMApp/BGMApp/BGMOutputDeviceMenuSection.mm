@@ -36,6 +36,7 @@
 
 // STL Includes
 #import <set>
+#import <vector>
 
 
 #pragma clang assume_nonnull begin
@@ -220,9 +221,9 @@ static NSInteger const kOutputDeviceMenuItemTag = 5;
     });
     
     if (numDataSources > 0) {
-        UInt32 dataSourceIDs[numDataSources];
+        std::vector<UInt32> dataSourceIDs(numDataSources);
         // This call updates numDataSources to the real number of IDs it added to our array.
-        device.GetAvailableDataSources(scope, channel, numDataSources, dataSourceIDs);
+        device.GetAvailableDataSources(scope, channel, numDataSources, dataSourceIDs.data());
         
         for (UInt32 i = 0; i < numDataSources; i++) {
             DebugMsg("BGMOutputDeviceMenuSection::createMenuItemsForDevice: "
