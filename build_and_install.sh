@@ -590,7 +590,13 @@ fi
 
 # Make sure Xcode and the command line tools are installed and recent enough.
 # This sets XCODE_VERSION to major.minor, e.g. 8.3, or -1 if Xcode isn't installed.
-XCODE_VERSION=$((${XCODEBUILD} -version 2>/dev/null || echo 'V -1') | head -n 1 | awk '{ print $2 }')
+get_xcode_version() {
+    local XCODE_VERSION_FULL
+    # Separated from the line below to workaround an intermittent bug in xcodebuild 16.1.
+    XCODE_VERSION_FULL=$(${XCODEBUILD} -version 2>/dev/null || echo 'V -1')
+    echo "${XCODE_VERSION_FULL}" | head -n 1 | awk '{ print $2 }'
+}
+XCODE_VERSION=$(get_xcode_version)
 check_xcode &
 CHECK_XCODE_TASK_PID=$!
 
