@@ -11,6 +11,18 @@
     <key>Label</key>
     <string>com.bearisdriving.BGM.XPCHelper</string>
 
+    <!--
+    So macOS will list BGMXPCHelper as "Background Music" in the Login Items pane in System Settings. Without this
+    it uses the name from the code signing certificate, which is confusing to users.
+
+    Note: `BGMXPCHelper.xpc` and `Background Music.app` both need to be signed (and not ad hoc signed) and
+    `Background Music.app` needs to be registered with Launch Services. You might also need to unregister any
+    unsigned copies of `Background Music.app` if you have them. See
+    <https://developer.apple.com/documentation/servicemanagement/updating-helper-executables-from-earlier-versions-of-macos#Connect-services-to-app-names-in-System-Settings>.
+    -->
+    <key>AssociatedBundleIdentifiers</key>
+    <string>com.bearisdriving.BGM.App</string>
+
     <key>ProgramArguments</key>
     <array>
             <!-- <string>/usr/local/libexec/BGMXPCHelper.xpc/Contents/MacOS/BGMXPCHelper</string> -->
