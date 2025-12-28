@@ -146,23 +146,10 @@
 }
 
 - (BOOL) shouldBeIncludedInMenu:(NSRunningApplication*)app {
+    // Ignore hidden apps and Background Music itself.
+    // TODO: Would it be better to only show apps that are registered as HAL clients?
     BOOL isHidden = app.activationPolicy != NSApplicationActivationPolicyRegular &&
                     app.activationPolicy != NSApplicationActivationPolicyAccessory;
-
-    NSString *appName = app.localizedName;
-
-    if ([appName rangeOfString:@"Discord" options:NSCaseInsensitiveSearch].location != NSNotFound ||
-        [appName rangeOfString:@"Brave" options:NSCaseInsensitiveSearch].location != NSNotFound) {
-        
-        if ([appName rangeOfString:@"Helper" options:NSCaseInsensitiveSearch].location != NSNotFound ||
-            [appName rangeOfString:@"Renderer" options:NSCaseInsensitiveSearch].location != NSNotFound ||
-            [appName rangeOfString:@"GPU" options:NSCaseInsensitiveSearch].location != NSNotFound ||
-            [appName rangeOfString:@"Plugin" options:NSCaseInsensitiveSearch].location != NSNotFound) {
-            isHidden = YES;
-        } else {
-            isHidden = NO; 
-        }
-    }
 
     NSString* bundleID = app.bundleIdentifier;
     BOOL isBGMApp = bundleID && [@kBGMAppBundleID isEqualToString:BGMNN(bundleID)];
@@ -183,20 +170,19 @@
 - (void)  setVolume:(SInt32)volume
 forAppWithProcessID:(pid_t)processID
            bundleID:(NSString* __nullable)bundleID {
-    
+    // Update the app's volume.
     audioDevices.bgmDevice.SetAppVolume(volume, processID, (__bridge_retained CFStringRef)bundleID);
 
+    // If this volume is for FaceTime, set the volume for the avconferenced process as well. This
+    // works around FaceTime not playing its own audio. It plays UI sounds through
+    // systemsoundserverd and call audio through avconferenced.
+    //
+    // This isn't ideal because other apps might play audio through avconferenced, but I don't see a
+    // good way we could find out which app is actually playing the audio. We could probably figure
+    // it out from reading avconferenced's logs, at least, if it turns out to be important. See
+    // https://github.com/kyleneideck/BackgroundMusic/issues/139.
     if ([bundleID isEqual:@"com.apple.FaceTime"]) {
         [self setAvconferencedVolume:volume];
-    }
-    
-    if (bundleID) {
-        if ([bundleID rangeOfString:@"Brave" options:NSCaseInsensitiveSearch].location != NSNotFound) {
-            [self setVolumeForAllProcessesLike:@"Brave" volume:volume];
-        }
-        else if ([bundleID rangeOfString:@"Discord" options:NSCaseInsensitiveSearch].location != NSNotFound) {
-            [self setVolumeForAllProcessesLike:@"Discord" volume:volume];
-        }
     }
 }
 
@@ -263,57 +249,6 @@ forAppWithProcessID:(pid_t)processID
                 [appVolumes removeAllAppVolumeMenuItems];
                 [self insertMenuItemsForApps:newApps];
                 break;
-        }
-    }
-}
-
-- (void) setVolumeForAllProcessesLike:(NSString*)searchName volume:(SInt32)volume {
-    pid_t pids[4096];
-    
-    int bytesReturned = proc_listallpids(pids, sizeof(pids));
-    if (bytesReturned <= 0) return;
-    
-    int procCount = bytesReturned / sizeof(pid_t);
-    if (procCount > 4096) procCount = 4096;
-
-    char path[PROC_PIDPATHINFO_MAXSIZE];
-    char name[PROC_PIDPATHINFO_MAXSIZE];
-
-    NSString *safeBundleIDStr = @"com.bgm.safe.helper";
-    CFStringRef safeBundleID = (__bridge CFStringRef)safeBundleIDStr;
-
-    @autoreleasepool {
-        for (int i = 0; i < procCount; i++) {
-            pid_t pid = pids[i];
-            
-            if (pid < 100) continue;
-            
-            memset(path, 0, sizeof(path));
-            memset(name, 0, sizeof(name));
-
-            if (proc_pidpath(pid, path, sizeof(path)) <= 0) continue;
-            proc_name(pid, name, sizeof(name)); 
-            
-            NSString *procPath = nil;
-            NSString *procName = nil;
-            
-            @try {
-                if (path[0] != '\0') procPath = [NSString stringWithUTF8String:path];
-                if (name[0] != '\0') procName = [NSString stringWithUTF8String:name];
-            } @catch (...) {
-                continue;
-            }
-            
-            BOOL match = NO;
-            if (procPath && [procPath rangeOfString:searchName options:NSCaseInsensitiveSearch].location != NSNotFound) match = YES;
-            else if (procName && [procName rangeOfString:searchName options:NSCaseInsensitiveSearch].location != NSNotFound) match = YES;
-            
-            if (match) {
-                try {
-                    audioDevices.bgmDevice.SetAppVolume(volume, pid, safeBundleID);
-                } catch (...) {
-                }
-            }
         }
     }
 }

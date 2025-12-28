@@ -117,22 +117,13 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
     }
 #endif
 
-    // --- GÜNCELLENEN KISIM ---
-    // Discord veya Brave helper'larını ana menüye zorla
-    BOOL isTargetApp = [app.localizedName containsString:@"Discord"] || 
-                       [app.bundleIdentifier containsString:@"Discord"] ||
-                       [app.localizedName containsString:@"Brave"]   || 
-                       [app.bundleIdentifier containsString:@"Brave"];
-
     // Add the menu item to its menu.
-    if (app.activationPolicy == NSApplicationActivationPolicyRegular || isTargetApp) {
+    if (app.activationPolicy == NSApplicationActivationPolicyRegular) {
         [bgmMenu insertItem:appVolItem atIndex:[self firstMenuItemIndex]];
         numMenuItems++;
     } else if (app.activationPolicy == NSApplicationActivationPolicyAccessory) {
         [moreAppsMenu insertItem:appVolItem atIndex:0];
     }
-    // --------------------------
-    // --- DEĞİŞTİRİLEN KISIM BİTİŞ ---
 }
 
 - (NSMenuItem*) getMenuItemForApp:(NSRunningApplication*)app {
