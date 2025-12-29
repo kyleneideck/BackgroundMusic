@@ -17,7 +17,7 @@
 //  BGM_ClientMap.cpp
 //  BGMDriver
 //
-//  Copyright © 2016, 2017, 2019 Kyle Neideck
+//  Copyright © 2016, 2017, 2019, 2025 Kyle Neideck
 //  Copyright © 2017 Andrew Tonner
 //
 
@@ -264,6 +264,9 @@ std::vector<BGM_Client*> * _Nullable BGM_ClientMap::GetClients(pid_t inAppPid) {
 }
 
 std::vector<BGM_Client*> * _Nullable BGM_ClientMap::GetClients(CACFString inAppBundleID) {
+    if(!inAppBundleID.IsValid()) {
+        return nullptr;
+    }
     return GetClientsFromMap(mClientMapByBundleIDShadow, inAppBundleID);
 }
 
@@ -335,12 +338,12 @@ bool BGM_ClientMap::SetClientsRelativeVolume(pid_t searchKey, Float32 inRelative
 bool BGM_ClientMap::SetClientsRelativeVolume(CACFString searchKey, Float32 inRelativeVolume)
 {
     bool didChangeVolume = false;
-    
+
     CAMutex::Locker theShadowMapsLocker(mShadowMapsMutex);
-    
+
     auto theSetVolumesInShadowMapsFunc = [&] {
         // Look up the clients for the key and update their volumes
-        
+
         auto theClients = GetClients(searchKey);
         if(theClients != nullptr)
         {
@@ -389,9 +392,9 @@ bool BGM_ClientMap::SetClientsPanPosition(pid_t searchKey, SInt32 inPanPosition)
 bool BGM_ClientMap::SetClientsPanPosition(CACFString searchKey, SInt32 inPanPosition)
 {
     bool didChangePanPosition = false;
-    
+
     CAMutex::Locker theShadowMapsLocker(mShadowMapsMutex);
-    
+
     auto theSetPansInShadowMapsFunc = [&] {
         // Look up the clients for the key and update their pan positions
         auto theClients = GetClients(searchKey);
