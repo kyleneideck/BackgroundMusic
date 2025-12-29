@@ -17,7 +17,7 @@
 //  BGM_ClientMap.h
 //  BGMDriver
 //
-//  Copyright © 2016 Kyle Neideck
+//  Copyright © 2016, 2025 Kyle Neideck
 //
 
 #ifndef __BGMDriver__BGM_ClientMap__
@@ -131,11 +131,13 @@ public:
     // Returns true if a client for PID inAppPID was found and its relative volume changed.
     bool                                                SetClientsRelativeVolume(pid_t inAppPID, Float32 inRelativeVolume);
     // Returns true if a client for bundle ID inAppBundleID was found and its relative volume changed.
+    // inAppBundleID may contain a null CFStringRef, in which case it returns false.
     bool                                                SetClientsRelativeVolume(CACFString inAppBundleID, Float32 inRelativeVolume);
     
     // Returns true if a client for PID inAppPID was found and its pan position changed.
     bool                                                SetClientsPanPosition(pid_t inAppPID, SInt32 inPanPosition);
     // Returns true if a client for bundle ID inAppBundleID was found and its pan position changed.
+    // inAppBundleID may contain a null CFStringRef, in which case it returns false.
     bool                                                SetClientsPanPosition(CACFString inAppBundleID, SInt32 inPanPosition);
     
     void                                                StartIONonRT(UInt32 inClientID) { UpdateClientIOStateNonRT(inClientID, true); }

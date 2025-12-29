@@ -17,7 +17,7 @@
 //  MockAudioObjects.cpp
 //  BGMAppUnitTests
 //
-//  Copyright © 2020 Kyle Neideck
+//  Copyright © 2020, 2025 Kyle Neideck
 //
 
 // Self Include
@@ -25,6 +25,9 @@
 
 // PublicUtility Includes
 #include "CACFString.h"
+
+// STL Includes
+#include <vector>
 
 
 // static
@@ -87,9 +90,9 @@ std::shared_ptr<MockAudioDevice> MockAudioObjects::GetAudioDevice(CFStringRef in
 {
     // Convert inUID to a std::string.
     UInt32 uidCStringLen = CACFString::GetStringByteLength(inUID) + 1;
-    char uidCString[uidCStringLen];
-    CACFString::GetCString(inUID, uidCString, uidCStringLen);
-    std::string uid = std::string(uidCString);
+    std::vector<char> uidCString(uidCStringLen);
+    CACFString::GetCString(inUID, uidCString.data(), uidCStringLen);
+    std::string uid = std::string(uidCString.data());
 
     return GetAudioDevice(uid);
 }

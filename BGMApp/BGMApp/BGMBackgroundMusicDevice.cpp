@@ -237,7 +237,14 @@ BGMBackgroundMusicDevice::ResponsibleBundleIDsOf(CACFString inParentBundleID)
         { "hu.mplayerhq.mplayerosx.extended",
                 { "ch.sttz.mplayerosx.extended.binaries.officialsvn" } },
         // Discord
-        { "com.hnc.Discord", { "com.hnc.Discord.helper" } },
+        { "com.hnc.Discord",
+            { "com.hnc.Discord.helper",
+              "com.hnc.Discord.helper.Renderer",
+              "com.hnc.Discord.helper.Plugin" } },
+        // Brave
+        { "com.brave.Browser",
+            { "com.brave.Browser.helper",
+              "com.brave.Browser.helper.plugin" } },
         // Skype
         { "com.skype.skype", { "com.skype.skype.Helper" } },
         // Google Chrome

@@ -17,7 +17,7 @@
 //  BGM_Device.cpp
 //  BGMDriver
 //
-//  Copyright © 2016, 2017, 2019 Kyle Neideck
+//  Copyright © 2016, 2017, 2019, 2025 Kyle Neideck
 //  Copyright © 2017 Andrew Tonner
 //  Copyright © 2019 Gordon Childs
 //  Copyright © 2020 Aleksey Yurkevich
@@ -40,6 +40,7 @@
 #include "CADispatchQueue.h"
 #include "CAException.h"
 #include "CACFArray.h"
+#include "CACFDictionary.h"
 #include "CACFString.h"
 #include "CADebugMacros.h"
 #include "CAHostTimeBase.h"
@@ -1001,6 +1002,74 @@ void	BGM_Device::Device_GetPropertyData(AudioObjectID inObjectID, pid_t inClient
 	};
 }
 
+// Validates inAppVolumes for the kAudioDeviceCustomPropertyAppVolumes property as described in
+// BGM_Types.h. Throws CAException(kAudioHardwareIllegalOperationError) if invalid.
+static void ValidateAppVolumesProperty(const CACFArray& inAppVolumes)
+{
+    UInt32 theCount = inAppVolumes.GetNumberItems();
+
+    for(UInt32 i = 0; i < theCount; i++)
+    {
+        // Each element must be a CFDictionary.
+        CFTypeRef theElement = nullptr;
+        bool didGetValue = inAppVolumes.GetCFType(i, theElement);
+        ThrowIf(!didGetValue || theElement == nullptr,
+                CAException(kAudioHardwareIllegalOperationError),
+                "BGM_Device::ValidateAppVolumesProperty: Could not get element from array");
+        ThrowIf(CFGetTypeID(theElement) != CFDictionaryGetTypeID(),
+                CAException(kAudioHardwareIllegalOperationError),
+                "BGM_Device::ValidateAppVolumesProperty: Element is not a CFDictionary");
+
+        CACFDictionary theDict(static_cast<CFDictionaryRef>(theElement), false);
+
+        // Check for ProcessID. Must be a CFNumber if present.
+        CFTypeRef thePIDValue = nullptr;
+        bool hasPID = theDict.GetCFType(CFSTR(kBGMAppVolumesKey_ProcessID), thePIDValue);
+        if(hasPID && thePIDValue != nullptr)
+        {
+            ThrowIf(CFGetTypeID(thePIDValue) != CFNumberGetTypeID(),
+                    CAException(kAudioHardwareIllegalOperationError),
+                    "BGM_Device::ValidateAppVolumesProperty: ProcessID is not a CFNumber");
+        }
+
+        // Check for BundleID. Must be a CFString if present.
+        CFTypeRef theBundleIDValue = nullptr;
+        bool hasBundleID = theDict.GetCFType(CFSTR(kBGMAppVolumesKey_BundleID), theBundleIDValue);
+        if(hasBundleID && theBundleIDValue != nullptr)
+        {
+            ThrowIf(CFGetTypeID(theBundleIDValue) != CFStringGetTypeID(),
+                    CAException(kAudioHardwareIllegalOperationError),
+                    "BGM_Device::ValidateAppVolumesProperty: BundleID is not a CFString");
+        }
+
+        // At least one of ProcessID or BundleID must be present.
+        ThrowIf(!hasPID && !hasBundleID,
+                CAException(kAudioHardwareIllegalOperationError),
+                "BGM_Device::ValidateAppVolumesProperty: Neither ProcessID nor BundleID present");
+
+        // Check RelativeVolume. Must be a CFNumber in [0, 100] if present.
+        SInt32 theVolume;
+        bool hasVolume = theDict.GetSInt32(CFSTR(kBGMAppVolumesKey_RelativeVolume), theVolume);
+        if(hasVolume)
+        {
+            ThrowIf(theVolume < kAppRelativeVolumeMinRawValue ||
+                    theVolume > kAppRelativeVolumeMaxRawValue,
+                    CAException(kAudioHardwareIllegalOperationError),
+                    "BGM_Device::ValidateAppVolumesProperty: RelativeVolume out of range");
+        }
+
+        // Check PanPosition. Must be a CFNumber in [-100, 100] if present.
+        SInt32 thePan;
+        bool hasPan = theDict.GetSInt32(CFSTR(kBGMAppVolumesKey_PanPosition), thePan);
+        if(hasPan)
+        {
+            ThrowIf(thePan < kAppPanLeftRawValue || thePan > kAppPanRightRawValue,
+                    CAException(kAudioHardwareIllegalOperationError),
+                    "BGM_Device::ValidateAppVolumesProperty: PanPosition out of range");
+        }
+    }
+}
+
 void	BGM_Device::Device_SetPropertyData(AudioObjectID inObjectID, pid_t inClientPID, const AudioObjectPropertyAddress& inAddress, UInt32 inQualifierDataSize, const void* inQualifierData, UInt32 inDataSize, const void* inData)
 {
 	switch(inAddress.mSelector)
@@ -1092,6 +1161,8 @@ void	BGM_Device::Device_SetPropertyData(AudioObjectID inObjectID, pid_t inClient
                 
                 CACFArray array(arrayRef, false);
 
+                ValidateAppVolumesProperty(array);
+
                 bool propertyWasChanged = false;
 
 				CAMutex::Locker theStateLocker(mStateMutex);
@@ -1104,7 +1175,7 @@ void	BGM_Device::Device_SetPropertyData(AudioObjectID inObjectID, pid_t inClient
                 {
                     Throw(CAException(kAudioHardwareIllegalOperationError));
                 }
-                
+
                 if(propertyWasChanged)
                 {
                     // Send notification

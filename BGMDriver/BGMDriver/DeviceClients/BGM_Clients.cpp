@@ -17,7 +17,7 @@
 //  BGM_Clients.cpp
 //  BGMDriver
 //
-//  Copyright © 2016, 2017, 2019 Kyle Neideck
+//  Copyright © 2016, 2017, 2019, 2025 Kyle Neideck
 //  Copyright © 2017 Andrew Tonner
 //
 
@@ -26,6 +26,7 @@
 
 // Local Includes
 #include "BGM_Types.h"
+#include "BGM_Utils.h"
 #include "BGM_PlugIn.h"
 
 // PublicUtility Includes
@@ -324,26 +325,22 @@ bool    BGM_Clients::SetClientsRelativeVolumes(const CACFArray inAppVolumes)
         // Get the app's PID from the dict
         pid_t theAppPID;
         bool didFindPID = theAppVolume.GetSInt32(CFSTR(kBGMAppVolumesKey_ProcessID), theAppPID);
-        
+
         // Get the app's bundle ID from the dict
         CACFString theAppBundleID;
         theAppBundleID.DontAllowRelease();
         theAppVolume.GetCACFString(CFSTR(kBGMAppVolumesKey_BundleID), theAppBundleID);
-        
-        ThrowIf(!didFindPID && !theAppBundleID.IsValid(),
-                BGM_InvalidClientRelativeVolumeException(),
-                "BGM_Clients::SetClientsRelativeVolumes: App volume was sent without PID or bundle ID for app");
-        
+
+        BGMAssert(didFindPID || theAppBundleID.IsValid(),
+                  "BGM_Clients::SetClientsRelativeVolumes: No PID or bundle ID");
+        (void)didFindPID;  // Suppress unused variable warning in release builds.
+
         bool didGetVolume;
         {
             SInt32 theRawRelativeVolume;
             didGetVolume = theAppVolume.GetSInt32(CFSTR(kBGMAppVolumesKey_RelativeVolume), theRawRelativeVolume);
-            
+
             if (didGetVolume) {
-                ThrowIf(didGetVolume && (theRawRelativeVolume < kAppRelativeVolumeMinRawValue || theRawRelativeVolume > kAppRelativeVolumeMaxRawValue),
-                        BGM_InvalidClientRelativeVolumeException(),
-                        "BGM_Clients::SetClientsRelativeVolumes: Relative volume for app out of valid range");
-                
                 // Apply the volume curve to the raw volume
                 //
                 // mRelativeVolumeCurve uses the default kPow2Over1Curve transfer function, so we also multiply by 4 to
@@ -372,10 +369,6 @@ bool    BGM_Clients::SetClientsRelativeVolumes(const CACFArray inAppVolumes)
             SInt32 thePanPosition;
             didGetPanPosition = theAppVolume.GetSInt32(CFSTR(kBGMAppVolumesKey_PanPosition), thePanPosition);
             if (didGetPanPosition) {
-                ThrowIf(didGetPanPosition && (thePanPosition < kAppPanLeftRawValue || thePanPosition > kAppPanRightRawValue),
-                                              BGM_InvalidClientPanPositionException(),
-                                              "BGM_Clients::SetClientsRelativeVolumes: Pan position for app out of valid range");
-                
                 if(mClientMap.SetClientsPanPosition(theAppPID, thePanPosition))
                 {
                     didChangeAppVolumes = true;
