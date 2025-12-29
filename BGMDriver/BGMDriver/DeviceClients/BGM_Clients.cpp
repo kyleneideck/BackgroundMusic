@@ -333,6 +333,7 @@ bool    BGM_Clients::SetClientsRelativeVolumes(const CACFArray inAppVolumes)
 
         BGMAssert(didFindPID || theAppBundleID.IsValid(),
                   "BGM_Clients::SetClientsRelativeVolumes: No PID or bundle ID");
+        (void)didFindPID;  // Suppress unused variable warning in release builds.
 
         bool didGetVolume;
         {
