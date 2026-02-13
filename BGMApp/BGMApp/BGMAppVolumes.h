@@ -63,6 +63,13 @@
 
 // Custom classes for the UI elements in the app volume menu items
 
+@interface BGMAVM_VolumeMute: NSButton <BGMAppVolumeMenuItemSubview>
+
+- (void) bgm_syncForVolume:(int)vol;
+
+@end
+
+
 @interface BGMAVM_AppIcon : NSImageView <BGMAppVolumeMenuItemSubview>
 @end
 
