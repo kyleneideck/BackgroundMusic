@@ -45,6 +45,10 @@ NS_ASSUME_NONNULL_BEGIN
  aboutPanelLicenseView:(NSTextView*)inAboutPanelLicenseView
           userDefaults:(BGMUserDefaults*)inUserDefaults;
 
+//IMP change here
+- (IBAction)openLoginItemsSettings:(id)sender;
+//change here
+
 @end
 
 NS_ASSUME_NONNULL_END

@@ -30,6 +30,10 @@
 // System Includes
 #import <math.h>
 
+//included the Cocoa framework so I could create a menu item and open System Settings !
+#import <Cocoa/Cocoa.h>
+
+
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -97,9 +101,19 @@ static NSInteger const kAboutPanelMenuItemTag  = 4;
         [aboutMenuItem setTarget:aboutPanel];
         [aboutMenuItem setAction:@selector(show)];
         
+        //created a new menu item in the Preferences menu !
+        NSMenuItem* launchAtLoginItem =
+            [[NSMenuItem alloc] initWithTitle:@"Launch at Login Settings"
+                                action:@selector(openLoginItemsSettings:)
+                                keyEquivalent:@""];
+        launchAtLoginItem.target = self;
+        [prefsMenu addItem:launchAtLoginItem];
+        //
+        
         // Set up delay preferences
         userDefaults = inUserDefaults;
         [self setupDelayPreferences:prefsMenu];
+    
     }
     
     return self;
@@ -283,6 +297,17 @@ static NSInteger const kAboutPanelMenuItemTag  = 4;
     
     return (NSInteger)MIN(MAX(sliderValue, 0), 100);
 }
+
+//created a function, this runs when the menu item is clicked !
+- (IBAction)openLoginItemsSettings:(id)sender {
+    (void)sender;
+    NSURL* url = [NSURL URLWithString:@"x-apple.systempreferences:com.apple.LoginItems-Settings.extension"];
+    if (url) {
+        [[NSWorkspace sharedWorkspace] openURL:url];
+    }
+}
+//
+
 
 @end
 
