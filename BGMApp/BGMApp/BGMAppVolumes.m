@@ -17,10 +17,11 @@
 //  BGMAppVolumes.m
 //  BGMApp
 //
-//  Copyright © 2016-2020 Kyle Neideck
+//  Copyright © 2016-2020, 2026 Kyle Neideck
 //  Copyright © 2017 Andrew Tonner
 //  Copyright © 2021 Marcus Wu
 //  Copyright © 2022 Jon Egan
+//  Copyright © 2026 TwelfthFace
 //
 
 // Self Include
@@ -423,20 +424,132 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
 
 @end
 
-@implementation BGMAVM_VolumeSlider {
-    // Will be set to -1 for apps without a pid
+@implementation BGMAVM_VolumeMute {
     pid_t appProcessID;
     NSString* __nullable appBundleID;
     BGMAppVolumesController* controller;
+}
+
+- (NSString*) lastNonZeroVolumeDefaultsKey {
+    if (appBundleID.length > 0) {
+        return [NSString stringWithFormat:@"BGMAVM_LastNonZeroVolume_%@", appBundleID];
+    }
+    return [NSString stringWithFormat:@"BGMAVM_LastNonZeroVolume_pid_%d", appProcessID];
+}
+
+- (BOOL) isMuted:(int)value {
+    return value <= kAppRelativeVolumeMinRawValue;
+}
+
+- (int) defaultRestoreVolume {
+    return (int)((kAppRelativeVolumeMaxRawValue + kAppRelativeVolumeMinRawValue) / 2);
+}
+
+- (BGMAVM_VolumeSlider* __nullable) findSiblingVolumeSlider {
+    for (NSView* view in self.superview.subviews) {
+        if ([view isKindOfClass:[BGMAVM_VolumeSlider class]]) {
+            return (BGMAVM_VolumeSlider*)view;
+        }
+    }
+    return nil;
+}
+
+- (void) updateButtonForVolume:(int)volume {
+    BOOL muted = [self isMuted:volume];
+
+    if ([NSImage respondsToSelector:@selector(imageWithSystemSymbolName:accessibilityDescription:)]) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpartial-availability"
+        NSString* symbol = muted ? @"speaker.slash.fill" : @"speaker.wave.2.fill";
+        NSString* description = muted ? @"Unmute" : @"Mute";
+        self.image = [NSImage imageWithSystemSymbolName:symbol accessibilityDescription:description];
+#pragma clang diagnostic pop
+        self.imagePosition = NSImageOnly;
+        self.title = @"";
+    } else {
+        self.title = muted ? @"Unmute" : @"Mute";
+    }
+}
+
+- (void) bgm_syncForVolume:(int)volume {
+    [self updateButtonForVolume:volume];
 }
 
 - (void) setUpWithApp:(NSRunningApplication*)app
               context:(BGMAppVolumes*)ctx
            controller:(BGMAppVolumesController*)ctrl
              menuItem:(NSMenuItem*)menuItem {
-    #pragma unused (ctx, menuItem)
+#pragma unused (ctx, menuItem)
+
+    controller = ctrl;
+    appProcessID = app.processIdentifier;
+    appBundleID = app.bundleIdentifier;
+
+    self.target = self;
+    self.action = @selector(mutePressed:);
+
+    BGMAVM_VolumeSlider* slider = [self findSiblingVolumeSlider];
+    int currentVol = slider ? slider.intValue : kAppRelativeVolumeMinRawValue;
+    [self updateButtonForVolume:currentVol];
+}
+
+- (IBAction) mutePressed:(id)sender {
+#pragma unused(sender)
+
+    BGMAVM_VolumeSlider* slider = [self findSiblingVolumeSlider];
+    if (!slider) {
+        DebugMsg("Mute button: no slider found");
+        return;
+    }
+
+    int currentVol = slider.intValue;
+    BOOL mutedNow = [self isMuted:currentVol];
+
+    if (!mutedNow) {
+        // Store last volume
+        [[NSUserDefaults standardUserDefaults] setInteger:currentVol
+                                                   forKey:[self lastNonZeroVolumeDefaultsKey]];
+
+        [slider setRelativeVolume:kAppRelativeVolumeMinRawValue];
+    } else {
+        NSInteger last = [[NSUserDefaults standardUserDefaults] integerForKey:[self lastNonZeroVolumeDefaultsKey]];
+        int restoreVol = (int)last;
+
+        if (restoreVol <= kAppRelativeVolumeMinRawValue ||
+            restoreVol > kAppRelativeVolumeMaxRawValue) {
+            restoreVol = [self defaultRestoreVolume];
+        }
+
+        [slider setRelativeVolume:restoreVol];
+    }
+
+    [controller setVolume:slider.intValue
+      forAppWithProcessID:appProcessID
+                 bundleID:appBundleID];
+
+    [self updateButtonForVolume:slider.intValue];
+}
+
+@end
+
+@implementation BGMAVM_VolumeSlider {
+    // Will be set to -1 for apps without a pid
+    pid_t appProcessID;
+    NSString* __nullable appBundleID;
+    BGMAppVolumesController* controller;
+
+    // Keep the menu item so we can sync the mute button when the slider changes.
+    __weak NSMenuItem* menuItem;
+}
+
+- (void) setUpWithApp:(NSRunningApplication*)app
+              context:(BGMAppVolumes*)ctx
+           controller:(BGMAppVolumesController*)ctrl
+             menuItem:(NSMenuItem*)inMenuItem {
+    #pragma unused (ctx)
     
     controller = ctrl;
+    menuItem = inMenuItem;
     
     self.target = self;
     self.action = @selector(appVolumeChanged);
@@ -483,6 +596,13 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
     // The values from our sliders are in
     // [kAppRelativeVolumeMinRawValue, kAppRelativeVolumeMaxRawValue] already.
     [controller setVolume:self.intValue forAppWithProcessID:appProcessID bundleID:appBundleID];
+
+    // Sync the mute button so it reflects muted/unmuted when the user drags the slider.
+    for (NSView* subview in menuItem.view.subviews) {
+        if ([subview isKindOfClass:[BGMAVM_VolumeMute class]]) {
+            [(BGMAVM_VolumeMute*)subview bgm_syncForVolume:self.intValue];
+        }
+    }
 }
 
 @end
@@ -533,3 +653,4 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
 }
 
 @end
+

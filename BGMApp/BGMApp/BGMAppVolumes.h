@@ -19,6 +19,7 @@
 //
 //  Copyright © 2016, 2017 Kyle Neideck
 //  Copyright © 2021 Marcus Wu
+//  Copyright © 2026 TwelfthFace
 //
 
 // Local Includes
@@ -62,6 +63,13 @@
 @end
 
 // Custom classes for the UI elements in the app volume menu items
+
+@interface BGMAVM_VolumeMute: NSButton <BGMAppVolumeMenuItemSubview>
+
+- (void) bgm_syncForVolume:(int)vol;
+
+@end
+
 
 @interface BGMAVM_AppIcon : NSImageView <BGMAppVolumeMenuItemSubview>
 @end
