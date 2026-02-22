@@ -82,16 +82,16 @@
             <point key="canvasLocation" x="-184" y="-69.5"/>
         </menu>
         <customView wantsLayer="YES" id="MWB-XH-kFI">
-            <rect key="frame" x="0.0" y="0.0" width="269" height="86"/>
+            <rect key="frame" x="0.0" y="0.0" width="269" height="47"/>
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
             <subviews>
                 <imageView identifier="AppIcon" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="W04-iT-IUw" customClass="BGMAVM_AppIcon">
-                    <rect key="frame" x="20" y="66" width="16" height="16"/>
+                    <rect key="frame" x="20" y="27" width="16" height="16"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" id="6QQ-oO-HxF"/>
                 </imageView>
                 <button springLoaded="YES" verticalHuggingPriority="750" id="3qR-sO-pXN" customClass="BGMAVM_VolumeMute">
-                    <rect key="frame" x="139" y="63.5" width="21.5" height="21"/>
+                    <rect key="frame" x="139" y="24.5" width="21.5" height="21"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <buttonCell key="cell" type="smallSquare" bezelStyle="smallSquare" image="NSAddTemplate" imagePosition="overlaps" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" id="xzH-YY-5On">
                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -99,19 +99,19 @@
                     </buttonCell>
                 </button>
                 <slider verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="I1l-Ci-4md" customClass="BGMAVM_VolumeSlider">
-                    <rect key="frame" x="163" y="66" width="74" height="15"/>
+                    <rect key="frame" x="163" y="27" width="74" height="15"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <sliderCell key="cell" controlSize="mini" continuous="YES" state="on" alignment="left" maxValue="100" doubleValue="50" tickMarkPosition="above" sliderType="linear" id="Jmg-df-9Xl"/>
                     <accessibility description="Volume"/>
                 </slider>
                 <slider toolTip="Pan" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2mh-uO-kOV" customClass="BGMAVM_PanSlider">
-                    <rect key="frame" x="163" y="46" width="74" height="15"/>
+                    <rect key="frame" x="163" y="7" width="74" height="15"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <sliderCell key="cell" controlSize="mini" continuous="YES" state="on" alignment="left" minValue="-100" maxValue="100" tickMarkPosition="below" numberOfTickMarks="1" sliderType="linear" id="ccM-Mt-93g"/>
                     <accessibility description="Pan"/>
                 </slider>
                 <button tag="1" springLoaded="YES" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="vTG-n6-GxY" customClass="BGMAVM_ShowMoreControlsButton">
-                    <rect key="frame" x="243" y="66" width="16" height="17"/>
+                    <rect key="frame" x="243" y="27" width="16" height="17"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <contentFilters>
                         <ciFilter name="CIAffineTransform">
@@ -127,7 +127,7 @@
                     </buttonCell>
                 </button>
                 <textField identifier="PanLeft" toolTip="Pan" focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="9jc-9i-jw2">
-                    <rect key="frame" x="162" y="38" width="12" height="17"/>
+                    <rect key="frame" x="162" y="-1" width="12" height="17"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="L" id="hgE-7A-bez">
                         <font key="font" metaFont="menu" size="9"/>
@@ -136,7 +136,7 @@
                     </textFieldCell>
                 </textField>
                 <textField identifier="PanRight" toolTip="Pan" focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1lZ-hX-6Kl">
-                    <rect key="frame" x="228" y="38" width="12" height="17"/>
+                    <rect key="frame" x="228" y="-1" width="12" height="17"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="R" id="lzr-NO-0Na">
                         <font key="font" metaFont="menu" size="9"/>
@@ -145,7 +145,7 @@
                     </textFieldCell>
                 </textField>
                 <textField identifier="AppName" focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Xmd-bg-huG" customClass="BGMAVM_AppNameLabel">
-                    <rect key="frame" x="44" y="66" width="87" height="14"/>
+                    <rect key="frame" x="44" y="27" width="87" height="14"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <textFieldCell key="cell" controlSize="small" lineBreakMode="truncatingTail" allowsUndo="NO" sendsActionOnEndEditing="YES" alignment="left" title="App name here" usesSingleLineMode="YES" id="ZHF-ZW-Oqg">
                         <font key="font" metaFont="message" size="11"/>
