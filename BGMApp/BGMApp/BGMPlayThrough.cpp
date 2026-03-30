@@ -606,8 +606,8 @@ OSStatus    BGMPlayThrough::WaitForOutputDeviceToStart() noexcept
 
         DebugMsg("BGMPlayThrough::WaitForOutputDeviceToStart: Started %f ms after notification, %f "
                  "ms after entering WaitForOutputDeviceToStart.",
-                 static_cast<Float64>(startedBy - mToldOutputDeviceToStartAt) * base / NSEC_PER_MSEC,
-                 static_cast<Float64>(startedBy - startedAt) * base / NSEC_PER_MSEC);
+                 static_cast<Float64>(startedBy - mToldOutputDeviceToStartAt) * static_cast<Float64>(base) / NSEC_PER_MSEC,
+                 static_cast<Float64>(startedBy - startedAt) * static_cast<Float64>(base) / NSEC_PER_MSEC);
     }
 
     // Figure out which error code to return.
@@ -1121,7 +1121,7 @@ OSStatus    BGMPlayThrough::OutputDeviceIOProc(AudioObjectID           inDevice,
                                                 refCon->mInToOutSampleOffset);
 
             // Recalculate the in-to-out offset and read head.
-            refCon->mInToOutSampleOffset = inOutputTime->mSampleTime - lastInputSampleTime;
+            refCon->mInToOutSampleOffset = inOutputTime->mSampleTime - static_cast<Float64>(lastInputSampleTime);
             readHeadSampleTime = static_cast<CARingBuffer::SampleTime>(
                     inOutputTime->mSampleTime - refCon->mInToOutSampleOffset);
         }

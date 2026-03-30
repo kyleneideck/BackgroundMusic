@@ -72,6 +72,20 @@ bool    BGMAudioDevice::CanBeOutputDeviceInBGMApp() const
             canBeDefault;
 }
 
+#pragma mark Device Type
+
+bool    BGMAudioDevice::IsAggregate() const
+{
+    try
+    {
+        return GetTransportType() == kAudioDeviceTransportTypeAggregate;
+    }
+    catch(CAException)
+    {
+        return false;
+    }
+}
+
 #pragma mark Available Controls
 
 bool    BGMAudioDevice::HasSettableMasterVolume(AudioObjectPropertyScope inScope) const
@@ -115,6 +129,12 @@ bool    BGMAudioDevice::HasSettableMasterMute(AudioObjectPropertyScope inScope) 
 void    BGMAudioDevice::CopyMuteFrom(const BGMAudioDevice inDevice,
                                      AudioObjectPropertyScope inScope)
 {
+    // Skip aggregate devices for the same reason as in CopyVolumeFrom.
+    if(IsAggregate() || inDevice.IsAggregate())
+    {
+        return;
+    }
+
     // TODO: Support for devices that have per-channel mute controls but no master mute control
     if(HasSettableMasterMute(inScope) && inDevice.HasMuteControl(inScope, kMasterChannel))
     {
@@ -127,6 +147,17 @@ void    BGMAudioDevice::CopyMuteFrom(const BGMAudioDevice inDevice,
 void    BGMAudioDevice::CopyVolumeFrom(const BGMAudioDevice inDevice,
                                        AudioObjectPropertyScope inScope)
 {
+    // Don't try to copy volume to/from aggregate devices. Aggregate devices rely on macOS to
+    // manage their virtual volume control through the sub-devices. Using the deprecated
+    // AudioHardwareService APIs (which we use for virtual master volume) to write to an aggregate
+    // device can corrupt its volume control state, causing the volume slider to become permanently
+    // disabled in System Settings. See https://github.com/kyleneideck/BackgroundMusic/issues/848
+    if(IsAggregate() || inDevice.IsAggregate())
+    {
+        DebugMsg("BGMAudioDevice::CopyVolumeFrom: Skipping volume copy for aggregate device");
+        return;
+    }
+
     // Get the volume of the other device.
     bool didGetVolume = false;
     Float32 volume = FLT_MIN;
@@ -155,7 +186,7 @@ void    BGMAudioDevice::CopyVolumeFrom(const BGMAudioDevice inDevice,
 
         if(numChannels > 0)  // Avoid divide by zero.
         {
-            volume /= numChannels;
+            volume /= static_cast<Float32>(numChannels);
         }
     }
 
