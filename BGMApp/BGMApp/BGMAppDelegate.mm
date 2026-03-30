@@ -369,12 +369,18 @@ static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
 
 - (void) applicationWillTerminate:(NSNotification*)aNotification {
     #pragma unused (aNotification)
-    
+
     DebugMsg("BGMAppDelegate::applicationWillTerminate");
+
+    // Deactivate control sync and playthrough before changing the default device back. This
+    // prevents the default device change from triggering volume sync listeners that could leave
+    // the output device at the wrong volume. See
+    // https://github.com/kyleneideck/BackgroundMusic/issues/841
+    [audioDevices prepareForTermination];
 
     // Change the user's default output device back.
     NSError* error = [audioDevices unsetBGMDeviceAsOSDefault];
-    
+
     if (error) {
         [self showSetDeviceAsDefaultError:error
                                   message:@"Failed to reset your system's audio output device."
