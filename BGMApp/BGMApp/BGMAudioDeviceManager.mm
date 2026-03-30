@@ -128,6 +128,33 @@
     return nil;
 }
 
+- (void) prepareForTermination {
+    DebugMsg("BGMAudioDeviceManager::prepareForTermination: Deactivating control sync and "
+             "playthrough before termination");
+
+    @try {
+        [stateLock lock];
+
+        // Deactivate control sync BEFORE changing the default device. This removes the volume/mute
+        // listeners so that the default device change doesn't trigger any stale volume sync that
+        // could leave the output device at the wrong volume.
+        // See https://github.com/kyleneideck/BackgroundMusic/issues/841
+        BGMLogAndSwallowExceptions("BGMAudioDeviceManager::prepareForTermination", [&] {
+            deviceControlSync.Deactivate();
+        });
+
+        // Stop playthrough so we don't try to pass audio during shutdown.
+        BGMLogAndSwallowExceptions("BGMAudioDeviceManager::prepareForTermination", [&] {
+            playThrough.Deactivate();
+        });
+        BGMLogAndSwallowExceptions("BGMAudioDeviceManager::prepareForTermination", [&] {
+            playThrough_UISounds.Deactivate();
+        });
+    } @finally {
+        [stateLock unlock];
+    }
+}
+
 - (NSError* __nullable) unsetBGMDeviceAsOSDefault {
     // Copy the devices so we can call the HAL without holding stateLock. See startPlayThroughSync.
     BGMBackgroundMusicDevice* bgmDeviceCopy;
