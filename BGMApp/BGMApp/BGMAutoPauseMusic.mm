@@ -206,7 +206,7 @@ static Float32 const kUnpauseDelayWeightingFactor = 0.1f;
     // TODO: Fading in and out would make short pauses a lot less jarring because, if they were short enough, we wouldn't
     //       actually pause the music player. So you'd hear a dip in the music's volume rather than a gap.
     UInt64 unpauseDelayNsec =
-        static_cast<UInt64>((wentSilent - wentAudible) * kUnpauseDelayWeightingFactor);
+        static_cast<UInt64>(static_cast<Float64>(wentSilent - wentAudible) * kUnpauseDelayWeightingFactor);
     
     // Convert from absolute time to nanos.
     mach_timebase_info_data_t info;

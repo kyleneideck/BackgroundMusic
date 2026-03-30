@@ -400,7 +400,7 @@ Float32	CAVolumeCurve::ConvertRawToDB(SInt32 inRaw) const
 		SInt32 theRawStepsToAdd = std::min(theRawRange, theNumberRawSteps);
 		
 		//	add this many steps worth of db to the answer;
-		theAnswer += theRawStepsToAdd * theDBPerRaw;
+		theAnswer += static_cast<Float32>(theRawStepsToAdd) * theDBPerRaw;
 		
 		//	figure out how many steps are left
 		theNumberRawSteps -= theRawStepsToAdd;

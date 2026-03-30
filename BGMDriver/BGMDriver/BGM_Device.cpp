@@ -1361,8 +1361,8 @@ void	BGM_Device::GetZeroTimeStamp(Float64& outSampleTime, UInt64& outHostTime, U
     	}
     	
     	//	set the return values
-    	outSampleTime = mLoopbackTime.numberTimeStamps * kLoopbackRingBufferFrameSize;
-    	outHostTime = static_cast<UInt64>(mLoopbackTime.anchorHostTime + (static_cast<Float64>(mLoopbackTime.numberTimeStamps) * theHostTicksPerRingBuffer));
+    	outSampleTime = static_cast<Float64>(mLoopbackTime.numberTimeStamps) * kLoopbackRingBufferFrameSize;
+    	outHostTime = static_cast<UInt64>(static_cast<Float64>(mLoopbackTime.anchorHostTime) + (static_cast<Float64>(mLoopbackTime.numberTimeStamps) * theHostTicksPerRingBuffer));
         // TODO: I think we should increment outSeed whenever this device switches to/from having a wrapped engine
     	outSeed = 1;
     }
@@ -1523,16 +1523,13 @@ void	BGM_Device::EndIOOperation(UInt32 inOperationID, UInt32 inIOBufferFrameSize
 void	BGM_Device::ReadInputData(UInt32 inIOBufferFrameSize, Float64 inSampleTime, void* outBuffer)
 {
     // Wrap the provided buffer in an AudioBufferList.
-    AudioBufferList abl = {
-        .mNumberBuffers = 1,
-        .mBuffers[0] = {
-            .mNumberChannels = 2,
-            // Each frame is 2 Float32 samples (one per channel). The number of frames * the number
-            // of bytes per frame = the size of outBuffer in bytes.
-            .mDataByteSize = static_cast<UInt32>(inIOBufferFrameSize * sizeof(Float32) * 2),
-            .mData = outBuffer
-        }
-    };
+    AudioBufferList abl;
+    abl.mNumberBuffers = 1;
+    abl.mBuffers[0].mNumberChannels = 2;
+    // Each frame is 2 Float32 samples (one per channel). The number of frames * the number
+    // of bytes per frame = the size of outBuffer in bytes.
+    abl.mBuffers[0].mDataByteSize = static_cast<UInt32>(inIOBufferFrameSize * sizeof(Float32) * 2);
+    abl.mBuffers[0].mData = outBuffer;
 
     // Copy the audio data from our ring buffer into the provided buffer.
     CARingBufferError err =
@@ -1562,16 +1559,13 @@ void	BGM_Device::ReadInputData(UInt32 inIOBufferFrameSize, Float64 inSampleTime,
 void	BGM_Device::WriteOutputData(UInt32 inIOBufferFrameSize, Float64 inSampleTime, const void* inBuffer)
 {
     // Wrap the provided buffer in an AudioBufferList.
-    AudioBufferList abl = {
-        .mNumberBuffers = 1,
-        .mBuffers[0] = {
-            .mNumberChannels = 2,
-            // Each frame is 2 Float32 samples (one per channel). The number of frames * the number
-            // of bytes per frame = the size of inBuffer in bytes.
-            .mDataByteSize = static_cast<UInt32>(inIOBufferFrameSize * sizeof(Float32) * 2),
-            .mData = const_cast<void *>(inBuffer)
-        }
-    };
+    AudioBufferList abl;
+    abl.mNumberBuffers = 1;
+    abl.mBuffers[0].mNumberChannels = 2;
+    // Each frame is 2 Float32 samples (one per channel). The number of frames * the number
+    // of bytes per frame = the size of inBuffer in bytes.
+    abl.mBuffers[0].mDataByteSize = static_cast<UInt32>(inIOBufferFrameSize * sizeof(Float32) * 2);
+    abl.mBuffers[0].mData = const_cast<void *>(inBuffer);
 
     // Copy the audio data from the provided buffer into our ring buffer.
     CARingBufferError err =
@@ -1908,7 +1902,7 @@ Float64	BGM_Device::_HW_GetSampleRate() const
             CAException(kAudioHardwareUnspecifiedError),
             "BGM_Device::_HW_GetSampleRate: No wrapped audio device");
 
-    return mWrappedAudioEngine->GetSampleRate();
+    return static_cast<Float64>(mWrappedAudioEngine->GetSampleRate());
 }
 
 kern_return_t	BGM_Device::_HW_SetSampleRate(Float64 inNewSampleRate)

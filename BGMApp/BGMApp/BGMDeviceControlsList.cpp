@@ -186,9 +186,21 @@ bool    BGMDeviceControlsList::MatchControlsListOf(AudioObjectID inDeviceID)
 
     // Check which controls the other device has.
     BGMAudioDevice device(inDeviceID);
-    bool hasMute = device.HasSettableMasterMute(inScope);
 
-    bool hasVolume =
+    // Aggregate devices (created in Audio MIDI Setup) rely on macOS to provide virtual volume
+    // control through the sub-devices. The deprecated AudioHardwareService APIs we use to detect
+    // volume support can return incorrect results for aggregate devices on newer macOS versions,
+    // which causes us to incorrectly disable BGMDevice's volume control. This then triggers
+    // PropagateControlListChange (which toggles the default device through a null device), and
+    // that can permanently break the aggregate device's volume slider in System Settings.
+    //
+    // To avoid this, always report that aggregate devices have volume and mute controls, since
+    // macOS provides virtual volume/mute for them regardless of what the HAL reports.
+    bool isAggregate = device.IsAggregate();
+
+    bool hasMute = isAggregate || device.HasSettableMasterMute(inScope);
+
+    bool hasVolume = isAggregate ||
         device.HasSettableMasterVolume(inScope) || device.HasSettableVirtualMasterVolume(inScope);
 
     if(!hasVolume)
