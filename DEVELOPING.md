@@ -208,6 +208,23 @@ xcodebuild -project BGMApp/BGMApp.xcodeproj \
 open "BGMApp/build/Debug/Background Music.app"
 ```
 
+For day-to-day local verification, it is usually easier to launch the DerivedData build product directly:
+
+```shell
+xcodebuild -project BGMApp/BGMApp.xcodeproj -scheme "Background Music" -configuration Debug
+open "$HOME/Library/Developer/Xcode/DerivedData/.../Build/Products/Debug/Background Music.app"
+```
+
+If you need stable TCC permissions for Accessibility testing, copy the built app to a fixed user-local
+path and run that copy instead:
+
+```shell
+mkdir -p "$HOME/Applications"
+ditto "$HOME/Library/Developer/Xcode/DerivedData/.../Build/Products/Debug/Background Music.app" \
+      "$HOME/Applications/Background Music.app"
+open -a "$HOME/Applications/Background Music.app"
+```
+
 You might have to delete `BGMApp/build` first if you're using `xcodebuild` and run into permissions problems.
 
 To test with Address Sanitizer, you might have to set the environment var `ASAN_OPTIONS=detect_odr_violation=0` to work
@@ -225,6 +242,9 @@ relevant TCC entries, opens the Accessibility settings page, waits for manual au
 launches Background Music, triggers competing audio with IINA and checks whether Netease Music
 changes from `Pause` to `Play`.
 
+This script is meant for local integration testing only. It does not grant Accessibility
+automatically; macOS requires the user to approve that step in System Settings.
+
 ----
 
 <b id="f1">[1]</b> It actually publishes two devices -- the main one and one for UI-related sounds, but you probably
@@ -232,4 +252,3 @@ only need to know about the main one. [↩](#a1)
 
 <b id="f2">[2]</b> All, unless you're playing audio through a program that's set to always use a specific device or,
 for some reason, doesn't switch to the new default device right away. [↩](#a2)
-

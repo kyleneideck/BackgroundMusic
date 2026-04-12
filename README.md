@@ -94,6 +94,23 @@ brew install --cask background-music
 Just run `Applications > Background Music.app`! **Background Music** sets itself as your default output device under
 `System Settings > Sound` when it starts up (and sets it back on Quit).
 
+If you're running a source build for local testing instead of the installed app, build `Background Music.app` with
+Xcode or `xcodebuild` and then either:
+
+```bash
+open "~/Library/Developer/Xcode/DerivedData/.../Build/Products/Debug/Background Music.app"
+```
+
+or copy it to a stable user-local path first:
+
+```bash
+ditto "~/Library/Developer/Xcode/DerivedData/.../Build/Products/Debug/Background Music.app" \
+      "$HOME/Applications/Background Music.app"
+open -a "$HOME/Applications/Background Music.app"
+```
+
+Using `~/Applications/Background Music.app` makes macOS Accessibility permissions easier to keep stable across rebuilds.
+
 ### Launch at Startup (Optional)
 
 Add **Background Music** to `System Settings > General > Login Items`.
@@ -192,6 +209,9 @@ meeting volume.
 - **Some applications play notification sounds that are only just long enough to trigger an auto-pause.**
     - Increase the `kPauseDelayNSec` constant in [BGMAutoPauseMusic.mm](/BGMApp/BGMApp/BGMAutoPauseMusic.mm). It will increase your music's overlap time over other audio, so don't increase it too much. See [#5](https://github.com/kyleneideck/BackgroundMusic/issues/5) for details.
 
+- **Auto-pausing Netease Music may briefly show its macOS menu bar items.**
+    - The current Netease Music integration uses macOS UI scripting to control the app because it does not expose a native AppleScript play/pause command. The integration works, but it can momentarily reveal Netease Music's menu while pausing or resuming playback.
+
 Many other issues are listed in [TODO.md](/TODO.md) and in [GitHub
 Issues](https://github.com/kyleneideck/BackgroundMusic/issues).
 
@@ -206,6 +226,18 @@ If you're debugging a source build, you can run:
 The script rebuilds the Debug app, refreshes `~/Applications/Background Music Debug.app`, opens the
 Accessibility settings page, waits for you to authorize the app, then verifies that another audio
 source causes Netease Music to pause.
+
+The test flow is:
+
+1. Rebuild the Debug app
+2. Refresh a stable test copy in `~/Applications`
+3. Reset `Accessibility` and `AppleEvents` for Background Music
+4. Open `Privacy & Security > Accessibility`
+5. Wait for you to authorize the test app and confirm Netease Music is playing
+6. Launch Background Music
+7. Verify the system audio defaults include `Background Music`
+8. Trigger competing audio with IINA
+9. Check whether Netease Music changes from `Pause` to `Play`
 
 # Related projects
 
@@ -255,4 +287,3 @@ Licensed under [GPLv2](https://www.gnu.org/licenses/gpl-2.0.html), or any later 
 <b id="f1">[1]</b> However, if the music player doesn't support AppleScript, or doesn't support the events Background
 Music needs (`isPlaying`, `isPaused`, `play` and `pause`), it can take significantly more effort to add. (And in some
 cases would require changes to the music player itself.) [↩](#a1)
-
