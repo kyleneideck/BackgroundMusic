@@ -41,6 +41,87 @@
 
 #pragma clang assume_nonnull begin
 
+namespace {
+
+NSSet<NSString*>* BGMChromiumBrowserBundleIDsNeedingHelperPIDFanout() {
+    static NSSet<NSString*>* bundleIDs;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        bundleIDs = [NSSet setWithArray:@[
+            @"com.brave.Browser",
+            @"com.google.Chrome",
+            @"com.microsoft.edgemac",
+            @"company.thebrowser.Browser",
+            @"com.naver.Whale"
+        ]];
+    });
+
+    return bundleIDs;
+}
+
+BOOL BGMShouldFanOutToChromiumHelperPIDs(NSString* __nullable bundleID) {
+    return bundleID != nil &&
+           [BGMChromiumBrowserBundleIDsNeedingHelperPIDFanout() containsObject:BGMNN(bundleID)];
+}
+
+NSArray<NSDictionary<NSString*, id>*>* BGMChromiumHelpersForAppBundleID(NSString* __nullable bundleID) {
+    if (!BGMShouldFanOutToChromiumHelperPIDs(bundleID)) {
+        return @[];
+    }
+
+    NSRunningApplication* app =
+            [NSRunningApplication runningApplicationsWithBundleIdentifier:BGMNN(bundleID)].firstObject;
+    NSString* bundlePath = app.bundleURL.path;
+    if (bundlePath.length == 0) {
+        return @[];
+    }
+
+    NSString* helperPathPrefix =
+            [[bundlePath stringByAppendingPathComponent:@"Contents"] stringByAppendingPathComponent:@"Frameworks/"];
+
+    pid_t pids[4096];
+    const int procCount = proc_listallpids(pids, sizeof(pids));
+    NSMutableArray<NSDictionary<NSString*, id>*>* helpers = [NSMutableArray array];
+    char procPath[PROC_PIDPATHINFO_MAXSIZE];
+
+    for (int i = 0; i < procCount; i++) {
+        pid_t pid = pids[i];
+
+        if (pid <= 0 || pid == app.processIdentifier) {
+            continue;
+        }
+
+        if (proc_pidpath(pid, procPath, sizeof(procPath)) <= 0) {
+            continue;
+        }
+
+        NSString* path = [NSString stringWithUTF8String:procPath];
+        if (path.length == 0) {
+            continue;
+        }
+
+        if ([path hasPrefix:helperPathPrefix] && [path containsString:@"/Helpers/"]) {
+            NSRange appSuffixRange = [path rangeOfString:@".app/"];
+            NSString* helperBundleID = nil;
+
+            if (appSuffixRange.location != NSNotFound) {
+                NSUInteger helperAppPathEnd = appSuffixRange.location + @".app".length;
+                NSString* helperAppPath = [path substringToIndex:helperAppPathEnd];
+                helperBundleID = [NSBundle bundleWithPath:helperAppPath].bundleIdentifier;
+            }
+
+            [helpers addObject:@{
+                @"pid": @(pid),
+                @"bundleID": helperBundleID ?: @""
+            }];
+        }
+    }
+
+    return helpers;
+}
+
+}  // namespace
+
 @implementation BGMAppVolumesController {
     // The App Volumes UI.
     BGMAppVolumes* appVolumes;
@@ -173,6 +254,16 @@ forAppWithProcessID:(pid_t)processID
     // Update the app's volume.
     audioDevices.bgmDevice.SetAppVolume(volume, processID, (__bridge_retained CFStringRef)bundleID);
 
+    for (NSDictionary<NSString*, id>* helper in BGMChromiumHelpersForAppBundleID(bundleID)) {
+        NSNumber* helperPID = helper[@"pid"];
+        NSString* helperBundleID = helper[@"bundleID"];
+        audioDevices.bgmDevice.SetAppVolume(volume,
+                                            helperPID.intValue,
+                                            helperBundleID.length > 0
+                                                ? (__bridge CFStringRef)helperBundleID
+                                                : nullptr);
+    }
+
     // If this volume is for FaceTime, set the volume for the avconferenced process as well. This
     // works around FaceTime not playing its own audio. It plays UI sounds through
     // systemsoundserverd and call audio through avconferenced.
@@ -212,6 +303,16 @@ forAppWithProcessID:(pid_t)processID
     audioDevices.bgmDevice.SetAppPanPosition(pan,
                                              processID,
                                              (__bridge_retained CFStringRef)bundleID);
+
+    for (NSDictionary<NSString*, id>* helper in BGMChromiumHelpersForAppBundleID(bundleID)) {
+        NSNumber* helperPID = helper[@"pid"];
+        NSString* helperBundleID = helper[@"bundleID"];
+        audioDevices.bgmDevice.SetAppPanPosition(pan,
+                                                 helperPID.intValue,
+                                                 helperBundleID.length > 0
+                                                     ? (__bridge CFStringRef)helperBundleID
+                                                     : nullptr);
+    }
 }
 
 #pragma mark KVO
@@ -256,4 +357,3 @@ forAppWithProcessID:(pid_t)processID
 @end
 
 #pragma clang assume_nonnull end
-
