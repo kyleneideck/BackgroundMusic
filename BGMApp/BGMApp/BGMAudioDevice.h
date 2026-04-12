@@ -78,6 +78,14 @@ public:
      */
     bool               CanBeOutputDeviceInBGMApp() const;
 
+#pragma mark Device Type
+
+    /*!
+     @return True if this device is an aggregate device (i.e. a device created in Audio MIDI Setup
+             that combines multiple audio devices).
+     */
+    bool               IsAggregate() const;
+
 #pragma mark Available Controls
 
     bool               HasSettableMasterVolume(AudioObjectPropertyScope inScope) const;

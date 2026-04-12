@@ -471,8 +471,8 @@ void    BGM_NullDevice::GetZeroTimeStamp(Float64& outSampleTime,
         (static_cast<Float64>(mNumberTimeStamps) * theHostTicksPerPeriod);
 
     // Set the return values.
-    outSampleTime = mNumberTimeStamps * kZeroTimeStampPeriod;
-    outHostTime = static_cast<UInt64>(mAnchorHostTime + theHostTicksSinceAnchor);
+    outSampleTime = static_cast<Float64>(mNumberTimeStamps) * kZeroTimeStampPeriod;
+    outHostTime = static_cast<UInt64>(static_cast<Float64>(mAnchorHostTime) + theHostTicksSinceAnchor);
     outSeed = 1;
 }
 
