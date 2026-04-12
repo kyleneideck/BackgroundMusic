@@ -173,6 +173,346 @@ bold_face() {
     echo $(tput bold)$*$(tput sgr0)
 }
 
+log_info() {
+    echo "$*" | tee -a ${LOG_FILE}
+}
+
+capture_command_with_timeout() {
+    local timeout_seconds="$1"
+    local output_var_name="$2"
+    shift 2
+
+    local had_errexit=0
+    [[ $- == *e* ]] && had_errexit=1
+    set +e
+
+    local tmpfile
+    tmpfile="$(mktemp -t bgm-timeout.XXXXXX)"
+    "$@" >"${tmpfile}" 2>&1 &
+    local command_pid=$!
+    local exit_status=0
+    local timed_out=0
+    local waited=0
+
+    while kill -0 "${command_pid}" > /dev/null 2>&1; do
+        if [[ ${waited} -ge ${timeout_seconds} ]]; then
+            timed_out=1
+            kill "${command_pid}" > /dev/null 2>&1 || true
+            sleep 1
+            kill -9 "${command_pid}" > /dev/null 2>&1 || true
+            break
+        fi
+
+        sleep 1
+        waited=$((waited + 1))
+    done
+
+    if [[ ${timed_out} -eq 0 ]]; then
+        wait "${command_pid}"
+        exit_status=$?
+    else
+        wait "${command_pid}" > /dev/null 2>&1 || true
+        exit_status=124
+    fi
+
+    local captured_output
+    captured_output="$(cat "${tmpfile}")"
+    rm -f "${tmpfile}"
+
+    printf -v "${output_var_name}" '%s' "${captured_output}"
+
+    if [[ ${had_errexit} -eq 1 ]]; then
+        set -e
+    fi
+
+    return "${exit_status}"
+}
+
+codesign_details() {
+    /usr/bin/codesign -dv --verbose=2 "$1" 2>&1
+}
+
+verify_installed_bundle_for_hal_restart() {
+    local bundle_path="$1"
+    local bundle_label="$2"
+    local verify_output=""
+    local details_output=""
+
+    if ! verify_output="$(/usr/bin/codesign --verify --strict --verbose=2 "${bundle_path}" 2>&1)"; then
+        log_info "codesign verification failed for ${bundle_label}: ${verify_output}"
+        return 1
+    fi
+
+    if ! details_output="$(codesign_details "${bundle_path}")"; then
+        log_info "Couldn't inspect ${bundle_label} signature details: ${details_output}"
+        return 1
+    fi
+
+    if printf '%s\n' "${details_output}" | grep -q 'Signature=adhoc'; then
+        log_info "${bundle_label} is still ad hoc signed, which Tahoe may refuse during HAL reload."
+        return 1
+    fi
+
+    if ! printf '%s\n' "${details_output}" | grep -q 'TeamIdentifier=' || \
+       printf '%s\n' "${details_output}" | grep -q 'TeamIdentifier=not set'; then
+        log_info "${bundle_label} does not have a TeamIdentifier. Refusing unsafe HAL reload."
+        return 1
+    fi
+
+    return 0
+}
+
+validate_installed_products_before_hal_restart() {
+    if [[ "${BGM_ALLOW_UNVERIFIED_HAL_RESTART:-0}" == "1" ]]; then
+        log_info "WARNING: Skipping HAL restart signature validation because BGM_ALLOW_UNVERIFIED_HAL_RESTART=1."
+        return 0
+    fi
+
+    verify_installed_bundle_for_hal_restart "${DRIVER_PATH}/${DRIVER_DIR}" "Background Music Device.driver"
+    verify_installed_bundle_for_hal_restart "${XPC_HELPER_OUTPUT_PATH}/${XPC_HELPER_DIR}" "BGMXPCHelper.xpc"
+    verify_installed_bundle_for_hal_restart "${APP_PATH}/${APP_DIR}" "Background Music.app"
+}
+
+find_browser_audio_session_pids() {
+    local current_uid="$(id -u)"
+
+    ps -axo pid=,uid=,args= | \
+        awk -v current_uid="${current_uid}" '
+            $2 == current_uid {
+                cmd = ""
+                for (i = 3; i <= NF; ++i) {
+                    cmd = cmd $i " "
+                }
+
+                if (cmd ~ /audio\.mojom\.AudioService/ ||
+                    cmd ~ /com\.apple\.WebKit\.(GPU|WebContent)/) {
+                    print $1
+                }
+            }
+        ' | sort -u
+}
+
+declare -a SUSPENDED_BROWSER_AUDIO_PIDS=()
+
+suspend_browser_audio_clients_before_hal_restart() {
+    SUSPENDED_BROWSER_AUDIO_PIDS=()
+
+    while IFS= read -r pid; do
+        [[ -n "${pid}" ]] && SUSPENDED_BROWSER_AUDIO_PIDS+=("${pid}")
+    done < <(find_browser_audio_session_pids)
+
+    if [[ ${#SUSPENDED_BROWSER_AUDIO_PIDS[@]} -eq 0 ]]; then
+        return 0
+    fi
+
+    log_info "Temporarily suspending browser audio clients before restarting coreaudiod: ${SUSPENDED_BROWSER_AUDIO_PIDS[*]}"
+    kill -STOP "${SUSPENDED_BROWSER_AUDIO_PIDS[@]}" >> ${LOG_FILE} 2>&1 || true
+    sleep 1
+}
+
+resume_suspended_browser_audio_clients() {
+    if [[ ${#SUSPENDED_BROWSER_AUDIO_PIDS[@]} -eq 0 ]]; then
+        return 0
+    fi
+
+    log_info "Resuming browser audio clients after the guarded coreaudiod restart."
+    kill -CONT "${SUSPENDED_BROWSER_AUDIO_PIDS[@]}" >> ${LOG_FILE} 2>&1 || true
+    SUSPENDED_BROWSER_AUDIO_PIDS=()
+}
+
+wait_for_coreaudiod_restart() {
+    local old_pid="$1"
+    local old_start_time="$2"
+    local timeout_seconds="${3:-20}"
+    local waited=0
+
+    while [[ ${waited} -lt ${timeout_seconds} ]]; do
+        local new_pid
+        new_pid="$(pgrep -x coreaudiod | head -n1 || true)"
+
+        if [[ -n "${new_pid}" ]]; then
+            local new_start_time
+            new_start_time="$(ps -o lstart= -p "${new_pid}" 2>/dev/null | sed 's/^ *//')"
+
+            if [[ -z "${old_pid}" ]] || [[ "${new_pid}" != "${old_pid}" ]] || \
+               [[ -n "${old_start_time}" && "${new_start_time}" != "${old_start_time}" ]]; then
+                sleep 2
+                return 0
+            fi
+        fi
+
+        sleep 1
+        waited=$((waited + 1))
+    done
+
+    return 1
+}
+
+restart_coreaudiod_guarded() {
+    local old_pid
+    old_pid="$(pgrep -x coreaudiod | head -n1 || true)"
+    local old_start_time=""
+    if [[ -n "${old_pid}" ]]; then
+        old_start_time="$(ps -o lstart= -p "${old_pid}" 2>/dev/null | sed 's/^ *//')"
+    fi
+
+    suspend_browser_audio_clients_before_hal_restart
+    trap 'resume_suspended_browser_audio_clients' RETURN
+
+    if ! (sudo launchctl kickstart -k system/com.apple.audio.coreaudiod &>/dev/null || \
+            sudo launchctl kill SIGTERM system/com.apple.audio.coreaudiod &>/dev/null || \
+            sudo launchctl kill TERM system/com.apple.audio.coreaudiod &>/dev/null || \
+            sudo launchctl kill 15 system/com.apple.audio.coreaudiod &>/dev/null || \
+            sudo launchctl kill -15 system/com.apple.audio.coreaudiod &>/dev/null || \
+            (sudo launchctl unload "${COREAUDIOD_PLIST}" &>/dev/null && \
+                sudo launchctl load "${COREAUDIOD_PLIST}" &>/dev/null) || \
+            sudo killall coreaudiod &>/dev/null); then
+        return 1
+    fi
+
+    if ! wait_for_coreaudiod_restart "${old_pid}" "${old_start_time}" 20; then
+        return 1
+    fi
+
+    resume_suspended_browser_audio_clients
+    trap - RETURN
+}
+
+probe_bgm_device_once() {
+    local profiler_output=""
+    if capture_command_with_timeout 8 profiler_output system_profiler SPAudioDataType; then
+        if [[ "${profiler_output}" =~ "Background Music" ]]; then
+            return 0
+        fi
+    else
+        log_info "system_profiler timed out while checking the HAL device after restart."
+    fi
+
+    local input_device_output=""
+    if capture_command_with_timeout 8 input_device_output /usr/bin/xcrun swift pkg/ListInputDevices.swift; then
+        [[ "${input_device_output}" =~ "BGMDevice" ]] && return 0
+    else
+        log_info "AVFoundation device probe timed out while checking the HAL device after restart."
+    fi
+
+    return 1
+}
+
+wait_for_bgm_device_after_restart() {
+    local retries="${1:-5}"
+
+    while [[ ${retries} -gt 0 ]]; do
+        if probe_bgm_device_once; then
+            return 0
+        fi
+
+        retries=$((retries - 1))
+        [[ ${retries} -gt 0 ]] && sleep 2
+    done
+
+    return 1
+}
+
+find_signing_identity() {
+    SIGNING_IDENTITY="${SIGNING_IDENTITY:-${BGM_CODESIGN_IDENTITY:-}}"
+
+    if [[ -n ${SIGNING_IDENTITY:-} ]]; then
+        return 0
+    fi
+
+    local available_identities
+    available_identities="$(security find-identity -v -p codesigning 2>/dev/null || true)"
+
+    SIGNING_IDENTITY="$(printf '%s\n' "${available_identities}" | \
+        sed -n 's/.*"\(Apple Development:[^"]*\)".*/\1/p' | head -n1)"
+
+    if [[ -z ${SIGNING_IDENTITY} ]]; then
+        SIGNING_IDENTITY="$(printf '%s\n' "${available_identities}" | \
+            sed -n 's/.*"\(Mac Development:[^"]*\)".*/\1/p' | head -n1)"
+    fi
+
+    if [[ -z ${SIGNING_IDENTITY} ]]; then
+        SIGNING_IDENTITY="$(printf '%s\n' "${available_identities}" | \
+            sed -n 's/.*"\(Developer ID Application:[^"]*\)".*/\1/p' | head -n1)"
+    fi
+
+    return 0
+}
+
+bgmapp_entitlements_path() {
+    if [[ "${CONFIGURATION}" == "Release" ]]; then
+        echo "BGMApp/BGMApp/BGMApp.entitlements"
+    else
+        echo "BGMApp/BGMApp/BGMApp-Debug.entitlements"
+    fi
+}
+
+resign_installed_products_if_possible() {
+    local launchd_plist="/Library/LaunchDaemons/com.bearisdriving.BGM.XPCHelper.plist"
+    local current_user="$(id -un)"
+    local current_group="$(id -gn)"
+    local -a temporarily_user_owned_paths=(
+        "${DRIVER_PATH}/${DRIVER_DIR}"
+        "${XPC_HELPER_OUTPUT_PATH}/${XPC_HELPER_DIR}"
+    )
+    local restored_root_ownership=0
+
+    restore_root_owned_products() {
+        if [[ ${restored_root_ownership} -ne 0 ]]; then
+            return 0
+        fi
+
+        echo "Restoring root ownership on the driver and helper." >> ${LOG_FILE}
+        sudo chown -RH root:wheel "${temporarily_user_owned_paths[@]}" >> ${LOG_FILE} 2>&1
+        restored_root_ownership=1
+    }
+
+    find_signing_identity
+
+    if [[ -z ${SIGNING_IDENTITY} ]]; then
+        echo "$(tput setaf 11)WARNING$(tput sgr0): Couldn't find an Apple/macOS code signing " \
+             "certificate. Tahoe may reject the ad hoc signed app, helper and driver." \
+             | tee -a ${LOG_FILE}
+        return 0
+    fi
+
+    echo "Re-signing installed products with ${SIGNING_IDENTITY}." | tee -a ${LOG_FILE}
+
+    # codesign needs access to the developer certificate's private key, which lives in the current
+    # user's login keychain rather than root's keychain. Temporarily hand the installed root-owned
+    # bundles to the invoking user, sign them as that user, then restore root ownership before
+    # launchd/coreaudiod use them.
+    trap restore_root_owned_products RETURN
+    sudo chown -R "${current_user}:${current_group}" "${temporarily_user_owned_paths[@]}" \
+         >> ${LOG_FILE} 2>&1
+
+    /usr/bin/codesign --force --sign "${SIGNING_IDENTITY}" \
+                      --options runtime \
+                      "${DRIVER_PATH}/${DRIVER_DIR}" >> ${LOG_FILE} 2>&1
+
+    /usr/bin/codesign --force --sign "${SIGNING_IDENTITY}" \
+                      --options runtime \
+                      "${XPC_HELPER_OUTPUT_PATH}/${XPC_HELPER_DIR}" \
+                      >> ${LOG_FILE} 2>&1
+
+    /usr/bin/codesign --force --sign "${SIGNING_IDENTITY}" \
+                      --options runtime \
+                      --entitlements "$(bgmapp_entitlements_path)" \
+                      "${APP_PATH}/${APP_DIR}" >> ${LOG_FILE} 2>&1
+
+    restore_root_owned_products
+    trap - RETURN
+
+    # post_install.sh bootstraps the launchd job before Xcode's final signing step runs. Reload the
+    # helper after re-signing so launchd sees the final executable with a Team ID.
+    echo "Reloading BGMXPCHelper after re-signing." | tee -a ${LOG_FILE}
+    sudo launchctl bootout system "${launchd_plist}" >> ${LOG_FILE} 2>&1 || \
+        sudo launchctl unload "${launchd_plist}" >> ${LOG_FILE} 2>&1 || \
+        true
+    sudo launchctl bootstrap system "${launchd_plist}" >> ${LOG_FILE} 2>&1 || \
+        sudo launchctl load "${launchd_plist}" >> ${LOG_FILE} 2>&1
+}
+
 # Takes a PID and returns 0 if the process is running.
 is_alive() {
     kill -0 $1 > /dev/null 2>&1 && return 0 || return 1
@@ -819,23 +1159,19 @@ if [[ "${XCODEBUILD_ACTION}" == "install" ]]; then
     # deleted easily after installing.
     sudo chown -R "$(whoami):admin" "BGMApp/build" "BGMDriver/build"
 
+    resign_installed_products_if_possible
+
+    ERROR_MSG="Refusing to restart coreaudiod because the installed HAL artifacts failed signature validation. Re-sign them with a Team ID, or set BGM_ALLOW_UNVERIFIED_HAL_RESTART=1 to override at your own risk."
+    validate_installed_products_before_hal_restart
+
     # Restart coreaudiod.
 
-    echo "Restarting coreaudiod to load the virtual audio device." \
-         | tee -a ${LOG_FILE}
+    log_info "Restarting coreaudiod with browser audio clients quiesced to load the virtual audio device."
+    ERROR_MSG="Guarded coreaudiod restart failed. Suspended browser audio clients were resumed, but the HAL may still be mid-reload. Close active browser audio playback (especially Chromium audio.mojom.AudioService) and retry."
+    restart_coreaudiod_guarded
 
-    # The extra or-clauses are fallback versions of the command that restarts coreaudiod. Apparently
-    # some of these commands don't work with older versions of launchctl, so I figure there's no
-    # harm in trying a bunch of different ways (which should all work).
-    (sudo launchctl kickstart -k system/com.apple.audio.coreaudiod &>/dev/null || \
-        sudo launchctl kill SIGTERM system/com.apple.audio.coreaudiod &>/dev/null || \
-        sudo launchctl kill TERM system/com.apple.audio.coreaudiod &>/dev/null || \
-        sudo launchctl kill 15 system/com.apple.audio.coreaudiod &>/dev/null || \
-        sudo launchctl kill -15 system/com.apple.audio.coreaudiod &>/dev/null || \
-        (sudo launchctl unload "${COREAUDIOD_PLIST}" &>/dev/null && \
-            sudo launchctl load "${COREAUDIOD_PLIST}" &>/dev/null) || \
-        sudo killall coreaudiod &>/dev/null) && \
-        sleep 5
+    ERROR_MSG="Background Music Device didn't appear after the guarded coreaudiod restart. Close active audio playback or reboot before retrying."
+    wait_for_bgm_device_after_restart
 
     # Invalidate sudo ticket
     sudo -k
@@ -866,4 +1202,3 @@ elif [[ "${XCODEBUILD_ACTION}" == "archive" ]]; then
     mv "$APP_PATH/Products/Applications/Background Music.app/Contents/MacOS/Background Music.dSYM" \
        "$APP_PATH/dSYMs"
 fi
-

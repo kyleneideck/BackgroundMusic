@@ -20,7 +20,10 @@
 //  Copyright © 2016-2020 Kyle Neideck
 //
 
-// Unit include
+// Unit includes
+#define private public
+#import "BGMBackgroundMusicDevice.h"
+#undef private
 #import "BGMMusicPlayers.h"
 
 // BGM includes
@@ -44,6 +47,23 @@
 // Note that the PublicUtility classes that we use to communicate with the HAL, CAHALAudioObject and
 // CAHALAudioSystemObject, are also mocked. The unit tests are compiled with mock implementations:
 // Mock_CAHALAudioObject.cpp and Mock_CAHALAudioSystemObject.cpp.
+
+static NSArray<NSString*>* BGMResponsibleBundleIDs(NSString* bundleID) {
+    std::vector<CACFString> responsibleBundleIDs =
+            BGMBackgroundMusicDevice::ResponsibleBundleIDsOf(CACFString((__bridge CFStringRef)bundleID));
+
+    NSMutableArray<NSString*>* result =
+            [NSMutableArray arrayWithCapacity:(NSUInteger)responsibleBundleIDs.size()];
+
+    for (const CACFString& responsibleBundleID : responsibleBundleIDs) {
+        NSString* nsBundleID = (__bridge NSString*)responsibleBundleID.GetCFString();
+        if (nsBundleID) {
+            [result addObject:nsBundleID];
+        }
+    }
+
+    return result;
+}
 
 @interface BGMMockUserDefaults : BGMUserDefaults
 
@@ -211,7 +231,38 @@
     XCTAssertEqualObjects(players.selectedMusicPlayer.name, @"VLC");
 }
 
+- (void) testResponsibleBundleIDsOfSafariIncludeMediaHelperBundleIDs {
+    NSArray<NSString*>* responsibleBundleIDs = BGMResponsibleBundleIDs(@"com.apple.Safari");
+
+    XCTAssertTrue([responsibleBundleIDs containsObject:@"com.apple.WebKit.WebContent"]);
+    XCTAssertTrue([responsibleBundleIDs containsObject:@"com.apple.WebKit.WebContent.EnhancedSecurity"]);
+    XCTAssertTrue([responsibleBundleIDs containsObject:@"com.apple.WebKit.GPU"]);
+}
+
+- (void) testResponsibleBundleIDsOfChromeIncludeModernHelperBundleIDs {
+    NSArray<NSString*>* responsibleBundleIDs = BGMResponsibleBundleIDs(@"com.google.Chrome");
+
+    XCTAssertTrue([responsibleBundleIDs containsObject:@"com.google.Chrome.helper"]);
+    XCTAssertTrue([responsibleBundleIDs containsObject:@"com.google.Chrome.helper.renderer"]);
+    XCTAssertTrue([responsibleBundleIDs containsObject:@"com.google.Chrome.helper.plugin"]);
+}
+
+- (void) testResponsibleBundleIDsOfBraveIncludeModernHelperBundleIDs {
+    NSArray<NSString*>* responsibleBundleIDs = BGMResponsibleBundleIDs(@"com.brave.Browser");
+
+    XCTAssertTrue([responsibleBundleIDs containsObject:@"com.brave.Browser.helper"]);
+    XCTAssertTrue([responsibleBundleIDs containsObject:@"com.brave.Browser.helper.renderer"]);
+    XCTAssertTrue([responsibleBundleIDs containsObject:@"com.brave.Browser.helper.plugin"]);
+}
+
+- (void) testResponsibleBundleIDsOfWhaleIncludeModernHelperBundleIDs {
+    NSArray<NSString*>* responsibleBundleIDs = BGMResponsibleBundleIDs(@"com.naver.Whale");
+
+    XCTAssertTrue([responsibleBundleIDs containsObject:@"com.naver.Whale.helper"]);
+    XCTAssertTrue([responsibleBundleIDs containsObject:@"com.naver.Whale.helper.renderer"]);
+    XCTAssertTrue([responsibleBundleIDs containsObject:@"com.naver.Whale.helper.plugin"]);
+}
+
 // TODO: Test setting the selectedMusicPlayer property
 
 @end
-

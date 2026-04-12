@@ -63,6 +63,11 @@ static const int kBGMErrorCode_ReturningEarly       = 2;
 // Replace BGMDevice as the default device with the output device
 - (NSError* __nullable) unsetBGMDeviceAsOSDefault;
 
+// Prepare for app termination by deactivating control sync and playthrough before the default
+// device is changed back. This prevents stale volume state from being left on the output device.
+// Must be called before unsetBGMDeviceAsOSDefault.
+- (void) prepareForTermination;
+
 #ifdef __cplusplus
 // The virtual device published by BGMDriver.
 - (BGMBackgroundMusicDevice) bgmDevice;

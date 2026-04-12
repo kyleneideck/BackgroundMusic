@@ -133,6 +133,29 @@ osascript -e 'tell application id "com.apple.finder"
   || rm -rf "${trash_dir}" \
   || true
 
+# Clean up BGMDevice entries from macOS audio preferences to prevent persistent low volume
+# after uninstall. See https://github.com/kyleneideck/BackgroundMusic/issues/841
+echo "Cleaning up audio device preferences."
+for plist_dir in "$HOME/Library/Preferences" "/Library/Preferences/Audio"; do
+  for plist in "com.apple.audio.DeviceSettings.plist" "com.apple.audio.SystemSettings.plist"; do
+    plist_path="${plist_dir}/${plist}"
+    if [ -f "${plist_path}" ]; then
+      # Remove entries keyed by BGMDevice UIDs
+      for uid in "BGMDevice" "BGMDevice_UISounds"; do
+        defaults delete "${plist_path}" "${uid}" &>/dev/null || true
+      done
+    fi
+  done
+done
+# Also clean up ByHost audio preferences
+for byhost_plist in "$HOME/Library/Preferences/ByHost"/com.apple.audio.*.plist; do
+  if [ -f "${byhost_plist}" ]; then
+    for uid in "BGMDevice" "BGMDevice_UISounds"; do
+      defaults delete "${byhost_plist}" "${uid}" &>/dev/null || true
+    done
+  fi
+done
+
 echo "Restarting Core Audio."
 # Wait a little because moving files to the trash plays a short sound.
 sleep 2

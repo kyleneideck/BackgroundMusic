@@ -52,6 +52,129 @@ bold_face() {
     echo $(tput bold)$*$(tput sgr0)
 }
 
+find_browser_audio_session_pids() {
+    local current_uid="$(id -u)"
+
+    ps -axo pid=,uid=,args= | \
+        awk -v current_uid="${current_uid}" '
+            $2 == current_uid {
+                cmd = ""
+                for (i = 3; i <= NF; ++i) {
+                    cmd = cmd $i " "
+                }
+
+                if (cmd ~ /audio\.mojom\.AudioService/ ||
+                    cmd ~ /com\.apple\.WebKit\.(GPU|WebContent)/) {
+                    print $1
+                }
+            }
+        ' | sort -u
+}
+
+declare -a SUSPENDED_BROWSER_AUDIO_PIDS=()
+
+suspend_browser_audio_clients_before_hal_restart() {
+    SUSPENDED_BROWSER_AUDIO_PIDS=()
+
+    while IFS= read -r pid; do
+        [[ -n "${pid}" ]] && SUSPENDED_BROWSER_AUDIO_PIDS+=("${pid}")
+    done < <(find_browser_audio_session_pids)
+
+    if [[ ${#SUSPENDED_BROWSER_AUDIO_PIDS[@]} -eq 0 ]]; then
+        return 0
+    fi
+
+    echo "Temporarily suspending browser audio clients before restarting coreaudiod: ${SUSPENDED_BROWSER_AUDIO_PIDS[*]}"
+    kill -STOP "${SUSPENDED_BROWSER_AUDIO_PIDS[@]}" >/dev/null 2>&1 || true
+    sleep 1
+}
+
+resume_suspended_browser_audio_clients() {
+    if [[ ${#SUSPENDED_BROWSER_AUDIO_PIDS[@]} -eq 0 ]]; then
+        return 0
+    fi
+
+    echo "Resuming browser audio clients after the guarded coreaudiod restart."
+    kill -CONT "${SUSPENDED_BROWSER_AUDIO_PIDS[@]}" >/dev/null 2>&1 || true
+    SUSPENDED_BROWSER_AUDIO_PIDS=()
+}
+
+wait_for_coreaudiod_restart() {
+    local old_pid="$1"
+    local old_start_time="$2"
+    local timeout_seconds="${3:-20}"
+    local waited=0
+
+    while [[ ${waited} -lt ${timeout_seconds} ]]; do
+        local new_pid
+        new_pid="$(pgrep -x coreaudiod | head -n1 || true)"
+
+        if [[ -n "${new_pid}" ]]; then
+            local new_start_time
+            new_start_time="$(ps -o lstart= -p "${new_pid}" 2>/dev/null | sed 's/^ *//')"
+
+            if [[ -z "${old_pid}" ]] || [[ "${new_pid}" != "${old_pid}" ]] || \
+               [[ -n "${old_start_time}" && "${new_start_time}" != "${old_start_time}" ]]; then
+                sleep 2
+                return 0
+            fi
+        fi
+
+        sleep 1
+        waited=$((waited + 1))
+    done
+
+    return 1
+}
+
+validate_driver_signature_for_hal_restart() {
+    if [[ ${UNINSTALL_ONLY} == true ]] || [[ "${BGM_ALLOW_UNVERIFIED_HAL_RESTART:-0}" == "1" ]]; then
+        return 0
+    fi
+
+    local verify_output=""
+    local details_output=""
+
+    if ! verify_output="$(/usr/bin/codesign --verify --strict --verbose=2 "${INSTALLED_DRIVER_PATH}" 2>&1)"; then
+        echo "$(bold_face Aborting). Installed driver failed codesign verification: ${verify_output}" >&2
+        return 1
+    fi
+
+    if ! details_output="$(/usr/bin/codesign -dv --verbose=2 "${INSTALLED_DRIVER_PATH}" 2>&1)"; then
+        echo "$(bold_face Aborting). Couldn't inspect installed driver signature details: ${details_output}" >&2
+        return 1
+    fi
+
+    if echo "${details_output}" | grep -q 'Signature=adhoc'; then
+        echo "$(bold_face Aborting). Installed driver is still ad hoc signed. Set BGM_ALLOW_UNVERIFIED_HAL_RESTART=1 to override at your own risk." >&2
+        return 1
+    fi
+
+    if ! echo "${details_output}" | grep -q 'TeamIdentifier=' || \
+       echo "${details_output}" | grep -q 'TeamIdentifier=not set'; then
+        echo "$(bold_face Aborting). Installed driver has no TeamIdentifier. Set BGM_ALLOW_UNVERIFIED_HAL_RESTART=1 to override at your own risk." >&2
+        return 1
+    fi
+}
+
+restart_coreaudiod_guarded() {
+    local old_pid
+    old_pid="$(pgrep -x coreaudiod | head -n1 || true)"
+    local old_start_time=""
+    if [[ -n "${old_pid}" ]]; then
+        old_start_time="$(ps -o lstart= -p "${old_pid}" 2>/dev/null | sed 's/^ *//')"
+    fi
+
+    suspend_browser_audio_clients_before_hal_restart
+    trap 'resume_suspended_browser_audio_clients' RETURN
+
+    sudo launchctl kill SIGTERM system/com.apple.audio.coreaudiod >/dev/null 2>&1 || sudo killall coreaudiod >/dev/null 2>&1 || return 1
+    wait_for_coreaudiod_restart "${old_pid}" "${old_start_time}" 20 || return 1
+
+    resume_suspended_browser_audio_clients
+    trap - RETURN
+}
+
 usage() {
     echo "Usage: $0 [options]" >&2
     echo -e "\t-u\tUninstall only" >&2
@@ -203,10 +326,9 @@ fi
 # Restart coreaudiod to load the installed build
 
 if [[ ${DONT_RESTART_COREAUDIOD} == false ]]; then
-    echo "$(bold_face Restarting coreaudiod). If a running app stops playing audio, change your default audio device (and change it back if you want) or open BGMApp."
+    validate_driver_signature_for_hal_restart
+    echo "$(bold_face Restarting coreaudiod). Browser audio utility processes will be paused briefly first to reduce Tahoe HAL deadlock risk."
 
     # ("set -x" so the command is echoed)
-    (set -x; sudo launchctl kill SIGTERM system/com.apple.audio.coreaudiod || sudo killall coreaudiod)
+    (set -x; restart_coreaudiod_guarded)
 fi
-
-

@@ -223,8 +223,14 @@ BGMBackgroundMusicDevice::ResponsibleBundleIDsOf(CACFString inParentBundleID)
         { "com.apple.finder",
             { "com.apple.quicklook.ui.helper",
               "com.apple.quicklook.QuickLookUIService" } },
-        // Safari
-        { "com.apple.Safari", { "com.apple.WebKit.WebContent" } },
+        // Safari. Recent macOS versions can run normal tabs in either the classic WebContent
+        // service or the EnhancedSecurity variant, and Tahoe can also hand media playback off to
+        // the GPU helper (surfaced as “Safari Graphics and Media”). Safari's own app process
+        // doesn't emit the tab audio directly.
+        { "com.apple.Safari",
+            { "com.apple.WebKit.WebContent",
+              "com.apple.WebKit.WebContent.EnhancedSecurity",
+              "com.apple.WebKit.GPU" } },
         // Firefox
         { "org.mozilla.firefox", { "org.mozilla.plugincontainer" } },
         // Firefox Nightly
@@ -240,19 +246,36 @@ BGMBackgroundMusicDevice::ResponsibleBundleIDsOf(CACFString inParentBundleID)
         { "com.hnc.Discord",
             { "com.hnc.Discord.helper",
               "com.hnc.Discord.helper.Renderer",
+              "com.hnc.Discord.helper.renderer",
+              "com.hnc.Discord.helper.plugin",
               "com.hnc.Discord.helper.Plugin" } },
         // Brave
         { "com.brave.Browser",
             { "com.brave.Browser.helper",
+              "com.brave.Browser.helper.renderer",
               "com.brave.Browser.helper.plugin" } },
+        // NAVER Whale
+        { "com.naver.Whale",
+            { "com.naver.Whale.helper",
+              "com.naver.Whale.helper.renderer",
+              "com.naver.Whale.helper.plugin" } },
         // Skype
         { "com.skype.skype", { "com.skype.skype.Helper" } },
         // Google Chrome
-        { "com.google.Chrome", { "com.google.Chrome.helper" } },
+        { "com.google.Chrome",
+            { "com.google.Chrome.helper",
+              "com.google.Chrome.helper.renderer",
+              "com.google.Chrome.helper.plugin" } },
         // Microsoft Edge
-        { "com.microsoft.edgemac", { "com.microsoft.edgemac.helper" } },
+        { "com.microsoft.edgemac",
+            { "com.microsoft.edgemac.helper",
+              "com.microsoft.edgemac.helper.renderer",
+              "com.microsoft.edgemac.helper.plugin" } },
         // Arc
-        { "company.thebrowser.Browser", { "company.thebrowser.browser.helper" } }
+        { "company.thebrowser.Browser",
+            { "company.thebrowser.browser.helper",
+              "company.thebrowser.browser.helper.renderer",
+              "company.thebrowser.browser.helper.plugin" } }
     };
 
     // Parallels' VM "dock helper" apps have bundle IDs like
@@ -331,4 +354,3 @@ CFStringRef BGMBackgroundMusicDevice::GetMusicPlayerBundleID() const
 }
 
 #pragma clang assume_nonnull end
-

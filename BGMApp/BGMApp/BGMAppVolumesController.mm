@@ -38,7 +38,6 @@
 // System Includes
 #include <libproc.h>
 
-
 #pragma clang assume_nonnull begin
 
 @implementation BGMAppVolumesController {
@@ -256,4 +255,3 @@ forAppWithProcessID:(pid_t)processID
 @end
 
 #pragma clang assume_nonnull end
-
