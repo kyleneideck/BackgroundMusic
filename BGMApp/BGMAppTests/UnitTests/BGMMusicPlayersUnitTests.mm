@@ -182,6 +182,23 @@
     XCTAssertEqualObjects(players.selectedMusicPlayer.name, @"Spotify");
 }
 
+- (void) testDefaultPlayerListIncludesNeteaseCloudMusic {
+    BGMMusicPlayers* players = [[BGMMusicPlayers alloc] initWithAudioDevices:devices
+                                                                userDefaults:defaults];
+    
+    XCTAssertGreaterThanOrEqual(players.musicPlayers.count, 9);
+    
+    BOOL hasNetease = NO;
+    for (id<BGMMusicPlayer> player in players.musicPlayers) {
+        if ([player.name isEqualToString:@"网易云音乐"]) {
+            hasNetease = YES;
+            break;
+        }
+    }
+    
+    XCTAssertTrue(hasNetease);
+}
+
 - (void) testUnrecognizedSelectedMusicPlayerInUserDefaults {
     // If there's an unrecognized ID in user defaults, the default music player should be selected.
     defaults.selectedPlayerID = [[NSUUID alloc] initWithUUIDString:@"11111111-1111-1111-0000-000000000000"];
@@ -214,4 +231,3 @@
 // TODO: Test setting the selectedMusicPlayer property
 
 @end
-

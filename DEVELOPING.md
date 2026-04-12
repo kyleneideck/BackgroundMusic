@@ -214,6 +214,17 @@ To test with Address Sanitizer, you might have to set the environment var `ASAN_
 around [Issue #647](https://github.com/google/sanitizers/issues/647). (In Xcode, go `Product` > `Scheme` > `Edit
 Scheme...`, select the Background Music scheme, and add the environment var in Run > Arguments.)
 
+For end-to-end verification of the Netease Music auto-pause integration, run:
+
+```shell
+./scripts/test-netease-autopause.sh
+```
+
+The script rebuilds the Debug app, refreshes `~/Applications/Background Music Debug.app`, resets the
+relevant TCC entries, opens the Accessibility settings page, waits for manual authorization, then
+launches Background Music, triggers competing audio with IINA and checks whether Netease Music
+changes from `Pause` to `Play`.
+
 ----
 
 <b id="f1">[1]</b> It actually publishes two devices -- the main one and one for UI-related sounds, but you probably
@@ -221,5 +232,4 @@ only need to know about the main one. [↩](#a1)
 
 <b id="f2">[2]</b> All, unless you're playing audio through a program that's set to always use a specific device or,
 for some reason, doesn't switch to the new default device right away. [↩](#a2)
-
 

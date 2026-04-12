@@ -42,6 +42,7 @@ The auto-pause feature currently supports following music players:
 + [Hermes](http://hermesapp.org/)
 + [Swinsian](https://swinsian.com/)
 + [GPMDP](https://www.googleplaymusicdesktopplayer.com/)
++ [Netease Music](https://music.163.com/)
 
 Adding support for a new music player is usually straightforward.<sup id="a1">[1](#f1)</sup> If you don't know how to program, or just don't feel
 like it, feel free to [create an issue](https://github.com/kyleneideck/BackgroundMusic/issues/new). Otherwise, see
@@ -157,6 +158,11 @@ and check the box next to it. Background Music doesn't actually listen to your m
 the permission because it gets your system audio from its virtual input device, which macOS counts
 as a microphone. (We're working on it in [#177](/../../issues/177).)
 
+If you use auto-pause with **Netease Music**, you also need to allow **Background Music** under
+`System Settings > Privacy & Security > Accessibility`. Background Music uses macOS UI scripting to
+control Netease Music's **Controls** menu because Netease Music does not expose a native AppleScript
+play/pause command.
+
 If the volume slider for an app isn't working, try looking in `More Apps` for entries like `Some
 App (Helper)`. For some meeting or video chat apps, you may need to do this to change the current
 meeting volume.
@@ -188,6 +194,18 @@ meeting volume.
 
 Many other issues are listed in [TODO.md](/TODO.md) and in [GitHub
 Issues](https://github.com/kyleneideck/BackgroundMusic/issues).
+
+### Source-build auto-pause check for Netease Music
+
+If you're debugging a source build, you can run:
+
+```bash
+./scripts/test-netease-autopause.sh
+```
+
+The script rebuilds the Debug app, refreshes `~/Applications/Background Music Debug.app`, opens the
+Accessibility settings page, waits for you to authorize the app, then verifies that another audio
+source causes Netease Music to pause.
 
 # Related projects
 
@@ -237,5 +255,4 @@ Licensed under [GPLv2](https://www.gnu.org/licenses/gpl-2.0.html), or any later 
 <b id="f1">[1]</b> However, if the music player doesn't support AppleScript, or doesn't support the events Background
 Music needs (`isPlaying`, `isPaused`, `play` and `pause`), it can take significantly more effort to add. (And in some
 cases would require changes to the music player itself.) [↩](#a1)
-
 
