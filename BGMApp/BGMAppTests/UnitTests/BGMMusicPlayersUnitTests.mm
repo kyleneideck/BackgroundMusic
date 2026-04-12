@@ -255,6 +255,14 @@ static NSArray<NSString*>* BGMResponsibleBundleIDs(NSString* bundleID) {
     XCTAssertTrue([responsibleBundleIDs containsObject:@"com.brave.Browser.helper.plugin"]);
 }
 
+- (void) testResponsibleBundleIDsOfWhaleIncludeModernHelperBundleIDs {
+    NSArray<NSString*>* responsibleBundleIDs = BGMResponsibleBundleIDs(@"com.naver.Whale");
+
+    XCTAssertTrue([responsibleBundleIDs containsObject:@"com.naver.Whale.helper"]);
+    XCTAssertTrue([responsibleBundleIDs containsObject:@"com.naver.Whale.helper.renderer"]);
+    XCTAssertTrue([responsibleBundleIDs containsObject:@"com.naver.Whale.helper.plugin"]);
+}
+
 // TODO: Test setting the selectedMusicPlayer property
 
 @end

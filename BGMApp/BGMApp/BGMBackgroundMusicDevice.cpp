@@ -254,6 +254,11 @@ BGMBackgroundMusicDevice::ResponsibleBundleIDsOf(CACFString inParentBundleID)
             { "com.brave.Browser.helper",
               "com.brave.Browser.helper.renderer",
               "com.brave.Browser.helper.plugin" } },
+        // NAVER Whale
+        { "com.naver.Whale",
+            { "com.naver.Whale.helper",
+              "com.naver.Whale.helper.renderer",
+              "com.naver.Whale.helper.plugin" } },
         // Skype
         { "com.skype.skype", { "com.skype.skype.Helper" } },
         // Google Chrome
