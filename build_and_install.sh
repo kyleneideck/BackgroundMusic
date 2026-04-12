@@ -209,6 +209,23 @@ bgmapp_entitlements_path() {
 
 resign_installed_products_if_possible() {
     local launchd_plist="/Library/LaunchDaemons/com.bearisdriving.BGM.XPCHelper.plist"
+    local current_user="$(id -un)"
+    local current_group="$(id -gn)"
+    local -a temporarily_user_owned_paths=(
+        "${DRIVER_PATH}/${DRIVER_DIR}"
+        "${XPC_HELPER_OUTPUT_PATH}/${XPC_HELPER_DIR}"
+    )
+    local restored_root_ownership=0
+
+    restore_root_owned_products() {
+        if [[ ${restored_root_ownership} -ne 0 ]]; then
+            return 0
+        fi
+
+        echo "Restoring root ownership on the driver and helper." >> ${LOG_FILE}
+        sudo chown -RH root:wheel "${temporarily_user_owned_paths[@]}" >> ${LOG_FILE} 2>&1
+        restored_root_ownership=1
+    }
 
     find_signing_identity
 
@@ -221,19 +238,30 @@ resign_installed_products_if_possible() {
 
     echo "Re-signing installed products with ${SIGNING_IDENTITY}." | tee -a ${LOG_FILE}
 
-    sudo /usr/bin/codesign --force --sign "${SIGNING_IDENTITY}" \
-                           --options runtime \
-                           "${DRIVER_PATH}/${DRIVER_DIR}" >> ${LOG_FILE} 2>&1
+    # codesign needs access to the developer certificate's private key, which lives in the current
+    # user's login keychain rather than root's keychain. Temporarily hand the installed root-owned
+    # bundles to the invoking user, sign them as that user, then restore root ownership before
+    # launchd/coreaudiod use them.
+    trap restore_root_owned_products RETURN
+    sudo chown -R "${current_user}:${current_group}" "${temporarily_user_owned_paths[@]}" \
+         >> ${LOG_FILE} 2>&1
 
-    sudo /usr/bin/codesign --force --sign "${SIGNING_IDENTITY}" \
-                           --options runtime \
-                           "${XPC_HELPER_OUTPUT_PATH}/${XPC_HELPER_DIR}" \
-                           >> ${LOG_FILE} 2>&1
+    /usr/bin/codesign --force --sign "${SIGNING_IDENTITY}" \
+                      --options runtime \
+                      "${DRIVER_PATH}/${DRIVER_DIR}" >> ${LOG_FILE} 2>&1
 
-    sudo /usr/bin/codesign --force --sign "${SIGNING_IDENTITY}" \
-                           --options runtime \
-                           --entitlements "$(bgmapp_entitlements_path)" \
-                           "${APP_PATH}/${APP_DIR}" >> ${LOG_FILE} 2>&1
+    /usr/bin/codesign --force --sign "${SIGNING_IDENTITY}" \
+                      --options runtime \
+                      "${XPC_HELPER_OUTPUT_PATH}/${XPC_HELPER_DIR}" \
+                      >> ${LOG_FILE} 2>&1
+
+    /usr/bin/codesign --force --sign "${SIGNING_IDENTITY}" \
+                      --options runtime \
+                      --entitlements "$(bgmapp_entitlements_path)" \
+                      "${APP_PATH}/${APP_DIR}" >> ${LOG_FILE} 2>&1
+
+    restore_root_owned_products
+    trap - RETURN
 
     # post_install.sh bootstraps the launchd job before Xcode's final signing step runs. Reload the
     # helper after re-signing so launchd sees the final executable with a Team ID.
