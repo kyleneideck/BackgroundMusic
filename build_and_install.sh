@@ -173,6 +173,78 @@ bold_face() {
     echo $(tput bold)$*$(tput sgr0)
 }
 
+find_signing_identity() {
+    SIGNING_IDENTITY="${SIGNING_IDENTITY:-${BGM_CODESIGN_IDENTITY:-}}"
+
+    if [[ -n ${SIGNING_IDENTITY:-} ]]; then
+        return 0
+    fi
+
+    local available_identities
+    available_identities="$(security find-identity -v -p codesigning 2>/dev/null || true)"
+
+    SIGNING_IDENTITY="$(printf '%s\n' "${available_identities}" | \
+        sed -n 's/.*"\(Apple Development:[^"]*\)".*/\1/p' | head -n1)"
+
+    if [[ -z ${SIGNING_IDENTITY} ]]; then
+        SIGNING_IDENTITY="$(printf '%s\n' "${available_identities}" | \
+            sed -n 's/.*"\(Mac Development:[^"]*\)".*/\1/p' | head -n1)"
+    fi
+
+    if [[ -z ${SIGNING_IDENTITY} ]]; then
+        SIGNING_IDENTITY="$(printf '%s\n' "${available_identities}" | \
+            sed -n 's/.*"\(Developer ID Application:[^"]*\)".*/\1/p' | head -n1)"
+    fi
+
+    return 0
+}
+
+bgmapp_entitlements_path() {
+    if [[ "${CONFIGURATION}" == "Release" ]]; then
+        echo "BGMApp/BGMApp/BGMApp.entitlements"
+    else
+        echo "BGMApp/BGMApp/BGMApp-Debug.entitlements"
+    fi
+}
+
+resign_installed_products_if_possible() {
+    local launchd_plist="/Library/LaunchDaemons/com.bearisdriving.BGM.XPCHelper.plist"
+
+    find_signing_identity
+
+    if [[ -z ${SIGNING_IDENTITY} ]]; then
+        echo "$(tput setaf 11)WARNING$(tput sgr0): Couldn't find an Apple/macOS code signing " \
+             "certificate. Tahoe may reject the ad hoc signed app, helper and driver." \
+             | tee -a ${LOG_FILE}
+        return 0
+    fi
+
+    echo "Re-signing installed products with ${SIGNING_IDENTITY}." | tee -a ${LOG_FILE}
+
+    sudo /usr/bin/codesign --force --sign "${SIGNING_IDENTITY}" \
+                           --options runtime \
+                           "${DRIVER_PATH}/${DRIVER_DIR}" >> ${LOG_FILE} 2>&1
+
+    sudo /usr/bin/codesign --force --sign "${SIGNING_IDENTITY}" \
+                           --options runtime \
+                           "${XPC_HELPER_OUTPUT_PATH}/${XPC_HELPER_DIR}" \
+                           >> ${LOG_FILE} 2>&1
+
+    sudo /usr/bin/codesign --force --sign "${SIGNING_IDENTITY}" \
+                           --options runtime \
+                           --entitlements "$(bgmapp_entitlements_path)" \
+                           "${APP_PATH}/${APP_DIR}" >> ${LOG_FILE} 2>&1
+
+    # post_install.sh bootstraps the launchd job before Xcode's final signing step runs. Reload the
+    # helper after re-signing so launchd sees the final executable with a Team ID.
+    echo "Reloading BGMXPCHelper after re-signing." | tee -a ${LOG_FILE}
+    sudo launchctl bootout system "${launchd_plist}" >> ${LOG_FILE} 2>&1 || \
+        sudo launchctl unload "${launchd_plist}" >> ${LOG_FILE} 2>&1 || \
+        true
+    sudo launchctl bootstrap system "${launchd_plist}" >> ${LOG_FILE} 2>&1 || \
+        sudo launchctl load "${launchd_plist}" >> ${LOG_FILE} 2>&1
+}
+
 # Takes a PID and returns 0 if the process is running.
 is_alive() {
     kill -0 $1 > /dev/null 2>&1 && return 0 || return 1
@@ -819,6 +891,8 @@ if [[ "${XCODEBUILD_ACTION}" == "install" ]]; then
     # deleted easily after installing.
     sudo chown -R "$(whoami):admin" "BGMApp/build" "BGMDriver/build"
 
+    resign_installed_products_if_possible
+
     # Restart coreaudiod.
 
     echo "Restarting coreaudiod to load the virtual audio device." \
@@ -866,4 +940,3 @@ elif [[ "${XCODEBUILD_ACTION}" == "archive" ]]; then
     mv "$APP_PATH/Products/Applications/Background Music.app/Contents/MacOS/Background Music.dSYM" \
        "$APP_PATH/dSYMs"
 fi
-
