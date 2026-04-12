@@ -224,11 +224,13 @@ BGMBackgroundMusicDevice::ResponsibleBundleIDsOf(CACFString inParentBundleID)
             { "com.apple.quicklook.ui.helper",
               "com.apple.quicklook.QuickLookUIService" } },
         // Safari. Recent macOS versions can run normal tabs in either the classic WebContent
-        // service or the EnhancedSecurity variant, and Safari's own app process doesn't emit the
-        // tab audio directly.
+        // service or the EnhancedSecurity variant, and Tahoe can also hand media playback off to
+        // the GPU helper (surfaced as “Safari Graphics and Media”). Safari's own app process
+        // doesn't emit the tab audio directly.
         { "com.apple.Safari",
             { "com.apple.WebKit.WebContent",
-              "com.apple.WebKit.WebContent.EnhancedSecurity" } },
+              "com.apple.WebKit.WebContent.EnhancedSecurity",
+              "com.apple.WebKit.GPU" } },
         // Firefox
         { "org.mozilla.firefox", { "org.mozilla.plugincontainer" } },
         // Firefox Nightly

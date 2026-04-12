@@ -231,11 +231,12 @@ static NSArray<NSString*>* BGMResponsibleBundleIDs(NSString* bundleID) {
     XCTAssertEqualObjects(players.selectedMusicPlayer.name, @"VLC");
 }
 
-- (void) testResponsibleBundleIDsOfSafariIncludeEnhancedSecurityWebContent {
+- (void) testResponsibleBundleIDsOfSafariIncludeMediaHelperBundleIDs {
     NSArray<NSString*>* responsibleBundleIDs = BGMResponsibleBundleIDs(@"com.apple.Safari");
 
     XCTAssertTrue([responsibleBundleIDs containsObject:@"com.apple.WebKit.WebContent"]);
     XCTAssertTrue([responsibleBundleIDs containsObject:@"com.apple.WebKit.WebContent.EnhancedSecurity"]);
+    XCTAssertTrue([responsibleBundleIDs containsObject:@"com.apple.WebKit.GPU"]);
 }
 
 - (void) testResponsibleBundleIDsOfChromeIncludeModernHelperBundleIDs {
