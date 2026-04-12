@@ -260,7 +260,7 @@ forAppWithProcessID:(pid_t)processID
         audioDevices.bgmDevice.SetAppVolume(volume,
                                             helperPID.intValue,
                                             helperBundleID.length > 0
-                                                ? (__bridge CFStringRef)helperBundleID
+                                                ? (__bridge_retained CFStringRef)helperBundleID
                                                 : nullptr);
     }
 
@@ -310,7 +310,7 @@ forAppWithProcessID:(pid_t)processID
         audioDevices.bgmDevice.SetAppPanPosition(pan,
                                                  helperPID.intValue,
                                                  helperBundleID.length > 0
-                                                     ? (__bridge CFStringRef)helperBundleID
+                                                     ? (__bridge_retained CFStringRef)helperBundleID
                                                      : nullptr);
     }
 }
