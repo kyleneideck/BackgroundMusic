@@ -124,6 +124,73 @@ static inline NSString* NeteaseMusicEscapeAppleScriptString(NSString* input) {
             stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""];
 }
 
+static id __nullable BGMNeteaseCopyAXAttributeValue(AXUIElementRef element, CFStringRef attribute) {
+    CFTypeRef value = NULL;
+    AXError error = AXUIElementCopyAttributeValue(element, attribute, &value);
+    if (error != kAXErrorSuccess || value == NULL) {
+        return nil;
+    }
+
+    return CFBridgingRelease(value);
+}
+
+static AXUIElementRef __nullable BGMNeteaseCopyMatchingMenuItem(NSArray<NSString*>* menuNames,
+                                                                NSArray<NSString*>* itemNames) {
+    NSArray<NSRunningApplication*>* runningApps =
+        [NSRunningApplication runningApplicationsWithBundleIdentifier:kNeteaseMusicBundleID];
+    NSRunningApplication* app = runningApps.firstObject;
+    if (!app) {
+        return nil;
+    }
+
+    AXUIElementRef appElement = AXUIElementCreateApplication(app.processIdentifier);
+    if (!appElement) {
+        return nil;
+    }
+
+    AXUIElementRef result = NULL;
+    AXUIElementRef menuBar = (__bridge AXUIElementRef)BGMNeteaseCopyAXAttributeValue(appElement,
+                                                                                      kAXMenuBarAttribute);
+    if (!menuBar) {
+        CFRelease(appElement);
+        return nil;
+    }
+
+    NSArray* menuBarItems = BGMNeteaseCopyAXAttributeValue(menuBar, kAXChildrenAttribute);
+    for (id menuBarItemObj in menuBarItems) {
+        AXUIElementRef menuBarItem = (__bridge AXUIElementRef)menuBarItemObj;
+        NSString* title = BGMNeteaseCopyAXAttributeValue(menuBarItem, kAXTitleAttribute);
+        if (![menuNames containsObject:title]) {
+            continue;
+        }
+
+        NSArray* menus = BGMNeteaseCopyAXAttributeValue(menuBarItem, kAXChildrenAttribute);
+        for (id menuObj in menus) {
+            AXUIElementRef menu = (__bridge AXUIElementRef)menuObj;
+            NSArray* menuItems = BGMNeteaseCopyAXAttributeValue(menu, kAXChildrenAttribute);
+            for (id menuItemObj in menuItems) {
+                AXUIElementRef menuItem = (__bridge AXUIElementRef)menuItemObj;
+                NSString* itemTitle = BGMNeteaseCopyAXAttributeValue(menuItem, kAXTitleAttribute);
+                if ([itemNames containsObject:itemTitle]) {
+                    result = (AXUIElementRef)CFRetain(menuItem);
+                    break;
+                }
+            }
+
+            if (result) {
+                break;
+            }
+        }
+
+        if (result) {
+            break;
+        }
+    }
+
+    CFRelease(appElement);
+    return result;
+}
+
 @interface BGMNeteaseMusic : BGMMusicPlayerBase<BGMMusicPlayer>
 
 + (NSUUID*) sharedMusicPlayerID;
@@ -150,8 +217,9 @@ static inline NSString* NeteaseMusicEscapeAppleScriptString(NSString* input) {
 - (void) wasSelected {
     [super wasSelected];
 
-    // Netease control goes through System Events UI scripting, so request both permissions when the
-    // user actually chooses this player instead of prompting on every app launch.
+    // Netease control prefers direct accessibility actions and falls back to System Events UI
+    // scripting, so request both permissions when the user actually chooses this player instead of
+    // prompting on every app launch.
     BGMRequestAutomationPermissionForBundle(kSystemEventsBundleID, @"System Events");
     BGMRequestAccessibilityPermission();
 }
@@ -236,6 +304,21 @@ static inline NSString* NeteaseMusicEscapeAppleScriptString(NSString* input) {
 - (BOOL) clickControlMenuItemForCandidates:(NSArray<NSString*>*)itemNames {
     if (!itemNames.count) {
         return NO;
+    }
+
+    AXUIElementRef targetMenuItem = BGMNeteaseCopyMatchingMenuItem(kNeteaseMusicControlMenuLabels,
+                                                                   itemNames);
+    if (targetMenuItem) {
+        AXError axError = AXUIElementPerformAction(targetMenuItem, kAXPressAction);
+        CFRelease(targetMenuItem);
+
+        if (axError == kAXErrorSuccess) {
+            DebugMsg("BGMNeteaseMusic::clickControlMenuItem: pressed AX menu item directly");
+            return YES;
+        }
+
+        DebugMsg("BGMNeteaseMusic::clickControlMenuItem: direct AXPress failed with error=%d, falling back",
+                 axError);
     }
     
     NSString* controlMenuCandidates =

@@ -209,8 +209,8 @@ meeting volume.
 - **Some applications play notification sounds that are only just long enough to trigger an auto-pause.**
     - Increase the `kPauseDelayNSec` constant in [BGMAutoPauseMusic.mm](/BGMApp/BGMApp/BGMAutoPauseMusic.mm). It will increase your music's overlap time over other audio, so don't increase it too much. See [#5](https://github.com/kyleneideck/BackgroundMusic/issues/5) for details.
 
-- **Auto-pausing Netease Music may briefly show its macOS menu bar items.**
-    - The current Netease Music integration uses macOS UI scripting to control the app because it does not expose a native AppleScript play/pause command. The integration works, but it can momentarily reveal Netease Music's menu while pausing or resuming playback.
+- **Auto-pausing Netease Music can still fall back to macOS UI scripting if direct accessibility control fails.**
+    - Background Music now tries to press Netease Music's playback menu items directly through macOS accessibility APIs. If that fails because of an app update or system accessibility quirk, it falls back to UI scripting, which may still briefly reveal the menu while pausing or resuming playback.
 
 Many other issues are listed in [TODO.md](/TODO.md) and in [GitHub
 Issues](https://github.com/kyleneideck/BackgroundMusic/issues).
