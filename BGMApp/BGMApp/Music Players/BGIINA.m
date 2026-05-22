@@ -43,6 +43,7 @@
 #import <sys/un.h>
 #import <sys/stat.h>
 #import <unistd.h>
+#import <sys/ucred.h>
 
 
 // mpv IPC socket 路径
