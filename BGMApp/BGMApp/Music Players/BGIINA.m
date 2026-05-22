@@ -48,6 +48,8 @@
 
 // mpv IPC socket 路径
 static NSString* const kIINAMPVSocketPath = @"/tmp/iina-mpv-socket";
+// socket 超时时间（秒）
+static const NSTimeInterval kSocketTimeout = 5.0;
 
 
 #pragma clang assume_nonnull begin
@@ -99,13 +101,10 @@ static NSString* const kIINAMPVSocketPath = @"/tmp/iina-mpv-socket";
 
     // 通过 mpv IPC 查询播放状态
     // get_property pause 返回 true 表示暂停中
-    NSData* response = [self sendMPVCommand:@[@"get_property", @"pause"]];
-    if (response) {
-        NSDictionary* json = [NSJSONSerialization JSONObjectWithData:response options:0 error:nil];
-        if (json && [json[@"error"] isEqualToString:@"success"]) {
-            // data: false 表示未暂停（正在播放）
-            return [json[@"data"] boolValue] == NO;
-        }
+    NSDictionary* response = [self sendMPVGetProperty:@"pause"];
+    if (response && [response[@"error"] isEqualToString:@"success"]) {
+        // data: false 表示未暂停（正在播放）
+        return [response[@"data"] boolValue] == NO;
     }
     return NO;
 }
@@ -113,13 +112,10 @@ static NSString* const kIINAMPVSocketPath = @"/tmp/iina-mpv-socket";
 - (BOOL) isPaused {
     if (!self.running) return NO;
 
-    NSData* response = [self sendMPVCommand:@[@"get_property", @"pause"]];
-    if (response) {
-        NSDictionary* json = [NSJSONSerialization JSONObjectWithData:response options:0 error:nil];
-        if (json && [json[@"error"] isEqualToString:@"success"]) {
-            // data: true 表示暂停中
-            return [json[@"data"] boolValue] == YES;
-        }
+    NSDictionary* response = [self sendMPVGetProperty:@"pause"];
+    if (response && [response[@"error"] isEqualToString:@"success"]) {
+        // data: true 表示暂停中
+        return [response[@"data"] boolValue] == YES;
     }
     return NO;
 }
@@ -131,12 +127,7 @@ static NSString* const kIINAMPVSocketPath = @"/tmp/iina-mpv-socket";
     }
 
     DebugMsg("BGIINA::pause: 通过 mpv IPC 暂停 IINA");
-    NSData* response = [self sendMPVCommand:@[@"set_property", @"pause", @YES]];
-    if (response) {
-        NSDictionary* json = [NSJSONSerialization JSONObjectWithData:response options:0 error:nil];
-        return json && [json[@"error"] isEqualToString:@"success"];
-    }
-    return NO;
+    return [self sendMPVSetProperty:@"pause" value:@YES];
 }
 
 - (BOOL) unpause {
@@ -146,15 +137,39 @@ static NSString* const kIINAMPVSocketPath = @"/tmp/iina-mpv-socket";
     }
 
     DebugMsg("BGIINA::unpause: 通过 mpv IPC 恢复 IINA");
-    NSData* response = [self sendMPVCommand:@[@"set_property", @"pause", @NO]];
+    return [self sendMPVSetProperty:@"pause" value:@NO];
+}
+
+#pragma mark mpv IPC - 高级接口
+
+- (NSDictionary* __nullable) sendMPVGetProperty:(NSString*)property {
+    NSData* response = [self sendMPVCommand:@[@"get_property", property]];
     if (response) {
-        NSDictionary* json = [NSJSONSerialization JSONObjectWithData:response options:0 error:nil];
+        return [self parseResponse:response];
+    }
+    return nil;
+}
+
+- (BOOL) sendMPVSetProperty:(NSString*)property value:(id)value {
+    NSData* response = [self sendMPVCommand:@[@"set_property", property, value]];
+    if (response) {
+        NSDictionary* json = [self parseResponse:response];
         return json && [json[@"error"] isEqualToString:@"success"];
     }
     return NO;
 }
 
-#pragma mark mpv IPC
+- (NSDictionary* __nullable) parseResponse:(NSData*)data {
+    NSError* error = nil;
+    NSDictionary* json = [NSJSONSerialization JSONObjectWithData:data options:0 error:&error];
+    if (error) {
+        DebugMsg("BGIINA::parseResponse: JSON 解析失败: %s", error.localizedDescription.UTF8String);
+        return nil;
+    }
+    return json;
+}
+
+#pragma mark mpv IPC - 底层接口
 
 - (BOOL) isValidSocket:(NSString*)path {
     // 使用 lstat 而不是 stat，避免跟踪 symlink
@@ -196,6 +211,13 @@ static NSString* const kIINAMPVSocketPath = @"/tmp/iina-mpv-socket";
         DebugMsg("BGIINA::sendMPVCommand: 创建 socket 失败");
         return nil;
     }
+
+    // 设置 socket 超时
+    struct timeval tv;
+    tv.tv_sec = (long)kSocketTimeout;
+    tv.tv_usec = 0;
+    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+    setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
 
     // 设置 socket 地址
     struct sockaddr_un addr;
