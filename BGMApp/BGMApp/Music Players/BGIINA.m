@@ -41,6 +41,8 @@
 #import <Cocoa/Cocoa.h>
 #import <sys/socket.h>
 #import <sys/un.h>
+#import <sys/stat.h>
+#import <unistd.h>
 
 
 // mpv IPC socket 路径
@@ -145,10 +147,41 @@ static NSString* const kIINAMPVSocketPath = @"/tmp/iina-mpv-socket";
 
 #pragma mark mpv IPC
 
+- (BOOL) isValidSocket:(NSString*)path {
+    // 使用 lstat 而不是 stat，避免跟踪 symlink
+    struct stat socketStat;
+    if (lstat([path UTF8String], &socketStat) != 0) {
+        return NO;
+    }
+
+    // 验证是否是 socket 文件
+    if (!S_ISSOCK(socketStat.st_mode)) {
+        DebugMsg("BGIINA::isValidSocket: 文件不是 socket");
+        return NO;
+    }
+
+    // 验证所有者是否是当前用户
+    uid_t currentUid = getuid();
+    if (socketStat.st_uid != currentUid) {
+        DebugMsg("BGIINA::isValidSocket: socket 所有者不匹配 (expected=%d, actual=%d)",
+                 currentUid, socketStat.st_uid);
+        return NO;
+    }
+
+    // 验证权限是否安全（只允许所有者读写）
+    mode_t mode = socketStat.st_mode & 07777;
+    if (mode != 0600 && mode != 0700) {
+        DebugMsg("BGIINA::isValidSocket: socket 权限不安全 (mode=%o)", mode);
+        return NO;
+    }
+
+    return YES;
+}
+
 - (NSData* __nullable) sendMPVCommand:(NSArray*)command {
-    // 检查 socket 文件是否存在
-    if (![[NSFileManager defaultManager] fileExistsAtPath:kIINAMPVSocketPath]) {
-        DebugMsg("BGIINA::sendMPVCommand: mpv IPC socket 不存在: %s", kIINAMPVSocketPath.UTF8String);
+    // 安全验证：检查 socket 文件是否合法
+    if (![self isValidSocket:kIINAMPVSocketPath]) {
+        DebugMsg("BGIINA::sendMPVCommand: mpv IPC socket 验证失败");
         return nil;
     }
 
@@ -170,6 +203,19 @@ static NSString* const kIINAMPVSocketPath = @"/tmp/iina-mpv-socket";
         DebugMsg("BGIINA::sendMPVCommand: 连接 socket 失败");
         close(sock);
         return nil;
+    }
+
+    // 验证连接的 peer credentials
+    struct xucred peerCred;
+    socklen_t credLen = sizeof(peerCred);
+    if (getsockopt(sock, 0, LOCAL_PEERCRED, &peerCred, &credLen) == 0) {
+        uid_t currentUid = getuid();
+        if (peerCred.cr_uid != currentUid) {
+            DebugMsg("BGIINA::sendMPVCommand: peer 身份验证失败 (expected=%d, actual=%d)",
+                     currentUid, peerCred.cr_uid);
+            close(sock);
+            return nil;
+        }
     }
 
     // 构建 JSON IPC 命令
