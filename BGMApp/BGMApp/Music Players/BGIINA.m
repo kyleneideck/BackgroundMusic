@@ -100,11 +100,10 @@ static NSString* const kIINAMPVSocketPath = @"/tmp/iina-mpv-socket";
     // get_property pause 返回 true 表示暂停中
     NSData* response = [self sendMPVCommand:@[@"get_property", @"pause"]];
     if (response) {
-        NSString* responseStr = [[NSString alloc] initWithData:response encoding:NSUTF8StringEncoding];
-        // 响应格式: {"data":false,"request_id":0,"error":"success"}
-        // data: false 表示未暂停（正在播放）
-        if ([responseStr containsString:@"\"data\":false"]) {
-            return YES;
+        NSDictionary* json = [NSJSONSerialization JSONObjectWithData:response options:0 error:nil];
+        if (json && [json[@"error"] isEqualToString:@"success"]) {
+            // data: false 表示未暂停（正在播放）
+            return [json[@"data"] boolValue] == NO;
         }
     }
     return NO;
@@ -115,9 +114,10 @@ static NSString* const kIINAMPVSocketPath = @"/tmp/iina-mpv-socket";
 
     NSData* response = [self sendMPVCommand:@[@"get_property", @"pause"]];
     if (response) {
-        NSString* responseStr = [[NSString alloc] initWithData:response encoding:NSUTF8StringEncoding];
-        if ([responseStr containsString:@"\"data\":true"]) {
-            return YES;
+        NSDictionary* json = [NSJSONSerialization JSONObjectWithData:response options:0 error:nil];
+        if (json && [json[@"error"] isEqualToString:@"success"]) {
+            // data: true 表示暂停中
+            return [json[@"data"] boolValue] == YES;
         }
     }
     return NO;
@@ -131,7 +131,11 @@ static NSString* const kIINAMPVSocketPath = @"/tmp/iina-mpv-socket";
 
     DebugMsg("BGIINA::pause: 通过 mpv IPC 暂停 IINA");
     NSData* response = [self sendMPVCommand:@[@"set_property", @"pause", @YES]];
-    return response != nil;
+    if (response) {
+        NSDictionary* json = [NSJSONSerialization JSONObjectWithData:response options:0 error:nil];
+        return json && [json[@"error"] isEqualToString:@"success"];
+    }
+    return NO;
 }
 
 - (BOOL) unpause {
@@ -142,7 +146,11 @@ static NSString* const kIINAMPVSocketPath = @"/tmp/iina-mpv-socket";
 
     DebugMsg("BGIINA::unpause: 通过 mpv IPC 恢复 IINA");
     NSData* response = [self sendMPVCommand:@[@"set_property", @"pause", @NO]];
-    return response != nil;
+    if (response) {
+        NSDictionary* json = [NSJSONSerialization JSONObjectWithData:response options:0 error:nil];
+        return json && [json[@"error"] isEqualToString:@"success"];
+    }
+    return NO;
 }
 
 #pragma mark mpv IPC
@@ -168,12 +176,8 @@ static NSString* const kIINAMPVSocketPath = @"/tmp/iina-mpv-socket";
         return NO;
     }
 
-    // 验证权限是否安全（只允许所有者读写）
-    mode_t mode = socketStat.st_mode & 07777;
-    if (mode != 0600 && mode != 0700) {
-        DebugMsg("BGIINA::isValidSocket: socket 权限不安全 (mode=%o)", mode);
-        return NO;
-    }
+    // 注意：不检查 socket 权限，因为 mpv 默认创建 755 权限的 socket
+    // 安全性主要依赖 LOCAL_PEERCRED 验证（在 connect 后执行）
 
     return YES;
 }
