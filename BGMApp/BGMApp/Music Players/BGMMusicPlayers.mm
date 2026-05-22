@@ -36,6 +36,7 @@
 #import "BGMSwinsian.h"
 #import "BGMMusic.h"
 #import "BGMGooglePlayMusicDesktopPlayer.h"
+#import "BGIINA.h"
 
 
 #pragma clang assume_nonnull begin
@@ -58,7 +59,8 @@
                                                    [BGMDecibel class],
                                                    [BGMHermes class],
                                                    [BGMSwinsian class],
-                                                   [BGMMusic class] ];
+                                                   [BGMMusic class],
+                                                   [BGIINA class] ];
 
     // We only support Google Play Music Desktop Player on macOS 10.10 and higher.
     if (@available(macOS 10.10, *)) {
