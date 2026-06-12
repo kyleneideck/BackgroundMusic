@@ -52,6 +52,7 @@
 
 static NSString* const kOptNoPersistentData  = @"--no-persistent-data";
 static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
+static NSString* const kOptSafeAudioMode     = @"--safe-audio-mode";
 
 @implementation BGMAppDelegate {
     // The button in the system status bar that shows the main menu.
@@ -128,8 +129,13 @@ static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
 
     // Skip this if we're compiling on a version of macOS before 10.14 as won't compile and it
     // isn't needed.
+    if ([NSProcessInfo.processInfo.arguments indexOfObject:kOptSafeAudioMode] != NSNotFound) {
+        DebugMsg("BGMAppDelegate::applicationDidFinishLaunching: Safe audio mode enabled "
+                 "from launch argument %s", kOptSafeAudioMode.UTF8String);
+        [self continueLaunchAfterInputDevicePermissionGranted];
+    }
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400  // MAC_OS_X_VERSION_10_14
-    if (@available(macOS 10.14, *)) {
+    else if (@available(macOS 10.14, *)) {
         // On macOS 10.14+ we need to get the user's permission to use input devices before we can
         // use BGMDevice for playthrough (see BGMPlayThrough), so we wait until they've given it
         // before making BGMDevice the default device. This way, if the user is playing audio when
@@ -153,7 +159,7 @@ static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
                                             "audio.\n\nYou can grant the permission by going to "
                                             "System Preferences > Security and Privacy > "
                                             "Microphone and checking the box for Background Music."
-                 exitAfterMessageDismissed:YES];
+                                      exitAfterMessageDismissed:YES];
                 }
             });
         }];
@@ -168,9 +174,17 @@ static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
 }
 
 - (void) continueLaunchAfterInputDevicePermissionGranted {
+    BOOL safeAudioModeEnabled = [NSProcessInfo.processInfo.arguments
+        indexOfObject:kOptSafeAudioMode] != NSNotFound;
+
     // Choose an output device for BGMApp to use to play audio.
     if (![self setInitialOutputDevice]) {
         return;
+    }
+
+    if (safeAudioModeEnabled) {
+        DebugMsg("BGMAppDelegate::continueLaunchAfterInputDevicePermissionGranted: "
+                 "Safe audio mode enabled; using normal default-output routing.");
     }
 
     // Make BGMDevice the default device.
@@ -549,4 +563,3 @@ exitAfterMessageDismissed:(BOOL)fatal {
 @end
 
 #pragma clang assume_nonnull end
-

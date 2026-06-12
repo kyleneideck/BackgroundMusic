@@ -36,9 +36,409 @@
 #import "BGMSwinsian.h"
 #import "BGMMusic.h"
 #import "BGMGooglePlayMusicDesktopPlayer.h"
+#import <ApplicationServices/ApplicationServices.h>
 
 
 #pragma clang assume_nonnull begin
+
+// Netease Cloud Music support uses System Events because this app does not expose a normal scripting
+// dictionary in this project.
+static NSString* const kNeteaseMusicBundleID = @"com.netease.163music";
+static NSString* const kSystemEventsBundleID = @"com.apple.systemevents";
+static NSString* const kNeteaseMusicProcessName = @"NeteaseMusic";
+static NSString* const kNeteaseMusicControlMenuEnglish = @"Controls";
+static NSString* const kNeteaseMusicControlMenuEnglishAlt = @"Control";
+static NSString* const kNeteaseMusicControlMenuChinese = @"控制";
+static NSString* const kNeteaseMusicControlMenuChineseAlt = @"播放控制";
+static NSString* const kNeteaseMusicPauseEnglish = @"Pause";
+static NSString* const kNeteaseMusicPauseEnglish2 = @"Pause Playback";
+static NSString* const kNeteaseMusicPauseChinese = @"暂停";
+static NSString* const kNeteaseMusicPauseChinese2 = @"暂停播放";
+static NSString* const kNeteaseMusicPlayEnglish = @"Play";
+static NSString* const kNeteaseMusicPlayEnglish2 = @"Resume";
+static NSString* const kNeteaseMusicPlayChinese = @"播放";
+static NSString* const kNeteaseMusicPlayChinese2 = @"继续播放";
+
+static NSArray<NSString*>* const kNeteaseMusicControlMenuLabels = @[
+    kNeteaseMusicControlMenuEnglish,
+    kNeteaseMusicControlMenuEnglishAlt,
+    kNeteaseMusicControlMenuChinese,
+    kNeteaseMusicControlMenuChineseAlt
+];
+static NSArray<NSString*>* const kNeteaseMusicPauseLabels = @[
+    kNeteaseMusicPauseEnglish,
+    kNeteaseMusicPauseEnglish2,
+    kNeteaseMusicPauseChinese,
+    kNeteaseMusicPauseChinese2
+];
+static NSArray<NSString*>* const kNeteaseMusicPlayLabels = @[
+    kNeteaseMusicPlayEnglish,
+    kNeteaseMusicPlayEnglish2,
+    kNeteaseMusicPlayChinese,
+    kNeteaseMusicPlayChinese2
+];
+
+static void BGMRequestAccessibilityPermission(void) {
+    NSDictionary* options = @{ (__bridge NSString*)kAXTrustedCheckOptionPrompt: @YES };
+    AXIsProcessTrustedWithOptions((__bridge CFDictionaryRef)options);
+}
+
+static void BGMRequestAutomationPermissionForBundle(NSString* bundleID, NSString* playerName) {
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+    if (@available(macOS 10.14, *)) {
+        NSAppleEventDescriptor* targetDescriptor =
+            [NSAppleEventDescriptor descriptorWithBundleIdentifier:bundleID];
+        if (!targetDescriptor) {
+            DebugMsg("BGMRequestAutomationPermissionForBundle: failed to create descriptor for %s",
+                     playerName.UTF8String);
+            return;
+        }
+
+        dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+            OSStatus status =
+                AEDeterminePermissionToAutomateTarget(targetDescriptor.aeDesc,
+                                                      typeWildCard,
+                                                      typeWildCard,
+                                                      true);
+            if (status == noErr) {
+                DebugMsg("BGMRequestAutomationPermissionForBundle: permission granted for %s (%s)",
+                         playerName.UTF8String,
+                         bundleID.UTF8String);
+            } else {
+                DebugMsg("BGMRequestAutomationPermissionForBundle: permission denied for %s (%s), status=%d",
+                         playerName.UTF8String,
+                         bundleID.UTF8String,
+                         status);
+            }
+        });
+    } else {
+        #pragma unused(bundleID, playerName)
+    }
+#else
+    #pragma unused(bundleID, playerName)
+#endif
+}
+
+static inline NSString* NeteaseMusicEscapeAppleScriptString(NSString* input) {
+    return [[input stringByReplacingOccurrencesOfString:@"\\" withString:@"\\\\"]
+            stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""];
+}
+
+static id __nullable BGMNeteaseCopyAXAttributeValue(AXUIElementRef element, CFStringRef attribute) {
+    CFTypeRef value = NULL;
+    AXError error = AXUIElementCopyAttributeValue(element, attribute, &value);
+    if (error != kAXErrorSuccess || value == NULL) {
+        return nil;
+    }
+
+    return CFBridgingRelease(value);
+}
+
+static AXUIElementRef __nullable BGMNeteaseCopyMatchingMenuItem(NSArray<NSString*>* menuNames,
+                                                                NSArray<NSString*>* itemNames) {
+    NSArray<NSRunningApplication*>* runningApps =
+        [NSRunningApplication runningApplicationsWithBundleIdentifier:kNeteaseMusicBundleID];
+    NSRunningApplication* app = runningApps.firstObject;
+    if (!app) {
+        return nil;
+    }
+
+    AXUIElementRef appElement = AXUIElementCreateApplication(app.processIdentifier);
+    if (!appElement) {
+        return nil;
+    }
+
+    AXUIElementRef result = NULL;
+    AXUIElementRef menuBar = (__bridge AXUIElementRef)BGMNeteaseCopyAXAttributeValue(appElement,
+                                                                                      kAXMenuBarAttribute);
+    if (!menuBar) {
+        CFRelease(appElement);
+        return nil;
+    }
+
+    NSArray* menuBarItems = BGMNeteaseCopyAXAttributeValue(menuBar, kAXChildrenAttribute);
+    for (id menuBarItemObj in menuBarItems) {
+        AXUIElementRef menuBarItem = (__bridge AXUIElementRef)menuBarItemObj;
+        NSString* title = BGMNeteaseCopyAXAttributeValue(menuBarItem, kAXTitleAttribute);
+        if (![menuNames containsObject:title]) {
+            continue;
+        }
+
+        NSArray* menus = BGMNeteaseCopyAXAttributeValue(menuBarItem, kAXChildrenAttribute);
+        for (id menuObj in menus) {
+            AXUIElementRef menu = (__bridge AXUIElementRef)menuObj;
+            NSArray* menuItems = BGMNeteaseCopyAXAttributeValue(menu, kAXChildrenAttribute);
+            for (id menuItemObj in menuItems) {
+                AXUIElementRef menuItem = (__bridge AXUIElementRef)menuItemObj;
+                NSString* itemTitle = BGMNeteaseCopyAXAttributeValue(menuItem, kAXTitleAttribute);
+                if ([itemNames containsObject:itemTitle]) {
+                    result = (AXUIElementRef)CFRetain(menuItem);
+                    break;
+                }
+            }
+
+            if (result) {
+                break;
+            }
+        }
+
+        if (result) {
+            break;
+        }
+    }
+
+    CFRelease(appElement);
+    return result;
+}
+
+@interface BGMNeteaseMusic : BGMMusicPlayerBase<BGMMusicPlayer>
+
++ (NSUUID*) sharedMusicPlayerID;
+
+@end
+
+@implementation BGMNeteaseMusic
+
++ (NSUUID*) sharedMusicPlayerID {
+    NSUUID* musicPlayerID = [BGMMusicPlayerBase makeID:@"F4E4ABEF-C775-4284-981B-A2B14D19A342"];
+    return (NSUUID*)musicPlayerID;
+}
+
+- (instancetype) init {
+    if ((self = [super initWithMusicPlayerID:[BGMNeteaseMusic sharedMusicPlayerID]
+                                      name:@"网易云音乐"
+                                  bundleID:kNeteaseMusicBundleID])) {
+        // no additional init
+    }
+    
+    return self;
+}
+
+- (void) wasSelected {
+    [super wasSelected];
+
+    // Netease control prefers direct accessibility actions and falls back to System Events UI
+    // scripting, so request both permissions when the user actually chooses this player instead of
+    // prompting on every app launch.
+    BGMRequestAutomationPermissionForBundle(kSystemEventsBundleID, @"System Events");
+    BGMRequestAccessibilityPermission();
+}
+
+- (NSString* __nullable) currentControlState {
+    NSString* controlMenuCandidates =
+        kNeteaseMusicControlMenuLabels.count
+            ? [NSString stringWithFormat:@"\"%@\"", NeteaseMusicEscapeAppleScriptString(kNeteaseMusicControlMenuLabels[0])]
+            : @"\"Controls\"";
+    for (NSUInteger i = 1; i < kNeteaseMusicControlMenuLabels.count; i++) {
+        controlMenuCandidates = [controlMenuCandidates stringByAppendingFormat:
+                                @", \"%@\"",
+                                NeteaseMusicEscapeAppleScriptString(kNeteaseMusicControlMenuLabels[i])];
+    }
+    
+    NSString* controlStateCandidates =
+        kNeteaseMusicPauseLabels.count
+            ? [NSString stringWithFormat:@"\"%@\"", NeteaseMusicEscapeAppleScriptString(kNeteaseMusicPauseLabels[0])]
+            : @"\"Pause\"";
+    for (NSUInteger i = 1; i < kNeteaseMusicPauseLabels.count; i++) {
+        controlStateCandidates = [controlStateCandidates stringByAppendingFormat:
+                                 @", \"%@\"",
+                                 NeteaseMusicEscapeAppleScriptString(kNeteaseMusicPauseLabels[i])];
+    }
+    NSString* playStateCandidates =
+        kNeteaseMusicPlayLabels.count
+            ? [NSString stringWithFormat:@"\"%@\"", NeteaseMusicEscapeAppleScriptString(kNeteaseMusicPlayLabels[0])]
+            : @"\"Play\"";
+    for (NSUInteger i = 1; i < kNeteaseMusicPlayLabels.count; i++) {
+        playStateCandidates = [playStateCandidates stringByAppendingFormat:
+                              @", \"%@\"",
+                              NeteaseMusicEscapeAppleScriptString(kNeteaseMusicPlayLabels[i])];
+    }
+
+    NSString* source =
+        [NSString stringWithFormat:
+         @"tell application \"System Events\"\n"
+         @"if not (exists process \"%@\") then return \"\"\n"
+         @"tell process \"%@\"\n"
+         @"    set controlMenuName to missing value\n"
+         @"    repeat with candidateMenu in {%@}\n"
+         @"        if exists menu bar item (contents of candidateMenu) of menu bar 1 then\n"
+         @"            set controlMenuName to contents of candidateMenu\n"
+         @"            exit repeat\n"
+         @"        end if\n"
+         @"    end repeat\n"
+         @"    if controlMenuName is missing value then return \"\"\n"
+         @"    set controlMenu to menu 1 of menu bar item controlMenuName of menu bar 1\n"
+         @"    repeat with candidateItem in {%@}\n"
+         @"        if exists menu item (contents of candidateItem) of controlMenu then\n"
+         @"            return contents of candidateItem\n"
+         @"        end if\n"
+         @"    end repeat\n"
+         @"    repeat with candidateItem in {%@}\n"
+         @"        if exists menu item (contents of candidateItem) of controlMenu then\n"
+         @"            return contents of candidateItem\n"
+         @"        end if\n"
+         @"    end repeat\n"
+         @"    return \"\"\n"
+         @"end tell\n"
+         @"end tell\n",
+         kNeteaseMusicProcessName,
+         kNeteaseMusicProcessName,
+         controlMenuCandidates,
+         controlStateCandidates,
+         playStateCandidates];
+
+    NSDictionary* __nullable error = nil;
+    NSAppleScript* script = [[NSAppleScript alloc] initWithSource:source];
+    NSAppleEventDescriptor* result = [script executeAndReturnError:&error];
+    
+    if (error) {
+        NSString* errString = error ? [error description] : @"";
+        DebugMsg("BGMNeteaseMusic::currentControlState: System Events returned error=%s",
+                 errString.UTF8String);
+        return nil;
+    }
+    
+    return result.stringValue;
+}
+
+- (BOOL) clickControlMenuItemForCandidates:(NSArray<NSString*>*)itemNames {
+    if (!itemNames.count) {
+        return NO;
+    }
+
+    AXUIElementRef targetMenuItem = BGMNeteaseCopyMatchingMenuItem(kNeteaseMusicControlMenuLabels,
+                                                                   itemNames);
+    if (targetMenuItem) {
+        AXError axError = AXUIElementPerformAction(targetMenuItem, kAXPressAction);
+        CFRelease(targetMenuItem);
+
+        if (axError == kAXErrorSuccess) {
+            DebugMsg("BGMNeteaseMusic::clickControlMenuItem: pressed AX menu item directly");
+            return YES;
+        }
+
+        DebugMsg("BGMNeteaseMusic::clickControlMenuItem: direct AXPress failed with error=%d, falling back",
+                 axError);
+    }
+    
+    NSString* controlMenuCandidates =
+        kNeteaseMusicControlMenuLabels.count
+            ? [NSString stringWithFormat:@"\"%@\"", NeteaseMusicEscapeAppleScriptString(kNeteaseMusicControlMenuLabels[0])]
+            : @"\"Controls\"";
+    for (NSUInteger i = 1; i < kNeteaseMusicControlMenuLabels.count; i++) {
+        controlMenuCandidates = [controlMenuCandidates stringByAppendingFormat:
+                                @", \"%@\"",
+                                NeteaseMusicEscapeAppleScriptString(kNeteaseMusicControlMenuLabels[i])];
+    }
+
+    NSString* targetCandidates =
+        [NSString stringWithFormat:@"\"%@\"", NeteaseMusicEscapeAppleScriptString(itemNames[0])];
+    for (NSUInteger i = 1; i < itemNames.count; i++) {
+        targetCandidates = [targetCandidates stringByAppendingFormat:
+                           @", \"%@\"",
+                           NeteaseMusicEscapeAppleScriptString(itemNames[i])];
+    }
+    
+    NSString* source =
+        [NSString stringWithFormat:
+         @"tell application \"System Events\"\n"
+         @"if not (exists process \"%@\") then return \"\"\n"
+         @"tell process \"%@\"\n"
+         @"    set controlMenuName to missing value\n"
+         @"    repeat with candidateMenu in {%@}\n"
+         @"        if exists menu bar item (contents of candidateMenu) of menu bar 1 then\n"
+         @"            set controlMenuName to contents of candidateMenu\n"
+         @"            exit repeat\n"
+         @"        end if\n"
+         @"    end repeat\n"
+         @"    if controlMenuName is not missing value then\n"
+         @"        click menu bar item controlMenuName of menu bar 1\n"
+         @"        delay 0.1\n"
+         @"        set controlMenu to menu 1 of menu bar item controlMenuName of menu bar 1\n"
+         @"        repeat with candidateItem in {%@}\n"
+         @"            if exists menu item (contents of candidateItem) of controlMenu then\n"
+         @"                click menu item (contents of candidateItem) of controlMenu\n"
+         @"                delay 0.05\n"
+         @"                return \"ok\"\n"
+         @"            end if\n"
+         @"        end repeat\n"
+         @"        key code 53\n"
+         @"    end if\n"
+         @"    return \"\"\n"
+         @"end tell\n"
+         @"end tell\n",
+         kNeteaseMusicProcessName,
+         kNeteaseMusicProcessName,
+         controlMenuCandidates,
+         targetCandidates];
+    
+    NSDictionary* __nullable error = nil;
+    NSAppleScript* script = [[NSAppleScript alloc] initWithSource:source];
+    NSAppleEventDescriptor* result = [script executeAndReturnError:&error];
+    
+    if (error) {
+        NSString* errString = error ? [error description] : @"";
+        DebugMsg("BGMNeteaseMusic::clickControlMenuItem: System Events returned error=%s",
+                 errString.UTF8String);
+        return NO;
+    }
+    
+    return (result != nil && result.stringValue && [result.stringValue length] > 0);
+}
+
+- (BOOL) isRunning {
+    return [[NSRunningApplication runningApplicationsWithBundleIdentifier:kNeteaseMusicBundleID] count] > 0;
+}
+
+- (BOOL) isPlaying {
+    if (!self.running) {
+        return NO;
+    }
+    
+    NSString* state = [self currentControlState];
+    return ([state isEqualToString:kNeteaseMusicPauseEnglish] ||
+            [state isEqualToString:kNeteaseMusicPauseEnglish2] ||
+            [state isEqualToString:kNeteaseMusicPauseChinese] ||
+            [state isEqualToString:kNeteaseMusicPauseChinese2]);
+}
+
+- (BOOL) isPaused {
+    if (!self.running) {
+        return NO;
+    }
+    
+    NSString* state = [self currentControlState];
+    return ([state isEqualToString:kNeteaseMusicPlayEnglish] ||
+            [state isEqualToString:kNeteaseMusicPlayEnglish2] ||
+            [state isEqualToString:kNeteaseMusicPlayChinese] ||
+            [state isEqualToString:kNeteaseMusicPlayChinese2]);
+}
+
+- (BOOL) pause {
+    // isPlaying checks isRunning, so we don't need to check it here.
+    BOOL wasPlaying = self.playing;
+    
+    if (wasPlaying) {
+        DebugMsg("BGMNeteaseMusic::pause: Pausing Netease Cloud Music");
+        return [self clickControlMenuItemForCandidates:kNeteaseMusicPauseLabels];
+    }
+    
+    return NO;
+}
+
+- (BOOL) unpause {
+    // isPaused checks isRunning, so we don't need to check it here.
+    BOOL wasPaused = self.paused;
+    
+    if (wasPaused) {
+        DebugMsg("BGMNeteaseMusic::unpause: Unpausing Netease Cloud Music");
+        return [self clickControlMenuItemForCandidates:kNeteaseMusicPlayLabels];
+    }
+    
+    return NO;
+}
+
+@end
 
 @implementation BGMMusicPlayers {
     BGMAudioDeviceManager* audioDevices;
@@ -53,6 +453,7 @@
     // it to this array.
     NSArray<Class<BGMMusicPlayer>>* mpClasses = @[ [BGMVOX class],
                                                    [BGMVLC class],
+                                                   [BGMNeteaseMusic class],
                                                    [BGMSpotify class],
                                                    [BGMiTunes class],
                                                    [BGMDecibel class],
@@ -264,4 +665,3 @@
 @end
 
 #pragma clang assume_nonnull end
-
