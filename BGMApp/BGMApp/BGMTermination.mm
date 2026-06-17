@@ -122,6 +122,10 @@ void    BGMTermination::CleanUpAudioDevices()
     // it's better for things to work even if BGMXPCHelper isn't installed.
     if(sAudioDevices)
     {
+        // Deactivate control sync and playthrough before changing the default device back.
+        // This prevents the default device change from triggering volume sync that could leave
+        // the output device at the wrong volume.
+        [sAudioDevices prepareForTermination];
         [sAudioDevices unsetBGMDeviceAsOSDefault];
     }
 }
