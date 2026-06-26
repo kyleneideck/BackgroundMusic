@@ -59,6 +59,11 @@ static NSInteger const kAboutPanelMenuItemTag  = 4;
     NSTextField* pauseDelayLabel;
     NSTextField* maxUnpauseDelayLabel;
     BGMUserDefaults* userDefaults;
+
+    // Ducking preferences
+    NSMenuItem* duckVolumeMenuItem;
+    NSSlider* duckVolumeSlider;
+    NSTextField* duckVolumeLabel;
 }
 
 - (id) initWithBGMMenu:(NSMenu*)inBGMMenu
@@ -101,6 +106,11 @@ static NSInteger const kAboutPanelMenuItemTag  = 4;
         // Set up delay preferences
         userDefaults = inUserDefaults;
         [self setupDelayPreferences:prefsMenu];
+
+        [userDefaults addObserver:self
+                       forKeyPath:@"autoDuckMusic"
+                          options:NSKeyValueObservingOptionNew
+                          context:nil];
     }
     
     return self;
@@ -195,8 +205,36 @@ static NSInteger const kAboutPanelMenuItemTag  = 4;
     
     maxUnpauseDelayMenuItem.view = maxUnpauseDelayView;
     [prefsMenu addItem:maxUnpauseDelayMenuItem];
+
+    // Create ducking volume menu item with slider
+    duckVolumeMenuItem = [[NSMenuItem alloc] initWithTitle:@"" action:nil keyEquivalent:@""];
+    NSView* duckVolumeView = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 280, 25)];
     
-    // Initialize the delay sliders with current values and targets
+    // Ducking volume label
+    NSTextField* duckVolumeTitleLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(10, 5, 110, 15)];
+    duckVolumeTitleLabel.stringValue = @"Ducking Volume:";
+    duckVolumeTitleLabel.editable = NO;
+    duckVolumeTitleLabel.bordered = NO;
+    duckVolumeTitleLabel.backgroundColor = [NSColor clearColor];
+    duckVolumeTitleLabel.font = [NSFont menuFontOfSize:13];
+    [duckVolumeView addSubview:duckVolumeTitleLabel];
+    
+    // Ducking volume slider
+    duckVolumeSlider = [[NSSlider alloc] initWithFrame:NSMakeRect(115, 5, 100, 15)];
+    [duckVolumeView addSubview:duckVolumeSlider];
+    
+    // Ducking volume value label
+    duckVolumeLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(220, 5, 55, 15)];
+    duckVolumeLabel.editable = NO;
+    duckVolumeLabel.bordered = NO;
+    duckVolumeLabel.backgroundColor = [NSColor clearColor];
+    duckVolumeLabel.font = [NSFont menuFontOfSize:11];
+    [duckVolumeView addSubview:duckVolumeLabel];
+    
+    duckVolumeMenuItem.view = duckVolumeView;
+    [prefsMenu addItem:duckVolumeMenuItem];
+    
+    // Initialize the sliders with current values and targets
     [self initDelaySliders];
 }
 
@@ -216,10 +254,19 @@ static NSInteger const kAboutPanelMenuItemTag  = 4;
     maxUnpauseDelaySlider.integerValue = [self msToSliderValue:userDefaults.maxUnpauseDelayMS];
     maxUnpauseDelaySlider.target = self;
     maxUnpauseDelaySlider.action = @selector(maxUnpauseDelaySliderChanged:);
+
+    // Configure ducking volume slider (0% to 100%)
+    duckVolumeSlider.minValue = 0;
+    duckVolumeSlider.maxValue = 100;
+    duckVolumeSlider.integerValue = userDefaults.autoDuckPercent;
+    duckVolumeSlider.target = self;
+    duckVolumeSlider.action = @selector(duckVolumeSliderChanged:);
     
     // Update labels with current values
     [self updatePauseDelayLabel];
     [self updateMaxUnpauseDelayLabel];
+    [self updateDuckVolumeLabel];
+    [self updateSliderStates];
 }
 
 - (void) pauseDelaySliderChanged:(NSSlider*)sender {
@@ -283,6 +330,45 @@ static NSInteger const kAboutPanelMenuItemTag  = 4;
     double sliderValue = (log10(logInput) / 2.0) * 100.0; // 0-100
     
     return (NSInteger)MIN(MAX(sliderValue, 0), 100);
+}
+
+- (void) dealloc {
+    try {
+        [userDefaults removeObserver:self forKeyPath:@"autoDuckMusic" context:nil];
+    } catch (const std::exception& e) {
+    }
+}
+
+- (void) observeValueForKeyPath:(NSString* __nullable)keyPath
+                       ofObject:(id __nullable)object
+                         change:(NSDictionary* __nullable)change
+                        context:(void* __nullable)context
+{
+    #pragma unused (object, change, context)
+    if ([keyPath isEqualToString:@"autoDuckMusic"]) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self updateSliderStates];
+        });
+    }
+}
+
+- (void) duckVolumeSliderChanged:(NSSlider*)sender {
+    userDefaults.autoDuckPercent = (NSUInteger)sender.integerValue;
+    [self updateDuckVolumeLabel];
+}
+
+- (void) updateDuckVolumeLabel {
+    duckVolumeLabel.stringValue = [NSString stringWithFormat:@"%lu%%", (unsigned long)userDefaults.autoDuckPercent];
+}
+
+- (void) updateSliderStates {
+    BOOL duckEnabled = userDefaults.autoDuckMusic;
+    duckVolumeSlider.enabled = duckEnabled;
+    if (duckEnabled) {
+        duckVolumeLabel.textColor = [NSColor controlTextColor];
+    } else {
+        duckVolumeLabel.textColor = [NSColor disabledControlTextColor];
+    }
 }
 
 @end

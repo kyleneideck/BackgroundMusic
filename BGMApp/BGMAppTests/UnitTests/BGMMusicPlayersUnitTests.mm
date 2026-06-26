@@ -108,6 +108,14 @@ static NSArray<NSString*>* BGMResponsibleBundleIDs(NSString* bundleID) {
     #pragma unused (autoDuckMusic)
 }
 
+- (NSUInteger) autoDuckPercent {
+    return 30;
+}
+
+- (void) setAutoDuckPercent:(NSUInteger)autoDuckPercent {
+    #pragma unused (autoDuckPercent)
+}
+
 @end
 
 // -------------------------------------------------------------------------------------------------
