@@ -73,7 +73,8 @@ static NSInteger const kAboutPanelMenuItemTag  = 4;
         
         autoPauseMusicPrefs = [[BGMAutoPauseMusicPrefs alloc] initWithPreferencesMenu:prefsMenu
                                                                          audioDevices:inAudioDevices
-                                                                         musicPlayers:inMusicPlayers];
+                                                                         musicPlayers:inMusicPlayers
+                                                                         userDefaults:inUserDefaults];
         
         aboutPanel = [[BGMAboutPanel alloc] initWithPanel:inAboutPanel licenseView:inAboutPanelLicenseView];
 

@@ -31,6 +31,7 @@
 
 // Keys
 static NSString* const kDefaultKeyAutoPauseMusicEnabled = @"AutoPauseMusicEnabled";
+static NSString* const kDefaultKeyAutoDuckMusic          = @"AutoDuckMusic";
 static NSString* const kDefaultKeySelectedMusicPlayerID = @"SelectedMusicPlayerID";
 static NSString* const kDefaultKeyPreferredDeviceUIDs   = @"PreferredDeviceUIDs";
 static NSString* const kDefaultKeyStatusBarIcon         = @"StatusBarIcon";
@@ -62,7 +63,8 @@ static NSString* const kKeychainLabelGPMDPAuthCode =
         NSDictionary* defaultsDict = @{ 
             kDefaultKeyAutoPauseMusicEnabled: @YES,
             kDefaultKeyPauseDelayMS: @1500,
-            kDefaultKeyMaxUnpauseDelayMS: @3500
+            kDefaultKeyMaxUnpauseDelayMS: @3500,
+            kDefaultKeyAutoDuckMusic: @NO
         };
 
         if (defaults) {
@@ -93,6 +95,16 @@ static NSString* const kKeychainLabelGPMDPAuthCode =
 
 - (void) setAutoPauseMusicEnabled:(BOOL)autoPauseMusicEnabled {
     [self setBool:kDefaultKeyAutoPauseMusicEnabled to:autoPauseMusicEnabled];
+}
+
+#pragma mark Auto-duck
+
+- (BOOL) autoDuckMusic {
+    return [self getBool:kDefaultKeyAutoDuckMusic];
+}
+
+- (void) setAutoDuckMusic:(BOOL)autoDuckMusic {
+    [self setBool:kDefaultKeyAutoDuckMusic to:autoDuckMusic];
 }
 
 #pragma mark Auto-pause Delays

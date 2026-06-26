@@ -30,7 +30,8 @@
 
 #pragma clang assume_nonnull begin
 
-static NSString* const kMenuItemTitleFormat = @"Auto-pause %@";
+static NSString* const kMenuItemTitleFormatPause = @"Auto-pause %@";
+static NSString* const kMenuItemTitleFormatDuck = @"Auto-duck %@";
 static NSString* const kMenuItemDisabledToolTipFormat = @"%@ doesn't appear to be running.";
 
 // Wait time to disable/enable the auto-pause menu item, in seconds.
@@ -123,7 +124,8 @@ static SInt64 const kMenuItemUpdateWaitTime = 1;
 - (void) updateMenuItemTitleWithHighlight:(BOOL)highlight {
     // Set the title of the Auto-pause Music menu item, including the name of the selected music player.
     NSString* musicPlayerName = musicPlayers.selectedMusicPlayer.name;
-    menuItem.title = [NSString stringWithFormat:kMenuItemTitleFormat, musicPlayerName];
+    NSString* titleFormat = userDefaults.autoDuckMusic ? kMenuItemTitleFormatDuck : kMenuItemTitleFormatPause;
+    menuItem.title = [NSString stringWithFormat:titleFormat, musicPlayerName];
     
     // Make the Auto-pause Music menu item appear disabled if the application is not running.
     //

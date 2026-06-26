@@ -24,8 +24,11 @@
 #import "BGMAutoPauseMusic.h"
 
 // Local Includes
-#include "BGM_Types.h"
+#import "BGM_Types.h"
 #import "BGMMusicPlayer.h"
+#import "CACFArray.h"
+#import "CACFDictionary.h"
+#import "CACFString.h"
 
 // STL Includes
 #import <algorithm>  // std::max, std::min
@@ -54,6 +57,12 @@ static Float32 const kUnpauseDelayWeightingFactor = 0.1f;
     // True if BGMApp has paused musicPlayer and hasn't unpaused it yet. (Will be out of sync with the music player app if the
     // user has unpaused it themselves.)
     BOOL wePaused;
+    // True if BGMApp has ducked the musicPlayer and hasn't unducked it yet.
+    BOOL weDucked;
+    // The original volume before ducking.
+    int originalVolume;
+    // The ducked volume we set.
+    int duckedVolume;
     // The times, in absolute time, that the BGMDevice last changed its audible state to silent...
     UInt64 wentSilent;
     // ...and to audible.
@@ -68,6 +77,9 @@ static Float32 const kUnpauseDelayWeightingFactor = 0.1f;
         
         enabled = NO;
         wePaused = NO;
+        weDucked = NO;
+        originalVolume = kAppRelativeVolumeMaxRawValue;
+        duckedVolume = kAppRelativeVolumeMaxRawValue;
         
         dispatch_queue_attr_t attr;
 
@@ -84,6 +96,15 @@ static Float32 const kUnpauseDelayWeightingFactor = 0.1f;
         listenerQueue = dispatch_queue_create("com.bearisdriving.BGM.AutoPauseMusic.Listener", attr);
         pauseUnpauseMusicQueue = dispatch_queue_create("com.bearisdriving.BGM.AutoPauseMusic.PauseUnpauseMusic", attr);
         
+        [userDefaults addObserver:self
+                       forKeyPath:@"autoDuckMusic"
+                          options:NSKeyValueObservingOptionNew
+                          context:nil];
+        [musicPlayers addObserver:self
+                       forKeyPath:@"selectedMusicPlayer"
+                          options:NSKeyValueObservingOptionNew
+                          context:nil];
+        
         [self initListenerBlock];
     }
     
@@ -92,6 +113,14 @@ static Float32 const kUnpauseDelayWeightingFactor = 0.1f;
 
 - (void) dealloc {
     [self disable];
+    try {
+        [userDefaults removeObserver:self forKeyPath:@"autoDuckMusic" context:nil];
+    } catch (const std::exception& e) {
+    }
+    try {
+        [musicPlayers removeObserver:self forKeyPath:@"selectedMusicPlayer" context:nil];
+    } catch (const std::exception& e) {
+    }
 }
 
 - (void) initListenerBlock {
@@ -120,8 +149,9 @@ static Float32 const kUnpauseDelayWeightingFactor = 0.1f;
                 } else if (audibleState == kBGMDeviceIsSilentExceptMusic) {
                     // If we pause the music player and then the user unpauses it before the other audio stops, we need to set
                     // wePaused to false at some point before the other audio starts again so we know we should pause
-                    DebugMsg("BGMAutoPauseMusic: Device is silent except music, resetting wePaused flag");
+                    DebugMsg("BGMAutoPauseMusic: Device is silent except music, resetting wePaused/weDucked flags");
                     wePaused = NO;
+                    weDucked = NO;
                 }
                 // TODO: Add a fourth audible state, something like "AudibleAndMusicPlaying", and check it here to
                 //       handle the user unpausing and then repausing music while also playing other audio?
@@ -141,35 +171,43 @@ static Float32 const kUnpauseDelayWeightingFactor = 0.1f;
     
     UInt64 pauseDelayMS = userDefaults.pauseDelayMS;
     
-    // If pause delay is 0, pause immediately (no delay)
+    // If pause delay is 0, pause/duck immediately (no delay)
     if (pauseDelayMS == 0) {
-        DebugMsg("BGMAutoPauseMusic::queuePauseBlock: Pause delay is 0, pausing immediately");
+        DebugMsg("BGMAutoPauseMusic::queuePauseBlock: Pause/duck delay is 0, pausing/ducking immediately");
         
-        // Pause immediately if device is audible and we haven't already paused
-        if (!wePaused && ([self deviceAudibleState] == kBGMDeviceIsAudible)) {
-            wePaused = ([musicPlayers.selectedMusicPlayer pause] || wePaused);
+        // Pause/duck immediately if device is audible and we haven't already paused/ducked
+        if (!wePaused && !weDucked && ([self deviceAudibleState] == kBGMDeviceIsAudible)) {
+            if (userDefaults.autoDuckMusic) {
+                [self duckMusicPlayer];
+            } else {
+                wePaused = ([musicPlayers.selectedMusicPlayer pause] || wePaused);
+            }
         }
         return;
     }
     
     UInt64 pauseDelayNSec = pauseDelayMS * NSEC_PER_MSEC;
     
-    DebugMsg("BGMAutoPauseMusic::queuePauseBlock: Dispatching pause block at %llu", now);
+    DebugMsg("BGMAutoPauseMusic::queuePauseBlock: Dispatching pause/duck block at %llu", now);
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, pauseDelayNSec),
                    pauseUnpauseMusicQueue,
                    ^{
                        BOOL stillAudible = ([self deviceAudibleState] == kBGMDeviceIsAudible);
                        
-                       DebugMsg("BGMAutoPauseMusic::queuePauseBlock: Running pause block dispatched at %llu.%s wentAudible=%llu",
+                       DebugMsg("BGMAutoPauseMusic::queuePauseBlock: Running pause/duck block dispatched at %llu.%s wentAudible=%llu",
                                 startedPauseDelay,
-                                stillAudible ? "" : " Not pausing because the device isn't audible.",
+                                stillAudible ? "" : " Not pausing/ducking because the device isn't audible.",
                                 wentAudible);
                        
-                       // Pause if this is the most recent pause block and the device is still audible, which means the audible
-                       // state hasn't changed since this block was queued. Also set wePaused to true if the player wasn't
-                       // already paused.
-                       if (!wePaused && (startedPauseDelay == wentAudible) && stillAudible) {
-                           wePaused = ([musicPlayers.selectedMusicPlayer pause] || wePaused);
+                       // Pause/duck if this is the most recent pause block and the device is still audible, which means the audible
+                       // state hasn't changed since this block was queued. Also set wePaused/weDucked to true if the player wasn't
+                       // already paused/ducked.
+                       if (!wePaused && !weDucked && (startedPauseDelay == wentAudible) && stillAudible) {
+                           if (userDefaults.autoDuckMusic) {
+                               [self duckMusicPlayer];
+                           } else {
+                               wePaused = ([musicPlayers.selectedMusicPlayer pause] || wePaused);
+                           }
                        }
                    });
 }
@@ -182,29 +220,30 @@ static Float32 const kUnpauseDelayWeightingFactor = 0.1f;
     // Get user-configurable max delay
     UInt64 maxUnpauseDelayMS = userDefaults.maxUnpauseDelayMS;
     
-    // If max unpause delay is 0, unpause immediately (no delay)
+    // If max unpause delay is 0, unpause/unduck immediately (no delay)
     if (maxUnpauseDelayMS == 0) {
-        DebugMsg("BGMAutoPauseMusic::queueUnpauseBlock: Max unpause delay is 0, unpausing immediately");
+        DebugMsg("BGMAutoPauseMusic::queueUnpauseBlock: Max unpause/unduck delay is 0, unpausing/unducking immediately");
         
-        // Unpause immediately if we were the one who paused and device is still silent
         BGMDeviceAudibleState currentState = [self deviceAudibleState];
-        DebugMsg("BGMAutoPauseMusic::queueUnpauseBlock: Immediate unpause - wePaused=%s, currentState=%s", 
+        DebugMsg("BGMAutoPauseMusic::queueUnpauseBlock: Immediate unpause/unduck - wePaused=%s, weDucked=%s, currentState=%s", 
                  wePaused ? "YES" : "NO", 
+                 weDucked ? "YES" : "NO",
                  currentState == kBGMDeviceIsSilent ? "Silent" : 
                  (currentState == kBGMDeviceIsAudible ? "Audible" : "SilentExceptMusic"));
         
-        if (wePaused && (currentState == kBGMDeviceIsSilent)) {
-            wePaused = NO;
-            [musicPlayers.selectedMusicPlayer unpause];
+        if (currentState == kBGMDeviceIsSilent) {
+            if (wePaused) {
+                wePaused = NO;
+                [musicPlayers.selectedMusicPlayer unpause];
+            } else if (weDucked) {
+                [self unduckMusicPlayer];
+            }
         }
         return;
     }
     
-    // Unpause sooner if we've only been paused for a short time. This is so a notification sound causing an auto-pause is
+    // Unpause sooner if we've only been paused/ducked for a short time. This is so a notification sound causing an auto-pause/duck is
     // less of an interruption.
-    //
-    // TODO: Fading in and out would make short pauses a lot less jarring because, if they were short enough, we wouldn't
-    //       actually pause the music player. So you'd hear a dip in the music's volume rather than a gap.
     UInt64 unpauseDelayNsec =
         static_cast<UInt64>(static_cast<Float64>(wentSilent - wentAudible) *
                             kUnpauseDelayWeightingFactor);
@@ -220,7 +259,7 @@ static Float32 const kUnpauseDelayWeightingFactor = 0.1f;
     unpauseDelayNsec = std::min(maxUnpauseDelayNSec, unpauseDelayNsec);
     unpauseDelayNsec = std::max(minUnpauseDelayNSec, unpauseDelayNsec);
     
-    DebugMsg("BGMAutoPauseMusic::queueUnpauseBlock: Dispatched unpause block at %llu. unpauseDelayNsec=%llu",
+    DebugMsg("BGMAutoPauseMusic::queueUnpauseBlock: Dispatched unpause/unduck block at %llu. unpauseDelayNsec=%llu",
              now,
              unpauseDelayNsec);
     
@@ -231,20 +270,23 @@ static Float32 const kUnpauseDelayWeightingFactor = 0.1f;
                        BOOL stillSilent = (currentState == kBGMDeviceIsSilent);
                        BOOL isLatestUnpause = (startedUnpauseDelay == wentSilent);
                        
-                       DebugMsg("BGMAutoPauseMusic::queueUnpauseBlock: Running unpause block dispatched at %llu. wePaused=%s, isLatest=%s, currentState=%s, wentSilent=%llu",
+                       DebugMsg("BGMAutoPauseMusic::queueUnpauseBlock: Running unpause/unduck block dispatched at %llu. wePaused=%s, weDucked=%s, isLatest=%s, currentState=%s, wentSilent=%llu",
                                 startedUnpauseDelay,
                                 wePaused ? "YES" : "NO",
+                                weDucked ? "YES" : "NO",
                                 isLatestUnpause ? "YES" : "NO",
                                 currentState == kBGMDeviceIsSilent ? "Silent" : 
                                 (currentState == kBGMDeviceIsAudible ? "Audible" : "SilentExceptMusic"),
                                 wentSilent);
                        
-                       // Unpause if we were the one who paused. Also check that this is the most recent unpause block and the
-                       // device is still silent, which means the audible state hasn't changed since this block was queued.
-                       if (wePaused && isLatestUnpause && stillSilent) {
-                           DebugMsg("BGMAutoPauseMusic::queueUnpauseBlock: Unpausing music player");
-                           wePaused = NO;
-                           [musicPlayers.selectedMusicPlayer unpause];
+                       if (isLatestUnpause && stillSilent) {
+                           if (wePaused) {
+                               DebugMsg("BGMAutoPauseMusic::queueUnpauseBlock: Unpausing music player");
+                               wePaused = NO;
+                               [musicPlayers.selectedMusicPlayer unpause];
+                           } else if (weDucked) {
+                               [self unduckMusicPlayer];
+                           }
                        }
                    });
 }
@@ -260,6 +302,137 @@ static Float32 const kUnpauseDelayWeightingFactor = 0.1f;
     if (enabled) {
         [audioDevices bgmDevice].RemovePropertyListenerBlock(kBGMAudibleStateAddress, listenerQueue, listenerBlock);
         enabled = NO;
+    }
+}
+
+- (void) observeValueForKeyPath:(NSString* __nullable)keyPath
+                       ofObject:(id __nullable)object
+                         change:(NSDictionary* __nullable)change
+                        context:(void* __nullable)context
+{
+    #pragma unused (object, change, context)
+    if ([keyPath isEqualToString:@"autoDuckMusic"]) {
+        if (wePaused || weDucked) {
+            dispatch_async(pauseUnpauseMusicQueue, ^{
+                BGMDeviceAudibleState state = [self deviceAudibleState];
+                if (state == kBGMDeviceIsAudible) {
+                    if (userDefaults.autoDuckMusic && wePaused) {
+                        // Transition from paused to ducked:
+                        // 1. Unpause
+                        [musicPlayers.selectedMusicPlayer unpause];
+                        wePaused = NO;
+                        // 2. Duck
+                        [self duckMusicPlayer];
+                    } else if (!userDefaults.autoDuckMusic && weDucked) {
+                        // Transition from ducked to paused:
+                        // 1. Unduck
+                        [self unduckMusicPlayer];
+                        // 2. Pause
+                        wePaused = ([musicPlayers.selectedMusicPlayer pause] || wePaused);
+                    }
+                }
+            });
+        }
+    } else if ([keyPath isEqualToString:@"selectedMusicPlayer"]) {
+        wePaused = NO;
+        weDucked = NO;
+    }
+}
+
+- (void) duckMusicPlayer {
+    id<BGMMusicPlayer> player = musicPlayers.selectedMusicPlayer;
+    if (!player.isRunning || !player.isPlaying) {
+        return;
+    }
+    
+    originalVolume = [self getMusicPlayerVolume];
+    
+    static float const kDuckingFactor = 0.3f;
+    duckedVolume = (int)(static_cast<float>(originalVolume) * kDuckingFactor);
+    if (duckedVolume >= originalVolume && originalVolume > 0) {
+        duckedVolume = originalVolume - 1;
+    }
+    
+    DebugMsg("BGMAutoPauseMusic::duckMusicPlayer: originalVolume=%d, duckedVolume=%d", originalVolume, duckedVolume);
+    
+    [self setMusicPlayerVolume:duckedVolume];
+    weDucked = YES;
+}
+
+- (void) unduckMusicPlayer {
+    if (!weDucked) {
+        return;
+    }
+    
+    int currentVolume = [self getMusicPlayerVolume];
+    DebugMsg("BGMAutoPauseMusic::unduckMusicPlayer: currentVolume=%d, expectedDuckedVolume=%d, originalVolume=%d",
+             currentVolume, duckedVolume, originalVolume);
+             
+    if (currentVolume == duckedVolume) {
+        DebugMsg("BGMAutoPauseMusic::unduckMusicPlayer: Restoring volume to originalVolume=%d", originalVolume);
+        [self setMusicPlayerVolume:originalVolume];
+    } else {
+        DebugMsg("BGMAutoPauseMusic::unduckMusicPlayer: Volume was changed manually while ducked. Keeping currentVolume=%d", currentVolume);
+    }
+    
+    weDucked = NO;
+}
+
+- (int) getMusicPlayerVolume {
+    id<BGMMusicPlayer> player = musicPlayers.selectedMusicPlayer;
+    NSString* playerBundleID = player.bundleID;
+    pid_t playerPid = player.pid ? [player.pid intValue] : -1;
+    
+    if (playerPid == -1 && playerBundleID != nil) {
+        NSArray<NSRunningApplication*>* apps = [NSRunningApplication runningApplicationsWithBundleIdentifier:playerBundleID];
+        if (apps.count > 0) {
+            playerPid = apps.firstObject.processIdentifier;
+        }
+    }
+
+    try {
+        CACFArray volumes([audioDevices bgmDevice].GetAppVolumes(), false);
+        for (UInt32 i = 0; i < volumes.GetNumberItems(); i++) {
+            CACFDictionary appVolume(false);
+            volumes.GetCACFDictionary(i, appVolume);
+
+            CACFString bundleID;
+            bundleID.DontAllowRelease();
+            appVolume.GetCACFString(CFSTR(kBGMAppVolumesKey_BundleID), bundleID);
+
+            pid_t pid;
+            appVolume.GetSInt32(CFSTR(kBGMAppVolumesKey_ProcessID), pid);
+
+            if ((playerPid != -1 && playerPid == pid) ||
+                (playerBundleID != nil && [playerBundleID isEqualToString:(__bridge NSString*)bundleID.GetCFString()])) {
+                int volume = -1;
+                appVolume.GetSInt32(CFSTR(kBGMAppVolumesKey_RelativeVolume), volume);
+                return volume;
+            }
+        }
+    } catch (const std::exception& e) {
+        NSLog(@"BGMAutoPauseMusic::getMusicPlayerVolume error: %s", e.what());
+    }
+
+    return kAppRelativeVolumeMaxRawValue;
+}
+
+- (void) setMusicPlayerVolume:(int)volume {
+    id<BGMMusicPlayer> player = musicPlayers.selectedMusicPlayer;
+    NSString* playerBundleID = player.bundleID;
+    pid_t playerPid = player.pid ? [player.pid intValue] : -1;
+    
+    if (playerPid == -1 && playerBundleID != nil) {
+        NSArray<NSRunningApplication*>* apps = [NSRunningApplication runningApplicationsWithBundleIdentifier:playerBundleID];
+        if (apps.count > 0) {
+            playerPid = apps.firstObject.processIdentifier;
+        }
+    }
+    
+    try {
+        [audioDevices bgmDevice].SetAppVolume(volume, playerPid, (__bridge CFStringRef)playerBundleID);
+    } catch (const std::exception& e) {
+        NSLog(@"BGMAutoPauseMusic::setMusicPlayerVolume error: %s", e.what());
     }
 }
 

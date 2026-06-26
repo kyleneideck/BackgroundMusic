@@ -26,6 +26,7 @@
 // Local Includes
 #import "BGM_Types.h"
 #import "BGMMusicPlayer.h"
+#import "BGMUserDefaults.h"
 
 
 #pragma clang assume_nonnull begin
@@ -36,17 +37,20 @@ static NSInteger const kPrefsMenuAutoPauseHeaderTag = 1;
 @implementation BGMAutoPauseMusicPrefs {
     BGMAudioDeviceManager* audioDevices;
     BGMMusicPlayers* musicPlayers;
+    BGMUserDefaults* userDefaults;
     NSMenu* prefsMenu;
     NSArray<NSMenuItem*>* musicPlayerMenuItems;
 }
 
 - (id) initWithPreferencesMenu:(NSMenu*)inPrefsMenu
                   audioDevices:(BGMAudioDeviceManager*)inAudioDevices
-                  musicPlayers:(BGMMusicPlayers*)inMusicPlayers {
+                  musicPlayers:(BGMMusicPlayers*)inMusicPlayers
+                  userDefaults:(BGMUserDefaults*)inUserDefaults {
     if ((self = [super init])) {
         prefsMenu = inPrefsMenu;
         audioDevices = inAudioDevices;
         musicPlayers = inMusicPlayers;
+        userDefaults = inUserDefaults;
         
         musicPlayerMenuItems = @[];
         
@@ -96,6 +100,17 @@ static NSInteger const kPrefsMenuAutoPauseHeaderTag = 1;
         menuItem.target = self;
         menuItem.indentationLevel = 1;
     }
+    
+    // Add "Duck instead of pause" menu item below the music players
+    NSInteger duckMusicItemIndex = musicPlayerItemsIndex + musicPlayers.musicPlayers.count;
+    NSMenuItem* duckMusicMenuItem = [prefsMenu insertItemWithTitle:@"Duck instead of pause"
+                                                            action:@selector(handleDuckMusicChange:)
+                                                     keyEquivalent:@""
+                                                           atIndex:duckMusicItemIndex];
+    duckMusicMenuItem.representedObject = nil;
+    duckMusicMenuItem.target = self;
+    duckMusicMenuItem.indentationLevel = 1;
+    duckMusicMenuItem.state = userDefaults.autoDuckMusic ? NSOnState : NSOffState;
 }
 
 - (void) handleMusicPlayerChange:(NSMenuItem*)sender {
@@ -110,6 +125,12 @@ static NSInteger const kPrefsMenuAutoPauseHeaderTag = 1;
         BOOL isNewlySelectedMusicPlayer = (item == sender);
         item.state = (isNewlySelectedMusicPlayer ? NSOnState : NSOffState);
     }
+}
+
+- (void) handleDuckMusicChange:(NSMenuItem*)sender {
+    BOOL nextState = (sender.state == NSOffState);
+    sender.state = nextState ? NSOnState : NSOffState;
+    userDefaults.autoDuckMusic = nextState;
 }
 
 @end
