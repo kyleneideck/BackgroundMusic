@@ -80,8 +80,8 @@ static Float32 const kUnpauseDelayWeightingFactor = 0.1f;
         enabled = NO;
         wePaused = NO;
         weDucked = NO;
-        originalVolume = kAppRelativeVolumeMaxRawValue;
-        duckedVolume = kAppRelativeVolumeMaxRawValue;
+        originalVolume = 50;
+        duckedVolume = 50;
         
         dispatch_queue_attr_t attr;
 
@@ -441,7 +441,7 @@ static Float32 const kUnpauseDelayWeightingFactor = 0.1f;
         NSLog(@"BGMAutoPauseMusic::getMusicPlayerVolume error: %s", e.what());
     }
 
-    return kAppRelativeVolumeMaxRawValue;
+    return 50;
 }
 
 - (void) setMusicPlayerVolume:(int)volume {
