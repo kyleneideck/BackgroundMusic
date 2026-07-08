@@ -26,6 +26,7 @@
 // Local Includes
 #import "BGM_Types.h"
 #import "BGMMusicPlayer.h"
+#import "BGM_Utils.h"
 #import "CACFArray.h"
 #import "CACFDictionary.h"
 #import "CACFString.h"
@@ -257,8 +258,7 @@ static Float32 const kUnpauseDelayWeightingFactor = 0.1f;
         return;
     }
     
-    // Unpause sooner if we've only been paused/ducked for a short time. This is so a notification sound causing an auto-pause/duck is
-    // less of an interruption.
+    // Unpause sooner if we've only been paused/ducked for a short time. This is so a notification sound causing an auto-pause/duck is less of an interruption. See issue #311 for the longer fade-out/fade-in transition idea.
     UInt64 unpauseDelayNsec =
         static_cast<UInt64>(static_cast<Float64>(wentSilent - wentAudible) *
                             kUnpauseDelayWeightingFactor);
@@ -294,6 +294,7 @@ static Float32 const kUnpauseDelayWeightingFactor = 0.1f;
                                 (currentState == kBGMDeviceIsAudible ? "Audible" : "SilentExceptMusic"),
                                 wentSilent);
                        
+                       // Unpause or unduck if we were the one who paused/ducked. Also check that the device is still silent (or silent-except-music if we ducked), which means the audible state hasn't changed since this block was queued.
                        if (isLatestUnpause && silentEnough) {
                            if (wePaused) {
                                DebugMsg("BGMAutoPauseMusic::queueUnpauseBlock: Unpausing music player");
@@ -409,6 +410,7 @@ static Float32 const kUnpauseDelayWeightingFactor = 0.1f;
     id<BGMMusicPlayer> player = musicPlayers.selectedMusicPlayer;
     NSString* playerBundleID = player.bundleID;
     pid_t playerPid = player.pid ? [player.pid intValue] : -1;
+    __block int volume = 50;
     
     if (playerPid == -1 && playerBundleID != nil) {
         NSArray<NSRunningApplication*>* apps = [NSRunningApplication runningApplicationsWithBundleIdentifier:playerBundleID];
@@ -417,7 +419,7 @@ static Float32 const kUnpauseDelayWeightingFactor = 0.1f;
         }
     }
 
-    try {
+    BGMLogAndSwallowExceptions("BGMAutoPauseMusic::getMusicPlayerVolume", ([&] {
         CACFArray volumes([audioDevices bgmDevice].GetAppVolumes(), false);
         for (UInt32 i = 0; i < volumes.GetNumberItems(); i++) {
             CACFDictionary appVolume(false);
@@ -432,16 +434,13 @@ static Float32 const kUnpauseDelayWeightingFactor = 0.1f;
 
             if ((playerPid != -1 && playerPid == pid) ||
                 (playerBundleID != nil && [playerBundleID isEqualToString:(__bridge NSString*)bundleID.GetCFString()])) {
-                int volume = -1;
                 appVolume.GetSInt32(CFSTR(kBGMAppVolumesKey_RelativeVolume), volume);
-                return volume;
+                break;
             }
         }
-    } catch (const std::exception& e) {
-        NSLog(@"BGMAutoPauseMusic::getMusicPlayerVolume error: %s", e.what());
-    }
+    }));
 
-    return 50;
+    return volume;
 }
 
 - (void) setMusicPlayerVolume:(int)volume {
@@ -456,11 +455,9 @@ static Float32 const kUnpauseDelayWeightingFactor = 0.1f;
         }
     }
     
-    try {
+    BGMLogAndSwallowExceptions("BGMAutoPauseMusic::setMusicPlayerVolume", ([&] {
         [audioDevices bgmDevice].SetAppVolume(volume, playerPid, (__bridge CFStringRef)playerBundleID);
-    } catch (const std::exception& e) {
-        NSLog(@"BGMAutoPauseMusic::setMusicPlayerVolume error: %s", e.what());
-    }
+    }));
 }
 
 @end
