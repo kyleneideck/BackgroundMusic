@@ -34,7 +34,8 @@
 
 - (id) initWithPreferencesMenu:(NSMenu*)inPrefsMenu
                   audioDevices:(BGMAudioDeviceManager*)inAudioDevices
-                  musicPlayers:(BGMMusicPlayers*)inMusicPlayers;
+                  musicPlayers:(BGMMusicPlayers*)inMusicPlayers
+                  userDefaults:(BGMUserDefaults*)inUserDefaults;
 
 @end
 

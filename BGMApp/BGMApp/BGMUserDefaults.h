@@ -44,6 +44,8 @@
 @property NSString* __nullable selectedMusicPlayerID;
 
 @property BOOL autoPauseMusicEnabled;
+@property BOOL autoDuckMusic;
+@property NSUInteger autoDuckPercent;
 
 // The UIDs of the output devices most recently selected by the user. The most-recently selected
 // device is at index 0. See BGMPreferredOutputDevices.

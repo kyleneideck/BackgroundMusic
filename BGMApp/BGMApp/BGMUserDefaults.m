@@ -31,6 +31,8 @@
 
 // Keys
 static NSString* const kDefaultKeyAutoPauseMusicEnabled = @"AutoPauseMusicEnabled";
+static NSString* const kDefaultKeyAutoDuckMusic          = @"AutoDuckMusic";
+static NSString* const kDefaultKeyAutoDuckPercent        = @"AutoDuckPercent";
 static NSString* const kDefaultKeySelectedMusicPlayerID = @"SelectedMusicPlayerID";
 static NSString* const kDefaultKeyPreferredDeviceUIDs   = @"PreferredDeviceUIDs";
 static NSString* const kDefaultKeyStatusBarIcon         = @"StatusBarIcon";
@@ -62,7 +64,9 @@ static NSString* const kKeychainLabelGPMDPAuthCode =
         NSDictionary* defaultsDict = @{ 
             kDefaultKeyAutoPauseMusicEnabled: @YES,
             kDefaultKeyPauseDelayMS: @1500,
-            kDefaultKeyMaxUnpauseDelayMS: @3500
+            kDefaultKeyMaxUnpauseDelayMS: @3500,
+            kDefaultKeyAutoDuckMusic: @NO,
+            kDefaultKeyAutoDuckPercent: @30
         };
 
         if (defaults) {
@@ -93,6 +97,26 @@ static NSString* const kKeychainLabelGPMDPAuthCode =
 
 - (void) setAutoPauseMusicEnabled:(BOOL)autoPauseMusicEnabled {
     [self setBool:kDefaultKeyAutoPauseMusicEnabled to:autoPauseMusicEnabled];
+}
+
+#pragma mark Auto-duck
+
+- (BOOL) autoDuckMusic {
+    return [self getBool:kDefaultKeyAutoDuckMusic];
+}
+
+- (void) setAutoDuckMusic:(BOOL)autoDuckMusic {
+    [self setBool:kDefaultKeyAutoDuckMusic to:autoDuckMusic];
+}
+
+- (NSUInteger) autoDuckPercent {
+    NSInteger percent = [self getInt:kDefaultKeyAutoDuckPercent or:30];
+    return (NSUInteger)MAX(0, MIN(100, percent));
+}
+
+- (void) setAutoDuckPercent:(NSUInteger)autoDuckPercent {
+    NSUInteger clampedPercent = MAX(0, MIN(100, autoDuckPercent));
+    [self setInt:kDefaultKeyAutoDuckPercent to:(NSInteger)clampedPercent];
 }
 
 #pragma mark Auto-pause Delays
