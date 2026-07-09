@@ -42,6 +42,7 @@ The auto-pause feature currently supports following music players:
 + [Hermes](http://hermesapp.org/)
 + [Swinsian](https://swinsian.com/)
 + [GPMDP](https://www.googleplaymusicdesktopplayer.com/)
++ [TIDAL](https://tidal.com/download)
 
 Adding support for a new music player is usually straightforward.<sup id="a1">[1](#f1)</sup> If you don't know how to program, or just don't feel
 like it, feel free to [create an issue](https://github.com/kyleneideck/BackgroundMusic/issues/new). Otherwise, see
@@ -156,6 +157,12 @@ Make sure you allow "microphone access" when you first run Background Music. If 
 and check the box next to it. Background Music doesn't actually listen to your microphone. It needs
 the permission because it gets your system audio from its virtual input device, which macOS counts
 as a microphone. (We're working on it in [#177](/../../issues/177).)
+
+If you use auto-pause with **TIDAL**, you also need to allow **Background Music** under
+`System Settings > Privacy & Security > Accessibility`. TIDAL doesn't have an AppleScript API, so
+Background Music pauses and unpauses it through its "Playback" menu using the macOS Accessibility
+API, which requires that permission. Background Music asks for it when you select TIDAL as your
+music player.
 
 If the volume slider for an app isn't working, try looking in `More Apps` for entries like `Some
 App (Helper)`. For some meeting or video chat apps, you may need to do this to change the current
