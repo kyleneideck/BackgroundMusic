@@ -37,6 +37,7 @@
 #import "BGMOutputVolumeMenuItem.h"
 #import "BGMPreferencesMenu.h"
 #import "BGMPreferredOutputDevices.h"
+#import "BGMSleepTimer.h"
 #import "BGMStatusBarItem.h"
 #import "BGMSystemSoundsVolume.h"
 #import "BGMTermination.h"
@@ -65,6 +66,7 @@ static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
 
     BGMAutoPauseMusic* autoPauseMusic;
     BGMAutoPauseMenuItem* autoPauseMenuItem;
+    BGMSleepTimer* sleepTimer;
     BGMMusicPlayers* musicPlayers;
     BGMSystemSoundsVolume* systemSoundsVolume;
     BGMOutputDeviceMenuSection* outputDeviceMenuSection;
@@ -310,6 +312,14 @@ static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
                                           musicPlayers:musicPlayers
                                           userDefaults:userDefaults];
 
+    // Add the "Sleep Timer" item just below the "Auto-pause" item.
+    sleepTimer = [[BGMSleepTimer alloc] initWithAudioDevices:audioDevices
+                                                musicPlayers:musicPlayers
+                                                userDefaults:userDefaults];
+
+    NSInteger autoPauseIdx = [self.bgmMenu indexOfItem:self.autoPauseMenuItemUnwrapped];
+    [self.bgmMenu insertItem:sleepTimer.menuItem atIndex:(autoPauseIdx + 1)];
+
     [self initVolumesMenuSection];
 
     // Output device selection.
@@ -534,6 +544,7 @@ exitAfterMessageDismissed:(BOOL)fatal {
 - (void) menuNeedsUpdate:(NSMenu*)menu {
     if ([menu isEqual:self.bgmMenu]) {
         [autoPauseMenuItem parentMenuNeedsUpdate];
+        [sleepTimer parentMenuNeedsUpdate];
     } else {
         DebugMsg("BGMAppDelegate::menuNeedsUpdate: Warning: unexpected menu. menu=%s", menu.description.UTF8String);
     }

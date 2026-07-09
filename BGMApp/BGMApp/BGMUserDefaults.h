@@ -45,6 +45,10 @@
 
 @property BOOL autoPauseMusicEnabled;
 
+// Whether the sleep timer mutes BGMApp's output (in addition to pausing the music player) when it
+// ends. Defaults to YES. The timer's remaining time itself is not persisted across app restarts.
+@property BOOL sleepTimerMutesOutput;
+
 // The UIDs of the output devices most recently selected by the user. The most-recently selected
 // device is at index 0. See BGMPreferredOutputDevices.
 @property NSArray<NSString*>* preferredDeviceUIDs;
