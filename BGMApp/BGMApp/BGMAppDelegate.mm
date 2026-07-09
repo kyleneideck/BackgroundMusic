@@ -168,6 +168,11 @@ static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
 }
 
 - (void) continueLaunchAfterInputDevicePermissionGranted {
+    // Apply the user's software output volume setting before choosing the output device, so the
+    // initial volume mode is correct. (The menu toggle re-applies it when changed. See
+    // BGMPreferencesMenu.)
+    [audioDevices setSoftwareOutputVolumeEnabled:userDefaults.softwareOutputVolumeEnabled];
+
     // Choose an output device for BGMApp to use to play audio.
     if (![self setInitialOutputDevice]) {
         return;

@@ -73,21 +73,53 @@ void    BGMDeviceControlSync::Activate()
     {
         DebugMsg("BGMDeviceControlSync::Activate: Activating control sync");
 
+        // Decide whether to apply the output volume in software. We do this when software output
+        // volume is enabled and the output device has no hardware volume control (e.g. an HDMI
+        // monitor). In that case BGMDevice applies its volume to the audio itself (in BGMDriver) and
+        // we keep BGMDevice's volume control enabled so the slider stays usable. Otherwise we keep
+        // the original behaviour: mirror BGMDevice's volume onto the output device's hardware volume
+        // control.
+        bool outputHasVolume = false;
+        BGMLogAndSwallowExceptionsMsg("BGMDeviceControlSync::Activate", "Output volume check", [&] {
+            outputHasVolume =
+                BGMDeviceControlsList::OutputDeviceHasSettableVolume(mOutputDevice);
+        });
+
+        mInSoftwareVolumeMode = mSoftwareVolumeEnabled && !outputHasVolume;
+
+        DebugMsg("BGMDeviceControlSync::Activate: %s software output volume",
+                 mInSoftwareVolumeMode ? "Using" : "Not using");
+
+        // Tell BGMDriver whether to apply BGMDevice's volume to the audio it outputs.
+        BGMLogAndSwallowExceptionsMsg("BGMDeviceControlSync::Activate", "Applying-volume property",
+                                      [&] {
+            mBGMDevice.SetPropertyData_CFType(kBGMApplyingVolumeToAudioAddress,
+                                              mInSoftwareVolumeMode ? kCFBooleanTrue
+                                                                    : kCFBooleanFalse);
+        });
+
         // Disable BGMDevice controls that the output device doesn't have and reenable any that were
-        // disabled for the previous output device.
+        // disabled for the previous output device. In software volume mode we keep the volume
+        // control enabled regardless of the output device.
         //
         // Continue anyway if this fails because it's better to have extra/missing controls than to
         // be unable to use the device.
         BGMLogAndSwallowExceptionsMsg("BGMDeviceControlSync::Activate", "Controls list", [&] {
-            bool wasUpdated = mBGMDeviceControlsList.MatchControlsListOf(mOutputDevice);
+            bool wasUpdated =
+                mBGMDeviceControlsList.MatchControlsListOf(mOutputDevice, mInSoftwareVolumeMode);
             if(wasUpdated)
             {
                 mBGMDeviceControlsList.PropagateControlListChange();
             }
         });
 
-        // Init BGMDevice controls to match output device
-        mBGMDevice.CopyVolumeFrom(mOutputDevice, kAudioObjectPropertyScopeOutput);
+        // Init BGMDevice controls to match output device. In software volume mode we leave
+        // BGMDevice's volume as the user set it (the output device has no volume to copy anyway) so
+        // we don't reset the user's chosen software volume.
+        if(!mInSoftwareVolumeMode)
+        {
+            mBGMDevice.CopyVolumeFrom(mOutputDevice, kAudioObjectPropertyScopeOutput);
+        }
         mBGMDevice.CopyMuteFrom(mOutputDevice, kAudioObjectPropertyScopeOutput);
 
         // Register listeners for volume and mute values
@@ -166,6 +198,25 @@ void    BGMDeviceControlSync::SetDevices(AudioObjectID inBGMDevice, AudioObjectI
     }
 }
 
+void    BGMDeviceControlSync::SetSoftwareVolumeEnabled(bool inEnabled)
+{
+    CAMutex::Locker locker(mMutex);
+
+    if(mSoftwareVolumeEnabled == inEnabled)
+    {
+        return;
+    }
+
+    mSoftwareVolumeEnabled = inEnabled;
+
+    // Re-evaluate the mode with the new setting. Deactivate/Activate here mirror SetDevices.
+    if(mActive)
+    {
+        Deactivate();
+        Activate();
+    }
+}
+
 #pragma mark Listener Procs
 
 // static
@@ -207,8 +258,11 @@ OSStatus    BGMDeviceControlSync::BGMDeviceListenerProc(AudioObjectID inObjectID
                 {
                     CAMutex::Locker locker(refCon->mMutex);
 
-                    // Update the output device's volume.
-                    if(checkState())
+                    // Update the output device's volume. In software volume mode BGMDevice applies
+                    // its volume to the audio itself, so we must not also mirror it onto the output
+                    // device (that would either double-attenuate or, more likely, do nothing since
+                    // the output has no volume control).
+                    if(checkState() && !refCon->mInSoftwareVolumeMode)
                     {
                         refCon->mOutputDevice.CopyVolumeFrom(refCon->mBGMDevice, scope);
                     }

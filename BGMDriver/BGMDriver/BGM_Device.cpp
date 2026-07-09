@@ -327,7 +327,13 @@ bool	BGM_Device::Device_HasProperty(AudioObjectID inObjectID, pid_t inClientPID,
         case kAudioDeviceCustomPropertyDebugLoggingEnabled:
 			theAnswer = true;
 			break;
-			
+
+        case kAudioDeviceCustomPropertyApplyingVolumeToAudio:
+            // Only the main BGMDevice instance applies its volume to audio on request from BGMApp.
+            // The UI sounds instance always applies its own volume and doesn't expose this property.
+            theAnswer = (GetObjectID() == kObjectID_Device);
+            break;
+
 		case kAudioDevicePropertyLatency:
 		case kAudioDevicePropertySafetyOffset:
 		case kAudioDevicePropertyPreferredChannelsForStereo:
@@ -375,7 +381,12 @@ bool	BGM_Device::Device_IsPropertySettable(AudioObjectID inObjectID, pid_t inCli
         case kAudioDeviceCustomPropertyDebugLoggingEnabled:
 			theAnswer = true;
 			break;
-		
+
+        case kAudioDeviceCustomPropertyApplyingVolumeToAudio:
+            // Settable, but only on the main BGMDevice instance. See Device_HasProperty.
+            theAnswer = (GetObjectID() == kObjectID_Device);
+            break;
+
 		default:
 			theAnswer = BGM_AbstractDevice::IsPropertySettable(inObjectID, inClientPID, inAddress);
 			break;
@@ -459,7 +470,9 @@ UInt32	BGM_Device::Device_GetPropertyDataSize(AudioObjectID inObjectID, pid_t in
             break;
             
         case kAudioObjectPropertyCustomPropertyInfoList:
-            theAnswer = sizeof(AudioServerPlugInCustomPropertyInfo) * 7;
+            // The main BGMDevice instance also exposes kAudioDeviceCustomPropertyApplyingVolumeToAudio.
+            theAnswer = sizeof(AudioServerPlugInCustomPropertyInfo) *
+                    ((GetObjectID() == kObjectID_Device) ? 8 : 7);
             break;
             
         case kAudioDeviceCustomPropertyDeviceAudibleState:
@@ -489,7 +502,11 @@ UInt32	BGM_Device::Device_GetPropertyDataSize(AudioObjectID inObjectID, pid_t in
         case kAudioDeviceCustomPropertyDebugLoggingEnabled:
             theAnswer = sizeof(CFBooleanRef);
             break;
-		
+
+        case kAudioDeviceCustomPropertyApplyingVolumeToAudio:
+            theAnswer = sizeof(CFBooleanRef);
+            break;
+
 		default:
 			theAnswer = BGM_AbstractDevice::GetPropertyDataSize(inObjectID, inClientPID, inAddress, inQualifierDataSize, inQualifierData);
 			break;
@@ -888,13 +905,17 @@ void	BGM_Device::Device_GetPropertyData(AudioObjectID inObjectID, pid_t inClient
             
         case kAudioObjectPropertyCustomPropertyInfoList:
             theNumberItemsToFetch = inDataSize / sizeof(AudioServerPlugInCustomPropertyInfo);
-            
-            //	clamp it to the number of items we have
-            if(theNumberItemsToFetch > 7)
+
+            //	clamp it to the number of items we have. The main BGMDevice instance has one extra
+            //	custom property, kAudioDeviceCustomPropertyApplyingVolumeToAudio.
             {
-                theNumberItemsToFetch = 7;
+                UInt32 theNumberOfCustomProperties = (GetObjectID() == kObjectID_Device) ? 8 : 7;
+                if(theNumberItemsToFetch > theNumberOfCustomProperties)
+                {
+                    theNumberItemsToFetch = theNumberOfCustomProperties;
+                }
             }
-            
+
             if(theNumberItemsToFetch > 0)
             {
                 ((AudioServerPlugInCustomPropertyInfo*)outData)[0].mSelector = kAudioDeviceCustomPropertyAppVolumes;
@@ -936,6 +957,13 @@ void	BGM_Device::Device_GetPropertyData(AudioObjectID inObjectID, pid_t inClient
                 ((AudioServerPlugInCustomPropertyInfo*)outData)[6].mSelector = kAudioDeviceCustomPropertyDebugLoggingEnabled;
                 ((AudioServerPlugInCustomPropertyInfo*)outData)[6].mPropertyDataType = kAudioServerPlugInCustomPropertyDataTypeCFPropertyList;
                 ((AudioServerPlugInCustomPropertyInfo*)outData)[6].mQualifierDataType = kAudioServerPlugInCustomPropertyDataTypeNone;
+            }
+            // Index 7 is only reached for the main BGMDevice instance (see the clamp above).
+            if(theNumberItemsToFetch > 7)
+            {
+                ((AudioServerPlugInCustomPropertyInfo*)outData)[7].mSelector = kAudioDeviceCustomPropertyApplyingVolumeToAudio;
+                ((AudioServerPlugInCustomPropertyInfo*)outData)[7].mPropertyDataType = kAudioServerPlugInCustomPropertyDataTypeCFPropertyList;
+                ((AudioServerPlugInCustomPropertyInfo*)outData)[7].mQualifierDataType = kAudioServerPlugInCustomPropertyDataTypeNone;
             }
 
             outDataSize = theNumberItemsToFetch * sizeof(AudioServerPlugInCustomPropertyInfo);
@@ -981,6 +1009,14 @@ void	BGM_Device::Device_GetPropertyData(AudioObjectID inObjectID, pid_t inClient
         case kAudioDeviceCustomPropertyDebugLoggingEnabled:
             ThrowIf(inDataSize < sizeof(CFBooleanRef), CAException(kAudioHardwareBadPropertySizeError), "BGM_Device::Device_GetPropertyData: not enough space for the return value of kAudioDeviceCustomPropertyDebugLoggingEnabled for the device");
             *reinterpret_cast<CFBooleanRef*>(outData) = BGMDebugLoggingIsEnabled() ? kCFBooleanTrue : kCFBooleanFalse;
+            outDataSize = sizeof(CFBooleanRef);
+            break;
+
+        case kAudioDeviceCustomPropertyApplyingVolumeToAudio:
+            ThrowIf(inDataSize < sizeof(CFBooleanRef), CAException(kAudioHardwareBadPropertySizeError), "BGM_Device::Device_GetPropertyData: not enough space for the return value of kAudioDeviceCustomPropertyApplyingVolumeToAudio for the device");
+            // mWillApplyVolumeToAudio is atomic, so this is read without locking.
+            *reinterpret_cast<CFBooleanRef*>(outData) =
+                    mVolumeControl.WillApplyVolumeToAudioRT() ? kCFBooleanTrue : kCFBooleanFalse;
             outDataSize = sizeof(CFBooleanRef);
             break;
             
@@ -1285,6 +1321,56 @@ void	BGM_Device::Device_SetPropertyData(AudioObjectID inObjectID, pid_t inClient
             }
             break;
 
+        case kAudioDeviceCustomPropertyApplyingVolumeToAudio:
+            {
+                ThrowIf(inDataSize < sizeof(CFBooleanRef),
+                        CAException(kAudioHardwareBadPropertySizeError),
+                        "BGM_Device::Device_SetPropertyData: wrong size for the data for "
+                        "kAudioDeviceCustomPropertyApplyingVolumeToAudio");
+
+                CFBooleanRef theRef = *reinterpret_cast<const CFBooleanRef*>(inData);
+
+                ThrowIfNULL(theRef,
+                            CAException(kAudioHardwareIllegalOperationError),
+                            "BGM_Device::Device_SetPropertyData: null reference given for "
+                            "kAudioDeviceCustomPropertyApplyingVolumeToAudio");
+                ThrowIf(CFGetTypeID(theRef) != CFBooleanGetTypeID(),
+                        CAException(kAudioHardwareIllegalOperationError),
+                        "BGM_Device::Device_SetPropertyData: CFType given for "
+                        "kAudioDeviceCustomPropertyApplyingVolumeToAudio was not a CFBoolean");
+
+                // Only the main BGMDevice instance applies its volume to audio on request. The UI
+                // sounds instance always applies its own volume, so reject attempts to change it.
+                ThrowIf(GetObjectID() != kObjectID_Device,
+                        CAException(kAudioHardwareIllegalOperationError),
+                        "BGM_Device::Device_SetPropertyData: "
+                        "kAudioDeviceCustomPropertyApplyingVolumeToAudio is only supported on the "
+                        "main BGMDevice instance");
+
+                bool theNewValue = CFBooleanGetValue(theRef);
+                bool propertyWasChanged =
+                        (mVolumeControl.WillApplyVolumeToAudioRT() != theNewValue);
+
+                // mWillApplyVolumeToAudio is atomic and read on the IO thread without locking, so
+                // there's nothing to lock around here. WillDoIOOperation always reports that this
+                // device does the ProcessMix operation, so the change takes effect on the next IO
+                // cycle without the host having to rebuild its IO plan.
+                mVolumeControl.SetWillApplyVolumeToAudio(theNewValue);
+
+                DebugMsg("BGM_Device::Device_SetPropertyData: %s applying volume to audio in software",
+                         theNewValue ? "Started" : "Stopped");
+
+                if(propertyWasChanged)
+                {
+                    // Send notification
+                    CADispatchQueue::GetGlobalSerialQueue().Dispatch(false,	^{
+                        AudioObjectPropertyAddress theChangedProperties[] = { kBGMApplyingVolumeToAudioAddress };
+                        BGM_PlugIn::Host_PropertiesChanged(inObjectID, 1, theChangedProperties);
+                    });
+                }
+            }
+            break;
+
 		default:
 			BGM_AbstractDevice::SetPropertyData(inObjectID, inClientPID, inAddress, inQualifierDataSize, inQualifierData, inDataSize, inData);
 			break;
@@ -1417,7 +1503,11 @@ void	BGM_Device::WillDoIOOperation(UInt32 inOperationID, bool& outWillDo, bool& 
 			break;
 
         case kAudioServerPlugInIOOperationProcessMix:
-            outWillDo = mVolumeControl.WillApplyVolumeToAudioRT();
+            // Always claim this operation so mVolumeControl.SetWillApplyVolumeToAudio can be toggled
+            // at runtime (BGMApp does this when the output device changes) without the host having to
+            // rebuild its IO plan. ApplyVolumeToAudioRT is a no-op when the control isn't applying
+            // its volume, so this is cheap when software volume is off.
+            outWillDo = true;
             outWillDoInPlace = true;
             break;
 
@@ -1501,7 +1591,10 @@ void	BGM_Device::DoIOOperation(AudioObjectID inStreamObjectID, UInt32 inClientID
                 CAMutex::Locker theIOLocker(mIOMutex);
 
                 // We ask to do this IO operation so this device can apply its own volume to the
-                // stream. Currently, only the UI sounds device does.
+                // stream. The UI sounds instance always does this; the main instance does it when
+                // BGMApp has enabled software volume (i.e. when the output device has no hardware
+                // volume control). ApplyVolumeToAudioRT is a no-op when this control isn't applying
+                // its volume, so it's safe to call unconditionally here.
                 mVolumeControl.ApplyVolumeToAudioRT(reinterpret_cast<Float32*>(ioMainBuffer),
                                                     inIOBufferFrameSize);
             }

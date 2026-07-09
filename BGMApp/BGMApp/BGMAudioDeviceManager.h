@@ -75,6 +75,13 @@ static const int kBGMErrorCode_ReturningEarly       = 2;
 - (BOOL) isOutputDevice:(AudioObjectID)deviceID;
 - (BOOL) isOutputDataSource:(UInt32)dataSourceID;
 
+// Enable or disable software output volume. When enabled (the default), if the output device has no
+// hardware volume control BGMDevice applies its volume to the audio in software so the volume
+// slider/keys still work. When disabled, BGMApp always mirrors the volume onto the output device's
+// hardware volume control (so the slider is disabled for outputs without one). Takes effect
+// immediately, re-evaluating the current output device's volume mode.
+- (void) setSoftwareOutputVolumeEnabled:(BOOL)enabled;
+
 // Set the audio output device that BGMApp uses.
 //
 // Returns an error if the output device couldn't be changed. If revertOnFailure is true in that case,

@@ -374,4 +374,24 @@ bool BGMBackgroundMusicDevice::GetDebugLoggingEnabled() const
     return enabled;
 }
 
+#pragma mark Software Output Volume
+
+bool BGMBackgroundMusicDevice::GetApplyingVolumeToAudio() const
+{
+    CFTypeRef propertyDataRef = GetPropertyData_CFType(kBGMApplyingVolumeToAudioAddress);
+
+    ThrowIfNULL(propertyDataRef,
+                CAException(kAudioHardwareIllegalOperationError),
+                "BGMBackgroundMusicDevice::GetApplyingVolumeToAudio: !propertyDataRef");
+
+    ThrowIf(CFGetTypeID(propertyDataRef) != CFBooleanGetTypeID(),
+            CAException(kAudioHardwareIllegalOperationError),
+            "BGMBackgroundMusicDevice::GetApplyingVolumeToAudio: Property was not a CFBoolean");
+
+    bool applying = CFBooleanGetValue(static_cast<CFBooleanRef>(propertyDataRef));
+    CFRelease(propertyDataRef);
+
+    return applying;
+}
+
 #pragma clang assume_nonnull end

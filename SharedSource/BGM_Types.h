@@ -123,7 +123,14 @@ enum
     // by default. This property is settable. See the array indices below for more info.
     kAudioDeviceCustomPropertyEnabledOutputControls                   = 'bgct',
     // A CFBoolean. True if debug logging is enabled in BGMDriver. Settable.
-    kAudioDeviceCustomPropertyDebugLoggingEnabled                     = 'dblg'
+    kAudioDeviceCustomPropertyDebugLoggingEnabled                     = 'dblg',
+    // A CFBoolean. True if BGMDevice applies its (main output) volume to the audio it outputs, in
+    // software, rather than relying on BGMApp to mirror the volume onto the real output device's
+    // hardware volume control. BGMApp enables this when the selected output device has no hardware
+    // volume control (e.g. an HDMI monitor) so the volume slider/keys still work. Settable, false by
+    // default. Only meaningful for the main BGMDevice instance (not the UI sounds instance, which
+    // always applies its own volume).
+    kAudioDeviceCustomPropertyApplyingVolumeToAudio                   = 'apva'
 };
 
 // The number of silent/audible frames before BGMDriver will change kAudioDeviceCustomPropertyDeviceAudibleState
@@ -219,6 +226,12 @@ static const AudioObjectPropertyAddress kBGMEnabledOutputControlsAddress = {
 
 static const AudioObjectPropertyAddress kBGMDebugLoggingEnabledAddress = {
     kAudioDeviceCustomPropertyDebugLoggingEnabled,
+    kAudioObjectPropertyScopeGlobal,
+    kAudioObjectPropertyElementMain
+};
+
+static const AudioObjectPropertyAddress kBGMApplyingVolumeToAudioAddress = {
+    kAudioDeviceCustomPropertyApplyingVolumeToAudio,
     kAudioObjectPropertyScopeGlobal,
     kAudioObjectPropertyElementMain
 };

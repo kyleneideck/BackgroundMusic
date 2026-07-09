@@ -359,21 +359,27 @@ void    BGM_VolumeControl::SetVolumeDb(Float32 inNewVolumeDb)
 
 void    BGM_VolumeControl::SetWillApplyVolumeToAudio(bool inWillApplyVolumeToAudio)
 {
-    mWillApplyVolumeToAudio = inWillApplyVolumeToAudio;
+    // Atomic store. See the declaration of mWillApplyVolumeToAudio.
+    mWillApplyVolumeToAudio.store(inWillApplyVolumeToAudio, std::memory_order_relaxed);
 }
 
 #pragma mark IO Operations
 
 bool    BGM_VolumeControl::WillApplyVolumeToAudioRT() const
 {
-    return mWillApplyVolumeToAudio;
+    return mWillApplyVolumeToAudio.load(std::memory_order_relaxed);
 }
 
 void    BGM_VolumeControl::ApplyVolumeToAudioRT(Float32* ioBuffer, UInt32 inBufferFrameSize) const
 {
-    ThrowIf(!mWillApplyVolumeToAudio,
-            CAException(kAudioHardwareIllegalOperationError),
-            "BGM_VolumeControl::ApplyVolumeToAudioRT: This control doesn't process audio data");
+    // This control might not be applying its volume to the audio (e.g. the main BGMDevice instance
+    // only does so when the output device has no hardware volume control). In that case there's
+    // nothing to do. Reading the flag once here (rather than throwing) keeps this safe to call
+    // unconditionally on the IO thread even as the flag is toggled from another thread.
+    if(!mWillApplyVolumeToAudio.load(std::memory_order_relaxed))
+    {
+        return;
+    }
 
     // Don't bother if the change is very unlikely to be perceptible.
     if((mAmplitudeGain < 0.99f) || (mAmplitudeGain > 1.01f))

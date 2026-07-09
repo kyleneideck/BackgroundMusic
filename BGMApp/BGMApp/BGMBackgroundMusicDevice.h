@@ -199,6 +199,30 @@ public:
                             SetPropertyData_CFType(kBGMDebugLoggingEnabledAddress,
                                                    inEnabled ? kCFBooleanTrue : kCFBooleanFalse); }
 
+#pragma mark Software Output Volume
+
+public:
+    /*!
+     @return True if BGMDevice is currently applying its (main output) volume to the audio it
+             outputs in software, rather than relying on BGMApp to mirror the volume onto the real
+             output device's hardware volume control.
+     @throws CAException If the HAL returns an error or a non-boolean value.
+     @see kAudioDeviceCustomPropertyApplyingVolumeToAudio in BGM_Types.h.
+     */
+    bool                GetApplyingVolumeToAudio() const;
+    /*!
+     Tell BGMDevice whether to apply its (main output) volume to the audio it outputs in software.
+     BGMApp enables this when the selected output device has no hardware volume control so the volume
+     slider/keys still work.
+
+     @throws CAException If the HAL returns an error.
+     @see kAudioDeviceCustomPropertyApplyingVolumeToAudio in BGM_Types.h.
+     */
+    void                SetApplyingVolumeToAudio(bool inApplyingVolumeToAudio) {
+                            SetPropertyData_CFType(kBGMApplyingVolumeToAudioAddress,
+                                                   inApplyingVolumeToAudio ? kCFBooleanTrue
+                                                                           : kCFBooleanFalse); }
+
 #pragma mark UI Sounds Instance
 
 public:

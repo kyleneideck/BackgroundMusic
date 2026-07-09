@@ -224,6 +224,19 @@ static OSStatus BGMDeviceListenerProc(AudioObjectID inObjectID,
     return isOutputDataSource;
 }
 
+- (void) setSoftwareOutputVolumeEnabled:(BOOL)enabled {
+    @try {
+        [stateLock lock];
+
+        // Re-evaluates the volume mode for the current output device (if one is set).
+        BGMLogAndSwallowExceptions("BGMAudioDeviceManager::setSoftwareOutputVolumeEnabled", [&] {
+            deviceControlSync.SetSoftwareVolumeEnabled(enabled);
+        });
+    } @finally {
+        [stateLock unlock];
+    }
+}
+
 #pragma mark Output Device
 
 - (NSError* __nullable) setOutputDeviceWithID:(AudioObjectID)deviceID
