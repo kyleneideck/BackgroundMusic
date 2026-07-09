@@ -51,7 +51,16 @@ public:
     
 private:
     void                          Copy(const BGM_Client& inClient);
-    
+
+public:
+    // True if this client's audio should be treated as coming from the music player app identified
+    // by inMusicPlayerBundleID. This is the case when the bundle IDs match exactly, or when this
+    // client's bundle ID is a child of inMusicPlayerBundleID. The child case handles apps that play
+    // their audio from helper processes with their own bundle IDs, most notably Chromium-based
+    // browsers: e.g. a client with bundle ID "com.brave.Browser.helper.renderer" belongs to the
+    // music player "com.brave.Browser".
+    bool                          BundleIDMatchesMusicPlayer(const CACFString& inMusicPlayerBundleID) const;
+
 public:
     // These fields are duplicated from AudioServerPlugInClientInfo (except the mBundleID CFStringRef is
     // wrapped in a CACFString here).

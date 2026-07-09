@@ -62,9 +62,7 @@ void    BGM_Clients::AddClient(BGM_Client inClient)
     bool pidMatchesMusicPlayerProperty =
         (mMusicPlayerProcessIDProperty != 0 && inClient.mProcessID == mMusicPlayerProcessIDProperty);
     bool bundleIDMatchesMusicPlayerProperty =
-        (mMusicPlayerBundleIDProperty != "" &&
-         inClient.mBundleID.IsValid() &&
-         inClient.mBundleID == mMusicPlayerBundleIDProperty);
+        inClient.BundleIDMatchesMusicPlayer(mMusicPlayerBundleIDProperty);
     
     inClient.mIsMusicPlayer = (pidMatchesMusicPlayerProperty || bundleIDMatchesMusicPlayerProperty);
     

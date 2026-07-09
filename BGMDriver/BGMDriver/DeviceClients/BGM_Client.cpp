@@ -39,6 +39,37 @@ BGM_Client::BGM_Client(const AudioServerPlugInClientInfo* inClientInfo)
     }
 }
 
+bool    BGM_Client::BundleIDMatchesMusicPlayer(const CACFString& inMusicPlayerBundleID) const
+{
+    // An unset (empty) music player bundle ID never matches anything.
+    if(!mBundleID.IsValid() ||
+       !inMusicPlayerBundleID.IsValid() ||
+       CFStringGetLength(inMusicPlayerBundleID.GetCFString()) == 0)
+    {
+        return false;
+    }
+
+    if(mBundleID == inMusicPlayerBundleID)
+    {
+        return true;
+    }
+
+    // Match child bundle IDs by prefix, e.g. "com.brave.Browser.helper" for a music player set to
+    // "com.brave.Browser". The trailing dot ensures we only match actual children and not unrelated
+    // bundle IDs that happen to share a prefix (e.g. "com.brave.BrowserBeta").
+    CFStringRef theParentPrefix =
+        CFStringCreateWithFormat(NULL, NULL, CFSTR("%@."), inMusicPlayerBundleID.GetCFString());
+
+    bool theResult = (theParentPrefix != NULL) && mBundleID.StartsWith(theParentPrefix);
+
+    if(theParentPrefix != NULL)
+    {
+        CFRelease(theParentPrefix);
+    }
+
+    return theResult;
+}
+
 void    BGM_Client::Copy(const BGM_Client& inClient)
 {
     mClientID = inClient.mClientID;

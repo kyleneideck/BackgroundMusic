@@ -191,7 +191,7 @@ void    BGM_ClientMap::UpdateMusicPlayerFlags(CACFString inMusicPlayerBundleID)
     CAMutex::Locker theShadowMapsLocker(mShadowMapsMutex);
     
     auto theIsMusicPlayerTest = [&] (BGM_Client theClient) {
-        return (theClient.mBundleID.IsValid() && theClient.mBundleID == inMusicPlayerBundleID);
+        return theClient.BundleIDMatchesMusicPlayer(inMusicPlayerBundleID);
     };
     
     UpdateMusicPlayerFlagsInShadowMaps(theIsMusicPlayerTest);
