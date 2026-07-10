@@ -30,6 +30,9 @@
 #include "CAVolumeCurve.h"
 #include "CAMutex.h"
 
+// STL Includes
+#include <atomic>
+
 
 #pragma clang assume_nonnull begin
 
@@ -111,6 +114,9 @@ public:
      Set this volume control to apply its volume to audio data, which allows clients to call
      ApplyVolumeToAudioRT. When this is set true, WillApplyVolumeToAudioRT will return true. Set to
      false initially.
+
+     This can be changed at runtime, including while IO is running (BGMApp toggles it when the output
+     device changes), so the backing flag is atomic and read on the IO thread without locking.
      */
     void                SetWillApplyVolumeToAudio(bool inWillApplyVolumeToAudio);
 
@@ -125,12 +131,13 @@ public:
      Apply this volume control's volume to the samples in ioBuffer. That is, increase/decrease the
      volumes of the samples by the current volume of this control.
 
+     Does nothing if this control isn't set to apply its volume to audio data (see
+     SetWillApplyVolumeToAudio), so it's safe to call unconditionally on the IO thread.
+
      @param ioBuffer The audio sample buffer to process.
      @param inBufferFrameSize The number of sample frames in ioBuffer. The audio is assumed to be in
                               stereo, i.e. two samples per frame. (Though, hopefully we'll support
                               more at some point.)
-     @throws CAException If SetWillApplyVolumeToAudio hasn't been used to set this control to apply
-                         its volume to audio data.
      */
     void                ApplyVolumeToAudioRT(Float32* ioBuffer, UInt32 inBufferFrameSize) const;
 
@@ -158,7 +165,9 @@ private:
     // volume of this control.
     Float32             mAmplitudeGain;
 
-    bool                mWillApplyVolumeToAudio;
+    // Whether this control applies its volume to the audio it processes (see ApplyVolumeToAudioRT).
+    // Atomic because it's read on the IO thread but can be set from other threads at runtime.
+    std::atomic<bool>   mWillApplyVolumeToAudio;
 
 };
 

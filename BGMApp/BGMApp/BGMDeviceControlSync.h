@@ -93,6 +93,20 @@ public:
      */
     void                SetDevices(AudioObjectID inBGMDevice, AudioObjectID inOutputDevice);
 
+    /*!
+     Enable or disable software output volume. When enabled (the default) and the output device has
+     no hardware volume control, BGMDevice applies its volume to the audio in software (via
+     BGMDriver) so the volume slider/keys still work, and its volume is not mirrored onto the output
+     device. When disabled, BGMDevice's volume is always mirrored onto the output device's hardware
+     volume control (the original behaviour), so the slider is disabled for outputs without one.
+
+     Re-evaluates the current mode immediately if this BGMDeviceControlSync is active.
+
+     @throws CAException if re-evaluating the mode fails (the object will be deactivated in that
+                         case, matching SetDevices).
+     */
+    void                SetSoftwareVolumeEnabled(bool inEnabled);
+
 #pragma mark Listener Procs
     
 private:
@@ -105,6 +119,13 @@ private:
 private:
     CAMutex             mMutex         { "Device Control Sync" };
     bool                mActive        = false;
+
+    // Whether software output volume is enabled (see SetSoftwareVolumeEnabled). Persisted by BGMApp;
+    // defaults to true.
+    bool                mSoftwareVolumeEnabled = true;
+    // Whether we're currently applying the output volume in software, i.e. mSoftwareVolumeEnabled is
+    // true and the output device has no hardware volume control. Guarded by mMutex.
+    bool                mInSoftwareVolumeMode  = false;
 
     CAHALAudioSystemObject mAudioSystem;
     

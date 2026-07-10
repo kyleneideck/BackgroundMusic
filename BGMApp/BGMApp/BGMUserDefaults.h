@@ -45,6 +45,11 @@
 
 @property BOOL autoPauseMusicEnabled;
 
+// Whether to apply the output volume in software when the selected output device has no hardware
+// volume control (e.g. an HDMI monitor). When enabled, the volume slider/keys keep working on such
+// devices because BGMDevice attenuates the audio itself. Defaults to YES.
+@property BOOL softwareOutputVolumeEnabled;
+
 // The UIDs of the output devices most recently selected by the user. The most-recently selected
 // device is at index 0. See BGMPreferredOutputDevices.
 @property NSArray<NSString*>* preferredDeviceUIDs;

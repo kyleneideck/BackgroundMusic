@@ -59,6 +59,10 @@ static NSInteger const kAboutPanelMenuItemTag  = 4;
     NSTextField* pauseDelayLabel;
     NSTextField* maxUnpauseDelayLabel;
     BGMUserDefaults* userDefaults;
+
+    // Software output volume preference.
+    BGMAudioDeviceManager* audioDevices;
+    NSMenuItem* softwareOutputVolumeMenuItem;
 }
 
 - (id) initWithBGMMenu:(NSMenu*)inBGMMenu
@@ -99,10 +103,45 @@ static NSInteger const kAboutPanelMenuItemTag  = 4;
         
         // Set up delay preferences
         userDefaults = inUserDefaults;
+
+        // Set up the software output volume preference.
+        audioDevices = inAudioDevices;
+        [self setupSoftwareOutputVolumePreference:prefsMenu];
+
         [self setupDelayPreferences:prefsMenu];
     }
-    
+
     return self;
+}
+
+- (void) setupSoftwareOutputVolumePreference:(NSMenu*)prefsMenu {
+    // Add a checkbox that toggles software output volume. See
+    // BGMUserDefaults.softwareOutputVolumeEnabled and BGMDeviceControlSync.
+    [prefsMenu addItem:[NSMenuItem separatorItem]];
+
+    softwareOutputVolumeMenuItem =
+        [[NSMenuItem alloc] initWithTitle:@"Software volume for outputs without volume control"
+                                   action:@selector(toggleSoftwareOutputVolume)
+                            keyEquivalent:@""];
+    softwareOutputVolumeMenuItem.target = self;
+    softwareOutputVolumeMenuItem.state =
+        userDefaults.softwareOutputVolumeEnabled ? NSControlStateValueOn : NSControlStateValueOff;
+    softwareOutputVolumeMenuItem.toolTip =
+        @"When your output device has no volume control of its own (e.g. some HDMI displays), "
+         "Background Music adjusts the volume in software so the volume slider and keys still work.";
+
+    [prefsMenu addItem:softwareOutputVolumeMenuItem];
+}
+
+- (void) toggleSoftwareOutputVolume {
+    BOOL enabled = (softwareOutputVolumeMenuItem.state != NSControlStateValueOn);
+
+    softwareOutputVolumeMenuItem.state =
+        enabled ? NSControlStateValueOn : NSControlStateValueOff;
+
+    // Persist the change and re-evaluate the current output device's volume mode.
+    userDefaults.softwareOutputVolumeEnabled = enabled;
+    [audioDevices setSoftwareOutputVolumeEnabled:enabled];
 }
 
 - (void) useBGMStatusBarIcon {

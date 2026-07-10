@@ -133,7 +133,43 @@ void    BGMDeviceControlsList::SetBGMDevice(AudioObjectID inBGMDeviceID)
 
 #pragma mark Update Controls List
 
-bool    BGMDeviceControlsList::MatchControlsListOf(AudioObjectID inDeviceID)
+bool    BGMDeviceControlsList::OutputDeviceHasSettableVolume(AudioObjectID inDeviceID)
+{
+    AudioObjectPropertyScope inScope = kAudioObjectPropertyScopeOutput;
+
+    BGMAudioDevice device(inDeviceID);
+
+    bool hasVolume =
+        device.HasSettableMainVolume(inScope) || device.HasSettableVirtualMainVolume(inScope);
+
+    if(!hasVolume)
+    {
+        // Check for per-channel volume controls.
+        UInt32 numChannels =
+            device.GetTotalNumberChannels(inScope == kAudioObjectPropertyScopeInput);
+
+        for(UInt32 channel = 1; channel <= numChannels; channel++)
+        {
+            BGMLogAndSwallowExceptionsMsg("BGMDeviceControlsList::OutputDeviceHasSettableVolume",
+                                          "Checking for channel volume controls",
+                                          ([&] {
+                hasVolume =
+                    (device.HasVolumeControl(inScope, channel)
+                            && device.VolumeControlIsSettable(inScope, channel));
+            }));
+
+            if(hasVolume)
+            {
+                break;
+            }
+        }
+    }
+
+    return hasVolume;
+}
+
+bool    BGMDeviceControlsList::MatchControlsListOf(AudioObjectID inDeviceID,
+                                                  bool inKeepVolumeEnabled)
 {
     CAMutex::Locker locker(mMutex);
 
@@ -188,31 +224,9 @@ bool    BGMDeviceControlsList::MatchControlsListOf(AudioObjectID inDeviceID)
     BGMAudioDevice device(inDeviceID);
     bool hasMute = device.HasSettableMainMute(inScope);
 
-    bool hasVolume =
-        device.HasSettableMainVolume(inScope) || device.HasSettableVirtualMainVolume(inScope);
-
-    if(!hasVolume)
-    {
-        // Check for per-channel volume controls.
-        UInt32 numChannels =
-            device.GetTotalNumberChannels(inScope == kAudioObjectPropertyScopeInput);
-
-        for(UInt32 channel = 1; channel <= numChannels; channel++)
-        {
-            BGMLogAndSwallowExceptionsMsg("BGMDeviceControlsList::MatchControlsListOf",
-                                          "Checking for channel volume controls",
-                                          ([&] {
-                hasVolume =
-                    (device.HasVolumeControl(inScope, channel)
-                            && device.VolumeControlIsSettable(inScope, channel));
-            }));
-
-            if(hasVolume)
-            {
-                break;
-            }
-        }
-    }
+    // When applying the output volume in software, keep BGMDevice's volume control enabled even if
+    // the output device has no volume control of its own.
+    bool hasVolume = inKeepVolumeEnabled || OutputDeviceHasSettableVolume(inDeviceID);
 
     // Tell BGMDevice to enable/disable its controls to match the output device.
     bool deviceUpdated = false;

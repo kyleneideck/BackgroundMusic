@@ -31,6 +31,7 @@
 
 // Keys
 static NSString* const kDefaultKeyAutoPauseMusicEnabled = @"AutoPauseMusicEnabled";
+static NSString* const kDefaultKeySoftwareOutputVolumeEnabled = @"SoftwareOutputVolumeEnabled";
 static NSString* const kDefaultKeySelectedMusicPlayerID = @"SelectedMusicPlayerID";
 static NSString* const kDefaultKeyPreferredDeviceUIDs   = @"PreferredDeviceUIDs";
 static NSString* const kDefaultKeyStatusBarIcon         = @"StatusBarIcon";
@@ -59,8 +60,9 @@ static NSString* const kKeychainLabelGPMDPAuthCode =
         // here so we know when it's never been set. (If it hasn't, we try using BGMDevice's
         // kAudioDeviceCustomPropertyMusicPlayerBundleID property to tell which music player should
         // be selected. See BGMMusicPlayers.)
-        NSDictionary* defaultsDict = @{ 
+        NSDictionary* defaultsDict = @{
             kDefaultKeyAutoPauseMusicEnabled: @YES,
+            kDefaultKeySoftwareOutputVolumeEnabled: @YES,
             kDefaultKeyPauseDelayMS: @1500,
             kDefaultKeyMaxUnpauseDelayMS: @3500
         };
@@ -93,6 +95,16 @@ static NSString* const kKeychainLabelGPMDPAuthCode =
 
 - (void) setAutoPauseMusicEnabled:(BOOL)autoPauseMusicEnabled {
     [self setBool:kDefaultKeyAutoPauseMusicEnabled to:autoPauseMusicEnabled];
+}
+
+#pragma mark Software Output Volume
+
+- (BOOL) softwareOutputVolumeEnabled {
+    return [self getBool:kDefaultKeySoftwareOutputVolumeEnabled];
+}
+
+- (void) setSoftwareOutputVolumeEnabled:(BOOL)softwareOutputVolumeEnabled {
+    [self setBool:kDefaultKeySoftwareOutputVolumeEnabled to:softwareOutputVolumeEnabled];
 }
 
 #pragma mark Auto-pause Delays

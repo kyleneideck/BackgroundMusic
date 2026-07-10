@@ -65,10 +65,22 @@ public:
      the given device, and disable the ones that can't.
 
      @param inDeviceID The ID of the device.
+     @param inKeepVolumeEnabled If true, keep BGMDevice's volume control enabled even if the given
+                                device has no volume control. Used for software output volume, where
+                                BGMDevice applies its volume to the audio itself so the slider stays
+                                usable on devices without a hardware volume control.
      @return True if BGMDevice's list of controls was updated.
      @throws CAException if an error is received from either device.
      */
-    bool                MatchControlsListOf(AudioObjectID inDeviceID);
+    bool                MatchControlsListOf(AudioObjectID inDeviceID,
+                                            bool inKeepVolumeEnabled = false);
+
+    /*!
+     @param inDeviceID The ID of the device.
+     @return True if the given device has a settable main, virtual main or per-channel volume
+             control with output scope.
+     */
+    static bool         OutputDeviceHasSettableVolume(AudioObjectID inDeviceID);
     /*!
      After updating BGMDevice's controls list, we need to change the default device so programs
      (including OS X's audio UI) will update themselves. We could just change to the real output
