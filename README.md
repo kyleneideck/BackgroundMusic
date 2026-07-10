@@ -22,6 +22,7 @@
 # Overview
 
 + Automatically pause/unpause your music player when other audio sources are playing/stopped
++ Sleep timer that pauses your music (and optionally mutes the output) after a chosen countdown
 + Per-application volume control
 + Record system audio
 + No restart required to install

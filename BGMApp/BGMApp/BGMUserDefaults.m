@@ -31,6 +31,7 @@
 
 // Keys
 static NSString* const kDefaultKeyAutoPauseMusicEnabled = @"AutoPauseMusicEnabled";
+static NSString* const kDefaultKeySleepTimerMutesOutput = @"SleepTimerMutesOutput";
 static NSString* const kDefaultKeySelectedMusicPlayerID = @"SelectedMusicPlayerID";
 static NSString* const kDefaultKeyPreferredDeviceUIDs   = @"PreferredDeviceUIDs";
 static NSString* const kDefaultKeyStatusBarIcon         = @"StatusBarIcon";
@@ -61,6 +62,7 @@ static NSString* const kKeychainLabelGPMDPAuthCode =
         // be selected. See BGMMusicPlayers.)
         NSDictionary* defaultsDict = @{ 
             kDefaultKeyAutoPauseMusicEnabled: @YES,
+            kDefaultKeySleepTimerMutesOutput: @YES,
             kDefaultKeyPauseDelayMS: @1500,
             kDefaultKeyMaxUnpauseDelayMS: @3500
         };
@@ -93,6 +95,16 @@ static NSString* const kKeychainLabelGPMDPAuthCode =
 
 - (void) setAutoPauseMusicEnabled:(BOOL)autoPauseMusicEnabled {
     [self setBool:kDefaultKeyAutoPauseMusicEnabled to:autoPauseMusicEnabled];
+}
+
+#pragma mark Sleep Timer
+
+- (BOOL) sleepTimerMutesOutput {
+    return [self getBool:kDefaultKeySleepTimerMutesOutput];
+}
+
+- (void) setSleepTimerMutesOutput:(BOOL)sleepTimerMutesOutput {
+    [self setBool:kDefaultKeySleepTimerMutesOutput to:sleepTimerMutesOutput];
 }
 
 #pragma mark Auto-pause Delays

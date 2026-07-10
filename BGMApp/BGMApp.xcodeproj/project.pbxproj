@@ -84,6 +84,9 @@
 		1C837DD81F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C837DD71F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMOutputVolumeMenuItem.mm"; }; };
 		1C837DD91F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C837DD71F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm */; };
 		1C837DDA1F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C837DD71F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm */; };
+		1CBA51E70000000000000030 /* BGMSleepTimer.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1CBA51E70000000000000020 /* BGMSleepTimer.mm */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMSleepTimer.mm"; }; };
+		1CBA51E70000000000000040 /* BGMSleepTimer.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1CBA51E70000000000000020 /* BGMSleepTimer.mm */; };
+		1CBA51E70000000000000050 /* BGMSleepTimer.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1CBA51E70000000000000020 /* BGMSleepTimer.mm */; };
 		1C86DA6A1F91EE3B000C8CCF /* CAPThread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C8034C21BDAFD5700668E00 /* CAPThread.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-CAPThread.cpp"; }; };
 		1C8B0C6A216205BF008C5679 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1C8B0C69216205BF008C5679 /* AVFoundation.framework */; };
 		1C8B0C6B21645355008C5679 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1C8B0C69216205BF008C5679 /* AVFoundation.framework */; };
@@ -339,6 +342,8 @@
 		1C80DED220A6718600045BBE /* BGMAppWatcher.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BGMAppWatcher.m; sourceTree = "<group>"; };
 		1C837DD61F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BGMOutputVolumeMenuItem.h; sourceTree = "<group>"; };
 		1C837DD71F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = BGMOutputVolumeMenuItem.mm; sourceTree = "<group>"; };
+		1CBA51E70000000000000010 /* BGMSleepTimer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BGMSleepTimer.h; sourceTree = "<group>"; };
+		1CBA51E70000000000000020 /* BGMSleepTimer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = BGMSleepTimer.mm; sourceTree = "<group>"; };
 		1C8B0C69216205BF008C5679 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		1C8D8301204238DB00A838F2 /* Swinsian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Swinsian.h; path = "Music Players/Swinsian.h"; sourceTree = "<group>"; };
 		1C8D8302204238DB00A838F2 /* BGMSwinsian.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BGMSwinsian.m; path = "Music Players/BGMSwinsian.m"; sourceTree = "<group>"; };
@@ -689,6 +694,8 @@
 				1CACCF371F3175AD007F86CA /* BGMBackgroundMusicDevice.cpp */,
 				27C457E41CF2BC2600A6C9A6 /* BGMAutoPauseMenuItem.h */,
 				27C457E51CF2BC2600A6C9A6 /* BGMAutoPauseMenuItem.m */,
+				1CBA51E70000000000000010 /* BGMSleepTimer.h */,
+				1CBA51E70000000000000020 /* BGMSleepTimer.mm */,
 				1C1465B91BCC49D1003AEFE6 /* BGMAutoPauseMusic.h */,
 				1C1465B71BCC3A73003AEFE6 /* BGMAutoPauseMusic.mm */,
 				1C4699451BD5BF2E00F78043 /* Music Players */,
@@ -1155,6 +1162,7 @@
 				2743C9EC1D852B360089613B /* BGMScriptingBridge.m in Sources */,
 				1CC6593C1F91DEB400B0CCDC /* BGMTermination.mm in Sources */,
 				1C837DD81F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm in Sources */,
+				1CBA51E70000000000000030 /* BGMSleepTimer.mm in Sources */,
 				1C9258472090287F00B8D3A6 /* BGMGooglePlayMusicDesktopPlayerConnection.m in Sources */,
 				1C1963011BCAC0F6008A4DF7 /* CACFString.cpp in Sources */,
 				9E129A412602AE620005851B /* BGMASApplication.m in Sources */,
@@ -1199,6 +1207,7 @@
 				1CD989441ECFFCFC0014BBBF /* BGMAutoPauseMenuItem.m in Sources */,
 				1CD989451ECFFCFC0014BBBF /* BGMAutoPauseMusic.mm in Sources */,
 				1C837DD91F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm in Sources */,
+				1CBA51E70000000000000040 /* BGMSleepTimer.mm in Sources */,
 				1CD989461ECFFCFC0014BBBF /* BGMMusicPlayers.mm in Sources */,
 				1CD989471ECFFCFC0014BBBF /* BGMScriptingBridge.m in Sources */,
 				1CD989481ECFFCFC0014BBBF /* BGMMusicPlayer.m in Sources */,
@@ -1291,6 +1300,7 @@
 				1CE03A59239B56740036908D /* BGMDebugLoggingMenuItem.mm in Sources */,
 				2743CA0C1D86D7FA0089613B /* CACFArray.cpp in Sources */,
 				1C837DDA1F6AA1F2004B1E60 /* BGMOutputVolumeMenuItem.mm in Sources */,
+				1CBA51E70000000000000050 /* BGMSleepTimer.mm in Sources */,
 				2743CA0D1D86D7FA0089613B /* CACFDictionary.cpp in Sources */,
 				2743CA0E1D86D7FA0089613B /* CACFNumber.cpp in Sources */,
 				2743CA0F1D86D7FA0089613B /* CACFString.cpp in Sources */,
