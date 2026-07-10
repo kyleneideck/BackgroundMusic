@@ -143,6 +143,7 @@
 		1CD9894C1ECFFCFC0014BBBF /* BGMHermes.m in Sources */ = {isa = PBXBuildFile; fileRef = 279F48761DD6D73900768A85 /* BGMHermes.m */; };
 		1CD9894D1ECFFCFC0014BBBF /* BGMVLC.m in Sources */ = {isa = PBXBuildFile; fileRef = 27379B891C7C562D0084A24C /* BGMVLC.m */; };
 		1CD9894E1ECFFCFC0014BBBF /* BGMVOX.m in Sources */ = {isa = PBXBuildFile; fileRef = 273F10DE1CC3D0B900C1C6DA /* BGMVOX.m */; };
+		8984A5C4B3F575D86537F2E3 /* BGMYouTubeMusic.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B7FC2E92F4754135ED147B9 /* BGMYouTubeMusic.m */; };
 		1CD9894F1ECFFCFC0014BBBF /* BGMPreferencesMenu.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C0BD0A71BF1B029004F4CF5 /* BGMPreferencesMenu.mm */; };
 		1CD989501ECFFCFC0014BBBF /* BGMAboutPanel.m in Sources */ = {isa = PBXBuildFile; fileRef = 27D1D6BA1DD7226C0049E707 /* BGMAboutPanel.m */; };
 		1CD989511ECFFCFC0014BBBF /* BGMAutoPauseMusicPrefs.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1C0BD0A41BF1A8E6004F4CF5 /* BGMAutoPauseMusicPrefs.mm */; };
@@ -183,6 +184,7 @@
 		271677BA1C6CBDFA0080B0A2 /* CACFNumber.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 271677B81C6CBDFA0080B0A2 /* CACFNumber.cpp */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-CACFNumber.cpp"; }; };
 		27379B8A1C7C562D0084A24C /* BGMVLC.m in Sources */ = {isa = PBXBuildFile; fileRef = 27379B891C7C562D0084A24C /* BGMVLC.m */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMVLC.m"; }; };
 		273F10DF1CC3D0B900C1C6DA /* BGMVOX.m in Sources */ = {isa = PBXBuildFile; fileRef = 273F10DE1CC3D0B900C1C6DA /* BGMVOX.m */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMVOX.m"; }; };
+		1A8437537A1EC25116D06729 /* BGMYouTubeMusic.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B7FC2E92F4754135ED147B9 /* BGMYouTubeMusic.m */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMYouTubeMusic.m"; }; };
 		2743C9EB1D852B360089613B /* BGMMusicPlayers.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2743C9E81D852B350089613B /* BGMMusicPlayers.mm */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMMusicPlayers.mm"; }; };
 		2743C9EC1D852B360089613B /* BGMScriptingBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 2743C9EA1D852B350089613B /* BGMScriptingBridge.m */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMScriptingBridge.m"; }; };
 		2743C9F11D853FBB0089613B /* BGMUserDefaults.m in Sources */ = {isa = PBXBuildFile; fileRef = 2743C9F01D853FBB0089613B /* BGMUserDefaults.m */; settings = {COMPILER_FLAGS = "-frandom-seed=BGMApp-BGMUserDefaults.m"; }; };
@@ -194,6 +196,7 @@
 		2743CA061D86D41C0089613B /* BGMSpotify.m in Sources */ = {isa = PBXBuildFile; fileRef = 1C2336DE1BEAE10C004C1C4E /* BGMSpotify.m */; };
 		2743CA071D86D41C0089613B /* BGMVLC.m in Sources */ = {isa = PBXBuildFile; fileRef = 27379B891C7C562D0084A24C /* BGMVLC.m */; };
 		2743CA081D86D41C0089613B /* BGMVOX.m in Sources */ = {isa = PBXBuildFile; fileRef = 273F10DE1CC3D0B900C1C6DA /* BGMVOX.m */; };
+		B595D6CA968930B14E20D652 /* BGMYouTubeMusic.m in Sources */ = {isa = PBXBuildFile; fileRef = 0B7FC2E92F4754135ED147B9 /* BGMYouTubeMusic.m */; };
 		2743CA091D86D41C0089613B /* BGMUserDefaults.m in Sources */ = {isa = PBXBuildFile; fileRef = 2743C9F01D853FBB0089613B /* BGMUserDefaults.m */; };
 		2743CA0A1D86D52D0089613B /* BGMAudioDeviceManager.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1CED616B1C316E1A002CAFCF /* BGMAudioDeviceManager.mm */; };
 		2743CA0C1D86D7FA0089613B /* CACFArray.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1CC1DF7D1BE5068A00FB8FE4 /* CACFArray.cpp */; };
@@ -398,6 +401,9 @@
 		273F10DC1CC3CF9C00C1C6DA /* VOX.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VOX.h; path = "Music Players/VOX.h"; sourceTree = "<group>"; };
 		273F10DD1CC3D0B900C1C6DA /* BGMVOX.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGMVOX.h; path = "Music Players/BGMVOX.h"; sourceTree = "<group>"; };
 		273F10DE1CC3D0B900C1C6DA /* BGMVOX.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BGMVOX.m; path = "Music Players/BGMVOX.m"; sourceTree = "<group>"; };
+		420729A74489B1C05DA2D4E0 /* Chromium.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Chromium.h; path = "Music Players/Chromium.h"; sourceTree = "<group>"; };
+		8EAEDE3FADC75F3DCC3BBE60 /* BGMYouTubeMusic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGMYouTubeMusic.h; path = "Music Players/BGMYouTubeMusic.h"; sourceTree = "<group>"; };
+		0B7FC2E92F4754135ED147B9 /* BGMYouTubeMusic.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BGMYouTubeMusic.m; path = "Music Players/BGMYouTubeMusic.m"; sourceTree = "<group>"; };
 		2743C9E71D852B350089613B /* BGMMusicPlayers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGMMusicPlayers.h; path = "Music Players/BGMMusicPlayers.h"; sourceTree = "<group>"; };
 		2743C9E81D852B350089613B /* BGMMusicPlayers.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = BGMMusicPlayers.mm; path = "Music Players/BGMMusicPlayers.mm"; sourceTree = "<group>"; };
 		2743C9E91D852B350089613B /* BGMScriptingBridge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGMScriptingBridge.h; path = "Music Players/BGMScriptingBridge.h"; sourceTree = "<group>"; };
@@ -614,6 +620,8 @@
 				27379B891C7C562D0084A24C /* BGMVLC.m */,
 				273F10DD1CC3D0B900C1C6DA /* BGMVOX.h */,
 				273F10DE1CC3D0B900C1C6DA /* BGMVOX.m */,
+				8EAEDE3FADC75F3DCC3BBE60 /* BGMYouTubeMusic.h */,
+				0B7FC2E92F4754135ED147B9 /* BGMYouTubeMusic.m */,
 				27379B841C7C53BE0084A24C /* Supporting Files */,
 			);
 			name = "Music Players";
@@ -816,6 +824,7 @@
 				1C8D8301204238DB00A838F2 /* Swinsian.h */,
 				27379B871C7C552A0084A24C /* VLC.h */,
 				273F10DC1CC3CF9C00C1C6DA /* VOX.h */,
+				420729A74489B1C05DA2D4E0 /* Chromium.h */,
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";
@@ -1122,6 +1131,7 @@
 				1C1962E41BC94E15008A4DF7 /* CARingBuffer.cpp in Sources */,
 				1C8D830B2042DE9600A838F2 /* BGMGooglePlayMusicDesktopPlayer.m in Sources */,
 				273F10DF1CC3D0B900C1C6DA /* BGMVOX.m in Sources */,
+				1A8437537A1EC25116D06729 /* BGMYouTubeMusic.m in Sources */,
 				1CC1DF811BE5068A00FB8FE4 /* CACFArray.cpp in Sources */,
 				279F48771DD6D73A00768A85 /* BGMHermes.m in Sources */,
 				1C0BD0A81BF1B029004F4CF5 /* BGMPreferencesMenu.mm in Sources */,
@@ -1210,6 +1220,7 @@
 				1CD9894C1ECFFCFC0014BBBF /* BGMHermes.m in Sources */,
 				1CD9894D1ECFFCFC0014BBBF /* BGMVLC.m in Sources */,
 				1CD9894E1ECFFCFC0014BBBF /* BGMVOX.m in Sources */,
+				8984A5C4B3F575D86537F2E3 /* BGMYouTubeMusic.m in Sources */,
 				1CD9894F1ECFFCFC0014BBBF /* BGMPreferencesMenu.mm in Sources */,
 				1CD989501ECFFCFC0014BBBF /* BGMAboutPanel.m in Sources */,
 				1CD989511ECFFCFC0014BBBF /* BGMAutoPauseMusicPrefs.mm in Sources */,
@@ -1314,6 +1325,7 @@
 				2743CA071D86D41C0089613B /* BGMVLC.m in Sources */,
 				1CF5423D1EAAEE4300445AD8 /* BGMAudioDevice.cpp in Sources */,
 				2743CA081D86D41C0089613B /* BGMVOX.m in Sources */,
+				B595D6CA968930B14E20D652 /* BGMYouTubeMusic.m in Sources */,
 				1C62FE5223D3EB2E00B9B68E /* Mock_CAHALAudioDevice.cpp in Sources */,
 				1C62FE5323D3EB2E00B9B68E /* MockAudioDevice.cpp in Sources */,
 				2743CA091D86D41C0089613B /* BGMUserDefaults.m in Sources */,

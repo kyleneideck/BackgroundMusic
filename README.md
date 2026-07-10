@@ -42,6 +42,7 @@ The auto-pause feature currently supports following music players:
 + [Hermes](http://hermesapp.org/)
 + [Swinsian](https://swinsian.com/)
 + [GPMDP](https://www.googleplaymusicdesktopplayer.com/)
++ [YouTube Music](https://music.youtube.com) (in Brave/Chrome/Edge)
 
 Adding support for a new music player is usually straightforward.<sup id="a1">[1](#f1)</sup> If you don't know how to program, or just don't feel
 like it, feel free to [create an issue](https://github.com/kyleneideck/BackgroundMusic/issues/new). Otherwise, see
