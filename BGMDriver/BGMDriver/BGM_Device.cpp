@@ -1352,9 +1352,9 @@ void	BGM_Device::Device_SetPropertyData(AudioObjectID inObjectID, pid_t inClient
                         (mVolumeControl.WillApplyVolumeToAudioRT() != theNewValue);
 
                 // mWillApplyVolumeToAudio is atomic and read on the IO thread without locking, so
-                // there's nothing to lock around here. WillDoIOOperation always reports that this
-                // device does the ProcessMix operation, so the change takes effect on the next IO
-                // cycle without the host having to rebuild its IO plan.
+                // there's nothing to lock around here. The main instance applies its volume in the
+                // ProcessOutput operation, which reads this flag every cycle, so the change takes
+                // effect immediately without the host having to rebuild its IO plan.
                 mVolumeControl.SetWillApplyVolumeToAudio(theNewValue);
 
                 DebugMsg("BGM_Device::Device_SetPropertyData: %s applying volume to audio in software",
@@ -1503,11 +1503,15 @@ void	BGM_Device::WillDoIOOperation(UInt32 inOperationID, bool& outWillDo, bool& 
 			break;
 
         case kAudioServerPlugInIOOperationProcessMix:
-            // Always claim this operation so mVolumeControl.SetWillApplyVolumeToAudio can be toggled
-            // at runtime (BGMApp does this when the output device changes) without the host having to
-            // rebuild its IO plan. ApplyVolumeToAudioRT is a no-op when the control isn't applying
-            // its volume, so this is cheap when software volume is off.
-            outWillDo = true;
+            // Only the UI sounds instance applies its volume here. The main instance applies its
+            // software volume per-client in the ProcessOutput operation instead, so it never has to
+            // claim ProcessMix. If the main instance (which is the default output device) claimed
+            // ProcessMix, coreaudiod would keep its IO pipeline running every cycle. That keeps the
+            // input device active (so macOS shows the microphone as in use) and leaves
+            // kAudioDevicePropertyDeviceIsRunningSomewhere permanently true, which stops playthrough
+            // from restarting after it goes idle.
+            outWillDo = mVolumeControl.WillApplyVolumeToAudioRT() &&
+                        (GetObjectID() != kObjectID_Device);
             outWillDoInPlace = true;
             break;
 
@@ -1572,12 +1576,29 @@ void	BGM_Device::DoIOOperation(AudioObjectID inStreamObjectID, UInt32 inClientID
 												 reinterpret_cast<const Float32*>(ioMainBuffer));
             }
 
-            // Record that a non-BGMApp client is actively doing IO by updating the timestamp.
+            // Record that a non-BGMApp client is actively doing IO by updating the timestamp. This
+            // drives idle detection (see BGMPlayThrough::StopIfIdle in BGMApp).
 			// TODO: We probably don't need to call this for kAudioServerPlugInIOOperationProcessOutput (every client).
 			//       kAudioServerPlugInIOOperationProcessMix would be more efficient.
             mClients.RecordNonBGMAppIO(inClientID);
 
             ApplyClientRelativeVolume(inClientID, inIOBufferFrameSize, ioMainBuffer);
+
+            // The main BGMDevice instance applies its software output volume here, per client and
+            // before the mix, rather than in the ProcessMix operation. Applying the gain to each
+            // client's buffer is equivalent to applying it to the mixed buffer, and it means the main
+            // instance never has to claim ProcessMix. That matters because the main instance is the
+            // default output device: if it claimed ProcessMix, coreaudiod would keep its IO pipeline
+            // running every cycle, which keeps the input device active (macOS then shows the
+            // microphone as in use) and leaves kAudioDevicePropertyDeviceIsRunningSomewhere
+            // permanently true, so playthrough couldn't restart after going idle.
+            // ApplyVolumeToAudioRT is a no-op when this instance isn't applying its volume.
+            if(GetObjectID() == kObjectID_Device)
+            {
+                CAMutex::Locker theIOLocker(mIOMutex);
+                mVolumeControl.ApplyVolumeToAudioRT(reinterpret_cast<Float32*>(ioMainBuffer),
+                                                    inIOBufferFrameSize);
+            }
             break;
 
         case kAudioServerPlugInIOOperationProcessMix:
@@ -1590,11 +1611,10 @@ void	BGM_Device::DoIOOperation(AudioObjectID inStreamObjectID, UInt32 inClientID
 
                 CAMutex::Locker theIOLocker(mIOMutex);
 
-                // We ask to do this IO operation so this device can apply its own volume to the
-                // stream. The UI sounds instance always does this; the main instance does it when
-                // BGMApp has enabled software volume (i.e. when the output device has no hardware
-                // volume control). ApplyVolumeToAudioRT is a no-op when this control isn't applying
-                // its volume, so it's safe to call unconditionally here.
+                // Only the UI sounds instance performs this operation (see WillDoIOOperation). The
+                // main instance applies its software volume per-client in ProcessOutput instead, so
+                // it doesn't have to claim ProcessMix. ApplyVolumeToAudioRT is a no-op when this
+                // control isn't applying its volume.
                 mVolumeControl.ApplyVolumeToAudioRT(reinterpret_cast<Float32*>(ioMainBuffer),
                                                     inIOBufferFrameSize);
             }
