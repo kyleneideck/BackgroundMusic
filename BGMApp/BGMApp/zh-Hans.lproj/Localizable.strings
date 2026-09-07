@@ -51,3 +51,33 @@
 "Failed to set %@ as the output device." = "将 %@ 设为输出设备失败。";
 
 "This is probably a bug. Feel free to report it." = "这可能是个 bug，欢迎反馈。";
+
+/* BGMPreferencesMenu.mm */
+
+"Auto-pause Delays" = "自动暂停延迟";
+
+"Pause Delay:" = "暂停延迟：";
+
+"Max Unpause:" = "最长恢复延迟：";
+
+"Off" = "关闭";
+
+/* BGMAboutPanel.m */
+
+"Version %@" = "版本 %@";
+
+"Error: could not open license file." = "错误：无法打开许可证文件。";
+
+/* BGMOutputVolumeMenuItem.mm */
+
+"Output Device" = "输出设备";
+
+/* BGMSystemSoundsVolume.mm */
+
+"Alerts, notification sounds, etc. Usually short. Can be played by any app." = "提示音、通知声等的音量，通常很短，任何应用都可以播放。";
+
+/* BGMAppVolumes.m */
+
+"More Apps" = "更多应用";
+
+"More options" = "更多选项";

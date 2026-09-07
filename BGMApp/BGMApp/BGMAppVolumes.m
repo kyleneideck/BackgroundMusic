@@ -59,14 +59,14 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
     if ((self = [super init])) {
         controller = inController;
         bgmMenu = inMenu;
-        moreAppsMenu = [[NSMenu alloc] initWithTitle:kMoreAppsMenuTitle];
+        moreAppsMenu = [[NSMenu alloc] initWithTitle:NSLocalizedString(kMoreAppsMenuTitle, "")];
         appVolumeView = inView;
         appVolumeViewFullHeight = appVolumeView.frame.size.height;
         numMenuItems = 0;
 
         // Add the More Apps menu to the main menu.
         NSMenuItem* moreAppsMenuItem =
-            [[NSMenuItem alloc] initWithTitle:kMoreAppsMenuTitle action:nil keyEquivalent:@""];
+            [[NSMenuItem alloc] initWithTitle:NSLocalizedString(kMoreAppsMenuTitle, "") action:nil keyEquivalent:@""];
         moreAppsMenuItem.submenu = moreAppsMenu;
 
         [bgmMenu insertItem:moreAppsMenuItem atIndex:([self lastMenuItemIndex] + 1)];
@@ -417,7 +417,7 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
     if ([self respondsToSelector:@selector(setAccessibilityTitle:)]) {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wpartial-availability"
-        self.accessibilityTitle = @"More options";
+        self.accessibilityTitle = NSLocalizedString(@"More options", "");
 #pragma clang diagnostic pop
     }
 }

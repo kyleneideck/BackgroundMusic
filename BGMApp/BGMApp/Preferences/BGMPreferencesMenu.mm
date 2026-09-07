@@ -135,7 +135,7 @@ static NSInteger const kAboutPanelMenuItemTag  = 4;
     [prefsMenu addItem:[NSMenuItem separatorItem]];
     
     // Add "Auto-pause Delays" header
-    NSMenuItem* delaysHeader = [[NSMenuItem alloc] initWithTitle:@"Auto-pause Delays" action:nil keyEquivalent:@""];
+    NSMenuItem* delaysHeader = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Auto-pause Delays", "") action:nil keyEquivalent:@""];
     delaysHeader.enabled = NO;
     [prefsMenu addItem:delaysHeader];
     
@@ -145,7 +145,7 @@ static NSInteger const kAboutPanelMenuItemTag  = 4;
     
     // Pause delay label
     NSTextField* pauseDelayTitleLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(10, 5, 100, 15)];
-    pauseDelayTitleLabel.stringValue = @"Pause Delay:";
+    pauseDelayTitleLabel.stringValue = NSLocalizedString(@"Pause Delay:", "");
     pauseDelayTitleLabel.editable = NO;
     pauseDelayTitleLabel.bordered = NO;
     pauseDelayTitleLabel.backgroundColor = [NSColor clearColor];
@@ -173,7 +173,7 @@ static NSInteger const kAboutPanelMenuItemTag  = 4;
     
     // Max unpause delay label
     NSTextField* maxUnpauseDelayTitleLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(10, 5, 100, 15)];
-    maxUnpauseDelayTitleLabel.stringValue = @"Max Unpause:";
+    maxUnpauseDelayTitleLabel.stringValue = NSLocalizedString(@"Max Unpause:", "");
     maxUnpauseDelayTitleLabel.editable = NO;
     maxUnpauseDelayTitleLabel.bordered = NO;
     maxUnpauseDelayTitleLabel.backgroundColor = [NSColor clearColor];
@@ -237,7 +237,7 @@ static NSInteger const kAboutPanelMenuItemTag  = 4;
 - (void) updatePauseDelayLabel {
     NSUInteger delayMS = userDefaults.pauseDelayMS;
     if (delayMS == 0) {
-        pauseDelayLabel.stringValue = @"Off";
+        pauseDelayLabel.stringValue = NSLocalizedString(@"Off", "");
     } else {
         pauseDelayLabel.stringValue = [NSString stringWithFormat:@"%lums", (unsigned long)delayMS];
     }
@@ -246,7 +246,7 @@ static NSInteger const kAboutPanelMenuItemTag  = 4;
 - (void) updateMaxUnpauseDelayLabel {
     NSUInteger delayMS = userDefaults.maxUnpauseDelayMS;
     if (delayMS == 0) {
-        maxUnpauseDelayLabel.stringValue = @"Off";
+        maxUnpauseDelayLabel.stringValue = NSLocalizedString(@"Off", "");
     } else {
         maxUnpauseDelayLabel.stringValue = [NSString stringWithFormat:@"%lums", (unsigned long)delayMS];
     }

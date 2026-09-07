@@ -215,7 +215,7 @@ NSString* const __nonnull      kGenericOutputDeviceName = @"Output Device";
         DebugMsg("BGMOutputVolumeMenuItem::updateLabelAndToolTip: Output device unknown. Using the "
                  "generic label.");
         self.toolTip = nil;
-        deviceLabel.stringValue = kGenericOutputDeviceName;
+        deviceLabel.stringValue = NSLocalizedString(kGenericOutputDeviceName, "");
     } else {
         BOOL didSetLabel = NO;
 
@@ -256,7 +256,7 @@ NSString* const __nonnull      kGenericOutputDeviceName = @"Output Device";
             self.toolTip = nil;
 
             if (!didSetLabel) {
-                deviceLabel.stringValue = kGenericOutputDeviceName;
+                deviceLabel.stringValue = NSLocalizedString(kGenericOutputDeviceName, "");
             }
         }
     }
