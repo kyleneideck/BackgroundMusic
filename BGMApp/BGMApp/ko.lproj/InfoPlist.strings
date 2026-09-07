@@ -1,0 +1,3 @@
+"NSAppleEventsUsageDescription" = "음악을 자동으로 일시정지하려면 Background Music이 음악 플레이어 앱을 제어해야 합니다.";
+
+"NSMicrophoneUsageDescription" = "가상 오디오 장치인 \"Background Music\"은 가상 입력 장치를 통해 시스템 오디오를 Background Music(앱)으로 전송합니다.";

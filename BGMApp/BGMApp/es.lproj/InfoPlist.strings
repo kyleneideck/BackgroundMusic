@@ -1,0 +1,3 @@
+"NSAppleEventsUsageDescription" = "Background Music necesita controlar tu reproductor de música si quieres que lo pause automáticamente.";
+
+"NSMicrophoneUsageDescription" = "El dispositivo de audio virtual «Background Music» envía el audio del sistema a Background Music (la app) a través de un dispositivo de entrada virtual.";

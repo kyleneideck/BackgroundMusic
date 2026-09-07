@@ -6,6 +6,19 @@
 	<string>None</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>en</string>
+		<string>zh-Hans</string>
+		<string>fr</string>
+		<string>de</string>
+		<string>es</string>
+		<string>ja</string>
+		<string>ko</string>
+		<string>pt-PT</string>
+		<string>ru</string>
+		<string>it</string>
+	</array>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>

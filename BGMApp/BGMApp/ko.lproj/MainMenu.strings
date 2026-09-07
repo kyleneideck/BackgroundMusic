@@ -1,0 +1,113 @@
+/* Class = "NSTextField"; ibShadowedToolTip = "Pan"; ObjectID = "1lZ-hX-6Kl"; */
+"1lZ-hX-6Kl.ibShadowedToolTip" = "팬";
+
+/* Class = "NSMenuItem"; title = "Auto-pause"; ObjectID = "2aT-t7-HGW"; */
+"2aT-t7-HGW.title" = "자동 일시정지";
+
+/* Class = "NSSlider"; ibExternalAccessibilityDescription = "Pan"; ObjectID = "2mh-uO-kOV"; */
+"2mh-uO-kOV.ibExternalAccessibilityDescription" = "팬";
+
+/* Class = "NSSlider"; ibShadowedToolTip = "Pan"; ObjectID = "2mh-uO-kOV"; */
+"2mh-uO-kOV.ibShadowedToolTip" = "팬";
+
+/* Class = "NSTextFieldCell"; title = "Volume"; ObjectID = "60O-ju-B5C"; */
+"60O-ju-B5C.title" = "볼륨";
+
+/* Class = "NSMenu"; ibExternalAccessibilityDescription = "Background Music Main Menu"; ObjectID = "8AN-nh-rEe"; */
+"8AN-nh-rEe.ibExternalAccessibilityDescription" = "Background Music 기본 메뉴";
+
+/* Class = "NSMenuItem"; title = "Volumes"; ObjectID = "8PP-wA-Pae"; */
+"8PP-wA-Pae.title" = "볼륨";
+
+/* Class = "NSSlider"; ibExternalAccessibilityDescription = "Output Volume"; ObjectID = "9Ru-Sc-dqC"; */
+"9Ru-Sc-dqC.ibExternalAccessibilityDescription" = "출력 볼륨";
+
+/* Class = "NSSlider"; ibExternalAccessibilityHelp = "Sets the volume of your audio output device."; ObjectID = "9Ru-Sc-dqC"; */
+"9Ru-Sc-dqC.ibExternalAccessibilityHelp" = "오디오 출력 장치의 볼륨을 설정합니다.";
+
+/* Class = "NSMenuItem"; title = "Background Music Logo"; ObjectID = "9VF-qy-6fh"; */
+"9VF-qy-6fh.title" = "Background Music 로고";
+
+/* Class = "NSTextField"; ibShadowedToolTip = "Pan"; ObjectID = "9jc-9i-jw2"; */
+"9jc-9i-jw2.ibShadowedToolTip" = "팬";
+
+/* Class = "NSTextFieldCell"; title = "System Sounds"; ObjectID = "ATK-L8-s8z"; */
+"ATK-L8-s8z.title" = "시스템 사운드";
+
+/* Class = "NSTextFieldCell"; title = "// The version and copyright strings are replaced with // the values from Info.plist in the setup code. These // values are just placeholders/fallbacks. // // The icon image was being drawn with about 50%\n// opacity and I couldn't figure out why. The only  // solution I found was to layer two copies of the icon // on top of each other and add a black shadow (with no // offset) to both. "; ObjectID = "Ay8-8n-FHi"; */
+"Ay8-8n-FHi.title" = "// The version and copyright strings are replaced with // the values from Info.plist in the setup code. These // values are just placeholders/fallbacks. // // The icon image was being drawn with about 50%\n// opacity and I couldn't figure out why. The only  // solution I found was to layer two copies of the icon // on top of each other and add a black shadow (with no // offset) to both. ";
+
+/* Class = "NSMenuItem"; title = "Volume Icon"; ObjectID = "B47-O2-wd0"; */
+"B47-O2-wd0.title" = "볼륨 아이콘";
+
+/* Class = "NSMenuItem"; title = "Preferences"; ObjectID = "BHb-uh-9Zm"; */
+"BHb-uh-9Zm.title" = "환경설정";
+
+/* Class = "NSMenuItem"; title = "Status Bar Icon"; ObjectID = "CmD-ot-1wE"; */
+"CmD-ot-1wE.title" = "메뉴 막대 아이콘";
+
+/* Class = "NSTextFieldCell"; title = "Background Music"; ObjectID = "Dw2-nu-eBQ"; */
+"Dw2-nu-eBQ.title" = "Background Music";
+
+/* Class = "NSTextFieldCell"; title = "Licensed under GPL v2 or any later version."; ObjectID = "ETh-En-bzX"; */
+"ETh-En-bzX.title" = "GPL v2 이상의 버전으로 라이선스가 부여됩니다.";
+
+/* Class = "NSTextFieldCell"; title = "Version 0.5.0"; ObjectID = "FDH-7l-wFf"; */
+"FDH-7l-wFf.title" = "버전 0.5.0";
+
+/* Class = "NSSlider"; ibExternalAccessibilityDescription = "Volume"; ObjectID = "I1l-Ci-4md"; */
+"I1l-Ci-4md.ibExternalAccessibilityDescription" = "볼륨";
+
+/* Class = "NSButtonCell"; title = "⌃"; ObjectID = "IXo-C7-3uE"; */
+"IXo-C7-3uE.title" = "⌃";
+
+/* Class = "NSMenu"; title = "Preferences"; ObjectID = "Img-Dh-cpU"; */
+"Img-Dh-cpU.title" = "환경설정";
+
+/* Class = "NSMenuItem"; title = "Quit Background Music"; ObjectID = "Nj2-gJ-DhW"; */
+"Nj2-gJ-DhW.title" = "Background Music 종료";
+
+/* Class = "NSMenuItem"; title = "About Background Music"; ObjectID = "R45-Vo-Eto"; */
+"R45-Vo-Eto.title" = "Background Music 정보";
+
+/* Class = "NSTextFieldCell"; title = "Background Music contributors"; ObjectID = "UC2-MX-fML"; */
+"UC2-MX-fML.title" = "Background Music 기여자";
+
+/* Class = "NSTextFieldCell"; title = "https://github.com/kyleneideck/BackgroundMusic"; ObjectID = "VOb-5X-o3R"; */
+"VOb-5X-o3R.title" = "https://github.com/kyleneideck/BackgroundMusic";
+
+/* Class = "NSTextFieldCell"; title = "App name here"; ObjectID = "ZHF-ZW-Oqg"; */
+"ZHF-ZW-Oqg.title" = "여기에 앱 이름";
+
+/* Class = "NSMenuItem"; title = "Output Device"; ObjectID = "chk-9C-pab"; */
+"chk-9C-pab.title" = "출력 장치";
+
+/* Class = "NSTextFieldCell"; title = "Copyright © 2016-2026"; ObjectID = "ctF-95-uVu"; */
+"ctF-95-uVu.title" = "Copyright © 2016-2026";
+
+/* Class = "NSSlider"; ibExternalAccessibilityDescription = "System Sounds Volume"; ObjectID = "gyd-WV-2ju"; */
+"gyd-WV-2ju.ibExternalAccessibilityDescription" = "시스템 사운드 볼륨";
+
+/* Class = "NSSlider"; ibExternalAccessibilityHelp = "Volume of alerts, notification sounds, etc. Usually short. Can be played by any app."; ObjectID = "gyd-WV-2ju"; */
+"gyd-WV-2ju.ibExternalAccessibilityHelp" = "경고음, 알림음 등의 볼륨입니다. 대개 짧으며 어떤 앱에서도 재생될 수 있습니다.";
+
+/* Class = "NSTextFieldCell"; title = "L"; ObjectID = "hgE-7A-bez"; */
+"hgE-7A-bez.title" = "L";
+
+/* Class = "NSTextFieldCell"; title = "The AirPlay Logo is a trademark of Apple Inc."; ObjectID = "lx7-k3-q16"; */
+"lx7-k3-q16.title" = "AirPlay 로고는 Apple Inc.의 상표입니다.";
+
+/* Class = "NSTextFieldCell"; title = "R"; ObjectID = "lzr-NO-0Na"; */
+"lzr-NO-0Na.title" = "R";
+
+/* Class = "NSMenuItem"; ibExternalAccessibilityHelp = "Enable to automatically pause your selected music player when a different app starts playing audio."; ObjectID = "nHv-T8-1nb"; */
+"nHv-T8-1nb.ibExternalAccessibilityHelp" = "활성화하면 다른 앱이 오디오 재생을 시작할 때 선택한 음악 플레이어가 자동으로 일시정지됩니다.";
+
+/* Class = "NSMenuItem"; title = "Auto-pause Music"; ObjectID = "nHv-T8-1nb"; */
+"nHv-T8-1nb.title" = "음악 자동 일시정지";
+
+/* Class = "NSMenuItem"; ibShadowedToolTip = "Log detailed messages to help diagnose bugs. Search for \"bgm\" or \"background music\" in Console.app."; ObjectID = "sc9-vO-KyP"; */
+"sc9-vO-KyP.ibShadowedToolTip" = "버그 진단에 도움이 되는 자세한 메시지를 기록합니다. 콘솔.app에서 \"bgm\" 또는 \"background music\"을 검색하세요.";
+
+/* Class = "NSMenuItem"; title = "Debug Logging"; ObjectID = "sc9-vO-KyP"; */
+"sc9-vO-KyP.title" = "디버그 로깅";

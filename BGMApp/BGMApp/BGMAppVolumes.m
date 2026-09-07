@@ -59,14 +59,14 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
     if ((self = [super init])) {
         controller = inController;
         bgmMenu = inMenu;
-        moreAppsMenu = [[NSMenu alloc] initWithTitle:kMoreAppsMenuTitle];
+        moreAppsMenu = [[NSMenu alloc] initWithTitle:NSLocalizedString(kMoreAppsMenuTitle, "")];
         appVolumeView = inView;
         appVolumeViewFullHeight = appVolumeView.frame.size.height;
         numMenuItems = 0;
 
         // Add the More Apps menu to the main menu.
         NSMenuItem* moreAppsMenuItem =
-            [[NSMenuItem alloc] initWithTitle:kMoreAppsMenuTitle action:nil keyEquivalent:@""];
+            [[NSMenuItem alloc] initWithTitle:NSLocalizedString(kMoreAppsMenuTitle, "") action:nil keyEquivalent:@""];
         moreAppsMenuItem.submenu = moreAppsMenu;
 
         [bgmMenu insertItem:moreAppsMenuItem atIndex:([self lastMenuItemIndex] + 1)];
@@ -417,7 +417,7 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
     if ([self respondsToSelector:@selector(setAccessibilityTitle:)]) {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wpartial-availability"
-        self.accessibilityTitle = @"More options";
+        self.accessibilityTitle = NSLocalizedString(@"More options", "");
 #pragma clang diagnostic pop
     }
 }
@@ -461,13 +461,13 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wpartial-availability"
         NSString* symbol = muted ? @"speaker.slash.fill" : @"speaker.wave.2.fill";
-        NSString* description = muted ? @"Unmute" : @"Mute";
+        NSString* description = muted ? NSLocalizedString(@"Unmute", "") : NSLocalizedString(@"Mute", "");
         self.image = [NSImage imageWithSystemSymbolName:symbol accessibilityDescription:description];
 #pragma clang diagnostic pop
         self.imagePosition = NSImageOnly;
         self.title = @"";
     } else {
-        self.title = muted ? @"Unmute" : @"Mute";
+        self.title = muted ? NSLocalizedString(@"Unmute", "") : NSLocalizedString(@"Mute", "");
     }
 }
 

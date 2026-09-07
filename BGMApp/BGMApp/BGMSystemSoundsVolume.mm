@@ -50,7 +50,7 @@ NSString* const kMenuItemToolTip =
         volumeSlider = inSlider;
 
         _menuItem = [[NSMenuItem alloc] initWithTitle:@"" action:nil keyEquivalent:@""];
-        _menuItem.toolTip = kMenuItemToolTip;
+        _menuItem.toolTip = NSLocalizedString(kMenuItemToolTip, "");
 
         // Apply our custom view from MainMenu.xib. It's very similar to the one for app volumes.
         _menuItem.view = inView;

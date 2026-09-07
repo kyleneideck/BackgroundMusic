@@ -78,7 +78,7 @@ static NSInteger const kContributorsLabelTag = 4;
             [[bundle infoDictionary] objectForKey:@"CFBundleShortVersionString"];
         
         if (version) {
-            versionLabel.stringValue = [NSString stringWithFormat:@"Version %@", version];
+            versionLabel.stringValue = [NSString stringWithFormat:NSLocalizedString(@"Version %@", ""), version];
         }
         
         // Copyright notice label
@@ -126,7 +126,7 @@ static NSInteger const kContributorsLabelTag = 4;
         
         if (err || !licenseStr || [licenseStr isEqualToString:@""]) {
             NSLog(@"Error loading license file: %@", err);
-            licenseStr = @"Error: could not open license file.";
+            licenseStr = NSLocalizedString(@"Error: could not open license file.", "");
         }
         
         licenseView.string = (NSString*)licenseStr;

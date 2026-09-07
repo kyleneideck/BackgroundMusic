@@ -1,0 +1,83 @@
+/* BGMAppDelegate.mm */
+
+"Background Music needs permission to use microphones." = "Background Music 需要使用麦克风的权限。";
+
+"It uses a virtual microphone to access your system's audio.\n\nYou can grant the permission by going to System Preferences > Security and Privacy > Microphone and checking the box for Background Music." = "它需要通过虚拟麦克风来获取系统音频。\n\n你可以前往“系统偏好设置 > 安全性与隐私 > 麦克风”，勾选 Background Music 来授予该权限。";
+
+"Could not set the Background Music device as yourdefault audio device." = "无法将 Background Music 设备设为你的默认音频输出设备。";
+
+"You might be able to change it yourself." = "你可以尝试自己手动修改。";
+
+"Failed to reset your system's audio output device." = "重置系统音频输出设备失败。";
+
+"You'll have to change it yourself to get audio working again." = "你需要自己手动修改，才能让音频重新正常工作。";
+
+"Could not find the Background Music virtual audio device." = "找不到 Background Music 虚拟音频设备。";
+
+"Make sure you've installed Background Music Device.driver to /Library/Audio/Plug-Ins/HAL and restarted coreaudiod (e.g. \"sudo killall coreaudiod\")." = "请确认已将 Background Music Device.driver 安装到 /Library/Audio/Plug-Ins/HAL，并重启了 coreaudiod（例如执行 \"sudo killall coreaudiod\"）。";
+
+"Failed to set the output device." = "设置输出设备失败。";
+
+"Could not start the device '%@'. (Error: %ld)" = "无法启动设备“%@”。（错误代码：%ld）";
+
+"Could not find an audio output device." = "找不到音频输出设备。";
+
+"If you do have one installed, this is probably a bug. Sorry about that. Feel free to file an issue on GitHub." = "如果你确实安装了输出设备，这可能是个 bug，抱歉给你带来困扰。欢迎在 GitHub 上提交 issue。";
+
+"Error connecting to BGMXPCHelper." = "连接 BGMXPCHelper 时出错。";
+
+"Make sure you have BGMXPCHelper installed. There are instructions in the README.md file.\n\nBackground Music might still work, but it won't work as well as it could." = "请确认已安装 BGMXPCHelper，具体步骤请参考 README.md 文件。\n\nBackground Music 或许仍能工作，但效果会打折扣。";
+
+"\n\nDetails:\n" = "\n\n详细信息：\n";
+
+"OK" = "好";
+
+"Open Sound in System Preferences" = "在系统偏好设置中打开声音";
+
+/* BGMAppVolumes.m */
+
+"Unmute" = "取消静音";
+
+"Mute" = "静音";
+
+/* BGMAutoPauseMenuItem.m */
+
+"Auto-pause %@" = "自动暂停 %@";
+
+"%@ doesn't appear to be running." = "%@ 好像没有在运行。";
+
+/* BGMOutputDeviceMenuSection.mm */
+
+"Failed to set %@ as the output device." = "将 %@ 设为输出设备失败。";
+
+"This is probably a bug. Feel free to report it." = "这可能是个 bug，欢迎反馈。";
+
+/* BGMPreferencesMenu.mm */
+
+"Auto-pause Delays" = "自动暂停延迟";
+
+"Pause Delay:" = "暂停延迟：";
+
+"Max Unpause:" = "最长恢复延迟：";
+
+"Off" = "关闭";
+
+/* BGMAboutPanel.m */
+
+"Version %@" = "版本 %@";
+
+"Error: could not open license file." = "错误：无法打开许可证文件。";
+
+/* BGMOutputVolumeMenuItem.mm */
+
+"Output Device" = "输出设备";
+
+/* BGMSystemSoundsVolume.mm */
+
+"Alerts, notification sounds, etc. Usually short. Can be played by any app." = "提示音、通知声等的音量，通常很短，任何应用都可以播放。";
+
+/* BGMAppVolumes.m */
+
+"More Apps" = "更多应用";
+
+"More options" = "更多选项";
