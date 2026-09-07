@@ -27,6 +27,8 @@
 #import "BGM_Types.h"
 #import "BGM_Utils.h"
 #import "BGMAudioDevice.h"
+#import "BGMMusicPlayer.h"
+#import "BGMMusicPlayers.h"
 
 // PublicUtility Includes
 #import "CAAutoDisposer.h"
@@ -265,6 +267,23 @@ NSString* const kAudioSystemSettingsPlist =
 
         NSSet<NSNumber*>* currentDeviceIDs = [self currentConnectedDeviceIDs];
 
+        // Check whether the device we're currently using was just disconnected (e.g. the user
+        // unplugged their headphones), before we do anything else that might change the output
+        // device.
+        AudioObjectID outputDeviceBeforeChange = _devices.outputDevice.GetObjectID();
+        bool outputDeviceWasJustDisconnected =
+            [_lastConnectedDeviceIDs containsObject:@(outputDeviceBeforeChange)] &&
+            ![currentDeviceIDs containsObject:@(outputDeviceBeforeChange)];
+
+        // Pause the selected music player, if we're going to, before we switch the output device
+        // below. Otherwise, whatever's left of the current song in BGMApp's/BGMDriver's audio
+        // buffers can start playing out loud through the fallback device (e.g. the built-in
+        // speakers) in the moment before the pause command reaches the music player, since sending
+        // it there and back (e.g. over AppleScript, for Spotify) isn't instant.
+        if (outputDeviceWasJustDisconnected) {
+            [self pauseSelectedMusicPlayer];
+        }
+
         // Check whether an external device (e.g. USB or Bluetooth headphones) was just connected.
         // We check for this separately from findPreferredDevice's usual logic because the
         // preferred-devices list that logic uses (see readPreferredDevices) is derived from data
@@ -311,6 +330,22 @@ NSString* const kAudioSystemSettingsPlist =
         }
     } @finally {
         [_stateLock unlock];
+    }
+}
+
+// See the comment on the musicPlayers property in the header.
+- (void) pauseSelectedMusicPlayer {
+    if (!_musicPlayers) {
+        return;
+    }
+
+    id<BGMMusicPlayer> __nullable player = _musicPlayers.selectedMusicPlayer;
+
+    if (player) {
+        DebugMsg("BGMPreferredOutputDevices::pauseSelectedMusicPlayer: "
+                 "Output device disconnected. Pausing %s",
+                 player.name.UTF8String);
+        [player pause];
     }
 }
 

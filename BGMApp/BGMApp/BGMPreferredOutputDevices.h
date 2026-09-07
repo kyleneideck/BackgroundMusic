@@ -34,6 +34,9 @@
 #import "BGMAudioDeviceManager.h"
 #import "BGMUserDefaults.h"
 
+// Forward Declarations
+@class BGMMusicPlayers;
+
 // System Includes
 #import <CoreAudio/AudioHardwareBase.h>
 #import <Foundation/Foundation.h>
@@ -47,6 +50,13 @@
 // deallocated.
 - (instancetype) initWithDevices:(BGMAudioDeviceManager*)devices
                     userDefaults:(BGMUserDefaults*)userDefaults;
+
+// Not available until BGMAppDelegate sets it, once BGMMusicPlayers has been created, since it's
+// created after this class (see BGMAppDelegate.mm). If it's set, we pause the selected music
+// player when the output device we were using is disconnected, e.g. when headphones are unplugged,
+// rather than continuing playback through whatever device we fall back to. (Matches what many
+// apps, and macOS itself in some cases, do without BGMApp running.)
+@property (nullable) BGMMusicPlayers* musicPlayers;
 
 // Returns the most-preferred device that's currently connected. If no preferred devices are
 // connected, returns the current output device. If the current output device has been disconnected,
