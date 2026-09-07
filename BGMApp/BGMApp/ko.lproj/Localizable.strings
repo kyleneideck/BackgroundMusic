@@ -1,0 +1,65 @@
+"Background Music needs permission to use microphones." = "Background Music은 마이크를 사용할 권한이 필요합니다.";
+
+"It uses a virtual microphone to access your system's audio.\n\nYou can grant the permission by going to System Preferences > Security and Privacy > Microphone and checking the box for Background Music." = "시스템 오디오에 접근하기 위해 가상 마이크를 사용합니다.\n\n시스템 환경설정 > 보안 및 개인정보 보호 > 마이크에서 Background Music 항목을 체크하여 권한을 부여할 수 있습니다.";
+
+"Could not set the Background Music device as yourdefault audio device." = "Background Music 장치를 기본 오디오 출력 장치로 설정할 수 없습니다.";
+
+"You might be able to change it yourself." = "직접 변경할 수 있을 수도 있습니다.";
+
+"Failed to reset your system's audio output device." = "시스템의 오디오 출력 장치를 재설정하지 못했습니다.";
+
+"You'll have to change it yourself to get audio working again." = "오디오가 다시 작동하도록 하려면 직접 변경해야 합니다.";
+
+"Could not find the Background Music virtual audio device." = "Background Music 가상 오디오 장치를 찾을 수 없습니다.";
+
+"Make sure you've installed Background Music Device.driver to /Library/Audio/Plug-Ins/HAL and restarted coreaudiod (e.g. \"sudo killall coreaudiod\")." = "Background Music Device.driver가 /Library/Audio/Plug-Ins/HAL에 설치되어 있고 coreaudiod를 재시작했는지 확인하세요(예: \"sudo killall coreaudiod\").";
+
+"Failed to set the output device." = "출력 장치를 설정하지 못했습니다.";
+
+"Could not start the device '%@'. (Error: %ld)" = "장치 \"%@\"을(를) 시작할 수 없습니다. (오류: %ld)";
+
+"Could not find an audio output device." = "오디오 출력 장치를 찾을 수 없습니다.";
+
+"If you do have one installed, this is probably a bug. Sorry about that. Feel free to file an issue on GitHub." = "실제로 설치되어 있다면 아마 버그일 것입니다. 불편을 드려 죄송합니다. GitHub에 이슈를 등록해 주세요.";
+
+"Error connecting to BGMXPCHelper." = "BGMXPCHelper에 연결하는 중 오류가 발생했습니다.";
+
+"Make sure you have BGMXPCHelper installed. There are instructions in the README.md file.\n\nBackground Music might still work, but it won't work as well as it could." = "BGMXPCHelper가 설치되어 있는지 확인하세요. 안내는 README.md 파일에 있습니다.\n\nBackground Music은 계속 작동할 수 있지만 제 성능을 내지 못할 수 있습니다.";
+
+"\n\nDetails:\n" = "\n\n세부 정보:\n";
+
+"OK" = "확인";
+
+"Open Sound in System Preferences" = "시스템 환경설정에서 소리 열기";
+
+"Unmute" = "음소거 해제";
+
+"Mute" = "음소거";
+
+"Auto-pause %@" = "%@ 자동 일시정지";
+
+"%@ doesn't appear to be running." = "%@이(가) 실행 중이 아닌 것 같습니다.";
+
+"Failed to set %@ as the output device." = "%@을(를) 출력 장치로 설정하지 못했습니다.";
+
+"This is probably a bug. Feel free to report it." = "아마 버그일 것입니다. 자유롭게 신고해 주세요.";
+
+"Auto-pause Delays" = "자동 일시정지 지연 시간";
+
+"Pause Delay:" = "일시정지 지연 시간:";
+
+"Max Unpause:" = "최대 재개 지연 시간:";
+
+"Off" = "끄기";
+
+"Version %@" = "버전 %@";
+
+"Error: could not open license file." = "오류: 라이선스 파일을 열 수 없습니다.";
+
+"Output Device" = "출력 장치";
+
+"Alerts, notification sounds, etc. Usually short. Can be played by any app." = "경고음, 알림음 등의 볼륨입니다. 대개 짧으며 어떤 앱에서도 재생될 수 있습니다.";
+
+"More Apps" = "더 많은 앱";
+
+"More options" = "추가 옵션";

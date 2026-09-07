@@ -1,0 +1,65 @@
+"Background Music needs permission to use microphones." = "Background Music benötigt die Berechtigung, Mikrofone zu verwenden.";
+
+"It uses a virtual microphone to access your system's audio.\n\nYou can grant the permission by going to System Preferences > Security and Privacy > Microphone and checking the box for Background Music." = "Es verwendet ein virtuelles Mikrofon, um auf die Systemaudiodaten zuzugreifen.\n\nDu kannst die Berechtigung erteilen, indem du zu Systemeinstellungen > Sicherheit und Datenschutz > Mikrofon gehst und das Kästchen für Background Music aktivierst.";
+
+"Could not set the Background Music device as yourdefault audio device." = "Das Background Music-Gerät konnte nicht als Standard-Audiogerät festgelegt werden.";
+
+"You might be able to change it yourself." = "Möglicherweise kannst du es selbst ändern.";
+
+"Failed to reset your system's audio output device." = "Das Audioausgabegerät deines Systems konnte nicht zurückgesetzt werden.";
+
+"You'll have to change it yourself to get audio working again." = "Du musst es selbst ändern, damit die Audiowiedergabe wieder funktioniert.";
+
+"Could not find the Background Music virtual audio device." = "Das virtuelle Audiogerät von Background Music konnte nicht gefunden werden.";
+
+"Make sure you've installed Background Music Device.driver to /Library/Audio/Plug-Ins/HAL and restarted coreaudiod (e.g. \"sudo killall coreaudiod\")." = "Stelle sicher, dass du Background Music Device.driver in /Library/Audio/Plug-Ins/HAL installiert und coreaudiod neu gestartet hast (z. B. mit „sudo killall coreaudiod“).";
+
+"Failed to set the output device." = "Das Ausgabegerät konnte nicht festgelegt werden.";
+
+"Could not start the device '%@'. (Error: %ld)" = "Das Gerät „%@“ konnte nicht gestartet werden. (Fehler: %ld)";
+
+"Could not find an audio output device." = "Es konnte kein Audioausgabegerät gefunden werden.";
+
+"If you do have one installed, this is probably a bug. Sorry about that. Feel free to file an issue on GitHub." = "Falls doch eines installiert ist, handelt es sich wahrscheinlich um einen Fehler. Das tut uns leid. Melde das Problem gerne auf GitHub.";
+
+"Error connecting to BGMXPCHelper." = "Fehler beim Verbinden mit BGMXPCHelper.";
+
+"Make sure you have BGMXPCHelper installed. There are instructions in the README.md file.\n\nBackground Music might still work, but it won't work as well as it could." = "Stelle sicher, dass BGMXPCHelper installiert ist. Anleitungen findest du in der Datei README.md.\n\nBackground Music funktioniert eventuell trotzdem, aber nicht so gut, wie es könnte.";
+
+"\n\nDetails:\n" = "\n\nDetails:\n";
+
+"OK" = "OK";
+
+"Open Sound in System Preferences" = "Ton in Systemeinstellungen öffnen";
+
+"Unmute" = "Stummschaltung aufheben";
+
+"Mute" = "Stummschalten";
+
+"Auto-pause %@" = "%@ automatisch pausieren";
+
+"%@ doesn't appear to be running." = "%@ scheint nicht ausgeführt zu werden.";
+
+"Failed to set %@ as the output device." = "%@ konnte nicht als Ausgabegerät festgelegt werden.";
+
+"This is probably a bug. Feel free to report it." = "Das ist wahrscheinlich ein Fehler. Melde ihn gerne.";
+
+"Auto-pause Delays" = "Verzögerungen für automatische Pause";
+
+"Pause Delay:" = "Pausenverzögerung:";
+
+"Max Unpause:" = "Max. Wiedergabeverzögerung:";
+
+"Off" = "Aus";
+
+"Version %@" = "Version %@";
+
+"Error: could not open license file." = "Fehler: Lizenzdatei konnte nicht geöffnet werden.";
+
+"Output Device" = "Ausgabegerät";
+
+"Alerts, notification sounds, etc. Usually short. Can be played by any app." = "Lautstärke von Warntönen, Benachrichtigungstönen usw. Meist kurz. Kann von jeder App abgespielt werden.";
+
+"More Apps" = "Weitere Apps";
+
+"More options" = "Weitere Optionen";

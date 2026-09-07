@@ -1,0 +1,3 @@
+"NSAppleEventsUsageDescription" = "Background Music a besoin de contrôler votre lecteur de musique pour pouvoir le mettre automatiquement en pause.";
+
+"NSMicrophoneUsageDescription" = "Le périphérique audio virtuel « Background Music » envoie l'audio système à Background Music (l'application) via un périphérique d'entrée virtuel.";

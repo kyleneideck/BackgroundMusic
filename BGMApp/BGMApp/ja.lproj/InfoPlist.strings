@@ -1,0 +1,3 @@
+"NSAppleEventsUsageDescription" = "音楽の自動一時停止のために、Background Music は音楽プレーヤーアプリを制御する必要があります。";
+
+"NSMicrophoneUsageDescription" = "仮想オーディオデバイス「Background Music」は、仮想入力デバイスを通じてシステム音声を Background Music（アプリ）に送信します。";

@@ -1,0 +1,65 @@
+"Background Music needs permission to use microphones." = "Background Music необходимо разрешение на использование микрофонов.";
+
+"It uses a virtual microphone to access your system's audio.\n\nYou can grant the permission by going to System Preferences > Security and Privacy > Microphone and checking the box for Background Music." = "Для доступа к системному звуку используется виртуальный микрофон.\n\nВы можете предоставить разрешение в Системных настройках > Защита и безопасность > Микрофон, отметив флажок для Background Music.";
+
+"Could not set the Background Music device as yourdefault audio device." = "Не удалось назначить устройство Background Music устройством вывода звука по умолчанию.";
+
+"You might be able to change it yourself." = "Возможно, вы сможете изменить это самостоятельно.";
+
+"Failed to reset your system's audio output device." = "Не удалось сбросить устройство вывода звука системы.";
+
+"You'll have to change it yourself to get audio working again." = "Вам нужно будет изменить это самостоятельно, чтобы звук снова заработал.";
+
+"Could not find the Background Music virtual audio device." = "Не удалось найти виртуальное звуковое устройство Background Music.";
+
+"Make sure you've installed Background Music Device.driver to /Library/Audio/Plug-Ins/HAL and restarted coreaudiod (e.g. \"sudo killall coreaudiod\")." = "Убедитесь, что Background Music Device.driver установлен в /Library/Audio/Plug-Ins/HAL и что coreaudiod был перезапущен (например, командой «sudo killall coreaudiod»).";
+
+"Failed to set the output device." = "Не удалось задать устройство вывода.";
+
+"Could not start the device '%@'. (Error: %ld)" = "Не удалось запустить устройство «%@». (Ошибка: %ld)";
+
+"Could not find an audio output device." = "Не удалось найти устройство вывода звука.";
+
+"If you do have one installed, this is probably a bug. Sorry about that. Feel free to file an issue on GitHub." = "Если устройство действительно установлено, это, вероятно, ошибка в программе. Приносим извинения. Сообщите о проблеме на GitHub.";
+
+"Error connecting to BGMXPCHelper." = "Ошибка подключения к BGMXPCHelper.";
+
+"Make sure you have BGMXPCHelper installed. There are instructions in the README.md file.\n\nBackground Music might still work, but it won't work as well as it could." = "Убедитесь, что BGMXPCHelper установлен. Инструкции приведены в файле README.md.\n\nBackground Music может продолжить работу, но не так хорошо, как мог бы.";
+
+"\n\nDetails:\n" = "\n\nПодробности:\n";
+
+"OK" = "ОК";
+
+"Open Sound in System Preferences" = "Открыть «Звук» в Системных настройках";
+
+"Unmute" = "Включить звук";
+
+"Mute" = "Отключить звук";
+
+"Auto-pause %@" = "Автопауза %@";
+
+"%@ doesn't appear to be running." = "Похоже, %@ не запущен.";
+
+"Failed to set %@ as the output device." = "Не удалось назначить %@ устройством вывода.";
+
+"This is probably a bug. Feel free to report it." = "Это, вероятно, ошибка в программе. Сообщите о ней, пожалуйста.";
+
+"Auto-pause Delays" = "Задержки автопаузы";
+
+"Pause Delay:" = "Задержка паузы:";
+
+"Max Unpause:" = "Макс. задержка возобновления:";
+
+"Off" = "Выкл.";
+
+"Version %@" = "Версия %@";
+
+"Error: could not open license file." = "Ошибка: не удалось открыть файл лицензии.";
+
+"Output Device" = "Устройство вывода";
+
+"Alerts, notification sounds, etc. Usually short. Can be played by any app." = "Громкость предупреждений, звуков уведомлений и т. д. Обычно короткие. Может воспроизводиться любым приложением.";
+
+"More Apps" = "Другие приложения";
+
+"More options" = "Дополнительные параметры";

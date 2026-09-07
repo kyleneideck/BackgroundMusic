@@ -1,0 +1,113 @@
+/* Class = "NSTextField"; ibShadowedToolTip = "Pan"; ObjectID = "1lZ-hX-6Kl"; */
+"1lZ-hX-6Kl.ibShadowedToolTip" = "Bilanciamento";
+
+/* Class = "NSMenuItem"; title = "Auto-pause"; ObjectID = "2aT-t7-HGW"; */
+"2aT-t7-HGW.title" = "Pausa automatica";
+
+/* Class = "NSSlider"; ibExternalAccessibilityDescription = "Pan"; ObjectID = "2mh-uO-kOV"; */
+"2mh-uO-kOV.ibExternalAccessibilityDescription" = "Bilanciamento";
+
+/* Class = "NSSlider"; ibShadowedToolTip = "Pan"; ObjectID = "2mh-uO-kOV"; */
+"2mh-uO-kOV.ibShadowedToolTip" = "Bilanciamento";
+
+/* Class = "NSTextFieldCell"; title = "Volume"; ObjectID = "60O-ju-B5C"; */
+"60O-ju-B5C.title" = "Volume";
+
+/* Class = "NSMenu"; ibExternalAccessibilityDescription = "Background Music Main Menu"; ObjectID = "8AN-nh-rEe"; */
+"8AN-nh-rEe.ibExternalAccessibilityDescription" = "Menu principale di Background Music";
+
+/* Class = "NSMenuItem"; title = "Volumes"; ObjectID = "8PP-wA-Pae"; */
+"8PP-wA-Pae.title" = "Volumi";
+
+/* Class = "NSSlider"; ibExternalAccessibilityDescription = "Output Volume"; ObjectID = "9Ru-Sc-dqC"; */
+"9Ru-Sc-dqC.ibExternalAccessibilityDescription" = "Volume di uscita";
+
+/* Class = "NSSlider"; ibExternalAccessibilityHelp = "Sets the volume of your audio output device."; ObjectID = "9Ru-Sc-dqC"; */
+"9Ru-Sc-dqC.ibExternalAccessibilityHelp" = "Imposta il volume del dispositivo di uscita audio.";
+
+/* Class = "NSMenuItem"; title = "Background Music Logo"; ObjectID = "9VF-qy-6fh"; */
+"9VF-qy-6fh.title" = "Logo di Background Music";
+
+/* Class = "NSTextField"; ibShadowedToolTip = "Pan"; ObjectID = "9jc-9i-jw2"; */
+"9jc-9i-jw2.ibShadowedToolTip" = "Bilanciamento";
+
+/* Class = "NSTextFieldCell"; title = "System Sounds"; ObjectID = "ATK-L8-s8z"; */
+"ATK-L8-s8z.title" = "Suoni di sistema";
+
+/* Class = "NSTextFieldCell"; title = "// The version and copyright strings are replaced with // the values from Info.plist in the setup code. These // values are just placeholders/fallbacks. // // The icon image was being drawn with about 50%\n// opacity and I couldn't figure out why. The only  // solution I found was to layer two copies of the icon // on top of each other and add a black shadow (with no // offset) to both. "; ObjectID = "Ay8-8n-FHi"; */
+"Ay8-8n-FHi.title" = "// The version and copyright strings are replaced with // the values from Info.plist in the setup code. These // values are just placeholders/fallbacks. // // The icon image was being drawn with about 50%\n// opacity and I couldn't figure out why. The only  // solution I found was to layer two copies of the icon // on top of each other and add a black shadow (with no // offset) to both. ";
+
+/* Class = "NSMenuItem"; title = "Volume Icon"; ObjectID = "B47-O2-wd0"; */
+"B47-O2-wd0.title" = "Icona del volume";
+
+/* Class = "NSMenuItem"; title = "Preferences"; ObjectID = "BHb-uh-9Zm"; */
+"BHb-uh-9Zm.title" = "Preferenze";
+
+/* Class = "NSMenuItem"; title = "Status Bar Icon"; ObjectID = "CmD-ot-1wE"; */
+"CmD-ot-1wE.title" = "Icona della barra dei menu";
+
+/* Class = "NSTextFieldCell"; title = "Background Music"; ObjectID = "Dw2-nu-eBQ"; */
+"Dw2-nu-eBQ.title" = "Background Music";
+
+/* Class = "NSTextFieldCell"; title = "Licensed under GPL v2 or any later version."; ObjectID = "ETh-En-bzX"; */
+"ETh-En-bzX.title" = "Concesso in licenza secondo GPL v2 o versione successiva.";
+
+/* Class = "NSTextFieldCell"; title = "Version 0.5.0"; ObjectID = "FDH-7l-wFf"; */
+"FDH-7l-wFf.title" = "Versione 0.5.0";
+
+/* Class = "NSSlider"; ibExternalAccessibilityDescription = "Volume"; ObjectID = "I1l-Ci-4md"; */
+"I1l-Ci-4md.ibExternalAccessibilityDescription" = "Volume";
+
+/* Class = "NSButtonCell"; title = "⌃"; ObjectID = "IXo-C7-3uE"; */
+"IXo-C7-3uE.title" = "⌃";
+
+/* Class = "NSMenu"; title = "Preferences"; ObjectID = "Img-Dh-cpU"; */
+"Img-Dh-cpU.title" = "Preferenze";
+
+/* Class = "NSMenuItem"; title = "Quit Background Music"; ObjectID = "Nj2-gJ-DhW"; */
+"Nj2-gJ-DhW.title" = "Esci da Background Music";
+
+/* Class = "NSMenuItem"; title = "About Background Music"; ObjectID = "R45-Vo-Eto"; */
+"R45-Vo-Eto.title" = "Informazioni su Background Music";
+
+/* Class = "NSTextFieldCell"; title = "Background Music contributors"; ObjectID = "UC2-MX-fML"; */
+"UC2-MX-fML.title" = "Collaboratori di Background Music";
+
+/* Class = "NSTextFieldCell"; title = "https://github.com/kyleneideck/BackgroundMusic"; ObjectID = "VOb-5X-o3R"; */
+"VOb-5X-o3R.title" = "https://github.com/kyleneideck/BackgroundMusic";
+
+/* Class = "NSTextFieldCell"; title = "App name here"; ObjectID = "ZHF-ZW-Oqg"; */
+"ZHF-ZW-Oqg.title" = "Nome dell'app qui";
+
+/* Class = "NSMenuItem"; title = "Output Device"; ObjectID = "chk-9C-pab"; */
+"chk-9C-pab.title" = "Dispositivo di uscita";
+
+/* Class = "NSTextFieldCell"; title = "Copyright © 2016-2026"; ObjectID = "ctF-95-uVu"; */
+"ctF-95-uVu.title" = "Copyright © 2016-2026";
+
+/* Class = "NSSlider"; ibExternalAccessibilityDescription = "System Sounds Volume"; ObjectID = "gyd-WV-2ju"; */
+"gyd-WV-2ju.ibExternalAccessibilityDescription" = "Volume dei suoni di sistema";
+
+/* Class = "NSSlider"; ibExternalAccessibilityHelp = "Volume of alerts, notification sounds, etc. Usually short. Can be played by any app."; ObjectID = "gyd-WV-2ju"; */
+"gyd-WV-2ju.ibExternalAccessibilityHelp" = "Volume degli avvisi, suoni di notifica, ecc. Solitamente brevi. Possono essere riprodotti da qualsiasi app.";
+
+/* Class = "NSTextFieldCell"; title = "L"; ObjectID = "hgE-7A-bez"; */
+"hgE-7A-bez.title" = "L";
+
+/* Class = "NSTextFieldCell"; title = "The AirPlay Logo is a trademark of Apple Inc."; ObjectID = "lx7-k3-q16"; */
+"lx7-k3-q16.title" = "Il logo AirPlay è un marchio di Apple Inc.";
+
+/* Class = "NSTextFieldCell"; title = "R"; ObjectID = "lzr-NO-0Na"; */
+"lzr-NO-0Na.title" = "R";
+
+/* Class = "NSMenuItem"; ibExternalAccessibilityHelp = "Enable to automatically pause your selected music player when a different app starts playing audio."; ObjectID = "nHv-T8-1nb"; */
+"nHv-T8-1nb.ibExternalAccessibilityHelp" = "Attiva per mettere automaticamente in pausa il lettore musicale selezionato quando un'altra app inizia a riprodurre audio.";
+
+/* Class = "NSMenuItem"; title = "Auto-pause Music"; ObjectID = "nHv-T8-1nb"; */
+"nHv-T8-1nb.title" = "Pausa automatica della musica";
+
+/* Class = "NSMenuItem"; ibShadowedToolTip = "Log detailed messages to help diagnose bugs. Search for \"bgm\" or \"background music\" in Console.app."; ObjectID = "sc9-vO-KyP"; */
+"sc9-vO-KyP.ibShadowedToolTip" = "Registra messaggi dettagliati per aiutare a diagnosticare i bug. Cerca \"bgm\" o \"background music\" in Console.app.";
+
+/* Class = "NSMenuItem"; title = "Debug Logging"; ObjectID = "sc9-vO-KyP"; */
+"sc9-vO-KyP.title" = "Log di debug";

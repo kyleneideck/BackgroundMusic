@@ -1,0 +1,3 @@
+"NSAppleEventsUsageDescription" = "Background Music необходим доступ к управлению вашим музыкальным плеером, чтобы автоматически ставить его на паузу.";
+
+"NSMicrophoneUsageDescription" = "Виртуальное аудиоустройство «Background Music» передаёт системный звук в приложение Background Music через виртуальное устройство ввода.";

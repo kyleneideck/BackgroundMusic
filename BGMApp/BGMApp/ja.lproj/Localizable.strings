@@ -1,0 +1,65 @@
+"Background Music needs permission to use microphones." = "Background Music はマイクを使用する権限が必要です。";
+
+"It uses a virtual microphone to access your system's audio.\n\nYou can grant the permission by going to System Preferences > Security and Privacy > Microphone and checking the box for Background Music." = "システムの音声にアクセスするために仮想マイクを使用します。\n\nシステム環境設定 > セキュリティとプライバシー > マイク で Background Music にチェックを入れることで、権限を許可できます。";
+
+"Could not set the Background Music device as yourdefault audio device." = "Background Music デバイスをデフォルトのオーディオ出力デバイスに設定できませんでした。";
+
+"You might be able to change it yourself." = "ご自身で変更できる場合があります。";
+
+"Failed to reset your system's audio output device." = "システムのオーディオ出力デバイスをリセットできませんでした。";
+
+"You'll have to change it yourself to get audio working again." = "音声を再び動作させるには、ご自身で変更する必要があります。";
+
+"Could not find the Background Music virtual audio device." = "Background Music の仮想オーディオデバイスが見つかりませんでした。";
+
+"Make sure you've installed Background Music Device.driver to /Library/Audio/Plug-Ins/HAL and restarted coreaudiod (e.g. \"sudo killall coreaudiod\")." = "Background Music Device.driver が /Library/Audio/Plug-Ins/HAL にインストールされていること、また coreaudiod を再起動したことを確認してください（例：「sudo killall coreaudiod」）。";
+
+"Failed to set the output device." = "出力デバイスを設定できませんでした。";
+
+"Could not start the device '%@'. (Error: %ld)" = "デバイス「%@」を起動できませんでした。（エラー: %ld）";
+
+"Could not find an audio output device." = "オーディオ出力デバイスが見つかりませんでした。";
+
+"If you do have one installed, this is probably a bug. Sorry about that. Feel free to file an issue on GitHub." = "実際にインストールされている場合、これはおそらく不具合です。申し訳ありません。GitHub で issue を報告してください。";
+
+"Error connecting to BGMXPCHelper." = "BGMXPCHelper への接続中にエラーが発生しました。";
+
+"Make sure you have BGMXPCHelper installed. There are instructions in the README.md file.\n\nBackground Music might still work, but it won't work as well as it could." = "BGMXPCHelper がインストールされていることを確認してください。手順は README.md ファイルに記載されています。\n\nBackground Music は動作する可能性がありますが、本来の性能は発揮できません。";
+
+"\n\nDetails:\n" = "\n\n詳細:\n";
+
+"OK" = "OK";
+
+"Open Sound in System Preferences" = "システム環境設定の「サウンド」を開く";
+
+"Unmute" = "ミュート解除";
+
+"Mute" = "ミュート";
+
+"Auto-pause %@" = "%@ を自動一時停止";
+
+"%@ doesn't appear to be running." = "%@ は実行されていないようです。";
+
+"Failed to set %@ as the output device." = "%@ を出力デバイスに設定できませんでした。";
+
+"This is probably a bug. Feel free to report it." = "これはおそらく不具合です。ご報告いただけると助かります。";
+
+"Auto-pause Delays" = "自動一時停止の遅延";
+
+"Pause Delay:" = "一時停止までの遅延:";
+
+"Max Unpause:" = "再開までの最大遅延:";
+
+"Off" = "オフ";
+
+"Version %@" = "バージョン %@";
+
+"Error: could not open license file." = "エラー：ライセンスファイルを開けませんでした。";
+
+"Output Device" = "出力デバイス";
+
+"Alerts, notification sounds, etc. Usually short. Can be played by any app." = "警告音や通知音などの音量です。通常は短く、どのアプリからでも再生できます。";
+
+"More Apps" = "その他のアプリ";
+
+"More options" = "その他のオプション";
