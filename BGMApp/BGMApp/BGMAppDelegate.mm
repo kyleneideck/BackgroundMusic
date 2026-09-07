@@ -183,6 +183,11 @@ static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
     musicPlayers = [[BGMMusicPlayers alloc] initWithAudioDevices:audioDevices
                                                     userDefaults:userDefaults];
 
+    // Now that musicPlayers exists, let preferredOutputDevices use it to pause the selected music
+    // player when its output device is disconnected. See the comment on this property in
+    // BGMPreferredOutputDevices.h.
+    preferredOutputDevices.musicPlayers = musicPlayers;
+
     autoPauseMusic = [[BGMAutoPauseMusic alloc] initWithAudioDevices:audioDevices
                                                         musicPlayers:musicPlayers
                                                         userDefaults:userDefaults];
