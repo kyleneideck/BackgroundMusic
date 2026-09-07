@@ -380,8 +380,8 @@ static NSInteger const kOutputDeviceMenuItemTag = 5;
             NSAlert* alert = [NSAlert new];
             
             alert.messageText =
-                [NSString stringWithFormat:@"Failed to set %@ as the output device.", deviceName];
-            alert.informativeText = @"This is probably a bug. Feel free to report it.";
+                [NSString stringWithFormat:NSLocalizedString(@"Failed to set %@ as the output device.", ""), deviceName];
+            alert.informativeText = NSLocalizedString(@"This is probably a bug. Feel free to report it.", "");
             
             [alert runModal];
         });

@@ -1,0 +1,3 @@
+"NSAppleEventsUsageDescription" = "如果你希望 Background Music 自动暂停你的音乐播放器，它需要控制该音乐播放器 App。";
+
+"NSMicrophoneUsageDescription" = "“Background Music”虚拟音频设备会通过一个虚拟输入设备，把系统音频发送给 Background Music（该 App）。";

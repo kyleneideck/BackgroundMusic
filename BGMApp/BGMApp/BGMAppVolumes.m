@@ -461,13 +461,13 @@ static NSString* const kMoreAppsMenuTitle          = @"More Apps";
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wpartial-availability"
         NSString* symbol = muted ? @"speaker.slash.fill" : @"speaker.wave.2.fill";
-        NSString* description = muted ? @"Unmute" : @"Mute";
+        NSString* description = muted ? NSLocalizedString(@"Unmute", "") : NSLocalizedString(@"Mute", "");
         self.image = [NSImage imageWithSystemSymbolName:symbol accessibilityDescription:description];
 #pragma clang diagnostic pop
         self.imagePosition = NSImageOnly;
         self.title = @"";
     } else {
-        self.title = muted ? @"Unmute" : @"Mute";
+        self.title = muted ? NSLocalizedString(@"Unmute", "") : NSLocalizedString(@"Mute", "");
     }
 }
 

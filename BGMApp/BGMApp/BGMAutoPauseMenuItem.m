@@ -123,7 +123,7 @@ static SInt64 const kMenuItemUpdateWaitTime = 1;
 - (void) updateMenuItemTitleWithHighlight:(BOOL)highlight {
     // Set the title of the Auto-pause Music menu item, including the name of the selected music player.
     NSString* musicPlayerName = musicPlayers.selectedMusicPlayer.name;
-    menuItem.title = [NSString stringWithFormat:kMenuItemTitleFormat, musicPlayerName];
+    menuItem.title = [NSString stringWithFormat:NSLocalizedString(kMenuItemTitleFormat, ""), musicPlayerName];
     
     // Make the Auto-pause Music menu item appear disabled if the application is not running.
     //
@@ -155,7 +155,7 @@ static SInt64 const kMenuItemUpdateWaitTime = 1;
                                                                                   attributes:attributes];
         menuItem.attributedTitle = pseudoDisabledTitle;
 
-        menuItem.toolTip = [NSString stringWithFormat:kMenuItemDisabledToolTipFormat, musicPlayerName];
+        menuItem.toolTip = [NSString stringWithFormat:NSLocalizedString(kMenuItemDisabledToolTipFormat, ""), musicPlayerName];
     }
 }
 

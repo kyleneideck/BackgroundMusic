@@ -1,0 +1,113 @@
+/* Class = "NSTextField"; ibShadowedToolTip = "Pan"; ObjectID = "1lZ-hX-6Kl"; */
+"1lZ-hX-6Kl.ibShadowedToolTip" = "声像";
+
+/* Class = "NSMenuItem"; title = "Auto-pause"; ObjectID = "2aT-t7-HGW"; */
+"2aT-t7-HGW.title" = "自动暂停";
+
+/* Class = "NSSlider"; ibExternalAccessibilityDescription = "Pan"; ObjectID = "2mh-uO-kOV"; */
+"2mh-uO-kOV.ibExternalAccessibilityDescription" = "声像";
+
+/* Class = "NSSlider"; ibShadowedToolTip = "Pan"; ObjectID = "2mh-uO-kOV"; */
+"2mh-uO-kOV.ibShadowedToolTip" = "声像";
+
+/* Class = "NSTextFieldCell"; title = "Volume"; ObjectID = "60O-ju-B5C"; */
+"60O-ju-B5C.title" = "音量";
+
+/* Class = "NSMenu"; ibExternalAccessibilityDescription = "Background Music Main Menu"; ObjectID = "8AN-nh-rEe"; */
+"8AN-nh-rEe.ibExternalAccessibilityDescription" = "Background Music 主菜单";
+
+/* Class = "NSMenuItem"; title = "Volumes"; ObjectID = "8PP-wA-Pae"; */
+"8PP-wA-Pae.title" = "应用音量";
+
+/* Class = "NSSlider"; ibExternalAccessibilityDescription = "Output Volume"; ObjectID = "9Ru-Sc-dqC"; */
+"9Ru-Sc-dqC.ibExternalAccessibilityDescription" = "输出音量";
+
+/* Class = "NSSlider"; ibExternalAccessibilityHelp = "Sets the volume of your audio output device."; ObjectID = "9Ru-Sc-dqC"; */
+"9Ru-Sc-dqC.ibExternalAccessibilityHelp" = "设置音频输出设备的音量。";
+
+/* Class = "NSMenuItem"; title = "Background Music Logo"; ObjectID = "9VF-qy-6fh"; */
+"9VF-qy-6fh.title" = "Background Music 图标";
+
+/* Class = "NSTextField"; ibShadowedToolTip = "Pan"; ObjectID = "9jc-9i-jw2"; */
+"9jc-9i-jw2.ibShadowedToolTip" = "声像";
+
+/* Class = "NSTextFieldCell"; title = "System Sounds"; ObjectID = "ATK-L8-s8z"; */
+"ATK-L8-s8z.title" = "系统声音";
+
+/* Class = "NSTextFieldCell"; title = "// The version and copyright strings are replaced with // the values from Info.plist in the setup code. These // values are just placeholders/fallbacks. // // The icon image was being drawn with about 50%\n// opacity and I couldn't figure out why. The only  // solution I found was to layer two copies of the icon // on top of each other and add a black shadow (with no // offset) to both. "; ObjectID = "Ay8-8n-FHi"; */
+"Ay8-8n-FHi.title" = "// The version and copyright strings are replaced with // the values from Info.plist in the setup code. These // values are just placeholders/fallbacks. // // The icon image was being drawn with about 50%\n// opacity and I couldn't figure out why. The only  // solution I found was to layer two copies of the icon // on top of each other and add a black shadow (with no // offset) to both. ";
+
+/* Class = "NSMenuItem"; title = "Volume Icon"; ObjectID = "B47-O2-wd0"; */
+"B47-O2-wd0.title" = "音量图标";
+
+/* Class = "NSMenuItem"; title = "Preferences"; ObjectID = "BHb-uh-9Zm"; */
+"BHb-uh-9Zm.title" = "偏好设置";
+
+/* Class = "NSMenuItem"; title = "Status Bar Icon"; ObjectID = "CmD-ot-1wE"; */
+"CmD-ot-1wE.title" = "状态栏图标";
+
+/* Class = "NSTextFieldCell"; title = "Background Music"; ObjectID = "Dw2-nu-eBQ"; */
+"Dw2-nu-eBQ.title" = "Background Music";
+
+/* Class = "NSTextFieldCell"; title = "Licensed under GPL v2 or any later version."; ObjectID = "ETh-En-bzX"; */
+"ETh-En-bzX.title" = "基于 GPL v2 或更高版本授权。";
+
+/* Class = "NSTextFieldCell"; title = "Version 0.5.0"; ObjectID = "FDH-7l-wFf"; */
+"FDH-7l-wFf.title" = "版本 0.5.0";
+
+/* Class = "NSSlider"; ibExternalAccessibilityDescription = "Volume"; ObjectID = "I1l-Ci-4md"; */
+"I1l-Ci-4md.ibExternalAccessibilityDescription" = "音量";
+
+/* Class = "NSButtonCell"; title = "⌃"; ObjectID = "IXo-C7-3uE"; */
+"IXo-C7-3uE.title" = "⌃";
+
+/* Class = "NSMenu"; title = "Preferences"; ObjectID = "Img-Dh-cpU"; */
+"Img-Dh-cpU.title" = "偏好设置";
+
+/* Class = "NSMenuItem"; title = "Quit Background Music"; ObjectID = "Nj2-gJ-DhW"; */
+"Nj2-gJ-DhW.title" = "退出 Background Music";
+
+/* Class = "NSMenuItem"; title = "About Background Music"; ObjectID = "R45-Vo-Eto"; */
+"R45-Vo-Eto.title" = "关于 Background Music";
+
+/* Class = "NSTextFieldCell"; title = "Background Music contributors"; ObjectID = "UC2-MX-fML"; */
+"UC2-MX-fML.title" = "Background Music 贡献者";
+
+/* Class = "NSTextFieldCell"; title = "https://github.com/kyleneideck/BackgroundMusic"; ObjectID = "VOb-5X-o3R"; */
+"VOb-5X-o3R.title" = "https://github.com/kyleneideck/BackgroundMusic";
+
+/* Class = "NSTextFieldCell"; title = "App name here"; ObjectID = "ZHF-ZW-Oqg"; */
+"ZHF-ZW-Oqg.title" = "应用程序名称";
+
+/* Class = "NSMenuItem"; title = "Output Device"; ObjectID = "chk-9C-pab"; */
+"chk-9C-pab.title" = "输出设备";
+
+/* Class = "NSTextFieldCell"; title = "Copyright © 2016-2026"; ObjectID = "ctF-95-uVu"; */
+"ctF-95-uVu.title" = "版权所有 © 2016-2026";
+
+/* Class = "NSSlider"; ibExternalAccessibilityDescription = "System Sounds Volume"; ObjectID = "gyd-WV-2ju"; */
+"gyd-WV-2ju.ibExternalAccessibilityDescription" = "系统声音音量";
+
+/* Class = "NSSlider"; ibExternalAccessibilityHelp = "Volume of alerts, notification sounds, etc. Usually short. Can be played by any app."; ObjectID = "gyd-WV-2ju"; */
+"gyd-WV-2ju.ibExternalAccessibilityHelp" = "提示音、通知声等的音量，通常很短，任何应用都可以播放。";
+
+/* Class = "NSTextFieldCell"; title = "L"; ObjectID = "hgE-7A-bez"; */
+"hgE-7A-bez.title" = "L";
+
+/* Class = "NSTextFieldCell"; title = "The AirPlay Logo is a trademark of Apple Inc."; ObjectID = "lx7-k3-q16"; */
+"lx7-k3-q16.title" = "AirPlay 标志是 Apple Inc. 的商标。";
+
+/* Class = "NSTextFieldCell"; title = "R"; ObjectID = "lzr-NO-0Na"; */
+"lzr-NO-0Na.title" = "R";
+
+/* Class = "NSMenuItem"; ibExternalAccessibilityHelp = "Enable to automatically pause your selected music player when a different app starts playing audio."; ObjectID = "nHv-T8-1nb"; */
+"nHv-T8-1nb.ibExternalAccessibilityHelp" = "开启后，当其他应用开始播放音频时，会自动暂停你选择的音乐播放器。";
+
+/* Class = "NSMenuItem"; title = "Auto-pause Music"; ObjectID = "nHv-T8-1nb"; */
+"nHv-T8-1nb.title" = "自动暂停音乐";
+
+/* Class = "NSMenuItem"; ibShadowedToolTip = "Log detailed messages to help diagnose bugs. Search for \"bgm\" or \"background music\" in Console.app."; ObjectID = "sc9-vO-KyP"; */
+"sc9-vO-KyP.ibShadowedToolTip" = "记录详细日志以便排查问题。可在\"控制台\"App 中搜索 \"bgm\" 或 \"background music\" 查看。";
+
+/* Class = "NSMenuItem"; title = "Debug Logging"; ObjectID = "sc9-vO-KyP"; */
+"sc9-vO-KyP.title" = "调试日志";
