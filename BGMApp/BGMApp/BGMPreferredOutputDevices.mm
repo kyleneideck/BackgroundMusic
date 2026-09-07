@@ -54,6 +54,10 @@ NSString* const kAudioSystemSettingsPlist =
     // index 0. This list is derived from several sources.
     NSArray<NSString*>* _preferredDeviceUIDs;
 
+    // The AudioObjectIDs of the devices that were connected the last time we checked. Used to work
+    // out which devices, if any, were just connected -- see findNewlyConnectedOutputDevice:.
+    NSSet<NSNumber*>* _lastConnectedDeviceIDs;
+
     // Called when a device is connected or disconnected.
     AudioObjectPropertyListenerBlock _deviceListListener;
 }
@@ -65,6 +69,7 @@ NSString* const kAudioSystemSettingsPlist =
         _devices = devices;
         _userDefaults = userDefaults;
         _preferredDeviceUIDs = [self readPreferredDevices];
+        _lastConnectedDeviceIDs = [self currentConnectedDeviceIDs];
 
         DebugMsg("BGMPreferredOutputDevices::initWithDevices: Preferred devices: %s",
                  _preferredDeviceUIDs.debugDescription.UTF8String);
@@ -258,10 +263,27 @@ NSString* const kAudioSystemSettingsPlist =
     @try {
         [_stateLock lock];
 
-        // Decide which device should be the output device now. If a device has been connected and
-        // it's preferred over the current output device, we'll change to that device. If the
-        // current output device has been removed, we'll change to the next most-preferred device.
-        AudioObjectID preferredDevice = [self findPreferredDevice];
+        NSSet<NSNumber*>* currentDeviceIDs = [self currentConnectedDeviceIDs];
+
+        // Check whether an external device (e.g. USB or Bluetooth headphones) was just connected.
+        // We check for this separately from findPreferredDevice's usual logic because the
+        // preferred-devices list that logic uses (see readPreferredDevices) is derived from data
+        // CoreAudio only updates when a device actually becomes the systemwide default device --
+        // which mostly can't happen while BGMDevice is set as the default, since BGMApp keeps it
+        // that way. So that data never finds out about newly-connected devices on its own, which
+        // means without this, BGMApp wouldn't switch to a newly-connected device until the user
+        // picked it from the output device menu themselves at least once.
+        AudioObjectID newlyConnectedDevice = [self findNewlyConnectedOutputDevice:currentDeviceIDs];
+
+        _lastConnectedDeviceIDs = currentDeviceIDs;
+
+        // Decide which device should be the output device now. If an external device has just been
+        // connected, prefer switching to it, the way macOS would if BGMApp wasn't running. Otherwise,
+        // if a device has been connected and it's preferred over the current output device, we'll
+        // change to that device. If the current output device has been removed, we'll change to the
+        // next most-preferred device.
+        AudioObjectID preferredDevice = (newlyConnectedDevice != kAudioObjectUnknown) ?
+            newlyConnectedDevice : [self findPreferredDevice];
 
         if (preferredDevice == kAudioObjectUnknown) {
             LogWarning("BGMPreferredOutputDevices::connectedDeviceListChanged: "
@@ -281,11 +303,83 @@ NSString* const kAudioSystemSettingsPlist =
                 LogError("BGMPreferredOutputDevices::connectedDeviceListChanged: "
                          "Failed to change to preferred device. Error: %s",
                          error.debugDescription.UTF8String);
+            } else if (newlyConnectedDevice != kAudioObjectUnknown) {
+                // Remember this device as preferred so we switch straight back to it next time,
+                // even if CoreAudio's own preferred-devices data still doesn't reflect it.
+                [self userChangedOutputDeviceTo:preferredDevice];
             }
         }
     } @finally {
         [_stateLock unlock];
     }
+}
+
+// Returns the current set of connected devices' AudioObjectIDs, boxed as NSNumbers.
+- (NSSet<NSNumber*>*) currentConnectedDeviceIDs {
+    CAHALAudioSystemObject audioSystem;
+    UInt32 numDevices = audioSystem.GetNumberAudioDevices();
+
+    CAAutoArrayDelete<AudioObjectID> devices(numDevices);
+    audioSystem.GetAudioDevices(numDevices, devices);
+
+    NSMutableSet<NSNumber*>* deviceIDs = [NSMutableSet setWithCapacity:numDevices];
+
+    for (UInt32 i = 0; i < numDevices; i++) {
+        [deviceIDs addObject:@(devices[i])];
+    }
+
+    return deviceIDs;
+}
+
+// Looks for a device in currentDeviceIDs that wasn't in _lastConnectedDeviceIDs (i.e. that's just
+// been connected), can be used as BGMApp's output device and isn't a virtual/built-in device (see
+// isExternalDeviceWithID:). Returns kAudioObjectUnknown if it doesn't find one.
+//
+// If more than one newly-connected device qualifies, this just returns the first one it finds --
+// that shouldn't usually happen, and we don't have a good way to tell which the user would want
+// anyway.
+- (AudioObjectID) findNewlyConnectedOutputDevice:(NSSet<NSNumber*>*)currentDeviceIDs {
+    AudioObjectID newlyConnectedDevice = kAudioObjectUnknown;
+
+    for (NSNumber* deviceIDNumber in currentDeviceIDs) {
+        if (newlyConnectedDevice != kAudioObjectUnknown) {
+            break;
+        }
+
+        if (![_lastConnectedDeviceIDs containsObject:deviceIDNumber]) {
+            AudioObjectID deviceID = (AudioObjectID)deviceIDNumber.unsignedIntValue;
+
+            BGM_Utils::LogAndSwallowExceptions(BGMDbgArgs, [&] {
+                if (BGMAudioDevice(deviceID).CanBeOutputDeviceInBGMApp() &&
+                    [self isExternalDeviceWithID:deviceID]) {
+                    DebugMsg("BGMPreferredOutputDevices::findNewlyConnectedOutputDevice: "
+                             "Found newly-connected external device %u", deviceID);
+                    newlyConnectedDevice = deviceID;
+                }
+            });
+        }
+    }
+
+    return newlyConnectedDevice;
+}
+
+// Returns false for virtual/aggregate devices, since those are usually created by some other app
+// (or by macOS to represent something like a multi-output setup) rather than by the user plugging
+// something in or pairing a device, so we don't want to treat them the same way as, say, USB or
+// Bluetooth headphones being connected.
+//
+// Note that this deliberately doesn't exclude kAudioDeviceTransportTypeBuiltIn. macOS reports the
+// built-in headphone jack's device (as opposed to the built-in speakers) with that transport type,
+// but, unlike the speakers, it's only present in the device list while headphones are actually
+// plugged into the jack -- so it disappears and reappears from findNewlyConnectedOutputDevice:'s
+// point of view just like a USB or Bluetooth device would, which is exactly the case we want to
+// handle here.
+- (bool) isExternalDeviceWithID:(AudioObjectID)deviceID {
+    UInt32 transportType = BGMAudioDevice(deviceID).GetTransportType();
+
+    return transportType != kAudioDeviceTransportTypeVirtual &&
+           transportType != kAudioDeviceTransportTypeAggregate &&
+           transportType != kAudioDeviceTransportTypeUnknown;
 }
 
 - (AudioObjectID) findPreferredDevice {
