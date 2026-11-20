@@ -217,6 +217,7 @@ Issues](https://github.com/kyleneideck/BackgroundMusic/issues).
 - [Sound Siphon](https://staticz.com/soundsiphon/), [Sound Control](https://staticz.com/soundcontrol/) - System/app audio recording, per-app volumes, system audio equaliser
 - [SoundBunny](https://www.prosofteng.com/soundbunny-mac-volume-control/) - "Control application volume independently."
 - [Boom 2](https://www.globaldelight.com/boom/) - "The Best Volume Booster & Equalizer For Mac"
+- [SoundBar](https://soundbarmac.com) - Per-app volume, mute, equalizer and output device, in the notch or the menu bar
 
 ## License
 
