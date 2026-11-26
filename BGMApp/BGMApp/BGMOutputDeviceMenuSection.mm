@@ -298,13 +298,14 @@ static void BGMSetRowMuteButtonImage(NSButton* __nullable inButton, BOOL inMuted
     
     NSView* rowView = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, kRowWidth, kRowHeight)];
     
-    // The name label. AirPlay devices get an icon before it, like the app volume rows.
+    // The name label. (The left margin matches the app volume rows, whose icons start at x=20.)
+    // AirPlay devices get an icon before it, like the app volume rows.
     //
     // TODO: Test this with real hardware that supports AirPlay. (I don't have any.)
-    CGFloat nameX = 0;
+    CGFloat nameX = 20;
     BGM_Utils::LogAndSwallowExceptions(BGMDbgArgs, [&] {
         if (device.GetTransportType() == kAudioDeviceTransportTypeAirPlay) {
-            NSImageView* iconView = [[NSImageView alloc] initWithFrame:NSMakeRect(2, 2, 16, 16)];
+            NSImageView* iconView = [[NSImageView alloc] initWithFrame:NSMakeRect(20, 2, 16, 16)];
             iconView.image = [NSImage imageNamed:@"AirPlayIcon"];
             
             // Make the icon a "template image" so it gets drawn colour-inverted when it's
@@ -313,7 +314,7 @@ static void BGMSetRowMuteButtonImage(NSButton* __nullable inButton, BOOL inMuted
             
             [rowView addSubview:iconView];
             
-            nameX = 20;
+            nameX = 40;
         }
     });
     
