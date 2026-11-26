@@ -212,6 +212,17 @@ static NSString* const kOptShowDockIcon      = @"--show-dock-icon";
 
 // Returns NO if (and only if) BGMApp is about to terminate because of a fatal error.
 - (BOOL) setInitialOutputDevice {
+    // Let the manager persist the per-output-device settings (which devices are enabled and their
+    // gains).
+    [audioDevices setUserDefaults:userDefaults];
+
+    // Restore the output devices the user previously enabled, with their gains.
+    if ([audioDevices enablePersistedOutputDevices]) {
+        return YES;
+    }
+
+    // Otherwise (e.g. on the first launch, or if none of the user's previously enabled devices are
+    // connected), use the preferred device as the (only) enabled output device.
     AudioObjectID preferredDevice = [preferredOutputDevices findPreferredDevice];
 
     if (preferredDevice != kAudioObjectUnknown) {

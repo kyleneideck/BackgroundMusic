@@ -31,6 +31,7 @@
 #import "BGMOutputDeviceMenuSection.h"
 #import "BGMOutputVolumeMenuItem.h"
 #import "BGMPlayThrough.h"
+#import "BGMUserDefaults.h"
 #import "BGMXPCProtocols.h"
 
 // PublicUtility Includes
@@ -39,6 +40,10 @@
 #import "CAHALAudioSystemObject.h"
 #import "CAPropertyAddress.h"
 
+// STL Includes
+#include <cmath>  // For fabs
+#include <vector>
+
 
 #pragma clang assume_nonnull begin
 
@@ -46,6 +51,17 @@ static OSStatus BGMDeviceListenerProc(AudioObjectID inObjectID,
                                       UInt32 inNumberAddresses,
                                       const AudioObjectPropertyAddress* inAddresses,
                                       void* __nullable inClientData);
+
+// The gain (0.0 to 1.0) to use for an output device that has no saved settings, e.g. when the
+// user enables a device for the first time or on the app's first launch.
+static const float kDefaultOutputDeviceGain = 0.5f;
+
+// The state of an output device.
+struct BGMOutputDeviceState {
+    AudioObjectID deviceID;
+    BOOL          enabled;
+    float         gain;   // 0.0 to 1.0
+};
 
 @implementation BGMAudioDeviceManager {
     // This ivar is a pointer so that BGMBackgroundMusicDevice's constructor doesn't get called
@@ -57,7 +73,12 @@ static OSStatus BGMDeviceListenerProc(AudioObjectID inObjectID,
     // could wrap that call in a try/catch block instead, but it would make the code a bit
     // confusing.
     BGMBackgroundMusicDevice* bgmDevice;
+    // The primary output device (the first enabled one). Used for unsetting the OS default device
+    // and telling BGMXPCHelper which device to restore if BGMApp terminates abnormally.
     BGMAudioDevice outputDevice;
+    
+    // The state of each output device, in order. Guarded by stateLock.
+    std::vector<BGMOutputDeviceState> outputDeviceStates;
     
     BGMDeviceControlSync deviceControlSync;
     BGMPlayThrough playThrough;
@@ -70,6 +91,9 @@ static OSStatus BGMDeviceListenerProc(AudioObjectID inObjectID,
 
     BGMOutputVolumeMenuItem* __nullable outputVolumeMenuItem;
     BGMOutputDeviceMenuSection* __nullable outputDeviceMenuSection;
+
+    // Used to persist the per-output-device settings (which devices are enabled and their gains).
+    BGMUserDefaults* __nullable userDefaults;
 
     NSRecursiveLock* stateLock;
 }
@@ -195,7 +219,7 @@ static OSStatus BGMDeviceListenerProc(AudioObjectID inObjectID,
 - (BOOL) isOutputDevice:(AudioObjectID)deviceID {
     @try {
         [stateLock lock];
-        return deviceID == outputDevice.GetObjectID();
+        return [self isDeviceEnabled:deviceID];
     } @finally {
         [stateLock unlock];
     }
@@ -226,6 +250,15 @@ static OSStatus BGMDeviceListenerProc(AudioObjectID inObjectID,
 
 #pragma mark Output Device
 
+- (void) setUserDefaults:(BGMUserDefaults*)inUserDefaults {
+    @try {
+        [stateLock lock];
+        userDefaults = inUserDefaults;
+    } @finally {
+        [stateLock unlock];
+    }
+}
+
 - (NSError* __nullable) setOutputDeviceWithID:(AudioObjectID)deviceID
                               revertOnFailure:(BOOL)revertOnFailure {
     return [self setOutputDeviceWithIDImpl:deviceID
@@ -253,9 +286,15 @@ static OSStatus BGMDeviceListenerProc(AudioObjectID inObjectID,
         AudioDeviceID currentDeviceID = outputDevice.GetObjectID();  // (Doesn't throw.)
 
         try {
-            [self setOutputDeviceWithIDImpl:newDeviceID
-                               dataSourceID:dataSourceID
-                            currentDeviceID:currentDeviceID];
+            // Make newDeviceID the only enabled output device.
+            [self setEnabledDeviceIDsOnly:newDeviceID];
+
+            // Set the output device to use the new data source.
+            if (dataSourceID) {
+                // TODO: If this fails, ideally we'd still start playthrough and return an error, but not
+                //       revert the device. It would probably be a bit awkward, though.
+                [self setDataSource:*dataSourceID device:outputDevice];
+            }
         } catch (const CAException& e) {
             BGMAssert(e.GetError() != kAudioHardwareNoError,
                       "CAException with kAudioHardwareNoError");
@@ -269,6 +308,8 @@ static OSStatus BGMDeviceListenerProc(AudioObjectID inObjectID,
                                         revertTo:(revertOnFailure ? &currentDeviceID : nullptr)];
         }
 
+        [self persistOutputDeviceSettings];
+
         // Tell other classes and BGMXPCHelper that we changed the output device.
         [self propagateOutputDeviceChange];
     } @finally {
@@ -278,62 +319,495 @@ static OSStatus BGMDeviceListenerProc(AudioObjectID inObjectID,
     return nil;
 }
 
-// Throws CAException.
-- (void) setOutputDeviceWithIDImpl:(AudioObjectID)newDeviceID
-                      dataSourceID:(UInt32* __nullable)dataSourceID
-                   currentDeviceID:(AudioObjectID)currentDeviceID {
-    if (newDeviceID != currentDeviceID) {
-        BGMAudioDevice newOutputDevice(newDeviceID);
-        [self setOutputDeviceForPlaythroughAndControlSync:newOutputDevice];
-        outputDevice = newOutputDevice;
+// Sets the enabled output devices to exactly one, inDeviceID. Throws CAException.
+// Must be called with stateLock held.
+- (void) setEnabledDeviceIDsOnly:(AudioObjectID)inDeviceID {
+    for (auto& state : outputDeviceStates) {
+        state.enabled = (state.deviceID == inDeviceID);
     }
 
-    // Set the output device to use the new data source.
-    if (dataSourceID) {
-        // TODO: If this fails, ideally we'd still start playthrough and return an error, but not
-        //       revert the device. It would probably be a bit awkward, though.
-        [self setDataSource:*dataSourceID device:outputDevice];
+    // Make sure there's a state entry for the new device.
+    if (![self findStateForDeviceID:inDeviceID]) {
+        outputDeviceStates.push_back({ inDeviceID, YES, kDefaultOutputDeviceGain });
     }
 
-    if (newDeviceID != currentDeviceID) {
-        // We successfully changed to the new device. Start playthrough on it, since audio might be
-        // playing. (If we only changed the data source, playthrough will already be running if it
-        // needs to be.)
-        playThrough.Start();
-        playThrough_UISounds.Start();
-        // But stop playthrough if audio isn't playing, since it uses CPU.
-        playThrough.StopIfIdle();
-        playThrough_UISounds.StopIfIdle();
-    }
-
-    CFStringRef outputDeviceUID = outputDevice.CopyDeviceUID();
-    DebugMsg("BGMAudioDeviceManager::setOutputDeviceWithIDImpl: Set output device to %s (%d)",
-             CFStringGetCStringPtr(outputDeviceUID, kCFStringEncodingUTF8),
-             outputDevice.GetObjectID());
-    CFRelease(outputDeviceUID);
+    [self rebuildPlaythrough];
 }
 
-// Changes the output device that playthrough plays audio to and that BGMDevice's controls are
-// kept in sync with. Throws CAException.
-- (void) setOutputDeviceForPlaythroughAndControlSync:(const BGMAudioDevice&)newOutputDevice {
+// Reconfigures the playthroughs to play audio to the enabled output devices, at their gains, with
+// the master volume applied in real time. Throws CAException.
+// Must be called with stateLock held.
+- (void) rebuildPlaythrough {
+    std::vector<BGMAudioDevice> enabledDevices;
+    for (const auto& state : outputDeviceStates) {
+        if (state.enabled) {
+            enabledDevices.push_back(BGMAudioDevice(state.deviceID));
+        }
+    }
+
+    if (enabledDevices.empty()) {
+        // No enabled output devices. Keep the current configuration. (The caller should restore a
+        // preferred device if it needs one.)
+        LogWarning("BGMAudioDeviceManager::rebuildPlaythrough: No enabled output devices. Keeping "
+                   "the current configuration.");
+        return;
+    }
+
+    // Update the primary output device.
+    outputDevice = enabledDevices.front();
+
     // Deactivate playthrough rather than stopping it so it can't be started by HAL notifications
     // while we're updating deviceControlSync.
     playThrough.Deactivate();
     playThrough_UISounds.Deactivate();
 
-    deviceControlSync.SetDevices(*bgmDevice, newOutputDevice);
+    // Normalise the output devices' volume controls so the playthrough's software volume is the
+    // only attenuation.
+    deviceControlSync.SetDevices(bgmDevice->GetObjectID(), enabledDevices);
     deviceControlSync.Activate();
 
-    // Stream audio from BGMDevice to the new output device. This blocks while the old device stops
+    // Stream audio from BGMDevice to the output devices. This blocks while the old devices stop
     // IO.
-    playThrough.SetDevices(bgmDevice, &newOutputDevice);
+    playThrough.SetDevices(BGMAudioDevice(bgmDevice->GetObjectID()), enabledDevices);
     playThrough.Activate();
 
     // TODO: Support setting different devices as the default output device and the default system
     //       output device the way OS X does?
     BGMAudioDevice uiSoundsDevice = bgmDevice->GetUISoundsBGMDeviceInstance();
-    playThrough_UISounds.SetDevices(&uiSoundsDevice, &newOutputDevice);
+    playThrough_UISounds.SetDevices(uiSoundsDevice, enabledDevices);
     playThrough_UISounds.Activate();
+
+    // (Re)apply the per-device gains and the master volume.
+    for (const auto& state : outputDeviceStates) {
+        playThrough.SetOutputDeviceGain(state.deviceID, (Float32)state.gain);
+        playThrough_UISounds.SetOutputDeviceGain(state.deviceID, (Float32)state.gain);
+    }
+    [self updatePlayThroughMasterVolumes];
+
+    // Start playthrough, since audio might be playing.
+    playThrough.Start();
+    playThrough_UISounds.Start();
+    // But stop playthrough if audio isn't playing, since it uses CPU.
+    playThrough.StopIfIdle();
+    playThrough_UISounds.StopIfIdle();
+
+    CFStringRef outputDeviceUID = outputDevice.CopyDeviceUID();
+    DebugMsg("BGMAudioDeviceManager::rebuildPlaythrough: Set primary output device to %s (%d)",
+             CFStringGetCStringPtr(outputDeviceUID, kCFStringEncodingUTF8),
+             outputDevice.GetObjectID());
+    CFRelease(outputDeviceUID);
+}
+
+#pragma mark Per-Output-Device Control
+
+// Must be called with stateLock held.
+- (BGMOutputDeviceState* __nullable) findStateForDeviceID:(AudioObjectID)deviceID {
+    for (auto& state : outputDeviceStates) {
+        if (state.deviceID == deviceID) {
+            return &state;
+        }
+    }
+
+    return nullptr;
+}
+
+- (BOOL) setDevice:(AudioObjectID)deviceID enabled:(BOOL)enabled {
+    @try {
+        [stateLock lock];
+
+        BGMOutputDeviceState* state = [self findStateForDeviceID:deviceID];
+        if (!state) {
+            outputDeviceStates.push_back({ deviceID, enabled, kDefaultOutputDeviceGain });
+            state = &outputDeviceStates.back();
+        }
+
+        if (state->enabled == enabled) {
+            return YES;  // No change.
+        }
+
+        // Don't allow disabling the last enabled device, since BGMApp needs at least one output
+        // device to play audio to (and to restore the OS's default device on exit).
+        if (!enabled) {
+            NSUInteger numEnabled = 0;
+            for (const auto& s : outputDeviceStates) {
+                if (s.enabled) {
+                    numEnabled++;
+                }
+            }
+
+            if (numEnabled <= 1) {
+                LogWarning("BGMAudioDeviceManager::setDevice:enabled: Refusing to disable the "
+                           "last enabled output device (%u)", deviceID);
+                return NO;
+            }
+        }
+
+        state->enabled = enabled;
+
+        NSError* __nullable error = nil;
+
+        try {
+            [self rebuildPlaythrough];
+        } catch (const CAException& e) {
+            // Revert the change and try to restore the previous configuration.
+            state->enabled = !enabled;
+            BGMLogAndSwallowExceptions("BGMAudioDeviceManager::setDevice:enabled:", [&] {
+                [self rebuildPlaythrough];
+            });
+            error = [NSError errorWithDomain:@kBGMAppBundleID code:e.GetError() userInfo:nil];
+        } catch (...) {
+            state->enabled = !enabled;
+            BGMLogAndSwallowExceptions("BGMAudioDeviceManager::setDevice:enabled:", [&] {
+                [self rebuildPlaythrough];
+            });
+            error =
+                [NSError errorWithDomain:@kBGMAppBundleID
+                                    code:kAudioHardwareUnspecifiedError
+                                userInfo:nil];
+        }
+
+        if (error) {
+            return NO;
+        }
+
+        [self persistOutputDeviceSettings];
+        [self propagateOutputDeviceChange];
+
+        return YES;
+    } @finally {
+        [stateLock unlock];
+    }
+}
+
+- (void) setDevice:(AudioObjectID)deviceID gain:(float)gain {
+    gain = (float)MAX(0.0, MIN(1.0, gain));
+
+    @try {
+        [stateLock lock];
+
+        BGMOutputDeviceState* state = [self findStateForDeviceID:deviceID];
+        if (!state) {
+            outputDeviceStates.push_back({ deviceID, NO, gain });
+            state = &outputDeviceStates.back();
+        }
+        state->gain = gain;
+
+        // Apply the gain without restarting the IO. (No-op if the device isn't currently one of
+        // the playthroughs' output devices.)
+        playThrough.SetOutputDeviceGain(deviceID, (Float32)gain);
+        playThrough_UISounds.SetOutputDeviceGain(deviceID, (Float32)gain);
+
+        [self persistOutputDeviceSettings];
+    } @finally {
+        [stateLock unlock];
+    }
+}
+
+- (NSError* __nullable) sampleRateConflictErrorForDevice:(AudioObjectID)deviceID {
+    @try {
+        [stateLock lock];
+
+        BGMOutputDeviceState* state = [self findStateForDeviceID:deviceID];
+
+        if (!(state && state->enabled)) {
+            NSError* __nullable conflict = nil;
+
+            try {
+                BGMAudioDevice device(deviceID);
+                Float64 deviceRate = device.GetNominalSampleRate();
+
+                for (const auto& s : outputDeviceStates) {
+                    if (!s.enabled) {
+                        continue;
+                    }
+
+                    BGMAudioDevice other(s.deviceID);
+                    Float64 otherRate = other.GetNominalSampleRate();
+
+                    if (fabs(deviceRate - otherRate) > 0.5) {
+                        conflict =
+                            [NSError errorWithDomain:@"com.bearisdriving.BGM.App.SampleRateConflict"
+                                                 code:kAudioHardwareUnsupportedOperationError
+                                             userInfo:@{
+                                NSLocalizedDescriptionKey:
+                                    [NSString stringWithFormat:
+                                     @"%@ (%.0f Hz) has a different sample rate than the "
+                                     @"enabled output device %@ (%.0f Hz). All enabled output "
+                                     @"devices must have the same sample rate to play the same "
+                                     @"audio.",
+                                     CFBridgingRelease(device.CopyName()),
+                                     deviceRate,
+                                     CFBridgingRelease(other.CopyName()),
+                                     otherRate],
+                            }];
+                        break;
+                    }
+                }
+            } catch (const CAException& e) {
+                BGMLogExceptionIn("sampleRateConflictErrorForDevice", e);
+            } catch (...) {
+                // Can't determine a conflict. Let the caller try the normal path.
+            }
+
+            return conflict;
+        }
+
+        return nil;
+    } @catch (NSException* exception) {
+        return nil;
+    } @finally {
+        [stateLock unlock];
+    }
+}
+
+- (BOOL) isDeviceEnabled:(AudioObjectID)deviceID {
+    @try {
+        [stateLock lock];
+
+        BGMOutputDeviceState* state = [self findStateForDeviceID:deviceID];
+
+        return (state ? state->enabled : NO);
+    } @finally {
+        [stateLock unlock];
+    }
+}
+
+- (float) gainForDevice:(AudioObjectID)deviceID {
+    @try {
+        [stateLock lock];
+
+        BGMOutputDeviceState* state = [self findStateForDeviceID:deviceID];
+
+        return (state ? state->gain : kDefaultOutputDeviceGain);
+    } @finally {
+        [stateLock unlock];
+    }
+}
+
+- (NSArray<NSNumber*>* __nullable) enabledOutputDeviceIDs {
+    @try {
+        [stateLock lock];
+
+        NSMutableArray<NSNumber*>* ids = [NSMutableArray new];
+
+        for (const auto& state : outputDeviceStates) {
+            if (state.enabled) {
+                [ids addObject:@(state.deviceID)];
+            }
+        }
+
+        return ids;
+    } @finally {
+        [stateLock unlock];
+    }
+}
+
+- (BOOL) enablePersistedOutputDevices {
+    @try {
+        [stateLock lock];
+
+        if (!userDefaults) {
+            return NO;
+        }
+
+        NSDictionary* __nullable settings = [userDefaults outputDeviceSettings];
+
+        if (![settings isKindOfClass:[NSDictionary class]] || settings.count == 0) {
+            return NO;
+        }
+
+        // Get the IDs of the connected devices.
+        CAHALAudioSystemObject audioSystem;
+        UInt32 numDevices = audioSystem.GetNumberAudioDevices();
+        CAAutoArrayDelete<AudioObjectID> deviceIDs(numDevices);
+        audioSystem.GetAudioDevices(numDevices, deviceIDs);
+
+        // Enable the devices the user previously enabled, restoring their gains.
+        std::vector<AudioObjectID> enabledIDs;
+
+        for (NSString* uid in settings) {
+            id entry = settings[uid];
+
+            if (![entry isKindOfClass:[NSDictionary class]] ||
+                ![entry[@"enabled"] boolValue]) {
+                continue;
+            }
+
+            for (UInt32 i = 0; i < numDevices; i++) {
+                bool match = false;
+
+                BGMLogAndSwallowExceptions("enablePersistedOutputDevices", [&] {
+                    CFStringRef deviceUID = BGMAudioDevice(deviceIDs[i]).CopyDeviceUID();
+                    match = (CFStringCompare(deviceUID, (__bridge CFStringRef)uid, 0) == kCFCompareEqualTo);
+                    CFRelease(deviceUID);
+                });
+
+                if (match) {
+                    enabledIDs.push_back(deviceIDs[i]);
+
+                    BGMOutputDeviceState* state = [self findStateForDeviceID:deviceIDs[i]];
+                    if (!state) {
+                        outputDeviceStates.push_back({ deviceIDs[i], YES, kDefaultOutputDeviceGain });
+                        state = &outputDeviceStates.back();
+                    }
+
+                    state->enabled = YES;
+
+                    // Restore the saved gain. A saved gain of 0.0 is valid (the user muted the
+                    // device), so only use the default if there's no saved gain at all.
+                    NSNumber* __nullable savedGain = entry[@"gain"];
+                    if ([savedGain isKindOfClass:[NSNumber class]]) {
+                        float gain = (float)[savedGain floatValue];
+                        state->gain = MAX(0.0f, MIN(1.0f, gain));
+                    } else {
+                        state->gain = kDefaultOutputDeviceGain;
+                    }
+                    break;
+                }
+            }
+        }
+
+        if (enabledIDs.empty()) {
+            return NO;
+        }
+
+        // All enabled output devices must share a sample rate (see BGMPlayThrough::Activate). If
+        // the persisted set mixes rates (e.g. it was saved before this constraint existed), fall
+        // back to the preferred single device rather than activating a broken configuration.
+        try {
+            Float64 firstRate = BGMAudioDevice(enabledIDs.front()).GetNominalSampleRate();
+            for (AudioObjectID id : enabledIDs) {
+                if (fabs(BGMAudioDevice(id).GetNominalSampleRate() - firstRate) > 0.5) {
+                    LogWarning("BGMAudioDeviceManager::enablePersistedOutputDevices: Persisted "
+                               "output devices have different sample rates. Falling back to the "
+                               "preferred device.");
+                    return NO;
+                }
+            }
+        } catch (const CAException& e) {
+            // Can't check the rates. Fall through; rebuildPlaythrough will surface the real error.
+        }
+
+        try {
+            [self rebuildPlaythrough];
+        } catch (const CAException& e) {
+            BGMLogExceptionIn("BGMAudioDeviceManager::enablePersistedOutputDevices", e);
+            return NO;
+        } catch (...) {
+            LogError("BGMAudioDeviceManager::enablePersistedOutputDevices: Unknown exception");
+            return NO;
+        }
+
+        [self persistOutputDeviceSettings];
+        [self propagateOutputDeviceChange];
+
+        return YES;
+    } @finally {
+        [stateLock unlock];
+    }
+}
+
+- (void) pruneDisconnectedOutputDevices {
+    @try {
+        [stateLock lock];
+
+        bool changed = false;
+        std::vector<BGMOutputDeviceState> kept;
+
+        for (const auto& state : outputDeviceStates) {
+            bool exists = false;
+
+            BGMLogAndSwallowExceptions("pruneDisconnectedOutputDevices", [&] {
+                exists = CAHALAudioObject::ObjectExists(state.deviceID);
+            });
+
+            if (exists) {
+                kept.push_back(state);
+            } else {
+                changed = true;
+                LogWarning("BGMAudioDeviceManager::pruneDisconnectedOutputDevices: Output device "
+                           "%u is no longer connected", state.deviceID);
+            }
+        }
+
+        if (!changed || kept.empty()) {
+            return;
+        }
+
+        outputDeviceStates = std::move(kept);
+
+        bool anyEnabled = false;
+        for (const auto& state : outputDeviceStates) {
+            if (state.enabled) {
+                anyEnabled = true;
+                break;
+            }
+        }
+
+        if (anyEnabled) {
+            BGMLogAndSwallowExceptions("BGMAudioDeviceManager::pruneDisconnectedOutputDevices", [&] {
+                [self rebuildPlaythrough];
+            });
+            [self persistOutputDeviceSettings];
+            [self propagateOutputDeviceChange];
+        }
+        // Otherwise no enabled devices are left. BGMPreferredOutputDevices will restore a
+        // preferred one.
+    } @finally {
+        [stateLock unlock];
+    }
+}
+
+#pragma mark Output Device Persistence and Master Volume
+
+// Persists the per-output-device settings (enabled state and gain), keyed by device UID.
+// Must be called with stateLock held.
+- (void) persistOutputDeviceSettings {
+    if (!userDefaults) {
+        return;
+    }
+
+    NSMutableDictionary<NSString*, NSDictionary*>* settings = [NSMutableDictionary new];
+
+    for (const auto& state : outputDeviceStates) {
+        @try {
+            NSString* uid =
+                CFBridgingRelease(BGMAudioDevice(state.deviceID).CopyDeviceUID());
+            if (uid) {
+                settings[uid] = @{ @"enabled": @(state.enabled),
+                                  @"gain": @(state.gain) };
+            }
+        } @catch (NSException* exception) {
+            // The device threw. Skip it.
+        }
+    }
+
+    [userDefaults setOutputDeviceSettings:settings];
+}
+
+// Pushes BGMDevice's current volume and mute (the master volume) to the playthroughs, so it's
+// applied to the output devices in real time. Must be called with stateLock held.
+- (void) updatePlayThroughMasterVolumes {
+    float master = 1.0f;
+
+    try {
+        BGMAudioDevice bgm = *bgmDevice;
+
+        if (bgm.HasSettableMainVolume(kAudioObjectPropertyScopeOutput)) {
+            master = (float)bgm.GetVolumeControlScalarValue(kAudioObjectPropertyScopeOutput,
+                                                            kMainChannel);
+
+            if (bgm.HasSettableMainMute(kAudioObjectPropertyScopeOutput) &&
+                bgm.GetMuteControlValue(kAudioObjectPropertyScopeOutput, kMainChannel)) {
+                master = 0.0f;
+            }
+        }
+    } catch (const CAException& e) {
+        BGMLogException(e);
+    }
+
+    playThrough.SetMasterVolume((Float32)master);
+    playThrough_UISounds.SetMasterVolume((Float32)master);
 }
 
 - (void) setDataSource:(UInt32)dataSourceID device:(BGMAudioDevice&)device {
@@ -501,6 +975,18 @@ static OSStatus BGMDeviceListenerProc(AudioObjectID inObjectID,
     addListeners(bgmDevice->GetObjectID());
     addListeners(bgmDevice->GetUISoundsBGMDeviceInstance().GetObjectID());
 
+    // BGMDevice's volume (the master volume) and mute are applied by BGMPlayThrough in real time,
+    // so listen for changes to them and push them to the playthroughs.
+    BGMLogAndSwallowExceptions("BGMAudioDeviceManager::registerBGMDeviceListeners", [&] {
+        BGMAudioDevice device(bgmDevice->GetObjectID());
+        device.AddPropertyListener(
+                CAPropertyAddress(kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeOutput),
+                &BGMDeviceListenerProc, bridgeSelf);
+        device.AddPropertyListener(
+                CAPropertyAddress(kAudioDevicePropertyMute, kAudioDevicePropertyScopeOutput),
+                &BGMDeviceListenerProc, bridgeSelf);
+    });
+
     bgmDeviceListenersRegistered = YES;
 }
 
@@ -530,6 +1016,16 @@ static OSStatus BGMDeviceListenerProc(AudioObjectID inObjectID,
 
     removeListeners(bgmDevice->GetObjectID());
     removeListeners(bgmDevice->GetUISoundsBGMDeviceInstance().GetObjectID());
+
+    BGMLogAndSwallowExceptions("BGMAudioDeviceManager::removeBGMDeviceListeners", [&] {
+        BGMAudioDevice device(bgmDevice->GetObjectID());
+        device.RemovePropertyListener(
+                CAPropertyAddress(kAudioDevicePropertyVolumeScalar, kAudioDevicePropertyScopeOutput),
+                &BGMDeviceListenerProc, bridgeSelf);
+        device.RemovePropertyListener(
+                CAPropertyAddress(kAudioDevicePropertyMute, kAudioDevicePropertyScopeOutput),
+                &BGMDeviceListenerProc, bridgeSelf);
+    });
 
     bgmDeviceListenersRegistered = NO;
 }
@@ -575,11 +1071,40 @@ static OSStatus BGMDeviceListenerProc(AudioObjectID inObjectID,
                 [self handleDeviceIsRunningSomewhereOtherThanBGMApp:inDeviceID];
                 break;
 
+            case kAudioDevicePropertyVolumeScalar:
+            case kAudioDevicePropertyMute:
+                // BGMDevice's volume (the master volume) or mute changed. (We only listen for these
+                // on the main BGMDevice instance, not the UI sounds instance.)
+                if (inDeviceID == bgmDevice->GetObjectID()) {
+                    [self handleMasterVolumeChanged];
+                }
+                break;
+
             default:
                 // We might get properties we didn't ask for, so we just ignore them.
                 break;
         }
     }
+}
+
+// BGMDevice's volume (the master volume) or mute changed. Push the new master volume to the
+// playthroughs so it's applied to the output devices in real time.
+- (void) handleMasterVolumeChanged {
+    // Dispatched so we can take stateLock without risking deadlock.
+    dispatch_async(BGMGetDispatchQueue_PriorityUserInteractive(), ^{
+        @try {
+            [stateLock lock];
+
+            // Don't try to update the playthroughs before an output device has been set.
+            if (outputDevice.GetObjectID() == kAudioObjectUnknown) {
+                return;
+            }
+
+            [self updatePlayThroughMasterVolumes];
+        } @finally {
+            [stateLock unlock];
+        }
+    });
 }
 
 // Returns the BGMPlayThrough for the given BGMDevice instance.

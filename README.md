@@ -23,6 +23,7 @@
 
 + Automatically pause/unpause your music player when other audio sources are playing/stopped
 + Per-application volume control
++ Output to multiple audio devices at the same time, each with its own volume control
 + Record system audio
 + No restart required to install
 
@@ -168,6 +169,10 @@ meeting volume.
     - Set your volume to its maximum level and lower the volumes of other applications.
 
 - **Only 2-channel (stereo) audio devices are currently supported for output.**
+
+- **Output devices with different sample rates can't be enabled at the same time.**
+
+    - All enabled output devices must have the same sample rate (e.g. all 48000 Hz), or the audio would play at different speeds on the different devices. For example, a 44100 Hz Bluetooth speaker can't be enabled alongside 48000 Hz HDMI displays. Either set the devices to the same sample rate under `System Settings > Sound`, or disable one of the devices.
 
 - **VLC pauses iTunes or Spotify when playing, and stops Background Music from unpausing your music afterward.**
 

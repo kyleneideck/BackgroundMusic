@@ -49,6 +49,11 @@
 // device is at index 0. See BGMPreferredOutputDevices.
 @property NSArray<NSString*>* preferredDeviceUIDs;
 
+// Per-output-device settings, keyed by the device's UID:
+//   UID → { "enabled": NSNumber (BOOL), "gain": NSNumber (0.0 - 1.0) }
+// See BGMAudioDeviceManager.
+@property NSDictionary<NSString*, NSDictionary*>* __nullable outputDeviceSettings;
+
 // The (type of) icon to show in the button in the status bar. (The button the user clicks to open
 // BGMApp's main menu.)
 @property BGMStatusBarIcon statusBarIcon;

@@ -33,22 +33,15 @@
 
 #pragma clang assume_nonnull begin
 
-static const AudioObjectPropertyAddress kMutePropertyAddress =
-    { kAudioDevicePropertyMute, kAudioObjectPropertyScopeOutput, kAudioObjectPropertyElementMain };
-
-static const AudioObjectPropertyAddress kVolumePropertyAddress =
-    { kAudioDevicePropertyVolumeScalar, kAudioObjectPropertyScopeOutput, kAudioObjectPropertyElementMain };
+static const AudioObjectPropertyScope kOutputScope = kAudioObjectPropertyScopeOutput;
 
 #pragma mark Construction/Destruction
 
 BGMDeviceControlSync::BGMDeviceControlSync(AudioObjectID inBGMDevice,
-                                           AudioObjectID inOutputDevice,
-                                           CAHALAudioSystemObject inAudioSystem)
+                                           const std::vector<BGMAudioDevice>& inOutputDevices)
 :
     mBGMDevice(inBGMDevice),
-    mOutputDevice(inOutputDevice),
-    mAudioSystem(inAudioSystem),
-    mBGMDeviceControlsList(inBGMDevice)
+    mOutputDevices(inOutputDevices)
 {
 }
 
@@ -65,45 +58,38 @@ void    BGMDeviceControlSync::Activate()
 {
     CAMutex::Locker locker(mMutex);
 
-    ThrowIf((mBGMDevice.GetObjectID() == kAudioObjectUnknown || mOutputDevice.GetObjectID() == kAudioObjectUnknown),
+    ThrowIf((mBGMDevice == kAudioObjectUnknown),
             BGM_DeviceNotSetException(),
-            "BGMDeviceControlSync::Activate: Both the output device and BGMDevice must be set to start synchronizing their controls");
+            "BGMDeviceControlSync::Activate: BGMDevice must be set to normalise the output "
+            "devices' controls");
 
     if(!mActive)
     {
-        DebugMsg("BGMDeviceControlSync::Activate: Activating control sync");
+        DebugMsg("BGMDeviceControlSync::Activate: Normalising the output devices' volume controls");
 
-        // Disable BGMDevice controls that the output device doesn't have and reenable any that were
-        // disabled for the previous output device.
+        // Set each output device's volume control to full and unmute it. BGMApp applies the
+        // master volume and each device's relative volume in software (see BGMPlayThrough), so
+        // the devices' hardware volume controls would just attenuate the audio a second time.
         //
-        // Continue anyway if this fails because it's better to have extra/missing controls than to
-        // be unable to use the device.
-        BGMLogAndSwallowExceptionsMsg("BGMDeviceControlSync::Activate", "Controls list", [&] {
-            bool wasUpdated = mBGMDeviceControlsList.MatchControlsListOf(mOutputDevice);
-            if(wasUpdated)
-            {
-                mBGMDeviceControlsList.PropagateControlListChange();
-            }
-        });
-
-        // Init BGMDevice controls to match output device
-        mBGMDevice.CopyVolumeFrom(mOutputDevice, kAudioObjectPropertyScopeOutput);
-        mBGMDevice.CopyMuteFrom(mOutputDevice, kAudioObjectPropertyScopeOutput);
-
-        // Register listeners for volume and mute values
-        mBGMDevice.AddPropertyListener(kVolumePropertyAddress, &BGMDeviceControlSync::BGMDeviceListenerProc, this);
-        
-        try
+        // Continue anyway if a device fails because it's better to have a device at the wrong
+        // level than to be unable to use it at all.
+        for(const auto& outputDeviceRef : mOutputDevices)
         {
-            mBGMDevice.AddPropertyListener(kMutePropertyAddress, &BGMDeviceControlSync::BGMDeviceListenerProc, this);
-        }
-        catch(CAException)
-        {
-            CATry
-            mBGMDevice.RemovePropertyListener(kVolumePropertyAddress, &BGMDeviceControlSync::BGMDeviceListenerProc, this);
-            CACatch
-            
-            throw;
+            BGMAudioDevice outputDevice(outputDeviceRef.GetObjectID());
+
+            BGMLogAndSwallowExceptionsMsg("BGMDeviceControlSync::Activate", "Volume", [&] {
+                if(outputDevice.HasSettableMainVolume(kOutputScope))
+                {
+                    outputDevice.SetVolumeControlScalarValue(kOutputScope, kMainChannel, 1.0f);
+                }
+            });
+
+            BGMLogAndSwallowExceptionsMsg("BGMDeviceControlSync::Activate", "Mute", [&] {
+                if(outputDevice.HasSettableMainMute(kOutputScope))
+                {
+                    outputDevice.SetMuteControlValue(kOutputScope, kMainChannel, false);
+                }
+            });
         }
         
         mActive = true;
@@ -121,23 +107,7 @@ void    BGMDeviceControlSync::Deactivate()
     if(mActive)
     {
         DebugMsg("BGMDeviceControlSync::Deactivate: Deactivating control sync");
-
-        // Deregister listeners
-        if(mBGMDevice.GetObjectID() != kAudioDeviceUnknown)
-        {
-            BGMLogAndSwallowExceptions("BGMDeviceControlSync::Deactivate", [&] {
-                mBGMDevice.RemovePropertyListener(kVolumePropertyAddress,
-                                                  &BGMDeviceControlSync::BGMDeviceListenerProc,
-                                                  this);
-            });
-
-            BGMLogAndSwallowExceptions("BGMDeviceControlSync::Deactivate", [&] {
-                mBGMDevice.RemovePropertyListener(kMutePropertyAddress,
-                                                  &BGMDeviceControlSync::BGMDeviceListenerProc,
-                                                  this);
-            });
-        }
-
+        
         mActive = false;
     }
     else
@@ -148,7 +118,8 @@ void    BGMDeviceControlSync::Deactivate()
 
 #pragma mark Accessors
 
-void    BGMDeviceControlSync::SetDevices(AudioObjectID inBGMDevice, AudioObjectID inOutputDevice)
+void    BGMDeviceControlSync::SetDevices(AudioObjectID inBGMDevice,
+                                         const std::vector<BGMAudioDevice>& inOutputDevices)
 {
     CAMutex::Locker locker(mMutex);
 
@@ -157,8 +128,7 @@ void    BGMDeviceControlSync::SetDevices(AudioObjectID inBGMDevice, AudioObjectI
     Deactivate();
 
     mBGMDevice = inBGMDevice;
-    mBGMDeviceControlsList.SetBGMDevice(inBGMDevice);
-    mOutputDevice = inOutputDevice;
+    mOutputDevices = inOutputDevices;
     
     if(wasActive)
     {
@@ -166,73 +136,4 @@ void    BGMDeviceControlSync::SetDevices(AudioObjectID inBGMDevice, AudioObjectI
     }
 }
 
-#pragma mark Listener Procs
-
-// static
-OSStatus    BGMDeviceControlSync::BGMDeviceListenerProc(AudioObjectID inObjectID, UInt32 inNumberAddresses, const AudioObjectPropertyAddress* inAddresses, void* __nullable inClientData)
-{
-    // refCon (reference context) is the instance that registered this listener proc.
-    BGMDeviceControlSync* refCon = static_cast<BGMDeviceControlSync*>(inClientData);
-
-    auto checkState = [&] {
-        if(!refCon)
-        {
-            LogError("BGMDeviceControlSync::BGMDeviceListenerProc: !refCon");
-            return false;
-        }
-
-        if(!refCon->mActive ||
-           (refCon->mBGMDevice.GetObjectID() == kAudioObjectUnknown) ||
-           (refCon->mOutputDevice.GetObjectID() == kAudioObjectUnknown))
-        {
-            return false;
-        }
-
-        if(inObjectID != refCon->mBGMDevice.GetObjectID())
-        {
-            LogError("BGMDeviceControlSync::BGMDeviceListenerProc: notified about audio object other than BGMDevice");
-            return false;
-        }
-        
-        return true;
-    };
-
-    for(int i = 0; i < inNumberAddresses; i++)
-    {
-        AudioObjectPropertyScope scope = inAddresses[i].mScope;
-        
-        switch(inAddresses[i].mSelector)
-        {
-            case kAudioDevicePropertyVolumeScalar:
-                {
-                    CAMutex::Locker locker(refCon->mMutex);
-
-                    // Update the output device's volume.
-                    if(checkState())
-                    {
-                        refCon->mOutputDevice.CopyVolumeFrom(refCon->mBGMDevice, scope);
-                    }
-                }
-                break;
-                
-            case kAudioDevicePropertyMute:
-                {
-                    CAMutex::Locker locker(refCon->mMutex);
-
-                    // Update the output device's mute control. Note that this also runs when you
-                    // change the volume (on BGMDevice).
-                    if(checkState())
-                    {
-                        refCon->mOutputDevice.CopyMuteFrom(refCon->mBGMDevice, scope);
-                    }
-                }
-                break;
-        }
-    }
-
-    // "The return value [of an AudioObjectPropertyListenerProc] is currently unused and should always be 0."
-    return 0;
-}
-
 #pragma clang assume_nonnull end
-

@@ -34,6 +34,9 @@ xcuserdata
 *.xcuserstate
 *.xcscmblueprint
 
+## Profiling artifacts (generated when running the tests)
+*.profraw
+
 ## Obj-C/Swift specific
 *.hmap
 *.ipa

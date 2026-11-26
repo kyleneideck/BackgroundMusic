@@ -155,14 +155,32 @@ Builder.
 `awakeFromNib` in [BGMAppDelegate.mm](/BGMApp/BGMApp/BGMAppDelegate.mm) is (more or less) the entry point/main
 function. `applicationDidFinishLaunching` gets called next and finishes setting things up.
 
-At launch, BGMApp sets BGMDevice as the system's default device and starts playing the audio from BGMDevice through the
-actual output device. Usually that's the device that BGMDevice replaced when we set it as the default device. When
-BGMApp closes, it sets that device back as the default device.
+At launch, BGMApp sets BGMDevice as the system's default device and starts playing the audio from BGMDevice through
+the enabled output device(s). Usually that's the device that BGMDevice replaced when we set it as the default device
+(the "primary" output device, which BGMApp sets back as the default device when it closes).
+
+The user can enable more than one output device at the same time (in the "Output Device" section of the menu), each
+with its own relative volume. BGMApp persists which devices are enabled and their relative volumes in the user
+defaults (`OutputDeviceSettings`, keyed by device UID) and restores them at launch. Output devices with no saved
+settings (e.g. enabled for the first time) start at 50% (`kDefaultOutputDeviceGain` in BGMAudioDeviceManager.mm).
+
+The volume of the audio played to each output device is the master volume times that device's relative volume. The
+master volume is BGMDevice's volume control (the top slider in the menu), which BGMDriver doesn't apply to the audio
+itself (see `BGM_Device` in BGMDriver) -- BGMApp applies it in software instead. When an output device is enabled,
+[BGMDeviceControlSync](BGMApp/BGMApp/BGMDeviceControlSync.h) sets its volume control to full and unmutes it, so it
+doesn't attenuate the audio a second time. `BGMPlayThrough` then scales the audio in each output device's IOProc by
+the master volume times the device's relative volume (both are `std::atomic` values that can be updated in real
+time).
+
+All enabled output devices must have the same sample rate: BGMDevice runs at the first enabled device's rate, and
+each output device's IOProc plays the same samples at its own device's rate, so `BGMPlayThrough::Activate()` refuses
+to activate if the enabled devices' sample rates differ (resampling isn't possible in the realtime-constrained
+IOProcs). Enabling a device with a different rate is rejected in the UI with an explanatory message.
 
 BGMApp stores a small amount of state data using [User
 Defaults](https://developer.apple.com/library/content/documentation/Cocoa/Conceptual/UserDefaults/AboutPreferenceDomains/AboutPreferenceDomains.html)
--- currently just whether auto-pause is enabled and which music player to pause. Other persistent state (e.g. app
-volumes) is managed by BGMDriver.
+-- whether auto-pause is enabled, which music player to pause, and the per-output-device settings (see above). Other
+persistent state (e.g. app volumes) is managed by BGMDriver.
 
 BGMApp mostly communicates with BGMDriver through HAL notifications, though in some special cases we use XPC instead.
 The only other communication between them is BGMDriver sending the system's audio data through BGMDevice's output
@@ -174,13 +192,13 @@ from the HAL and decides whether it should pause the music player.
 
 Our custom notifications are defined/documented in `BGM_Types.h`, which is shared between the two projects.
 
-BGMApp also keeps the output device in sync with BGMDevice. For example, since BGMDevice is set as the default device,
-when the user changes their system volume only BGMDevice's volume will change. So BGMApp listens for changes to
-BGMDevice's volume and sets the output device's volume to match. 
+BGMApp also listens for changes to BGMDevice's volume (the master volume) and mute and pushes the new value to the
+`BGMPlayThrough` instances, which apply it to the audio in real time (see above).
 
 The only code in BGMApp that has to be real-time safe is in `BGMPlayThrough`'s IOProcs, `InputDeviceIOProc` and
-`OutputDeviceIOProc`, which don't do very much. The most complicated part of BGMApp is probably pausing/reducing IO when
-no other processes are playing audio, which is also handled in `BGMPlayThrough`.
+`OutputDeviceIOProc`, which don't do very much (the output IOProc copies audio out of a ring buffer and scales it by
+the master volume times the device's relative volume). The most complicated part of BGMApp is probably
+pausing/reducing IO when no other processes are playing audio, which is also handled in `BGMPlayThrough`.
 
 ### BGMXPCHelper
 

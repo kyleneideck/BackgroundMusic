@@ -33,6 +33,7 @@
 static NSString* const kDefaultKeyAutoPauseMusicEnabled = @"AutoPauseMusicEnabled";
 static NSString* const kDefaultKeySelectedMusicPlayerID = @"SelectedMusicPlayerID";
 static NSString* const kDefaultKeyPreferredDeviceUIDs   = @"PreferredDeviceUIDs";
+static NSString* const kDefaultKeyOutputDeviceSettings  = @"OutputDeviceSettings";
 static NSString* const kDefaultKeyStatusBarIcon         = @"StatusBarIcon";
 static NSString* const kDefaultKeyPauseDelayMS          = @"PauseDelayMS";
 static NSString* const kDefaultKeyMaxUnpauseDelayMS     = @"MaxUnpauseDelayMS";
@@ -130,6 +131,20 @@ static NSString* const kKeychainLabelGPMDPAuthCode =
 
 - (void) setPreferredDeviceUIDs:(NSArray<NSString*>*)devices {
     [self set:kDefaultKeyPreferredDeviceUIDs to:devices];
+}
+
+- (NSDictionary* __nullable) outputDeviceSettings {
+    id __nullable settings = [self get:kDefaultKeyOutputDeviceSettings];
+
+    if ([settings isKindOfClass:[NSDictionary class]]) {
+        return (NSDictionary*)settings;
+    }
+
+    return nil;
+}
+
+- (void) setOutputDeviceSettings:(NSDictionary* __nullable)outputDeviceSettings {
+    [self set:kDefaultKeyOutputDeviceSettings to:outputDeviceSettings];
 }
 
 - (BGMStatusBarIcon) statusBarIcon {

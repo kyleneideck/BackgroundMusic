@@ -43,6 +43,11 @@
 
 static NSInteger const kOutputDeviceMenuItemTag = 5;
 
+// The size of the custom view in each output device's menu item. (The width matches the master
+// volume row's view, which comes from MainMenu.xib.)
+static const CGFloat kRowWidth  = 269.0;
+static const CGFloat kRowHeight = 24.0;
+
 @implementation BGMOutputDeviceMenuSection {
     NSMenu* bgmMenu;
     BGMAudioDeviceManager* audioDevices;
@@ -236,10 +241,10 @@ static NSInteger const kOutputDeviceMenuItemTag = 5;
                     CFBridgingRelease(device.CopyDataSourceNameForID(scope, channel, dataSourceIDs[i]));
                 NSString* deviceName = CFBridgingRelease(device.CopyName());
                 
-                [items addObject:[self createMenuItemForDevice:device
-                                                  dataSourceID:@(dataSourceIDs[i])
-                                                         title:dataSourceName
-                                                       toolTip:deviceName]];
+                [items addObject:[self createRowMenuItemForDevice:device
+                                                    dataSourceID:@(dataSourceIDs[i])
+                                                           title:dataSourceName
+                                                         toolTip:deviceName]];
             });
         }
     } else {
@@ -247,55 +252,82 @@ static NSInteger const kOutputDeviceMenuItemTag = 5;
                  "Device ID:", device.GetObjectID());
 
         BGM_Utils::LogAndSwallowExceptions(BGMDbgArgs, [&] {
-            [items addObject:[self createMenuItemForDevice:device
-                                              dataSourceID:nil
-                                                     title:CFBridgingRelease(device.CopyName())
-                                                   toolTip:nil]];
+            [items addObject:[self createRowMenuItemForDevice:device
+                                                  dataSourceID:nil
+                                                         title:CFBridgingRelease(device.CopyName())
+                                                       toolTip:nil]];
         });
     }
     
     return items;
 }
 
-- (NSMenuItem*) createMenuItemForDevice:(CAHALAudioDevice)device
-                           dataSourceID:(NSNumber* __nullable)dataSourceID
-                                  title:(NSString* __nullable)title
-                                toolTip:(NSString* __nullable)toolTip {
+// Creates a menu item with a custom view containing a check box (to enable/disable the device as
+// an output) and a slider (to set the device's volume relative to the other output devices).
+- (NSMenuItem*) createRowMenuItemForDevice:(CAHALAudioDevice)device
+                              dataSourceID:(NSNumber* __nullable)dataSourceID
+                                     title:(NSString* __nullable)title
+                                   toolTip:(NSString* __nullable)toolTip {
     // If we don't have a title, use the tool-tip text instead.
     if (!title) {
         title = (toolTip ? toolTip : @"");
     }
     
-    NSMenuItem* item = [[NSMenuItem alloc] initWithTitle:BGMNN(title)
-                                                  action:@selector(outputDeviceMenuItemSelected:)
-                                           keyEquivalent:@""];
+    NSMenuItem* item = [[NSMenuItem alloc] initWithTitle:@"" action:nil keyEquivalent:@""];
     
-    // Add the AirPlay icon to the labels of AirPlay devices.
+    NSView* rowView = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, kRowWidth, kRowHeight)];
+    
+    CGFloat checkboxX = 0;
+    
+    // Add the AirPlay icon before the check box for AirPlay devices.
     //
     // TODO: Test this with real hardware that supports AirPlay. (I don't have any.)
     BGM_Utils::LogAndSwallowExceptions(BGMDbgArgs, [&] {
         if (device.GetTransportType() == kAudioDeviceTransportTypeAirPlay) {
-            item.image = [NSImage imageNamed:@"AirPlayIcon"];
+            NSImageView* iconView = [[NSImageView alloc] initWithFrame:NSMakeRect(4, 2, 18, 18)];
+            iconView.image = [NSImage imageNamed:@"AirPlayIcon"];
             
-            // Make the icon a "template image" so it gets drawn colour-inverted when it's highlighted or
-            // OS X is in dark mode.
-            [item.image setTemplate:YES];
+            // Make the icon a "template image" so it gets drawn colour-inverted when it's
+            // highlighted or OS X is in dark mode.
+            [iconView.image setTemplate:YES];
+            
+            [rowView addSubview:iconView];
+            
+            checkboxX = 26;
         }
     });
     
-    // The menu item should be selected if it's the menu item for the current output device. If the device
-    // has data sources, only the menu item for the current data source should be selected.
-    BOOL isSelected =
-        [audioDevices isOutputDevice:device.GetObjectID()] &&
-            (!dataSourceID || [audioDevices isOutputDataSource:[dataSourceID unsignedIntValue]]);
+    // The check box (with the device or data source's name) enables/disables the device as an
+    // output device.
+    NSButton* checkbox = [[NSButton alloc]
+                          initWithFrame:NSMakeRect(checkboxX, 2, 148 - checkboxX, 20)];
+    [checkbox setButtonType:NSButtonTypeSwitch];
+    [checkbox setTitle:BGMNN(title)];
+    [checkbox setTarget:self];
+    [checkbox setAction:@selector(outputDeviceCheckboxClicked:)];
+    [checkbox setToolTip:toolTip];
+    // Used to find the menu item in the action methods. (The same technique is used by
+    // BGMAppVolumes.)
+    checkbox.cell.representedObject = item;
     
-    item.state = (isSelected ? NSOnState : NSOffState);
+    // The slider sets the device's volume, from 0 to 1. (The device's level is the master volume
+    // times this gain.)
+    NSSlider* slider = [[NSSlider alloc] initWithFrame:NSMakeRect(154, 2, 109, 20)];
+    slider.minValue = 0.0;
+    slider.maxValue = 1.0;
+    slider.target = self;
+    slider.action = @selector(outputDeviceSliderChanged:);
+    slider.cell.representedObject = item;
+    [slider setToolTip:@"Sets the volume of this output device."];
+    
+    [rowView addSubview:checkbox];
+    [rowView addSubview:slider];
+    
+    item.view = rowView;
     item.toolTip = toolTip;
-    item.target = self;
-    item.indentationLevel = 1;
     item.representedObject = @{ @"deviceID": @(device.GetObjectID()),
                                 @"dataSourceID": dataSourceID ? BGMNN(dataSourceID) : [NSNull null] };
-
+    
 #if __clang_major__ >= 9
     if (@available(macOS 10.10, *)) {
         // Used for UI tests.
@@ -303,10 +335,172 @@ static NSInteger const kOutputDeviceMenuItemTag = 5;
     }
 #endif
     
+    // Set the check box and slider to the current settings.
+    [self updateRowItem:item];
+    
     return item;
 }
 
-// Called by BGMAudioDeviceManager to tell us a different device has been set as the output device.
+// Updates the check box and slider in a row's menu item to match the current settings for the
+// row's device.
+//
+// If the device has data sources, only the row for the device's current data source is checked.
+- (void) updateRowItem:(NSMenuItem*)item {
+    AudioObjectID deviceID = [[item representedObject][@"deviceID"] unsignedIntValue];
+    id dataSourceID = [item representedObject][@"dataSourceID"];
+
+    BOOL deviceEnabled = [audioDevices isDeviceEnabled:deviceID];
+
+    BOOL isChecked = NO;
+    if (deviceEnabled) {
+        if (dataSourceID == [NSNull null]) {
+            isChecked = YES;
+        } else {
+            // The device has data sources. This row is checked only if it's for the device's
+            // current data source.
+            BGM_Utils::LogAndSwallowExceptions(BGMDbgArgs, [&] {
+                BGMAudioDevice dev(deviceID);
+                AudioObjectPropertyScope scope = kAudioDevicePropertyScopeOutput;
+                UInt32 channel = kAudioObjectPropertyElementMain;
+
+                if (dev.HasDataSourceControl(scope, channel)) {
+                    isChecked =
+                        (dev.GetCurrentDataSourceID(scope, channel) == [dataSourceID unsignedIntValue]);
+                } else {
+                    isChecked = YES;
+                }
+            });
+        }
+    }
+
+    float gain = [audioDevices gainForDevice:deviceID];
+
+    for (NSView* subview in item.view.subviews) {
+        if ([subview isKindOfClass:[NSButton class]]) {
+            ((NSButton*)subview).state = (isChecked ? NSControlStateValueOn : NSControlStateValueOff);
+        } else if ([subview isKindOfClass:[NSSlider class]]) {
+            ((NSSlider*)subview).doubleValue = gain;
+        }
+    }
+}
+
+// Called when the user clicks a row's check box to enable or disable the device.
+- (void) outputDeviceCheckboxClicked:(NSButton*)checkbox {
+    NSMenuItem* menuItem = (NSMenuItem*)checkbox.cell.representedObject;
+
+    // Make sure the menu item is actually for an output device.
+    if (![outputDeviceMenuItems containsObject:menuItem]) {
+        return;
+    }
+
+    AudioDeviceID deviceID = [[menuItem representedObject][@"deviceID"] unsignedIntValue];
+    id dataSourceID = [menuItem representedObject][@"dataSourceID"];
+    BOOL hasDataSource = (dataSourceID != [NSNull null]);
+
+    BOOL isChecked = (checkbox.state == NSControlStateValueOn);
+    BOOL deviceWasEnabled = [audioDevices isDeviceEnabled:deviceID];
+
+    DebugMsg("BGMOutputDeviceMenuSection::outputDeviceCheckboxClicked: Device %u (%s data source) "
+             "%schecked",
+             deviceID,
+             hasDataSource ? [dataSourceID stringValue].UTF8String : "no",
+             isChecked ? "" : "un");
+
+    // Dispatched because changing which devices are enabled usually blocks. (Note that we're using
+    // DISPATCH_QUEUE_PRIORITY_HIGH, which is the second highest priority.)
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+        BOOL ok = YES;
+
+        if (isChecked) {
+            // Enable the device (if it isn't already).
+            if (!deviceWasEnabled) {
+                // All enabled output devices must share a sample rate, so check before enabling.
+                NSError* __nullable conflict = [audioDevices sampleRateConflictErrorForDevice:deviceID];
+                if (conflict) {
+                    // The device's sample rate differs from the enabled output devices', so it
+                    // would play the audio at the wrong speed. Revert the check box and explain.
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        checkbox.state = NSControlStateValueOff;
+
+                        NSAlert* alert = [NSAlert new];
+                        alert.messageText = @"Can't enable this output device.";
+                        alert.informativeText = conflict.localizedDescription ?: @"";
+                        [alert runModal];
+                    });
+                    return;
+                }
+
+                // Add the device to the list of preferred devices.
+                [preferredDevices userChangedOutputDeviceTo:deviceID];
+
+                ok = [audioDevices setDevice:deviceID enabled:YES];
+            }
+
+            // If this row has a data source, make it the device's current data source.
+            if (ok && hasDataSource) {
+                BGM_Utils::LogAndSwallowExceptions(BGMDbgArgs, [&] {
+                    BGMAudioDevice dev(deviceID);
+                    AudioObjectPropertyScope scope = kAudioDevicePropertyScopeOutput;
+                    UInt32 channel = kAudioObjectPropertyElementMain;
+
+                    if (dev.DataSourceControlIsSettable(scope, channel)) {
+                        dev.SetCurrentDataSourceByID(scope, channel, [dataSourceID unsignedIntValue]);
+                    }
+                });
+            }
+        } else if (deviceWasEnabled) {
+            // Disable the device.
+            ok = [audioDevices setDevice:deviceID enabled:NO];
+        }
+
+        if (!ok) {
+            // Put the check box back the way it was and show an error message. (NSAlerts should
+            // only be shown on the main thread.)
+            dispatch_async(dispatch_get_main_queue(), ^{
+                checkbox.state = (isChecked ? NSControlStateValueOff : NSControlStateValueOn);
+
+                BOOL isLastEnabledDevice = ([audioDevices enabledOutputDeviceIDs].count <= 1);
+
+                NSLog(@"Failed to %s output device %u", isChecked ? "enable" : "disable",
+                      deviceID);
+
+                NSAlert* alert = [NSAlert new];
+
+                alert.messageText =
+                    isLastEnabledDevice ?
+                        @"Can't disable the last output device." :
+                        @"Failed to change the output devices.";
+                alert.informativeText =
+                    isLastEnabledDevice ?
+                        @"BGMApp needs at least one output device to play audio to." :
+                        @"This is probably a bug. Feel free to report it.";
+
+                [alert runModal];
+            });
+        }
+    });
+}
+
+// Called when the user changes a row's volume slider.
+- (void) outputDeviceSliderChanged:(NSSlider*)slider {
+    NSMenuItem* menuItem = (NSMenuItem*)slider.cell.representedObject;
+
+    // Make sure the menu item is actually for an output device.
+    if (![outputDeviceMenuItems containsObject:menuItem]) {
+        return;
+    }
+
+    AudioDeviceID deviceID = [[menuItem representedObject][@"deviceID"] unsignedIntValue];
+
+    DebugMsg("BGMOutputDeviceMenuSection::outputDeviceSliderChanged: Device %u. New gain: %f",
+             deviceID, slider.doubleValue);
+
+    // Changing a device's gain is fast (it doesn't restart the IO), so no need to dispatch to
+    // another thread.
+    [audioDevices setDevice:deviceID gain:slider.floatValue];
+}
+
+// Called by BGMAudioDeviceManager to tell us the enabled output devices have changed.
 - (void) outputDeviceDidChange {
     BGMOutputDeviceMenuSection* __weak weakSelf = self;
 
@@ -317,78 +511,6 @@ static NSInteger const kOutputDeviceMenuItemTag = 5;
     });
 }
 
-- (void) outputDeviceMenuItemSelected:(NSMenuItem*)menuItem {
-    DebugMsg("BGMOutputDeviceMenuSection::outputDeviceMenuItemSelected: '%s' menu item selected",
-             [menuItem.title UTF8String]);
-    
-    // Make sure the menu item is actually for an output device.
-    if (![outputDeviceMenuItems containsObject:menuItem]) {
-        return;
-    }
-    
-    // Change to the new output device.
-    AudioDeviceID newDeviceID = [[menuItem representedObject][@"deviceID"] unsignedIntValue];
-    id newDataSourceID = [menuItem representedObject][@"dataSourceID"];
-    
-    BOOL changingDevice = ![audioDevices isOutputDevice:newDeviceID];
-    BOOL changingDataSource =
-        (newDataSourceID != [NSNull null]) &&
-            ![audioDevices isOutputDataSource:[newDataSourceID unsignedIntValue]];
-
-    if (changingDevice || changingDataSource) {
-        NSString* deviceName =
-            menuItem.toolTip ?
-                [NSString stringWithFormat:@"%@ (%@)", menuItem.title, menuItem.toolTip] :
-                menuItem.title;
-
-        if (changingDevice) {
-            // Add the new output device to the list of preferred devices.
-            [preferredDevices userChangedOutputDeviceTo:newDeviceID];
-        }
-
-        // Dispatched because it usually blocks. (Note that we're using
-        // DISPATCH_QUEUE_PRIORITY_HIGH, which is the second highest priority.)
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-            [self changeToOutputDevice:newDeviceID
-                         newDataSource:newDataSourceID
-                            deviceName:deviceName];
-        });
-    }
-}
-
-- (void) changeToOutputDevice:(AudioDeviceID)deviceID
-                newDataSource:(id)dataSourceID
-                   deviceName:(NSString*)deviceName {
-    NSError* __nullable error;
-    
-    if (dataSourceID == [NSNull null]) {
-        error = [audioDevices setOutputDeviceWithID:deviceID revertOnFailure:YES];
-    } else {
-        error = [audioDevices setOutputDeviceWithID:deviceID
-                                       dataSourceID:[dataSourceID unsignedIntValue]
-                                    revertOnFailure:YES];
-    }
-    
-    if (error) {
-        // Couldn't change the output device, so show a warning. (No need to change the menu
-        // selection back because it gets repopulated every time it's opened.)
-        
-        // NSAlerts should only be shown on the main thread.
-        dispatch_async(dispatch_get_main_queue(), ^{
-            NSLog(@"Failed to set output device: %@", deviceName);
-            
-            NSAlert* alert = [NSAlert new];
-            
-            alert.messageText =
-                [NSString stringWithFormat:@"Failed to set %@ as the output device.", deviceName];
-            alert.informativeText = @"This is probably a bug. Feel free to report it.";
-            
-            [alert runModal];
-        });
-    }
-}
-
 @end
 
 #pragma clang assume_nonnull end
-
