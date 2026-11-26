@@ -41,12 +41,32 @@
 
 #pragma clang assume_nonnull begin
 
-static NSInteger const kOutputDeviceMenuItemTag = 5;
+static NSInteger const kOutputDeviceMenuItemTag    = 5;
+static NSInteger const kOutputDeviceRowCheckboxTag = 1;
+static NSInteger const kOutputDeviceRowMuteTag     = 2;
 
 // The size of the custom view in each output device's menu item. (The width matches the master
-// volume row's view, which comes from MainMenu.xib.)
+// volume row's view, which comes from MainMenu.xib. The height matches the app volume rows.)
 static const CGFloat kRowWidth  = 269.0;
-static const CGFloat kRowHeight = 24.0;
+static const CGFloat kRowHeight = 20.0;
+
+// Sets the speaker icon on a row's mute button.
+static void BGMSetRowMuteButtonImage(NSButton* __nullable inButton, BOOL inMuted) {
+    if ([NSImage respondsToSelector:@selector(imageWithSystemSymbolName:accessibilityDescription:)]) {
+        #pragma clang diagnostic push
+        #pragma clang diagnostic ignored "-Wpartial-availability"
+        NSString* symbol = (inMuted ? @"speaker.slash.fill" : @"speaker.wave.2.fill");
+        inButton.image = [NSImage imageWithSystemSymbolName:symbol
+                                     accessibilityDescription:(inMuted ? @"Unmute" : @"Mute")];
+        #pragma clang diagnostic pop
+        inButton.imagePosition = NSImageOnly;
+        inButton.title = @"";
+    } else {
+        // macOS 10.x doesn't have SF Symbols.
+        inButton.image = nil;
+        inButton.title = (inMuted ? @"Unmute" : @"Mute");
+    }
+}
 
 @implementation BGMOutputDeviceMenuSection {
     NSMenu* bgmMenu;
@@ -262,8 +282,9 @@ static const CGFloat kRowHeight = 24.0;
     return items;
 }
 
-// Creates a menu item with a custom view containing a check box (to enable/disable the device as
-// an output) and a slider (to set the device's volume relative to the other output devices).
+// Creates a menu item with a custom view containing the device's name, a check box (to
+// enable/disable the device as an output), a mute button, and a slider (to set the device's
+// volume relative to the other output devices).
 - (NSMenuItem*) createRowMenuItemForDevice:(CAHALAudioDevice)device
                               dataSourceID:(NSNumber* __nullable)dataSourceID
                                      title:(NSString* __nullable)title
@@ -277,14 +298,13 @@ static const CGFloat kRowHeight = 24.0;
     
     NSView* rowView = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, kRowWidth, kRowHeight)];
     
-    CGFloat checkboxX = 0;
-    
-    // Add the AirPlay icon before the check box for AirPlay devices.
+    // The name label. AirPlay devices get an icon before it, like the app volume rows.
     //
     // TODO: Test this with real hardware that supports AirPlay. (I don't have any.)
+    CGFloat nameX = 0;
     BGM_Utils::LogAndSwallowExceptions(BGMDbgArgs, [&] {
         if (device.GetTransportType() == kAudioDeviceTransportTypeAirPlay) {
-            NSImageView* iconView = [[NSImageView alloc] initWithFrame:NSMakeRect(4, 2, 18, 18)];
+            NSImageView* iconView = [[NSImageView alloc] initWithFrame:NSMakeRect(2, 2, 16, 16)];
             iconView.image = [NSImage imageNamed:@"AirPlayIcon"];
             
             // Make the icon a "template image" so it gets drawn colour-inverted when it's
@@ -293,34 +313,56 @@ static const CGFloat kRowHeight = 24.0;
             
             [rowView addSubview:iconView];
             
-            checkboxX = 26;
+            nameX = 20;
         }
     });
     
-    // The check box (with the device or data source's name) enables/disables the device as an
-    // output device.
-    NSButton* checkbox = [[NSButton alloc]
-                          initWithFrame:NSMakeRect(checkboxX, 2, 148 - checkboxX, 20)];
+    NSTextField* nameLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(nameX, 3, 124 - nameX, 14)];
+    [nameLabel setEditable:NO];
+    [nameLabel setSelectable:NO];
+    [nameLabel setBordered:NO];
+    [nameLabel setDrawsBackground:NO];
+    [nameLabel setControlSize:NSControlSizeSmall];
+    [nameLabel setFont:[NSFont systemFontOfSize:11]];
+    [nameLabel setLineBreakMode:NSLineBreakByTruncatingTail];
+    [nameLabel setStringValue:BGMNN(title)];
+    [nameLabel setToolTip:toolTip];
+    [rowView addSubview:nameLabel];
+    
+    // The check box enables/disables the device as an output device.
+    NSButton* checkbox = [[NSButton alloc] initWithFrame:NSMakeRect(128, 2, 16, 16)];
     [checkbox setButtonType:NSButtonTypeSwitch];
-    [checkbox setTitle:BGMNN(title)];
+    [checkbox setTitle:@""];
     [checkbox setTarget:self];
     [checkbox setAction:@selector(outputDeviceCheckboxClicked:)];
     [checkbox setToolTip:toolTip];
+    checkbox.tag = kOutputDeviceRowCheckboxTag;
     // Used to find the menu item in the action methods. (The same technique is used by
     // BGMAppVolumes.)
     checkbox.cell.representedObject = item;
+    [rowView addSubview:checkbox];
+    
+    // The mute button silences the device without changing its saved volume.
+    NSButton* muteButton = [[NSButton alloc] initWithFrame:NSMakeRect(150, 1, 18, 18)];
+    // A momentary (default type), bordered square button, like the app volume rows' mute buttons.
+    [muteButton setBezelStyle:NSBezelStyleSmallSquare];
+    [muteButton setTarget:self];
+    [muteButton setAction:@selector(outputDeviceMuteToggled:)];
+    [muteButton setToolTip:@"Mute or un-mute this output device."];
+    muteButton.tag = kOutputDeviceRowMuteTag;
+    muteButton.cell.representedObject = item;
+    [rowView addSubview:muteButton];
     
     // The slider sets the device's volume, from 0 to 1. (The device's level is the master volume
     // times this gain.)
-    NSSlider* slider = [[NSSlider alloc] initWithFrame:NSMakeRect(154, 2, 109, 20)];
+    NSSlider* slider = [[NSSlider alloc] initWithFrame:NSMakeRect(174, 2, 89, 15)];
+    [slider setControlSize:NSControlSizeMini];
     slider.minValue = 0.0;
     slider.maxValue = 1.0;
     slider.target = self;
     slider.action = @selector(outputDeviceSliderChanged:);
     slider.cell.representedObject = item;
     [slider setToolTip:@"Sets the volume of this output device."];
-    
-    [rowView addSubview:checkbox];
     [rowView addSubview:slider];
     
     item.view = rowView;
@@ -333,9 +375,13 @@ static const CGFloat kRowHeight = 24.0;
         // Used for UI tests.
         item.accessibilityIdentifier = @"output-device";
     }
+    if ([item respondsToSelector:@selector(setAccessibilityTitle:)]) {
+        // So accessibility clients can read the row's name (the check box is now a bare square).
+        item.accessibilityTitle = BGMNN(title);
+    }
 #endif
     
-    // Set the check box and slider to the current settings.
+    // Set the check box, mute button, and slider to the current settings.
     [self updateRowItem:item];
     
     return item;
@@ -374,10 +420,16 @@ static const CGFloat kRowHeight = 24.0;
     }
 
     float gain = [audioDevices gainForDevice:deviceID];
+    BOOL muted = [audioDevices isDeviceMuted:deviceID];
 
     for (NSView* subview in item.view.subviews) {
         if ([subview isKindOfClass:[NSButton class]]) {
-            ((NSButton*)subview).state = (isChecked ? NSControlStateValueOn : NSControlStateValueOff);
+            NSButton* button = (NSButton*)subview;
+            if (button.tag == kOutputDeviceRowCheckboxTag) {
+                button.state = (isChecked ? NSControlStateValueOn : NSControlStateValueOff);
+            } else if (button.tag == kOutputDeviceRowMuteTag) {
+                BGMSetRowMuteButtonImage(button, muted);
+            }
         } else if ([subview isKindOfClass:[NSSlider class]]) {
             ((NSSlider*)subview).doubleValue = gain;
         }
@@ -496,8 +548,41 @@ static const CGFloat kRowHeight = 24.0;
              deviceID, slider.doubleValue);
 
     // Changing a device's gain is fast (it doesn't restart the IO), so no need to dispatch to
-    // another thread.
+    // another thread. It also un-mutes the device.
     [audioDevices setDevice:deviceID gain:slider.floatValue];
+
+    // Update the mute button's icon in case the device was muted.
+    for (NSView* subview in menuItem.view.subviews) {
+        if ([subview isKindOfClass:[NSButton class]] &&
+                ((NSButton*)subview).tag == kOutputDeviceRowMuteTag) {
+            BGMSetRowMuteButtonImage((NSButton*)subview, NO);
+        }
+    }
+}
+
+// Called when the user clicks a row's mute button to mute or un-mute the device.
+- (void) outputDeviceMuteToggled:(NSButton*)muteButton {
+    NSMenuItem* menuItem = (NSMenuItem*)muteButton.cell.representedObject;
+
+    // Make sure the menu item is actually for an output device.
+    if (![outputDeviceMenuItems containsObject:menuItem]) {
+        return;
+    }
+
+    AudioDeviceID deviceID = [[menuItem representedObject][@"deviceID"] unsignedIntValue];
+
+    // Toggle the device's mute state. (The mute button is momentary, so query the manager's
+    // current state rather than the button's.)
+    BOOL mutedNow = ![audioDevices isDeviceMuted:deviceID];
+
+    DebugMsg("BGMOutputDeviceMenuSection::outputDeviceMuteToggled: Device %u %smuted",
+             deviceID, mutedNow ? "" : "un");
+
+    // Muting doesn't restart the IO, so it's fast enough to do on the main thread.
+    [audioDevices setDevice:deviceID muted:mutedNow];
+
+    // Update the icon to the new state.
+    BGMSetRowMuteButtonImage(muteButton, [audioDevices isDeviceMuted:deviceID]);
 }
 
 // Called by BGMAudioDeviceManager to tell us the enabled output devices have changed.

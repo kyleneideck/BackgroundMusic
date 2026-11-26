@@ -75,8 +75,12 @@ static const int kBGMErrorCode_ReturningEarly       = 2;
 - (BOOL) setDevice:(AudioObjectID)deviceID enabled:(BOOL)enabled;
 
 // Set an output device's relative volume. 0.0 to 1.0. (Its level is the master volume times
-// this gain.)
+// this gain.) Also un-mutes the device if it was muted.
 - (void) setDevice:(AudioObjectID)deviceID gain:(float)gain;
+
+// Mute or un-mute an output device. Muting silences the device without changing its saved
+// relative volume; un-muting restores it.
+- (void) setDevice:(AudioObjectID)deviceID muted:(BOOL)muted;
 
 // Checks whether enabling inDeviceID would mix sample rates among the enabled output devices.
 // All enabled output devices must share the same sample rate: BGMDevice runs at the first
@@ -88,6 +92,7 @@ static const int kBGMErrorCode_ReturningEarly       = 2;
 
 - (BOOL) isDeviceEnabled:(AudioObjectID)deviceID;
 - (float) gainForDevice:(AudioObjectID)deviceID;
+- (BOOL) isDeviceMuted:(AudioObjectID)deviceID;
 - (NSArray<NSNumber*>* __nullable) enabledOutputDeviceIDs;
 
 // Enable the output devices the user previously enabled (see setUserDefaults:), restoring their

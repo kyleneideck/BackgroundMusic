@@ -61,6 +61,7 @@ struct BGMOutputDeviceState {
     AudioObjectID deviceID;
     BOOL          enabled;
     float         gain;   // 0.0 to 1.0
+    bool          muted;  // True to silence the device (its saved gain is preserved).
 };
 
 @implementation BGMAudioDeviceManager {
@@ -328,7 +329,7 @@ struct BGMOutputDeviceState {
 
     // Make sure there's a state entry for the new device.
     if (![self findStateForDeviceID:inDeviceID]) {
-        outputDeviceStates.push_back({ inDeviceID, YES, kDefaultOutputDeviceGain });
+        outputDeviceStates.push_back({ inDeviceID, YES, kDefaultOutputDeviceGain, false });
     }
 
     [self rebuildPlaythrough];
@@ -377,10 +378,11 @@ struct BGMOutputDeviceState {
     playThrough_UISounds.SetDevices(uiSoundsDevice, enabledDevices);
     playThrough_UISounds.Activate();
 
-    // (Re)apply the per-device gains and the master volume.
+    // (Re)apply the per-device gains and the master volume. Muted devices play silence.
     for (const auto& state : outputDeviceStates) {
-        playThrough.SetOutputDeviceGain(state.deviceID, (Float32)state.gain);
-        playThrough_UISounds.SetOutputDeviceGain(state.deviceID, (Float32)state.gain);
+        Float32 effectiveGain = (state.muted ? 0.0f : (Float32)state.gain);
+        playThrough.SetOutputDeviceGain(state.deviceID, effectiveGain);
+        playThrough_UISounds.SetOutputDeviceGain(state.deviceID, effectiveGain);
     }
     [self updatePlayThroughMasterVolumes];
 
@@ -417,7 +419,7 @@ struct BGMOutputDeviceState {
 
         BGMOutputDeviceState* state = [self findStateForDeviceID:deviceID];
         if (!state) {
-            outputDeviceStates.push_back({ deviceID, enabled, kDefaultOutputDeviceGain });
+            outputDeviceStates.push_back({ deviceID, enabled, kDefaultOutputDeviceGain, false });
             state = &outputDeviceStates.back();
         }
 
@@ -487,15 +489,46 @@ struct BGMOutputDeviceState {
 
         BGMOutputDeviceState* state = [self findStateForDeviceID:deviceID];
         if (!state) {
-            outputDeviceStates.push_back({ deviceID, NO, gain });
+            outputDeviceStates.push_back({ deviceID, NO, gain, false });
             state = &outputDeviceStates.back();
         }
         state->gain = gain;
+
+        // Changing the slider un-mutes the device.
+        state->muted = false;
 
         // Apply the gain without restarting the IO. (No-op if the device isn't currently one of
         // the playthroughs' output devices.)
         playThrough.SetOutputDeviceGain(deviceID, (Float32)gain);
         playThrough_UISounds.SetOutputDeviceGain(deviceID, (Float32)gain);
+
+        [self persistOutputDeviceSettings];
+    } @finally {
+        [stateLock unlock];
+    }
+}
+
+- (void) setDevice:(AudioObjectID)deviceID muted:(BOOL)muted {
+    @try {
+        [stateLock lock];
+
+        BGMOutputDeviceState* state = [self findStateForDeviceID:deviceID];
+        if (!state) {
+            outputDeviceStates.push_back({ deviceID, NO, kDefaultOutputDeviceGain, (bool)muted });
+            state = &outputDeviceStates.back();
+        }
+
+        if (state->muted == (bool)muted) {
+            return;  // No change.
+        }
+
+        state->muted = (bool)muted;
+
+        // Apply without restarting the IO. (No-op if the device isn't currently one of the
+        // playthroughs' output devices.)
+        Float32 effectiveGain = (muted ? 0.0f : (Float32)state->gain);
+        playThrough.SetOutputDeviceGain(deviceID, effectiveGain);
+        playThrough_UISounds.SetOutputDeviceGain(deviceID, effectiveGain);
 
         [self persistOutputDeviceSettings];
     } @finally {
@@ -584,6 +617,18 @@ struct BGMOutputDeviceState {
     }
 }
 
+- (BOOL) isDeviceMuted:(AudioObjectID)deviceID {
+    @try {
+        [stateLock lock];
+
+        BGMOutputDeviceState* state = [self findStateForDeviceID:deviceID];
+
+        return (state ? (BOOL)state->muted : NO);
+    } @finally {
+        [stateLock unlock];
+    }
+}
+
 - (NSArray<NSNumber*>* __nullable) enabledOutputDeviceIDs {
     @try {
         [stateLock lock];
@@ -647,14 +692,14 @@ struct BGMOutputDeviceState {
 
                     BGMOutputDeviceState* state = [self findStateForDeviceID:deviceIDs[i]];
                     if (!state) {
-                        outputDeviceStates.push_back({ deviceIDs[i], YES, kDefaultOutputDeviceGain });
+                        outputDeviceStates.push_back({ deviceIDs[i], YES, kDefaultOutputDeviceGain, false });
                         state = &outputDeviceStates.back();
                     }
 
                     state->enabled = YES;
 
-                    // Restore the saved gain. A saved gain of 0.0 is valid (the user muted the
-                    // device), so only use the default if there's no saved gain at all.
+                    // Restore the saved gain. A saved gain of 0.0 is valid (the user set the
+                    // slider to zero), so only use the default if there's no saved gain at all.
                     NSNumber* __nullable savedGain = entry[@"gain"];
                     if ([savedGain isKindOfClass:[NSNumber class]]) {
                         float gain = (float)[savedGain floatValue];
@@ -662,6 +707,9 @@ struct BGMOutputDeviceState {
                     } else {
                         state->gain = kDefaultOutputDeviceGain;
                     }
+
+                    // Older saved settings don't have a "muted" key; treat it as unmuted.
+                    state->muted = [entry[@"muted"] boolValue];
                     break;
                 }
             }
@@ -760,7 +808,8 @@ struct BGMOutputDeviceState {
 
 #pragma mark Output Device Persistence and Master Volume
 
-// Persists the per-output-device settings (enabled state and gain), keyed by device UID.
+// Persists the per-output-device settings (enabled state, gain, and mute state), keyed by device
+// UID.
 // Must be called with stateLock held.
 - (void) persistOutputDeviceSettings {
     if (!userDefaults) {
@@ -775,7 +824,8 @@ struct BGMOutputDeviceState {
                 CFBridgingRelease(BGMAudioDevice(state.deviceID).CopyDeviceUID());
             if (uid) {
                 settings[uid] = @{ @"enabled": @(state.enabled),
-                                  @"gain": @(state.gain) };
+                                  @"gain": @(state.gain),
+                                  @"muted": @(state.muted) };
             }
         } @catch (NSException* exception) {
             // The device threw. Skip it.
