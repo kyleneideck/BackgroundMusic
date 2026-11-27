@@ -82,14 +82,6 @@ static const int kBGMErrorCode_ReturningEarly       = 2;
 // relative volume; un-muting restores it.
 - (void) setDevice:(AudioObjectID)deviceID muted:(BOOL)muted;
 
-// Checks whether enabling inDeviceID would mix sample rates among the enabled output devices.
-// All enabled output devices must share the same sample rate: BGMDevice runs at the first
-// enabled device's rate, and each output device plays the same samples at its own rate, so a
-// device with a different rate would play the audio at the wrong speed.
-//
-// @return An error describing the conflict, or nil if the device can be enabled.
-- (NSError* __nullable) sampleRateConflictErrorForDevice:(AudioObjectID)deviceID;
-
 - (BOOL) isDeviceEnabled:(AudioObjectID)deviceID;
 - (float) gainForDevice:(AudioObjectID)deviceID;
 - (BOOL) isDeviceMuted:(AudioObjectID)deviceID;

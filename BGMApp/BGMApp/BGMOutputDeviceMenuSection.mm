@@ -467,23 +467,9 @@ static void BGMSetRowMuteButtonImage(NSButton* __nullable inButton, BOOL inMuted
         if (isChecked) {
             // Enable the device (if it isn't already).
             if (!deviceWasEnabled) {
-                // All enabled output devices must share a sample rate, so check before enabling.
-                NSError* __nullable conflict = [audioDevices sampleRateConflictErrorForDevice:deviceID];
-                if (conflict) {
-                    // The device's sample rate differs from the enabled output devices', so it
-                    // would play the audio at the wrong speed. Revert the check box and explain.
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        checkbox.state = NSControlStateValueOff;
-
-                        NSAlert* alert = [NSAlert new];
-                        alert.messageText = @"Can't enable this output device.";
-                        alert.informativeText = conflict.localizedDescription ?: @"";
-                        [alert runModal];
-                    });
-                    return;
-                }
-
-                // Add the device to the list of preferred devices.
+                // Add the device to the list of preferred devices. Output devices don't need to
+                // share a sample rate: BGMPlayThrough resamples any device whose rate differs from
+                // the others' (see BGMPlayThrough.h).
                 [preferredDevices userChangedOutputDeviceTo:deviceID];
 
                 ok = [audioDevices setDevice:deviceID enabled:YES];

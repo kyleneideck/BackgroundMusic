@@ -172,10 +172,11 @@ doesn't attenuate the audio a second time. `BGMPlayThrough` then scales the audi
 the master volume times the device's relative volume (both are `std::atomic` values that can be updated in real
 time).
 
-All enabled output devices must have the same sample rate: BGMDevice runs at the first enabled device's rate, and
-each output device's IOProc plays the same samples at its own device's rate, so `BGMPlayThrough::Activate()` refuses
-to activate if the enabled devices' sample rates differ (resampling isn't possible in the realtime-constrained
-IOProcs). Enabling a device with a different rate is rejected in the UI with an explanatory message.
+Output devices don't all need to share a sample rate. BGMDevice (the input) runs at the first enabled device's rate,
+and the audio is stored in a ring buffer at that rate. An output device whose rate matches the buffer plays the
+samples directly in its IOProc; a device with a different rate is resampled in its IOProc using an `AudioConverter`
+(created and pre-warmed in `BGMPlayThrough::CreateResamplers`, configured with `kConverterPrimeMethod_None` for
+real-time safety), so all the enabled devices play the same audio in sync.
 
 BGMApp stores a small amount of state data using [User
 Defaults](https://developer.apple.com/library/content/documentation/Cocoa/Conceptual/UserDefaults/AboutPreferenceDomains/AboutPreferenceDomains.html)

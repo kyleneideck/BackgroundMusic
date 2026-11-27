@@ -35,6 +35,7 @@
 #import <memory>
 #import <cstdlib>
 #import <cstring>
+#import <cmath>   // For fabsf
 
 // System Includes
 #import <CoreAudio/CoreAudio.h>
@@ -114,6 +115,22 @@ public:
     }
 
     /*!
+     * @return True if the device's sample rate differs from the ring buffer's (i.e. it will be
+     *         resampled), or false if the device isn't one of the playthrough's output devices.
+     */
+    static bool NeedsResamplingForOutputDevice(const BGMPlayThrough& inPlayThrough, AudioObjectID inDeviceID)
+    {
+        for(const auto& outputDevice : inPlayThrough.mOutputDevices)
+        {
+            if(outputDevice->device.GetObjectID() == inDeviceID)
+            {
+                return outputDevice->needsResampling;
+            }
+        }
+        return false;
+    }
+
+    /*!
      * Calls the input and output IOProcs directly to move inFrames frames of audio through the
      * playthrough's ring buffer.
      *
@@ -162,6 +179,66 @@ public:
 
         *inFetchedABL = MakeStereoFloatABL(inFrames, /* garbage = */ -1234.5f);
 
+        AudioTimeStamp outTime;
+        memset(&outTime, 0, sizeof(outTime));
+
+        return BGMPlayThrough::OutputDeviceIOProc(inOutputDeviceID,
+                                                  &dummyTime,
+                                                  &dummyABL,
+                                                  &dummyTime,
+                                                  inFetchedABL,
+                                                  &outTime,
+                                                  &inPlayThrough);
+    }
+
+    /*!
+     * Stores inInputFrames frames of inInputValue into the ring buffer, then fetches
+     * inOutputFrames frames through the output device's IOProc.
+     *
+     * Unlike DriveIOProcs (which stores and fetches the same number of frames), this stores more
+     * input than it fetches, so a resampling device's AudioConverter never runs out of input while
+     * producing the output window. For a DC input signal the resampled output should settle to the
+     * input value scaled by the master and device gains (after the converter's short start-up
+     * transient), so tests can check the level without depending on exact resampler output.
+     *
+     * inFetchedABL is pre-filled with garbage values (so tests can check the IOProc overwrote it)
+     * and must have its mData freed by the caller.
+     */
+    static OSStatus DriveResampler(BGMPlayThrough& inPlayThrough,
+                                   const BGMAudioDevice& inInputDevice,
+                                   AudioObjectID inOutputDeviceID,
+                                   UInt32 inInputFrames,
+                                   UInt32 inOutputFrames,
+                                   Float32 inInputValue,
+                                   AudioBufferList* inFetchedABL)
+    {
+        SetInputIOProcState(inPlayThrough, BGMPlayThrough::IOState::Running);
+
+        AudioTimeStamp dummyTime;
+        memset(&dummyTime, 0, sizeof(dummyTime));
+        AudioBufferList dummyABL;
+        memset(&dummyABL, 0, sizeof(dummyABL));
+
+        AudioBufferList inABL = MakeStereoFloatABL(inInputFrames, inInputValue);
+        AudioTimeStamp inTime;
+        memset(&inTime, 0, sizeof(inTime));
+        OSStatus err = BGMPlayThrough::InputDeviceIOProc(inInputDevice.GetObjectID(),
+                                                         &dummyTime,
+                                                         &inABL,
+                                                         &inTime,
+                                                         &dummyABL,
+                                                         &dummyTime,
+                                                         &inPlayThrough);
+        free(inABL.mBuffers[0].mData);
+
+        if(err != noErr)
+        {
+            return err;
+        }
+
+        SetOutputDeviceIOProcState(inPlayThrough, inOutputDeviceID, BGMPlayThrough::IOState::Running);
+
+        *inFetchedABL = MakeStereoFloatABL(inOutputFrames, /* garbage = */ -1234.5f);
         AudioTimeStamp outTime;
         memset(&outTime, 0, sizeof(outTime));
 
@@ -239,7 +316,7 @@ private:
     XCTAssert(mockInputDevice->mPropertiesWithListeners.empty());
 }
 
-- (void) testActivate_MixedSampleRateOutputDevicesThrows {
+- (void) testActivate_MixedSampleRateOutputDevicesSucceeds {
     auto secondOutputMock = MockAudioObjects::CreateMockDevice("Mock Second Output Device");
     BGMAudioDevice secondOutput(secondOutputMock->GetObjectID());
 
@@ -248,8 +325,8 @@ private:
 
     BGMPlayThrough playThrough(inputDevice, { outputDevice, secondOutput });
 
-    // Activating with output devices that have different sample rates must fail, because the
-    // audio would play at the wrong speed on the device with the different rate.
+    // Activating with output devices that have different sample rates should now succeed: the
+    // device whose rate differs from the ring buffer's gets resampled (see the header comment).
     bool threw = false;
     try {
         playThrough.Activate();
@@ -257,8 +334,74 @@ private:
         threw = true;
     }
 
-    XCTAssertTrue(threw, @"Activate should refuse output devices with different sample rates.");
-    XCTAssertFalse(BGMPlayThroughTestAccess::IsActive(playThrough));
+    XCTAssertFalse(threw, @"Activate should succeed with output devices of different sample rates.");
+    XCTAssertTrue(BGMPlayThroughTestAccess::IsActive(playThrough));
+
+    // The ring buffer runs at the first output device's rate (48000), so that device plays the
+    // samples directly while the 44100 device is resampled.
+    XCTAssertFalse(BGMPlayThroughTestAccess::NeedsResamplingForOutputDevice(playThrough,
+                                                                            outputDevice.GetObjectID()));
+    XCTAssertTrue(BGMPlayThroughTestAccess::NeedsResamplingForOutputDevice(playThrough,
+                                                                           secondOutput.GetObjectID()));
+}
+
+- (void) testOutputDeviceIOProc_ResamplesMixedRateDevice {
+    auto secondOutputMock = MockAudioObjects::CreateMockDevice("Mock Second Output Device");
+    BGMAudioDevice secondOutput(secondOutputMock->GetObjectID());
+
+    // First output at 48000 (sets the ring buffer's rate), second at 44100 (needs resampling).
+    outputDevice.SetNominalSampleRate(48000.0);
+
+    BGMPlayThrough playThrough(inputDevice, { outputDevice, secondOutput });
+    playThrough.Activate();
+
+    XCTAssertTrue(BGMPlayThroughTestAccess::NeedsResamplingForOutputDevice(playThrough,
+                                                                           secondOutput.GetObjectID()));
+
+    // Drive 44100-rate output from 48000-rate input through the resampler.
+    playThrough.SetMasterVolume(1.0f);
+    playThrough.SetOutputDeviceGain(secondOutput.GetObjectID(), 0.5f);  // expected level: 0.5
+
+    AudioBufferList outABL;
+    OSStatus err = BGMPlayThroughTestAccess::DriveResampler(playThrough,
+                                                             inputDevice,
+                                                             secondOutput.GetObjectID(),
+                                                             /* input frames = */ 2000,
+                                                             /* output frames = */ 200,
+                                                             /* input value = */ 1.0f,
+                                                             &outABL);
+    XCTAssertEqual(noErr, err);
+
+    const UInt32 numOutFrames = 200;
+    const Float32* outSamples = static_cast<const Float32*>(outABL.mBuffers[0].mData);
+    const Float32 expected = 0.5f;  // 1.0 (input) * 1.0 (master) * 0.5 (gain)
+    const Float32 tolerance = 0.1f;
+
+    // The IOProc must have overwritten the pre-filled garbage values (i.e. it produced output
+    // rather than leaving the buffer untouched).
+    for(UInt32 i = 0; i < numOutFrames * 2; i++)
+    {
+        XCTAssertNotEqual(-1234.5f, outSamples[i], @"Sample %u should be overwritten", i);
+    }
+
+    // The input is a DC signal, so after the resampler's short start-up transient the output
+    // should settle to the input value scaled by the gain. Check the settled (second half of the
+    // output) portion rather than the first few samples.
+    UInt32 withinTolerance = 0;
+    const UInt32 tailStart = numOutFrames / 2;
+    for(UInt32 i = tailStart * 2; i < numOutFrames * 2; i++)
+    {
+        if(fabsf(outSamples[i] - expected) <= tolerance)
+        {
+            withinTolerance++;
+        }
+    }
+    XCTAssertGreaterThan((int)withinTolerance, (int)((numOutFrames - tailStart) * 2 * 90 / 100),
+                         @"The resampled output should be close to the input scaled by the gain");
+
+    BGMPlayThroughTestAccess::StopIOProcs(playThrough);
+
+    free(outABL.mBuffers[0].mData);
 }
 
 - (void) testActivate_SameSampleRateOutputDevicesSucceeds {

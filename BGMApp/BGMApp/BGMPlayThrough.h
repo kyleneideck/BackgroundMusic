@@ -26,11 +26,14 @@
 //  Each output device's audio is scaled by the master volume (SetMasterVolume) times the
 //  device's relative volume (SetOutputDeviceGain) in its IOProc, in real time.
 //
-//  All the output devices must have the same sample rate. The input device is set to the first
-//  output device's rate, and each output device plays the same samples at its own rate, so a
-//  device with a different rate would play the audio at the wrong speed. (We can't resample in
-//  the IOProcs because they're realtime constrained.) Activate() refuses to activate if the
-//  output devices' sample rates differ.
+//  The output devices don't need to share a sample rate. The input device is set to the first
+//  output device's rate, and the audio is stored in a ring buffer at that rate. An output device
+//  whose rate matches the input plays the ring buffer's samples directly. A device with a
+//  different rate is resampled in its IOProc using an AudioConverter (created in CreateResamplers,
+//  configured with kConverterPrimeMethod_None for real-time safety). The resampler's input
+//  callback reads from the ring buffer, so all the devices stay in sync: each one consumes the
+//  input at the input rate, regardless of its own rate. A same-rate device skips the resampler
+//  entirely, so matched-rate devices have no extra cost.
 //
 //  Apple's CAPlayThrough sample code (https://developer.apple.com/library/mac/samplecode/CAPlayThrough/Introduction/Intro.html)
 //  has a similar class, but I couldn't get it fast enough to use here. Soundflower also has a similar class
@@ -67,6 +70,8 @@
 #include <vector>
 
 // System Includes
+#include <AudioToolbox/AudioConverter.h>
+#include <cstdlib>
 #include <mach/semaphore.h>
 
 
@@ -240,6 +245,64 @@ private:
         Float64                            lastOutputSampleTime = -1;
         // Subtract this from the output time to get the input time.
         Float64                            inToOutSampleOffset = 0.0;
+
+        // Resampling support (see the header comment). Only used when the device's sample rate
+        // differs from the input device's (needsResampling).
+        bool                               needsResampling = false;
+        AudioConverterRef __nullable       converter = nullptr;
+        // The input sample time of the next frame to read from the ring buffer for the resampler's
+        // input callback. -1 until the resampler has read its first frame.
+        CARingBuffer::SampleTime           resamplerInputSampleTime = -1;
+        // Pre-allocated input buffer for the resampler's input callback (see CreateResamplers).
+        // Allocated in CreateResamplers and freed here (or in DestroyResamplers).
+        Byte* __nullable                   resamplerInputBuffer = nullptr;
+        UInt32                             resamplerInputBufferSize = 0;
+
+        ~OutputDevice()
+        {
+            if(converter != nullptr)
+            {
+                AudioConverterDispose(static_cast<AudioConverterRef>(converter));
+                converter = nullptr;
+            }
+            if(resamplerInputBuffer != nullptr)
+            {
+                free(resamplerInputBuffer);
+                resamplerInputBuffer = nullptr;
+            }
+        }
+    };
+
+    // Creates the AudioConverters for the output devices whose sample rate differs from the
+    // input device's. Called from Activate, before the IOProcs start. @throws CAException
+    void                CreateResamplers();
+    // Destroys the AudioConverters and frees their input buffers. Called from Deactivate, after
+    // the IOProcs have stopped.
+    void                DestroyResamplers();
+
+    // The input callback for the resamplers' AudioConverters (see AudioConverter.h). Real-time
+    // safe: when reading from the ring buffer it uses the pre-allocated per-device buffer, so it
+    // doesn't allocate. See the .cpp for details.
+    static OSStatus     ResamplerInputProc(AudioConverterRef                   inAudioConverter,
+                                           UInt32*                             ioNumberDataPackets,
+                                           AudioBufferList*                    ioData,
+                                           AudioStreamPacketDescription* __nullable* __nullable outDataPacketDescription,
+                                           void* __nullable                    inUserData);
+
+    // State passed to ResamplerInputProc as its inUserData.
+    struct ResamplerCallbackState
+    {
+        // The ring buffer to read from. Null when the callback should provide silence instead
+        // (used to pre-warm a newly-created resampler).
+        CARingBuffer* __nullable    buffer;
+        // The device record, for the resampler's input sample time. Null when buffer is null.
+        OutputDevice* __nullable    record;
+        // The source format's bytes per frame, for sizing the callback's buffer.
+        UInt32                    inputBytesPerFrame;
+        // The pre-allocated input buffer the callback fills (so it never allocates). Non-null in
+        // both the pre-warm and the real-time path.
+        Byte* __nullable          inputBuffer;
+        UInt32                    inputBufferSize;
     };
 
     // The IOProcs call this to update their IOState member. Also stops the IOProc if its state has been set to Stopping.
@@ -254,6 +317,10 @@ private:
 private:
     std::unique_ptr<CARingBuffer>    mBuffer PT_GUARDED_BY(mBufferInputMutex)
                                         PT_GUARDED_BY(mBufferOutputMutex) { nullptr };
+    // The format of the audio stored in mBuffer (i.e. the first output device's virtual format,
+    // at the input device's sample rate). Used as the resamplers' source format. Set in
+    // AllocateBuffer.
+    AudioStreamBasicDescription      mBufferFormat { };
     
     AudioDeviceIOProcID __nullable mInputDeviceIOProcID { nullptr };
     

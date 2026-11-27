@@ -149,27 +149,9 @@ void    BGMPlayThrough::Activate()
     {
         DebugMsg("BGMPlayThrough::Activate: Activating playthrough");
         
-        // All the output devices must have the same sample rate. BGMDevice (the input) is set to
-        // the first device's rate (below), and each output device's IOProc plays the same ring
-        // buffer samples at its own device's rate, so a device with a different rate would play
-        // the audio at the wrong speed and drift out of sync. (We can't resample in the IOProcs
-        // because they're realtime constrained.)
-        Float64 firstRate = mOutputDevices.front()->device.GetNominalSampleRate();
-        for(const auto& outputDevice : mOutputDevices)
-        {
-            Float64 rate = outputDevice->device.GetNominalSampleRate();
-            if(fabs(rate - firstRate) > 0.5)
-            {
-                LogWarning("BGMPlayThrough::Activate: Output device %d's sample rate (%f Hz) "
-                           "differs from output device %d's (%f Hz). All enabled output devices "
-                           "must have the same sample rate.",
-                           outputDevice->device.GetObjectID(),
-                           rate,
-                           mOutputDevices.front()->device.GetObjectID(),
-                           firstRate);
-                throw CAException(kAudioHardwareUnsupportedOperationError);
-            }
-        }
+        // The output devices don't need to share a sample rate: a device whose rate differs from
+        // the input device's is resampled in its IOProc (see the header comment). We decide which
+        // devices need that below, after the input rate is set.
         
         CreateIOProcIDs();
         
@@ -201,6 +183,18 @@ void    BGMPlayThrough::Activate()
                        e.GetError());
         }
         
+        // Mark which output devices need resampling (their rate differs from the rate the audio is
+        // stored at, which is the input device's) and create their AudioConverters. If creating a
+        // resampler fails we throw, since playing the audio at the wrong speed would be worse.
+        const Float64 storedRate = mBufferFormat.mSampleRate;
+        for(auto& outputDevice : mOutputDevices)
+        {
+            outputDevice->needsResampling =
+                    (fabs(outputDevice->device.GetNominalSampleRate() - storedRate) > 0.5);
+        }
+        
+        CreateResamplers();
+        
         if(!mInputDevice.IsBGMDeviceInstance())
         {
             LogWarning("BGMPlayThrough::Activate: Playthrough activated with an input device other "
@@ -227,6 +221,11 @@ void    BGMPlayThrough::Deactivate()
             DestroyIOProcIDs();
         });
         
+        // The IOProcs are stopped now, so it's safe to destroy the resamplers.
+        BGMLogAndSwallowExceptions("BGMPlayThrough::Deactivate", [&] {
+            DestroyResamplers();
+        });
+        
         mActive = false;
     }
 }
@@ -242,6 +241,9 @@ void    BGMPlayThrough::AllocateBuffer()
     {
         Throw(CAException(kAudioHardwareUnsupportedOperationError));
     }
+    
+    // Remember the format for the resamplers (it's the source format they convert from).
+    mBufferFormat = outputFormat[0];
     
     // Need to lock the buffer mutexes to make sure the IOProcs aren't accessing it. The order is
     // important here. We always lock them in the same order to prevent deadlocks.
@@ -448,6 +450,221 @@ void    BGMPlayThrough::DestroyIOProcIDs()
     {
         destroy(outputDevice->device, "output", outputDevice->ioProcID);
     }
+}
+
+void    BGMPlayThrough::CreateResamplers()
+{
+    CAMutex::Locker stateLocker(mStateMutex);
+
+    for(auto& outputDevice : mOutputDevices)
+    {
+        if(!outputDevice->needsResampling)
+        {
+            continue;
+        }
+
+        // The output device's format is the resampler's destination format (at the device's own
+        // sample rate). The ring buffer's format (mBufferFormat) is the source format.
+        UInt32 numberStreams = 1;
+        AudioStreamBasicDescription destFormat[1];
+        BGMLogAndSwallowExceptionsMsg("BGMPlayThrough::CreateResamplers", "Get the device format",
+                                      [&] {
+            outputDevice->device.GetCurrentVirtualFormats(false, numberStreams, destFormat);
+        });
+
+        if(numberStreams < 1)
+        {
+            LogError("BGMPlayThrough::CreateResamplers: Device %d has no output format", 
+                     outputDevice->device.GetObjectID());
+            Throw(CAException(kAudioHardwareUnsupportedOperationError));
+        }
+
+        AudioConverterRef converter = nullptr;
+        OSStatus err = AudioConverterNew(&mBufferFormat, &destFormat[0], &converter);
+        if(err != noErr)
+        {
+            LogWarning("BGMPlayThrough::CreateResamplers: AudioConverterNew failed for device %d: %d",
+                       outputDevice->device.GetObjectID(), err);
+            Throw(CAException(err));
+        }
+
+        // Use kConverterPrimeMethod_None so the resampler doesn't ask for extra leading/trailing
+        // input frames, which we can't supply in real time. This adds a small amount of latency at
+        // the start of playback (the "through latency"), which is acceptable here.
+        const UInt32 primeMethod = kConverterPrimeMethod_None;
+        err = AudioConverterSetProperty(converter, kAudioConverterPrimeMethod,
+                                        sizeof(primeMethod), &primeMethod);
+        if(err != noErr)
+        {
+            AudioConverterDispose(converter);
+            LogWarning("BGMPlayThrough::CreateResamplers: Failed to set the prime method for "
+                       "device %d: %d",
+                       outputDevice->device.GetObjectID(), err);
+            Throw(CAException(err));
+        }
+
+        // Allocate the input buffer the resampler's input callback reads the ring buffer into. It
+        // must hold the most input the resampler is likely to ask for in one call (roughly
+        // outputFrames * inputRate / outputRate), with a margin.
+        {
+            const Float64 inputRate = mBufferFormat.mSampleRate;
+            const Float64 outputRate = destFormat[0].mSampleRate;
+            const UInt32 ioBufferFrames = outputDevice->device.GetIOBufferSize();
+            const UInt32 maxInputFrames =
+                    static_cast<UInt32>(ioBufferFrames * (inputRate / outputRate)) + 1024;
+            outputDevice->resamplerInputBufferSize = maxInputFrames * mBufferFormat.mBytesPerFrame;
+            outputDevice->resamplerInputBuffer = static_cast<Byte*>(
+                    calloc(1, outputDevice->resamplerInputBufferSize));
+            if(outputDevice->resamplerInputBuffer == nullptr)
+            {
+                AudioConverterDispose(converter);
+                outputDevice->resamplerInputBuffer = nullptr;
+                outputDevice->resamplerInputBufferSize = 0;
+                LogError("BGMPlayThrough::CreateResamplers: Failed to allocate the input buffer "
+                         "for device %d",
+                         outputDevice->device.GetObjectID());
+                Throw(CAException(kAudioHardwareUnspecifiedError));
+            }
+        }
+
+        // Pre-warm the resampler so any one-time internal setup (e.g. the sample-rate-conversion
+        // filter state) happens now, in a non-real-time context, rather than on the first real-time
+        // call. We feed it a little silence (from the pre-allocated buffer) and then reset it, so
+        // the real-time IO starts fresh.
+        {
+            const UInt32 preWarmOutputFrames = 256;
+            AudioBufferList preWarmOut;
+            preWarmOut.mNumberBuffers = 1;
+            preWarmOut.mBuffers[0].mNumberChannels = destFormat[0].mChannelsPerFrame;
+            preWarmOut.mBuffers[0].mDataByteSize =
+                    preWarmOutputFrames * destFormat[0].mBytesPerFrame;
+            preWarmOut.mBuffers[0].mData =
+                    static_cast<Byte*>(calloc(1, preWarmOut.mBuffers[0].mDataByteSize));
+
+            ResamplerCallbackState preWarmState;
+            preWarmState.buffer = nullptr;   // Provide silence, not the ring buffer.
+            preWarmState.record = nullptr;
+            preWarmState.inputBytesPerFrame = mBufferFormat.mBytesPerFrame;
+            preWarmState.inputBuffer = outputDevice->resamplerInputBuffer;
+            preWarmState.inputBufferSize = outputDevice->resamplerInputBufferSize;
+
+            UInt32 preWarmPackets = preWarmOutputFrames;
+            AudioConverterFillComplexBuffer(converter, &ResamplerInputProc, &preWarmState,
+                                            &preWarmPackets, &preWarmOut, nullptr);
+
+            free(preWarmOut.mBuffers[0].mData);
+        }
+        AudioConverterReset(converter);
+
+        outputDevice->converter = converter;
+        outputDevice->resamplerInputSampleTime = -1;
+
+        DebugMsg("BGMPlayThrough::CreateResamplers: Created a resampler for device %d (%.0f Hz "
+                 "-> %.0f Hz)",
+                 outputDevice->device.GetObjectID(),
+                 mBufferFormat.mSampleRate,
+                 destFormat[0].mSampleRate);
+    }
+}
+
+void    BGMPlayThrough::DestroyResamplers()
+{
+    CAMutex::Locker stateLocker(mStateMutex);
+
+    for(auto& outputDevice : mOutputDevices)
+    {
+        if(outputDevice->converter != nullptr)
+        {
+            AudioConverterDispose(static_cast<AudioConverterRef>(outputDevice->converter));
+            outputDevice->converter = nullptr;
+        }
+
+        if(outputDevice->resamplerInputBuffer != nullptr)
+        {
+            free(outputDevice->resamplerInputBuffer);
+            outputDevice->resamplerInputBuffer = nullptr;
+        }
+        outputDevice->resamplerInputBufferSize = 0;
+        outputDevice->resamplerInputSampleTime = -1;
+        outputDevice->needsResampling = false;
+    }
+}
+
+// static
+OSStatus    BGMPlayThrough::ResamplerInputProc(AudioConverterRef                   inAudioConverter,
+                                                UInt32*                             ioNumberDataPackets,
+                                                AudioBufferList*                    ioData,
+                                                AudioStreamPacketDescription* __nullable* __nullable outDataPacketDescription,
+                                                void* __nullable                    inUserData)
+{
+    #pragma unused (inAudioConverter, outDataPacketDescription)
+
+    ResamplerCallbackState* const state = static_cast<ResamplerCallbackState*>(inUserData);
+
+    UInt32 frames = *ioNumberDataPackets;
+    if(frames == 0)
+    {
+        return noErr;
+    }
+
+    if((state->inputBuffer == nullptr) || (state->inputBufferSize == 0))
+    {
+        // No input buffer provided. (Shouldn't happen.) Tell the converter we have no data.
+        *ioNumberDataPackets = 0;
+        return kAudioConverterErr_InvalidInputSize;
+    }
+
+    // Cap the number of frames to what fits in the pre-allocated buffer. (We sized it generously,
+    // so this shouldn't trigger in practice.)
+    const UInt32 maxFrames = state->inputBufferSize / state->inputBytesPerFrame;
+    if(frames > maxFrames)
+    {
+        frames = maxFrames;
+        if(frames == 0)
+        {
+            *ioNumberDataPackets = 0;
+            return noErr;
+        }
+    }
+
+    const UInt32 totalBytes = frames * state->inputBytesPerFrame;
+
+    ioData->mNumberBuffers = 1;
+    ioData->mBuffers[0].mData = state->inputBuffer;
+    ioData->mBuffers[0].mDataByteSize = totalBytes;
+
+    if(state->buffer == nullptr)
+    {
+        // Provide silence. (Used to pre-warm a newly-created resampler.)
+        memset(ioData->mBuffers[0].mData, 0, totalBytes);
+        *ioNumberDataPackets = frames;
+        return noErr;
+    }
+
+    // Read from the ring buffer into the pre-allocated buffer.
+    OutputDevice* const record = state->record;
+
+    CARingBufferError err =
+            state->buffer->Fetch(ioData, frames, record->resamplerInputSampleTime);
+    // Advance the read position by the number of frames we used (the full requested amount, even
+    // if Fetch zero-filled part of it because it wasn't in the buffer yet).
+    record->resamplerInputSampleTime += frames;
+
+    if(err != kCARingBufferError_OK)
+    {
+        // Fetch failed (e.g. CPU overload). Provide silence so the converter can continue.
+        memset(ioData->mBuffers[0].mData, 0, totalBytes);
+        *ioNumberDataPackets = 0;
+        return kAudioConverterErr_InvalidInputSize;
+    }
+
+    // Fetch sets mDataByteSize to the in-range bytes, which may be less than totalBytes if part
+    // of the requested range wasn't in the buffer. Restore it so the converter sees the full
+    // number of frames (Fetch already zero-filled the missing part).
+    ioData->mBuffers[0].mDataByteSize = totalBytes;
+    *ioNumberDataPackets = frames;
+
+    return noErr;
 }
 
 bool    BGMPlayThrough::CheckIOProcsAreStopped() const noexcept
@@ -988,6 +1205,7 @@ OSStatus    BGMPlayThrough::Stop()
     {
         outputDevice->lastOutputSampleTime = -1;
         outputDevice->inToOutSampleOffset = 0.0;
+        outputDevice->resamplerInputSampleTime = -1;
     }
     
     return noErr; // TODO: Why does this return anything and why always noErr?
@@ -1221,55 +1439,124 @@ OSStatus    BGMPlayThrough::OutputDeviceIOProc(AudioObjectID           inDevice,
 #pragma clang diagnostic ignored "-Wthread-safety"
     if(tryer.HasLock() && refCon->mBuffer)
     {
-        // Very occasionally (at least for me) our read head gets ahead of input, i.e. we haven't
-        // received any new input since this IOProc was last called, and we have to recalculate its
-        // position. I figure this might be caused by clock drift but I'm really not sure. It also
-        // happens if the input or output sample times are restarted from zero.
-        //
-        // We also recalculate the offset if the read head is outside of the ring buffer. This
-        // happens for example when you plug in or unplug headphones, which causes the output sample
-        // times to be restarted from zero.
-        //
-        // The vast majority of the time, just using lastInputSampleTime as the read head time
-        // instead of the one we calculate would work fine (and would also account for the above).
-        SInt64 bufferStartTime, bufferEndTime;
-        CARingBufferError err = refCon->mBuffer->GetTimeBounds(bufferStartTime, bufferEndTime);
-        bool outOfBounds = false;
-
-        if(err == kCARingBufferError_OK)
+        if(record->needsResampling && record->converter != nullptr)
         {
-            outOfBounds = (readHeadSampleTime < bufferStartTime)
-                    || (readHeadSampleTime - framesToOutput > bufferEndTime);
-        }
+            // Resample the audio to this device's sample rate using its AudioConverter. The
+            // converter's input callback reads from the ring buffer (see ResamplerInputProc), so
+            // this device consumes the input at the input rate and stays in sync with the other
+            // devices.
+            if(record->resamplerInputSampleTime == -1)
+            {
+                // Start reading at the current write head (which is slightly behind the very latest
+                // data, so there's data to read).
+                record->resamplerInputSampleTime =
+                        static_cast<CARingBuffer::SampleTime>(refCon->mLastInputSampleTime);
+            }
 
-        if(lastInputSampleTime < readHeadSampleTime || outOfBounds)
-        {
-            refCon->mRTLogger.LogNoSamplesReady(lastInputSampleTime,
-                                                readHeadSampleTime,
-                                                record->inToOutSampleOffset);
+            ResamplerCallbackState resamplerState;
+            resamplerState.buffer = refCon->mBuffer.get();
+            resamplerState.record = record;
+            resamplerState.inputBytesPerFrame = refCon->mBufferFormat.mBytesPerFrame;
+            resamplerState.inputBuffer = record->resamplerInputBuffer;
+            resamplerState.inputBufferSize = record->resamplerInputBufferSize;
 
-            // Recalculate the in-to-out offset and read head.
-            record->inToOutSampleOffset =
-                    inOutputTime->mSampleTime - static_cast<Float64>(lastInputSampleTime);
-            readHeadSampleTime = static_cast<CARingBuffer::SampleTime>(
-                    inOutputTime->mSampleTime - record->inToOutSampleOffset);
-        }
+            UInt32 outputPackets = framesToOutput;
+            OSStatus convErr = AudioConverterFillComplexBuffer(
+                    static_cast<AudioConverterRef>(record->converter),
+                    &ResamplerInputProc,
+                    &resamplerState,
+                    &outputPackets,
+                    outOutputData,
+                    nullptr);
 
-        // Copy the frames from the ring buffer.
-        err = refCon->mBuffer->Fetch(outOutputData, framesToOutput, readHeadSampleTime);
-        refCon->mRTLogger.LogIfRingBufferError_Fetch(err);
+            if((convErr != noErr) || (outputPackets < framesToOutput))
+            {
+                // The converter didn't fill the whole output buffer (e.g. it temporarily ran out of
+                // input). Silence the unfilled remainder.
+                if(outputPackets < framesToOutput)
+                {
+                    const UInt32 outputBytesPerFrame =
+                            framesToOutput > 0 ?
+                                outOutputData->mBuffers[0].mDataByteSize / framesToOutput :
+                                0;
+                    const UInt32 filledBytes = outputPackets * outputBytesPerFrame;
+                    memset(static_cast<Byte*>(outOutputData->mBuffers[0].mData) + filledBytes,
+                           0,
+                           outOutputData->mBuffers[0].mDataByteSize - filledBytes);
+                }
+                else
+                {
+                    FillWithSilence(outOutputData);
+                }
 
-        if(err != kCARingBufferError_OK)
-        {
-            FillWithSilence(outOutputData);
-        }
-        else
-        {
+                refCon->mRTLogger.LogNoSamplesReady(lastInputSampleTime,
+                                                    record->resamplerInputSampleTime,
+                                                    record->inToOutSampleOffset);
+            }
+
             // Apply the master volume and this device's relative volume.
             const Float32 level = refCon->mMasterVolume.load() * record->gain.load();
             if(level < 1.0f)
             {
                 ScaleAudioBuffer(outOutputData, level);
+            }
+        }
+        else
+        {
+            // Same-rate fast path: the device's rate matches the input's, so the ring buffer's
+            // samples are already at the right rate. Copy them directly.
+            //
+            // Very occasionally (at least for me) our read head gets ahead of input, i.e. we haven't
+            // received any new input since this IOProc was last called, and we have to recalculate
+            // its position. I figure this might be caused by clock drift but I'm really not sure. It
+            // also happens if the input or output sample times are restarted from zero.
+            //
+            // We also recalculate the offset if the read head is outside of the ring buffer. This
+            // happens for example when you plug in or unplug headphones, which causes the output
+            // sample times to be restarted from zero.
+            //
+            // The vast majority of the time, just using lastInputSampleTime as the read head time
+            // instead of the one we calculate would work fine (and would also account for the above).
+            SInt64 bufferStartTime, bufferEndTime;
+            CARingBufferError err =
+                    refCon->mBuffer->GetTimeBounds(bufferStartTime, bufferEndTime);
+            bool outOfBounds = false;
+
+            if(err == kCARingBufferError_OK)
+            {
+                outOfBounds = (readHeadSampleTime < bufferStartTime)
+                        || (readHeadSampleTime - framesToOutput > bufferEndTime);
+            }
+
+            if(lastInputSampleTime < readHeadSampleTime || outOfBounds)
+            {
+                refCon->mRTLogger.LogNoSamplesReady(lastInputSampleTime,
+                                                    readHeadSampleTime,
+                                                    record->inToOutSampleOffset);
+
+                // Recalculate the in-to-out offset and read head.
+                record->inToOutSampleOffset =
+                        inOutputTime->mSampleTime - static_cast<Float64>(lastInputSampleTime);
+                readHeadSampleTime = static_cast<CARingBuffer::SampleTime>(
+                        inOutputTime->mSampleTime - record->inToOutSampleOffset);
+            }
+
+            // Copy the frames from the ring buffer.
+            err = refCon->mBuffer->Fetch(outOutputData, framesToOutput, readHeadSampleTime);
+            refCon->mRTLogger.LogIfRingBufferError_Fetch(err);
+
+            if(err != kCARingBufferError_OK)
+            {
+                FillWithSilence(outOutputData);
+            }
+            else
+            {
+                // Apply the master volume and this device's relative volume.
+                const Float32 level = refCon->mMasterVolume.load() * record->gain.load();
+                if(level < 1.0f)
+                {
+                    ScaleAudioBuffer(outOutputData, level);
+                }
             }
         }
     }

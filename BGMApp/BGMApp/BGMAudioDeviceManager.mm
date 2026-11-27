@@ -536,63 +536,6 @@ struct BGMOutputDeviceState {
     }
 }
 
-- (NSError* __nullable) sampleRateConflictErrorForDevice:(AudioObjectID)deviceID {
-    @try {
-        [stateLock lock];
-
-        BGMOutputDeviceState* state = [self findStateForDeviceID:deviceID];
-
-        if (!(state && state->enabled)) {
-            NSError* __nullable conflict = nil;
-
-            try {
-                BGMAudioDevice device(deviceID);
-                Float64 deviceRate = device.GetNominalSampleRate();
-
-                for (const auto& s : outputDeviceStates) {
-                    if (!s.enabled) {
-                        continue;
-                    }
-
-                    BGMAudioDevice other(s.deviceID);
-                    Float64 otherRate = other.GetNominalSampleRate();
-
-                    if (fabs(deviceRate - otherRate) > 0.5) {
-                        conflict =
-                            [NSError errorWithDomain:@"com.bearisdriving.BGM.App.SampleRateConflict"
-                                                 code:kAudioHardwareUnsupportedOperationError
-                                             userInfo:@{
-                                NSLocalizedDescriptionKey:
-                                    [NSString stringWithFormat:
-                                     @"%@ (%.0f Hz) has a different sample rate than the "
-                                     @"enabled output device %@ (%.0f Hz). All enabled output "
-                                     @"devices must have the same sample rate to play the same "
-                                     @"audio.",
-                                     CFBridgingRelease(device.CopyName()),
-                                     deviceRate,
-                                     CFBridgingRelease(other.CopyName()),
-                                     otherRate],
-                            }];
-                        break;
-                    }
-                }
-            } catch (const CAException& e) {
-                BGMLogExceptionIn("sampleRateConflictErrorForDevice", e);
-            } catch (...) {
-                // Can't determine a conflict. Let the caller try the normal path.
-            }
-
-            return conflict;
-        }
-
-        return nil;
-    } @catch (NSException* exception) {
-        return nil;
-    } @finally {
-        [stateLock unlock];
-    }
-}
-
 - (BOOL) isDeviceEnabled:(AudioObjectID)deviceID {
     @try {
         [stateLock lock];
@@ -717,23 +660,6 @@ struct BGMOutputDeviceState {
 
         if (enabledIDs.empty()) {
             return NO;
-        }
-
-        // All enabled output devices must share a sample rate (see BGMPlayThrough::Activate). If
-        // the persisted set mixes rates (e.g. it was saved before this constraint existed), fall
-        // back to the preferred single device rather than activating a broken configuration.
-        try {
-            Float64 firstRate = BGMAudioDevice(enabledIDs.front()).GetNominalSampleRate();
-            for (AudioObjectID id : enabledIDs) {
-                if (fabs(BGMAudioDevice(id).GetNominalSampleRate() - firstRate) > 0.5) {
-                    LogWarning("BGMAudioDeviceManager::enablePersistedOutputDevices: Persisted "
-                               "output devices have different sample rates. Falling back to the "
-                               "preferred device.");
-                    return NO;
-                }
-            }
-        } catch (const CAException& e) {
-            // Can't check the rates. Fall through; rebuildPlaythrough will surface the real error.
         }
 
         try {
