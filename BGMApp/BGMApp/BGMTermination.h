@@ -20,8 +20,8 @@
 //  Copyright © 2017 Kyle Neideck
 //
 //  Cleans up if BGMApp crashes because of an uncaught C++ or Objective-C exception, or is sent
-//  SIGINT/SIGTERM/SIGQUIT. Currently, it just changes the default output device from BGMDevice to
-//  the real output device and records debug info for some types of crashes.
+//  SIGINT/SIGTERM/SIGQUIT. Currently, it just changes the default output and input devices from
+//  BGMDevice to the previous ones and records debug info for some types of crashes.
 //
 //  BGMXPCHelper also changes the default device if BGMApp disconnects and leaves BGMDevice as the
 //  default. This handles cases like segfaults where it wouldn't be safe to clean up from the

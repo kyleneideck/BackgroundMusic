@@ -42,12 +42,14 @@ static NSXPCConnection* __nullable sBGMAppConnection = nil;
 @implementation BGMXPCHelperService {
     NSXPCConnection* connection;
     AudioObjectID outputDeviceToMakeDefaultOnAbnormalTermination;
+    AudioObjectID inputDeviceToMakeDefaultOnAbnormalTermination;
 }
 
 - (id) initWithConnection:_connection {
     if ((self = [super init])) {
         connection = _connection;
         outputDeviceToMakeDefaultOnAbnormalTermination = kAudioObjectUnknown;
+        inputDeviceToMakeDefaultOnAbnormalTermination = kAudioObjectUnknown;
     }
     
     return self;
@@ -140,19 +142,22 @@ static NSXPCConnection* __nullable sBGMAppConnection = nil;
     }
 
     AudioObjectID outputDevice = outputDeviceToMakeDefaultOnAbnormalTermination;
+    AudioObjectID inputDevice = inputDeviceToMakeDefaultOnAbnormalTermination;
 
-    if (outputDevice == kAudioObjectUnknown) {
+    if (outputDevice == kAudioObjectUnknown && inputDevice == kAudioObjectUnknown) {
         // We could set the default device arbitrarily, but it's probably not worth the effort.
         DebugMsg("BGMXPCHelperService::unsetBGMDeviceAsDefault: No device to set. Doing nothing.");
         return;
     }
 
     // If BGMDevice has been left as the default device, change it to the real output device.
+    // (UnsetAsOSDefault skips any direction whose device ID is unknown.)
     BGMLogAndSwallowExceptions("BGMXPCHelperService::unsetBGMDeviceAsDefault", ([&] {
-        NSLog(@"BGMXPCHelperService::unsetBGMDeviceAsDefault: Changing default device to %u",
-              outputDevice);
+        NSLog(@"BGMXPCHelperService::unsetBGMDeviceAsDefault: Changing default output device to "
+              @"%u and default input device to %u",
+              outputDevice, inputDevice);
 
-        BGMBackgroundMusicDevice().UnsetAsOSDefault(outputDevice);
+        BGMBackgroundMusicDevice().UnsetAsOSDefault(outputDevice, inputDevice);
     }));
 }
 
@@ -246,6 +251,12 @@ static NSXPCConnection* __nullable sBGMAppConnection = nil;
 - (void) setOutputDeviceToMakeDefaultOnAbnormalTermination:(AudioObjectID)deviceID {
     outputDeviceToMakeDefaultOnAbnormalTermination = deviceID;
     DebugMsg("BGMXPCHelperService::setOutputDeviceToMakeDefaultOnAbnormalTermination: ID set to %u",
+             deviceID);
+}
+
+- (void) setInputDeviceToMakeDefaultOnAbnormalTermination:(AudioObjectID)deviceID {
+    inputDeviceToMakeDefaultOnAbnormalTermination = deviceID;
+    DebugMsg("BGMXPCHelperService::setInputDeviceToMakeDefaultOnAbnormalTermination: ID set to %u",
              deviceID);
 }
 

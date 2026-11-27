@@ -77,6 +77,11 @@ struct BGMOutputDeviceState {
     // The primary output device (the first enabled one). Used for unsetting the OS default device
     // and telling BGMXPCHelper which device to restore if BGMApp terminates abnormally.
     BGMAudioDevice outputDevice;
+
+    // The system's default input device before BGMApp changed it to BGMDevice. Remembered in
+    // setBGMDeviceAsOSDefault so we can restore it when the app quits (or tell BGMXPCHelper to).
+    // kAudioObjectUnknown if it wasn't remembered. Guarded by stateLock.
+    AudioDeviceID previousDefaultInputDevice;
     
     // The state of each output device, in order. Guarded by stateLock.
     std::vector<BGMOutputDeviceState> outputDeviceStates;
@@ -108,6 +113,7 @@ struct BGMOutputDeviceState {
         outputVolumeMenuItem = nil;
         outputDeviceMenuSection = nil;
         outputDevice = kAudioObjectUnknown;
+        previousDefaultInputDevice = kAudioObjectUnknown;
         bgmDeviceListenersRegistered = NO;
 
         try {
@@ -165,6 +171,28 @@ struct BGMOutputDeviceState {
 // kAudioHardwarePropertyDefaultSystemOutputDevice in AudioHardware.h.
 
 - (NSError* __nullable) setBGMDeviceAsOSDefault {
+    // Remember the current default input device (if it isn't already BGMDevice) so we can restore
+    // it when the app quits. Read it before SetAsOSDefault changes it.
+    try {
+        AudioDeviceID currentDefaultInput =
+                CAHALAudioSystemObject().GetDefaultAudioDevice(true, /* inIsSystem = */ false);
+
+        if(currentDefaultInput != bgmDevice->GetObjectID())
+        {
+            @try {
+                [stateLock lock];
+                previousDefaultInputDevice = currentDefaultInput;
+            } @finally {
+                [stateLock unlock];
+            }
+        }
+    } catch (const CAException& e) {
+        // If we can't read the current default input device, don't remember it. We'll still set
+        // BGMDevice as the default input, we just won't be able to restore the previous one on
+        // quit.
+        BGMLogExceptionIn("BGMAudioDeviceManager::setBGMDeviceAsOSDefault", e);
+    }
+
     try {
         // Intentionally avoid taking stateLock before making calls to the HAL. See
         // startPlayThroughSync.
@@ -182,11 +210,13 @@ struct BGMOutputDeviceState {
     // Copy the devices so we can call the HAL without holding stateLock. See startPlayThroughSync.
     BGMBackgroundMusicDevice* bgmDeviceCopy;
     AudioDeviceID outputDeviceID;
+    AudioDeviceID inputDeviceID;
 
     @try {
         [stateLock lock];
         bgmDeviceCopy = bgmDevice;
         outputDeviceID = outputDevice.GetObjectID();
+        inputDeviceID = previousDefaultInputDevice;
     } @finally {
         [stateLock unlock];
     }
@@ -198,7 +228,7 @@ struct BGMOutputDeviceState {
     }
 
     try {
-        bgmDeviceCopy->UnsetAsOSDefault(outputDeviceID);
+        bgmDeviceCopy->UnsetAsOSDefault(outputDeviceID, inputDeviceID);
     } catch (const CAException& e) {
         BGMLogExceptionIn("BGMAudioDeviceManager::unsetBGMDeviceAsOSDefault", e);
         return [NSError errorWithDomain:@kBGMAppBundleID code:e.GetError() userInfo:nil];
@@ -1213,6 +1243,7 @@ struct BGMOutputDeviceState {
                 }];
 
         [helperProxy setOutputDeviceToMakeDefaultOnAbnormalTermination:outputDevice.GetObjectID()];
+        [helperProxy setInputDeviceToMakeDefaultOnAbnormalTermination:previousDefaultInputDevice];
     }
 }
 

@@ -92,7 +92,9 @@ brew install --cask background-music
 # Run / Configure
 
 Just run `Applications > Background Music.app`! **Background Music** sets itself as your default output device under
-`System Settings > Sound` when it starts up (and sets it back on Quit).
+`System Settings > Sound` when it starts up (and sets it back on Quit). It also sets itself as your default input
+device, whose audio is a loopback of what's playing. This lets you record the system's playback audio by selecting the
+**Background Music** device as a microphone (e.g. in QuickTime), and your previous input device is restored on Quit.
 
 ### Launch at Startup (Optional)
 

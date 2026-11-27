@@ -82,9 +82,15 @@ void BGMBackgroundMusicDevice::SetAsOSDefault()
     }
 
     audioSystem.SetDefaultAudioDevice(false, false, GetObjectID());
+
+    // Set BGMDevice as the default input device. Its input is a loopback of its output, so apps
+    // that record from it record the system's playback audio. (There's no "default system input
+    // device" property, only the default input device.)
+    audioSystem.SetDefaultAudioDevice(true, false, GetObjectID());
 }
 
-void BGMBackgroundMusicDevice::UnsetAsOSDefault(AudioDeviceID inOutputDeviceID)
+void BGMBackgroundMusicDevice::UnsetAsOSDefault(AudioDeviceID inOutputDeviceID,
+                                                AudioDeviceID inInputDeviceID)
 {
     CAHALAudioSystemObject audioSystem;
 
@@ -94,10 +100,18 @@ void BGMBackgroundMusicDevice::UnsetAsOSDefault(AudioDeviceID inOutputDeviceID)
 
     if(bgmDeviceIsDefault)
     {
-        DebugMsg("BGMBackgroundMusicDevice::UnsetAsOSDefault: Setting the system's default output "
-                 "device back to device %d", inOutputDeviceID);
+        if(inOutputDeviceID == kAudioObjectUnknown)
+        {
+            DebugMsg("BGMBackgroundMusicDevice::UnsetAsOSDefault: No output device to restore "
+                     "the default output device to. Leaving it as is.");
+        }
+        else
+        {
+            DebugMsg("BGMBackgroundMusicDevice::UnsetAsOSDefault: Setting the system's default "
+                     "output device back to device %d", inOutputDeviceID);
 
-        audioSystem.SetDefaultAudioDevice(false, false, inOutputDeviceID);
+            audioSystem.SetDefaultAudioDevice(false, false, inOutputDeviceID);
+        }
     }
 
     // Set BGMApp's output device as OS X's default system output device.
@@ -108,10 +122,38 @@ void BGMBackgroundMusicDevice::UnsetAsOSDefault(AudioDeviceID inOutputDeviceID)
     // the same device as the default output device, change it back to the previous device.
     if(bgmDeviceIsSystemDefault)
     {
-        DebugMsg("BGMBackgroundMusicDevice::UnsetAsOSDefault: Setting the system's default system "
-                 "output device back to device %d", inOutputDeviceID);
+        if(inOutputDeviceID == kAudioObjectUnknown)
+        {
+            DebugMsg("BGMBackgroundMusicDevice::UnsetAsOSDefault: No output device to restore the "
+                     "default system output device to. Leaving it as is.");
+        }
+        else
+        {
+            DebugMsg("BGMBackgroundMusicDevice::UnsetAsOSDefault: Setting the system's default "
+                     "system output device back to device %d", inOutputDeviceID);
 
-        audioSystem.SetDefaultAudioDevice(false, true, inOutputDeviceID);
+            audioSystem.SetDefaultAudioDevice(false, true, inOutputDeviceID);
+        }
+    }
+
+    // Set the previous device as OS X's default input device.
+    bool bgmDeviceIsDefaultInput =
+            (audioSystem.GetDefaultAudioDevice(true, false) == GetObjectID());
+
+    if(bgmDeviceIsDefaultInput)
+    {
+        if(inInputDeviceID == kAudioObjectUnknown)
+        {
+            DebugMsg("BGMBackgroundMusicDevice::UnsetAsOSDefault: No input device to restore the "
+                     "default input device to. Leaving it as is.");
+        }
+        else
+        {
+            DebugMsg("BGMBackgroundMusicDevice::UnsetAsOSDefault: Setting the system's default "
+                     "input device back to device %d", inInputDeviceID);
+
+            audioSystem.SetDefaultAudioDevice(true, false, inInputDeviceID);
+        }
     }
 }
 

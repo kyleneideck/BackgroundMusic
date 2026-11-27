@@ -18,7 +18,9 @@ They're shown in `System Settings > Sound` along with the real audio devices.
 When you start BGMApp, it sets BGMDevice as your system's default output device so the system (i.e. Core Audio) will
 start sending all<sup id="a2">[2](#f2)</sup> your audio data to BGMDriver. BGMDriver plays that audio on BGMDevice's
 input stream, and the user can record it by selecting the Background Music device in QuickTime the same way they'd select
-a microphone.
+a microphone. BGMApp also sets BGMDevice as the system's default input device (restoring the previous default input on
+Quit), so the loopback is available without the user having to select it. See
+[BGMBackgroundMusicDevice](BGMApp/BGMApp/BGMBackgroundMusicDevice.h) for both directions.
 
 So that you can still hear the audio, BGMApp starts listening to BGMDevice's input stream and playing the audio out of
 your real output device. (See [BGMPlayThrough](BGMApp/BGMApp/BGMPlayThrough.h)). 
