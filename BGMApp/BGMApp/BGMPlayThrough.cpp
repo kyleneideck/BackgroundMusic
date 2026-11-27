@@ -256,9 +256,11 @@ void    BGMPlayThrough::AllocateBuffer()
     //
     // TODO: Test playthrough with hardware with more than 2 channels per frame, a sample (virtual) format other than
     //       32-bit floats and/or an IO buffer size other than 512 frames
+    const UInt32 capacityFrames = mOutputDevices.front()->device.GetIOBufferSize() * 20;
     mBuffer->Allocate(outputFormat[0].mChannelsPerFrame,
                       outputFormat[0].mBytesPerFrame,
-                      mOutputDevices.front()->device.GetIOBufferSize() * 20);
+                      capacityFrames);
+    mBufferCapacityFrames = capacityFrames;
 }
 
 void    BGMPlayThrough::DeallocateBuffer()
@@ -1451,6 +1453,58 @@ OSStatus    BGMPlayThrough::OutputDeviceIOProc(AudioObjectID           inDevice,
                 // data, so there's data to read).
                 record->resamplerInputSampleTime =
                         static_cast<CARingBuffer::SampleTime>(refCon->mLastInputSampleTime);
+            }
+
+            // Drift correction (mirrors the fast path below): this device's hardware clock isn't
+            // locked to the input device's, so the read head (in input sample time) drifts away
+            // from the write head while they run. Bluetooth sinks in particular can drift fast
+            // enough that, without correction, the read head either runs ahead of the available
+            // data (the resampler would read silence forever) or falls so far behind that the
+            // data it wants has been overwritten (the resampler would stall).
+            //
+            // Re-anchor the read head to the latest input when it drifts more than a threshold in
+            // either direction. This costs a brief discontinuity, but keeps this device in sync
+            // with the others.
+            {
+                const CARingBuffer::SampleTime writeHead = lastInputSampleTime;
+                const CARingBuffer::SampleTime readHead = record->resamplerInputSampleTime;
+
+                // Drift by more than a quarter of the ring buffer (~50 ms with the default buffer
+                // size): small enough to keep this device roughly in sync with the others, large
+                // enough that re-anchoring (and its click) is rare.
+                const CARingBuffer::SampleTime capacityFrames =
+                        refCon->mBufferCapacityFrames.load();
+                const CARingBuffer::SampleTime resyncThreshold =
+                        capacityFrames > 0 ? capacityFrames / 4 : 2048;
+
+                bool needsReanchor =
+                        (readHead - writeHead > resyncThreshold) ||   // Ahead of the input (fast clock).
+                        (writeHead - readHead > resyncThreshold);     // Behind the input (slow clock).
+
+                if(!needsReanchor)
+                {
+                    SInt64 bufferStartTime = 0, bufferEndTime = 0;
+                    if(refCon->mBuffer->GetTimeBounds(bufferStartTime, bufferEndTime) ==
+                            kCARingBufferError_OK)
+                    {
+                        // The data we're about to read has already been overwritten (we fell too
+                        // far behind), or it doesn't exist yet (we ran ahead). Re-anchor either
+                        // way.
+                        needsReanchor = (readHead < bufferStartTime) || (readHead > bufferEndTime);
+                    }
+                }
+
+                if(needsReanchor)
+                {
+                    refCon->mRTLogger.LogNoSamplesReady(lastInputSampleTime, readHead,
+                                                        record->inToOutSampleOffset);
+
+                    record->resamplerInputSampleTime = writeHead;
+
+                    // Discard the resampler's buffered (pre-jump) input so it doesn't emit stale
+                    // samples after the jump.
+                    AudioConverterReset(static_cast<AudioConverterRef>(record->converter));
+                }
             }
 
             ResamplerCallbackState resamplerState;

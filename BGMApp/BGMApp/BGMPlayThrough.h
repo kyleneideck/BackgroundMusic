@@ -321,6 +321,9 @@ private:
     // at the input device's sample rate). Used as the resamplers' source format. Set in
     // AllocateBuffer.
     AudioStreamBasicDescription      mBufferFormat { };
+    // The capacity of mBuffer, in frames. Used as the resamplers' drift-correction threshold (see
+    // the output IOProc). Set in AllocateBuffer, 0 otherwise.
+    std::atomic<UInt32>              mBufferCapacityFrames { 0 };
     
     AudioDeviceIOProcID __nullable mInputDeviceIOProcID { nullptr };
     
