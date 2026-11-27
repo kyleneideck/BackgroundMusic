@@ -258,19 +258,27 @@ NSString* const kAudioSystemSettingsPlist =
     @try {
         [_stateLock lock];
 
-        // Decide which device should be the output device now. If a device has been connected and
-        // it's preferred over the current output device, we'll change to that device. If the
-        // current output device has been removed, we'll change to the next most-preferred device.
+        // Remove the output devices that have been disconnected, if any. (Does nothing if none
+        // have been.) The remaining enabled devices keep playing audio.
+        [_devices pruneDisconnectedOutputDevices];
+
+        // If at least one enabled device is still connected, we're done. (BGMApp no longer
+        // auto-switches to newly connected devices, since the user controls which devices are
+        // enabled.)
+        if ([_devices enabledOutputDeviceIDs].count > 0) {
+            DebugMsg("BGMPreferredOutputDevices::connectedDeviceListChanged: "
+                     "Still have %lu enabled output device(s).", (unsigned long)[_devices enabledOutputDeviceIDs].count);
+            return;
+        }
+
+        // No enabled devices are left (they've all been disconnected), so change to the most
+        // preferred connected device.
         AudioObjectID preferredDevice = [self findPreferredDevice];
 
         if (preferredDevice == kAudioObjectUnknown) {
             LogWarning("BGMPreferredOutputDevices::connectedDeviceListChanged: "
                        "No preferred device found.");
-        } else if (_devices.outputDevice.GetObjectID() == preferredDevice) {
-            DebugMsg("BGMPreferredOutputDevices::connectedDeviceListChanged: "
-                     "The preferred device is already set as the output device.");
         } else {
-            // Change to the preferred device.
             DebugMsg("BGMPreferredOutputDevices::connectedDeviceListChanged: "
                      "Changing output device to %d.",
                      preferredDevice);

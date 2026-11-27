@@ -70,15 +70,24 @@ public:
     /*!
      Set BGMDevice as the default audio device for all processes.
 
+     This sets BGMDevice as the system's default output device (and default system output device,
+     using the UI sounds instance) and as the system's default input device. The input is a
+     loopback of BGMDevice's output, so apps that record from it record the system's playback
+     audio.
+
      @throws CAException If the HAL responds with an error.
      */
     void                SetAsOSDefault();
     /*!
-     Replace BGMDevice as the default device with the output device.
+     Replace BGMDevice as the default device with the given output and input devices.
+
+     A device ID of kAudioObjectUnknown skips restoring that direction, so it's safe to call this
+     even if only one of the devices is known.
 
      @throws CAException If the HAL responds with an error.
      */
-    void                UnsetAsOSDefault(AudioDeviceID inOutputDeviceID);
+    void                UnsetAsOSDefault(AudioDeviceID inOutputDeviceID,
+                                         AudioDeviceID inInputDeviceID = kAudioObjectUnknown);
 
 #pragma mark App Volumes
 

@@ -85,7 +85,11 @@ void	CAHALAudioObject::GetPropertyData(const AudioObjectPropertyAddress& inAddre
         {
             AudioStreamBasicDescription* outASBD =
                     reinterpret_cast<AudioStreamBasicDescription*>(outData);
-            outASBD->mSampleRate = 44100.0;
+            // Use the device's nominal sample rate so tests can model devices with different
+            // sample rates (e.g. to exercise BGMPlayThrough's resampling). The default nominal
+            // rate is 44100, so devices that don't set one still report 44100 as before.
+            outASBD->mSampleRate =
+                    MockAudioObjects::GetAudioDevice(GetObjectID())->mNominalSampleRate;
             outASBD->mFormatID = kAudioFormatLinearPCM;
             outASBD->mFormatFlags =
                     kAudioFormatFlagIsFloat | kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsPacked;

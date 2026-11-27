@@ -18,7 +18,9 @@ They're shown in `System Settings > Sound` along with the real audio devices.
 When you start BGMApp, it sets BGMDevice as your system's default output device so the system (i.e. Core Audio) will
 start sending all<sup id="a2">[2](#f2)</sup> your audio data to BGMDriver. BGMDriver plays that audio on BGMDevice's
 input stream, and the user can record it by selecting the Background Music device in QuickTime the same way they'd select
-a microphone.
+a microphone. BGMApp also sets BGMDevice as the system's default input device (restoring the previous default input on
+Quit), so the loopback is available without the user having to select it. See
+[BGMBackgroundMusicDevice](BGMApp/BGMApp/BGMBackgroundMusicDevice.h) for both directions.
 
 So that you can still hear the audio, BGMApp starts listening to BGMDevice's input stream and playing the audio out of
 your real output device. (See [BGMPlayThrough](BGMApp/BGMApp/BGMPlayThrough.h)). 
@@ -155,14 +157,33 @@ Builder.
 `awakeFromNib` in [BGMAppDelegate.mm](/BGMApp/BGMApp/BGMAppDelegate.mm) is (more or less) the entry point/main
 function. `applicationDidFinishLaunching` gets called next and finishes setting things up.
 
-At launch, BGMApp sets BGMDevice as the system's default device and starts playing the audio from BGMDevice through the
-actual output device. Usually that's the device that BGMDevice replaced when we set it as the default device. When
-BGMApp closes, it sets that device back as the default device.
+At launch, BGMApp sets BGMDevice as the system's default device and starts playing the audio from BGMDevice through
+the enabled output device(s). Usually that's the device that BGMDevice replaced when we set it as the default device
+(the "primary" output device, which BGMApp sets back as the default device when it closes).
+
+The user can enable more than one output device at the same time (in the "Output Device" section of the menu), each
+with its own relative volume. BGMApp persists which devices are enabled and their relative volumes in the user
+defaults (`OutputDeviceSettings`, keyed by device UID) and restores them at launch. Output devices with no saved
+settings (e.g. enabled for the first time) start at 50% (`kDefaultOutputDeviceGain` in BGMAudioDeviceManager.mm).
+
+The volume of the audio played to each output device is the master volume times that device's relative volume. The
+master volume is BGMDevice's volume control (the top slider in the menu), which BGMDriver doesn't apply to the audio
+itself (see `BGM_Device` in BGMDriver) -- BGMApp applies it in software instead. When an output device is enabled,
+[BGMDeviceControlSync](BGMApp/BGMApp/BGMDeviceControlSync.h) sets its volume control to full and unmutes it, so it
+doesn't attenuate the audio a second time. `BGMPlayThrough` then scales the audio in each output device's IOProc by
+the master volume times the device's relative volume (both are `std::atomic` values that can be updated in real
+time).
+
+Output devices don't all need to share a sample rate. BGMDevice (the input) runs at the first enabled device's rate,
+and the audio is stored in a ring buffer at that rate. An output device whose rate matches the buffer plays the
+samples directly in its IOProc; a device with a different rate is resampled in its IOProc using an `AudioConverter`
+(created and pre-warmed in `BGMPlayThrough::CreateResamplers`, configured with `kConverterPrimeMethod_None` for
+real-time safety), so all the enabled devices play the same audio in sync.
 
 BGMApp stores a small amount of state data using [User
 Defaults](https://developer.apple.com/library/content/documentation/Cocoa/Conceptual/UserDefaults/AboutPreferenceDomains/AboutPreferenceDomains.html)
--- currently just whether auto-pause is enabled and which music player to pause. Other persistent state (e.g. app
-volumes) is managed by BGMDriver.
+-- whether auto-pause is enabled, which music player to pause, and the per-output-device settings (see above). Other
+persistent state (e.g. app volumes) is managed by BGMDriver.
 
 BGMApp mostly communicates with BGMDriver through HAL notifications, though in some special cases we use XPC instead.
 The only other communication between them is BGMDriver sending the system's audio data through BGMDevice's output
@@ -174,13 +195,13 @@ from the HAL and decides whether it should pause the music player.
 
 Our custom notifications are defined/documented in `BGM_Types.h`, which is shared between the two projects.
 
-BGMApp also keeps the output device in sync with BGMDevice. For example, since BGMDevice is set as the default device,
-when the user changes their system volume only BGMDevice's volume will change. So BGMApp listens for changes to
-BGMDevice's volume and sets the output device's volume to match. 
+BGMApp also listens for changes to BGMDevice's volume (the master volume) and mute and pushes the new value to the
+`BGMPlayThrough` instances, which apply it to the audio in real time (see above).
 
 The only code in BGMApp that has to be real-time safe is in `BGMPlayThrough`'s IOProcs, `InputDeviceIOProc` and
-`OutputDeviceIOProc`, which don't do very much. The most complicated part of BGMApp is probably pausing/reducing IO when
-no other processes are playing audio, which is also handled in `BGMPlayThrough`.
+`OutputDeviceIOProc`, which don't do very much (the output IOProc copies audio out of a ring buffer and scales it by
+the master volume times the device's relative volume). The most complicated part of BGMApp is probably
+pausing/reducing IO when no other processes are playing audio, which is also handled in `BGMPlayThrough`.
 
 ### BGMXPCHelper
 

@@ -40,6 +40,7 @@
 // Forward Declarations
 @class BGMOutputVolumeMenuItem;
 @class BGMOutputDeviceMenuSection;
+@class BGMUserDefaults;
 
 
 #pragma clang assume_nonnull begin
@@ -63,6 +64,37 @@ static const int kBGMErrorCode_ReturningEarly       = 2;
 // Replace BGMDevice as the default device with the output device
 - (NSError* __nullable) unsetBGMDeviceAsOSDefault;
 
+#pragma mark Per-Output-Device Control
+
+// Set the user defaults used to persist the per-output-device settings (which devices are
+// enabled and their gains). Call before using the per-output-device API below.
+- (void) setUserDefaults:(BGMUserDefaults*)userDefaults;
+
+// Enable or disable an output device (i.e. whether BGMApp plays audio to it). Returns NO if the
+// change was rejected (e.g. because it would leave no enabled output devices).
+- (BOOL) setDevice:(AudioObjectID)deviceID enabled:(BOOL)enabled;
+
+// Set an output device's relative volume. 0.0 to 1.0. (Its level is the master volume times
+// this gain.) Also un-mutes the device if it was muted.
+- (void) setDevice:(AudioObjectID)deviceID gain:(float)gain;
+
+// Mute or un-mute an output device. Muting silences the device without changing its saved
+// relative volume; un-muting restores it.
+- (void) setDevice:(AudioObjectID)deviceID muted:(BOOL)muted;
+
+- (BOOL) isDeviceEnabled:(AudioObjectID)deviceID;
+- (float) gainForDevice:(AudioObjectID)deviceID;
+- (BOOL) isDeviceMuted:(AudioObjectID)deviceID;
+- (NSArray<NSNumber*>* __nullable) enabledOutputDeviceIDs;
+
+// Enable the output devices the user previously enabled (see setUserDefaults:), restoring their
+// gains. Returns YES if at least one device was enabled.
+- (BOOL) enablePersistedOutputDevices;
+
+// Remove the state of output devices that are no longer connected, and re-activate playthrough
+// if the enabled set changed. Call when the list of connected devices changes.
+- (void) pruneDisconnectedOutputDevices;
+
 #ifdef __cplusplus
 // The virtual device published by BGMDriver.
 - (BGMBackgroundMusicDevice) bgmDevice;
@@ -75,7 +107,7 @@ static const int kBGMErrorCode_ReturningEarly       = 2;
 - (BOOL) isOutputDevice:(AudioObjectID)deviceID;
 - (BOOL) isOutputDataSource:(UInt32)dataSourceID;
 
-// Set the audio output device that BGMApp uses.
+// Make deviceID the only enabled output device (disabling all the others).
 //
 // Returns an error if the output device couldn't be changed. If revertOnFailure is true in that case,
 // this method will attempt to set the output device back to the original device. If it fails to

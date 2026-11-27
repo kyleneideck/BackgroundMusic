@@ -34,6 +34,7 @@
 
 // STL Includes
 #include <algorithm>  // For std::max
+#include <cmath>      // For fabs
 
 // System Includes
 #include <mach/mach_init.h>
@@ -48,11 +49,14 @@ static const UInt32 kStopIOProcTimeoutInIOCycles = 600;
 #pragma mark Construction/Destruction
 
 BGMPlayThrough::BGMPlayThrough(BGMAudioDevice inInputDevice, BGMAudioDevice inOutputDevice)
-:
-    mInputDevice(inInputDevice),
-    mOutputDevice(inOutputDevice)
 {
-    Init(inInputDevice, inOutputDevice);
+    Init(inInputDevice, { inOutputDevice });
+}
+
+BGMPlayThrough::BGMPlayThrough(BGMAudioDevice inInputDevice,
+                               const std::vector<BGMAudioDevice>& inOutputDevices)
+{
+    Init(inInputDevice, inOutputDevices);
 }
 
 BGMPlayThrough::~BGMPlayThrough()
@@ -79,16 +83,40 @@ BGMPlayThrough::~BGMPlayThrough()
     }
 }
 
-void    BGMPlayThrough::Init(BGMAudioDevice inInputDevice, BGMAudioDevice inOutputDevice)
+void    BGMPlayThrough::Init(BGMAudioDevice inInputDevice, const std::vector<BGMAudioDevice>& inOutputDevices)
 {
     BGMAssert(mInputDeviceIOProcState.is_lock_free(),
               "BGMPlayThrough::BGMPlayThrough: !mInputDeviceIOProcState.is_lock_free()");
-    BGMAssert(mOutputDeviceIOProcState.is_lock_free(),
-              "BGMPlayThrough::BGMPlayThrough: !mOutputDeviceIOProcState.is_lock_free()");
     BGMAssert(!mActive, "BGMPlayThrough::BGMPlayThrough: Can't init while active.");
     
+    ThrowIf(inOutputDevices.empty(),
+            CAException(kAudioHardwareIllegalOperationError),
+            "BGMPlayThrough::BGMPlayThrough: No output devices");
+
     mInputDevice = inInputDevice;
-    mOutputDevice = inOutputDevice;
+    
+    // Replace the output devices, preserving the gain of any that are already present.
+    std::deque<std::unique_ptr<OutputDevice>> newOutputDevices;
+    for(const auto& inOutputDevice : inOutputDevices)
+    {
+        std::unique_ptr<OutputDevice> newOutputDevice(new OutputDevice(inOutputDevice));
+        for(const auto& oldOutputDevice : mOutputDevices)
+        {
+            if(oldOutputDevice->device.GetObjectID() == inOutputDevice.GetObjectID())
+            {
+                newOutputDevice->gain.store(oldOutputDevice->gain.load());
+                break;
+            }
+        }
+        newOutputDevices.push_back(std::move(newOutputDevice));
+    }
+    mOutputDevices = std::move(newOutputDevices);
+
+    for(const auto& outputDevice : mOutputDevices)
+    {
+        BGMAssert(outputDevice->state.is_lock_free(),
+                  "BGMPlayThrough::BGMPlayThrough: !OutputDevice.state.is_lock_free()");
+    }
     
     AllocateBuffer();
     
@@ -121,16 +149,20 @@ void    BGMPlayThrough::Activate()
     {
         DebugMsg("BGMPlayThrough::Activate: Activating playthrough");
         
+        // The output devices don't need to share a sample rate: a device whose rate differs from
+        // the input device's is resampled in its IOProc (see the header comment). We decide which
+        // devices need that below, after the input rate is set.
+        
         CreateIOProcIDs();
         
         mActive = true;
         
         // TODO: This code (the next two blocks) should be in BGMDeviceControlSync.
         
-        // Set BGMDevice's sample rate to match the output device.
+        // Set BGMDevice's sample rate to match the first output device.
         try
         {
-            Float64 outputSampleRate = mOutputDevice.GetNominalSampleRate();
+            Float64 outputSampleRate = mOutputDevices.front()->device.GetNominalSampleRate();
             mInputDevice.SetNominalSampleRate(outputSampleRate);
         }
         catch (const CAException& e)
@@ -139,10 +171,10 @@ void    BGMPlayThrough::Activate()
                        e.GetError());
         }
         
-        // Set BGMDevice's IO buffer size to match the output device.
+        // Set BGMDevice's IO buffer size to match the first output device.
         try
         {
-            UInt32 outputBufferSize = mOutputDevice.GetIOBufferSize();
+            UInt32 outputBufferSize = mOutputDevices.front()->device.GetIOBufferSize();
             mInputDevice.SetIOBufferSize(outputBufferSize);
         }
         catch (const CAException& e)
@@ -150,6 +182,18 @@ void    BGMPlayThrough::Activate()
             LogWarning("BGMPlayThrough::Activate: Failed to sync device buffer sizes. Error: %d",
                        e.GetError());
         }
+        
+        // Mark which output devices need resampling (their rate differs from the rate the audio is
+        // stored at, which is the input device's) and create their AudioConverters. If creating a
+        // resampler fails we throw, since playing the audio at the wrong speed would be worse.
+        const Float64 storedRate = mBufferFormat.mSampleRate;
+        for(auto& outputDevice : mOutputDevices)
+        {
+            outputDevice->needsResampling =
+                    (fabs(outputDevice->device.GetNominalSampleRate() - storedRate) > 0.5);
+        }
+        
+        CreateResamplers();
         
         if(!mInputDevice.IsBGMDeviceInstance())
         {
@@ -177,6 +221,11 @@ void    BGMPlayThrough::Deactivate()
             DestroyIOProcIDs();
         });
         
+        // The IOProcs are stopped now, so it's safe to destroy the resamplers.
+        BGMLogAndSwallowExceptions("BGMPlayThrough::Deactivate", [&] {
+            DestroyResamplers();
+        });
+        
         mActive = false;
     }
 }
@@ -186,12 +235,15 @@ void    BGMPlayThrough::AllocateBuffer()
     // Allocate the ring buffer that will hold the data passing between the devices
     UInt32 numberStreams = 1;
     AudioStreamBasicDescription outputFormat[1];
-    mOutputDevice.GetCurrentVirtualFormats(false, numberStreams, outputFormat);
+    mOutputDevices.front()->device.GetCurrentVirtualFormats(false, numberStreams, outputFormat);
     
     if(numberStreams < 1)
     {
         Throw(CAException(kAudioHardwareUnsupportedOperationError));
     }
+    
+    // Remember the format for the resamplers (it's the source format they convert from).
+    mBufferFormat = outputFormat[0];
     
     // Need to lock the buffer mutexes to make sure the IOProcs aren't accessing it. The order is
     // important here. We always lock them in the same order to prevent deadlocks.
@@ -204,9 +256,11 @@ void    BGMPlayThrough::AllocateBuffer()
     //
     // TODO: Test playthrough with hardware with more than 2 channels per frame, a sample (virtual) format other than
     //       32-bit floats and/or an IO buffer size other than 512 frames
+    const UInt32 capacityFrames = mOutputDevices.front()->device.GetIOBufferSize() * 20;
     mBuffer->Allocate(outputFormat[0].mChannelsPerFrame,
                       outputFormat[0].mBytesPerFrame,
-                      mOutputDevice.GetIOBufferSize() * 20);
+                      capacityFrames);
+    mBufferCapacityFrames = capacityFrames;
 }
 
 void    BGMPlayThrough::DeallocateBuffer()
@@ -257,17 +311,25 @@ void    BGMPlayThrough::CreateIOProcIDs()
               "BGMPlayThrough::CreateIOProcIDs: Tried to create IOProcs when playthrough was already running");
     BGMAssert(mInputDeviceIOProcID == nullptr,
               "BGMPlayThrough::CreateIOProcIDs: mInputDeviceIOProcID must be destroyed first.");
-    BGMAssert(mOutputDeviceIOProcID == nullptr,
-              "BGMPlayThrough::CreateIOProcIDs: mOutputDeviceIOProcID must be destroyed first.");
+    for(const auto& outputDevice : mOutputDevices)
+    {
+        BGMAssert(outputDevice->ioProcID == nullptr,
+                  "BGMPlayThrough::CreateIOProcIDs: An output device IOProc ID must be destroyed first.");
+    }
     BGMAssert(CheckIOProcsAreStopped(),
               "BGMPlayThrough::CreateIOProcIDs: IOProcs not ready.");
     
     const bool inDeviceAlive = mInputDevice.IsAlive();
-    const bool outDeviceAlive = mOutputDevice.IsAlive();
-    
-    if(inDeviceAlive && outDeviceAlive)
+    bool allOutDevicesAlive = !mOutputDevices.empty();
+    for(const auto& outputDevice : mOutputDevices)
     {
-        DebugMsg("BGMPlayThrough::CreateIOProcIDs: Creating IOProcs");
+        allOutDevicesAlive = allOutDevicesAlive && outputDevice->device.IsAlive();
+    }
+    
+    if(inDeviceAlive && allOutDevicesAlive)
+    {
+        DebugMsg("BGMPlayThrough::CreateIOProcIDs: Creating IOProcs for %u output device(s)",
+                 static_cast<unsigned int>(mOutputDevices.size()));
     
         try
         {
@@ -280,32 +342,49 @@ void    BGMPlayThrough::CreateIOProcIDs()
             throw;
         }
         
-        try
+        for(auto& outputDevice : mOutputDevices)
         {
-            mOutputDeviceIOProcID = mOutputDevice.CreateIOProcID(&BGMPlayThrough::OutputDeviceIOProc, this);
-        }
-        catch(const CAException& e)
-        {
-            LogWarning("BGMPlayThrough::CreateIOProcIDs: Failed to create output IOProc ID. mOutputDevice = %d",
-                       mOutputDevice.GetObjectID());
-            DestroyIOProcIDs(); // Clean up.
-            throw;
+            try
+            {
+                outputDevice->ioProcID =
+                        outputDevice->device.CreateIOProcID(&BGMPlayThrough::OutputDeviceIOProc, this);
+            }
+            catch(const CAException& e)
+            {
+                LogWarning("BGMPlayThrough::CreateIOProcIDs: Failed to create output IOProc ID. "
+                           "mOutputDevice = %d",
+                           outputDevice->device.GetObjectID());
+                DestroyIOProcIDs(); // Clean up.
+                throw;
+            }
         }
 
-        if(mInputDeviceIOProcID == nullptr || mOutputDeviceIOProcID == nullptr)
+        if(mInputDeviceIOProcID == nullptr)
         {
             // Should never happen if CAHALAudioDevice::CreateIOProcID didn't throw.
             LogError("BGMPlayThrough::CreateIOProcIDs: Null IOProc ID returned by CreateIOProcID");
             throw CAException(kAudioHardwareIllegalOperationError);
         }
+        for(const auto& outputDevice : mOutputDevices)
+        {
+            if(outputDevice->ioProcID == nullptr)
+            {
+                // Should never happen if CAHALAudioDevice::CreateIOProcID didn't throw.
+                LogError("BGMPlayThrough::CreateIOProcIDs: Null IOProc ID returned by CreateIOProcID");
+                throw CAException(kAudioHardwareIllegalOperationError);
+            }
+        }
 
         // Tell the HAL which streams our IOProcs actually use, so it won't engage streams we don't
         // use.
         // 
-        // OutputDeviceIOProc only writes audio, so disable the output device's input streams. With
+        // OutputDeviceIOProc only writes audio, so disable the output devices' input streams. With
         // a headset, for example, that avoids opening the mic input, which we think might help
         // avoid issues with Bluetooth headsets. See #859.
-        DisableIOProcStreams(mOutputDevice, mOutputDeviceIOProcID, /* inIsInput = */ true, "output");
+        for(auto& outputDevice : mOutputDevices)
+        {
+            DisableIOProcStreams(outputDevice->device, outputDevice->ioProcID, /* inIsInput = */ true, "output");
+        }
 
         // InputDeviceIOProc only captures, so disable BGMDevice's output streams.
         DisableIOProcStreams(mInputDevice, mInputDeviceIOProcID, /* inIsInput = */ false, "input");
@@ -315,13 +394,13 @@ void    BGMPlayThrough::CreateIOProcIDs()
         //       https://lists.apple.com/archives/coreaudio-api/2008/Mar/msg00043.html but from a quick look at their
         //       code, I don't think they ended up using it.
         // mInputDevice->SetIOCycleUsage(0.01f);
-        // mOutputDevice->SetIOCycleUsage(0.01f);
+        // for(auto& outputDevice : mOutputDevices) { outputDevice->device.SetIOCycleUsage(0.01f); }
     }
     else
     {
         LogWarning("BGMPlayThrough::CreateIOProcIDs: Failed to create IOProcs.%s%s",
                    (inDeviceAlive ? "" : " Input device not alive."),
-                   (outDeviceAlive ? "" : " Output device not alive."));
+                   (allOutDevicesAlive ? "" : " An output device not alive."));
         throw CAException(kAudioHardwareIllegalOperationError);
     }
 }
@@ -369,7 +448,225 @@ void    BGMPlayThrough::DestroyIOProcIDs()
     };
     
     destroy(mInputDevice, "input", mInputDeviceIOProcID);
-    destroy(mOutputDevice, "output", mOutputDeviceIOProcID);
+    for(auto& outputDevice : mOutputDevices)
+    {
+        destroy(outputDevice->device, "output", outputDevice->ioProcID);
+    }
+}
+
+void    BGMPlayThrough::CreateResamplers()
+{
+    CAMutex::Locker stateLocker(mStateMutex);
+
+    for(auto& outputDevice : mOutputDevices)
+    {
+        if(!outputDevice->needsResampling)
+        {
+            continue;
+        }
+
+        // The output device's format is the resampler's destination format (at the device's own
+        // sample rate). The ring buffer's format (mBufferFormat) is the source format.
+        UInt32 numberStreams = 1;
+        AudioStreamBasicDescription destFormat[1];
+        BGMLogAndSwallowExceptionsMsg("BGMPlayThrough::CreateResamplers", "Get the device format",
+                                      [&] {
+            outputDevice->device.GetCurrentVirtualFormats(false, numberStreams, destFormat);
+        });
+
+        if(numberStreams < 1)
+        {
+            LogError("BGMPlayThrough::CreateResamplers: Device %d has no output format", 
+                     outputDevice->device.GetObjectID());
+            Throw(CAException(kAudioHardwareUnsupportedOperationError));
+        }
+
+        AudioConverterRef converter = nullptr;
+        OSStatus err = AudioConverterNew(&mBufferFormat, &destFormat[0], &converter);
+        if(err != noErr)
+        {
+            LogWarning("BGMPlayThrough::CreateResamplers: AudioConverterNew failed for device %d: %d",
+                       outputDevice->device.GetObjectID(), err);
+            Throw(CAException(err));
+        }
+
+        // Use kConverterPrimeMethod_None so the resampler doesn't ask for extra leading/trailing
+        // input frames, which we can't supply in real time. This adds a small amount of latency at
+        // the start of playback (the "through latency"), which is acceptable here.
+        const UInt32 primeMethod = kConverterPrimeMethod_None;
+        err = AudioConverterSetProperty(converter, kAudioConverterPrimeMethod,
+                                        sizeof(primeMethod), &primeMethod);
+        if(err != noErr)
+        {
+            AudioConverterDispose(converter);
+            LogWarning("BGMPlayThrough::CreateResamplers: Failed to set the prime method for "
+                       "device %d: %d",
+                       outputDevice->device.GetObjectID(), err);
+            Throw(CAException(err));
+        }
+
+        // Allocate the input buffer the resampler's input callback reads the ring buffer into. It
+        // must hold the most input the resampler is likely to ask for in one call (roughly
+        // outputFrames * inputRate / outputRate), with a margin.
+        {
+            const Float64 inputRate = mBufferFormat.mSampleRate;
+            const Float64 outputRate = destFormat[0].mSampleRate;
+            const UInt32 ioBufferFrames = outputDevice->device.GetIOBufferSize();
+            const UInt32 maxInputFrames =
+                    static_cast<UInt32>(ioBufferFrames * (inputRate / outputRate)) + 1024;
+            outputDevice->resamplerInputBufferSize = maxInputFrames * mBufferFormat.mBytesPerFrame;
+            outputDevice->resamplerInputBuffer = static_cast<Byte*>(
+                    calloc(1, outputDevice->resamplerInputBufferSize));
+            if(outputDevice->resamplerInputBuffer == nullptr)
+            {
+                AudioConverterDispose(converter);
+                outputDevice->resamplerInputBuffer = nullptr;
+                outputDevice->resamplerInputBufferSize = 0;
+                LogError("BGMPlayThrough::CreateResamplers: Failed to allocate the input buffer "
+                         "for device %d",
+                         outputDevice->device.GetObjectID());
+                Throw(CAException(kAudioHardwareUnspecifiedError));
+            }
+        }
+
+        // Pre-warm the resampler so any one-time internal setup (e.g. the sample-rate-conversion
+        // filter state) happens now, in a non-real-time context, rather than on the first real-time
+        // call. We feed it a little silence (from the pre-allocated buffer) and then reset it, so
+        // the real-time IO starts fresh.
+        {
+            const UInt32 preWarmOutputFrames = 256;
+            AudioBufferList preWarmOut;
+            preWarmOut.mNumberBuffers = 1;
+            preWarmOut.mBuffers[0].mNumberChannels = destFormat[0].mChannelsPerFrame;
+            preWarmOut.mBuffers[0].mDataByteSize =
+                    preWarmOutputFrames * destFormat[0].mBytesPerFrame;
+            preWarmOut.mBuffers[0].mData =
+                    static_cast<Byte*>(calloc(1, preWarmOut.mBuffers[0].mDataByteSize));
+
+            ResamplerCallbackState preWarmState;
+            preWarmState.buffer = nullptr;   // Provide silence, not the ring buffer.
+            preWarmState.record = nullptr;
+            preWarmState.inputBytesPerFrame = mBufferFormat.mBytesPerFrame;
+            preWarmState.inputBuffer = outputDevice->resamplerInputBuffer;
+            preWarmState.inputBufferSize = outputDevice->resamplerInputBufferSize;
+
+            UInt32 preWarmPackets = preWarmOutputFrames;
+            AudioConverterFillComplexBuffer(converter, &ResamplerInputProc, &preWarmState,
+                                            &preWarmPackets, &preWarmOut, nullptr);
+
+            free(preWarmOut.mBuffers[0].mData);
+        }
+        AudioConverterReset(converter);
+
+        outputDevice->converter = converter;
+        outputDevice->resamplerInputSampleTime = -1;
+
+        DebugMsg("BGMPlayThrough::CreateResamplers: Created a resampler for device %d (%.0f Hz "
+                 "-> %.0f Hz)",
+                 outputDevice->device.GetObjectID(),
+                 mBufferFormat.mSampleRate,
+                 destFormat[0].mSampleRate);
+    }
+}
+
+void    BGMPlayThrough::DestroyResamplers()
+{
+    CAMutex::Locker stateLocker(mStateMutex);
+
+    for(auto& outputDevice : mOutputDevices)
+    {
+        if(outputDevice->converter != nullptr)
+        {
+            AudioConverterDispose(static_cast<AudioConverterRef>(outputDevice->converter));
+            outputDevice->converter = nullptr;
+        }
+
+        if(outputDevice->resamplerInputBuffer != nullptr)
+        {
+            free(outputDevice->resamplerInputBuffer);
+            outputDevice->resamplerInputBuffer = nullptr;
+        }
+        outputDevice->resamplerInputBufferSize = 0;
+        outputDevice->resamplerInputSampleTime = -1;
+        outputDevice->needsResampling = false;
+    }
+}
+
+// static
+OSStatus    BGMPlayThrough::ResamplerInputProc(AudioConverterRef                   inAudioConverter,
+                                                UInt32*                             ioNumberDataPackets,
+                                                AudioBufferList*                    ioData,
+                                                AudioStreamPacketDescription* __nullable* __nullable outDataPacketDescription,
+                                                void* __nullable                    inUserData)
+{
+    #pragma unused (inAudioConverter, outDataPacketDescription)
+
+    ResamplerCallbackState* const state = static_cast<ResamplerCallbackState*>(inUserData);
+
+    UInt32 frames = *ioNumberDataPackets;
+    if(frames == 0)
+    {
+        return noErr;
+    }
+
+    if((state->inputBuffer == nullptr) || (state->inputBufferSize == 0))
+    {
+        // No input buffer provided. (Shouldn't happen.) Tell the converter we have no data.
+        *ioNumberDataPackets = 0;
+        return kAudioConverterErr_InvalidInputSize;
+    }
+
+    // Cap the number of frames to what fits in the pre-allocated buffer. (We sized it generously,
+    // so this shouldn't trigger in practice.)
+    const UInt32 maxFrames = state->inputBufferSize / state->inputBytesPerFrame;
+    if(frames > maxFrames)
+    {
+        frames = maxFrames;
+        if(frames == 0)
+        {
+            *ioNumberDataPackets = 0;
+            return noErr;
+        }
+    }
+
+    const UInt32 totalBytes = frames * state->inputBytesPerFrame;
+
+    ioData->mNumberBuffers = 1;
+    ioData->mBuffers[0].mData = state->inputBuffer;
+    ioData->mBuffers[0].mDataByteSize = totalBytes;
+
+    if(state->buffer == nullptr)
+    {
+        // Provide silence. (Used to pre-warm a newly-created resampler.)
+        memset(ioData->mBuffers[0].mData, 0, totalBytes);
+        *ioNumberDataPackets = frames;
+        return noErr;
+    }
+
+    // Read from the ring buffer into the pre-allocated buffer.
+    OutputDevice* const record = state->record;
+
+    CARingBufferError err =
+            state->buffer->Fetch(ioData, frames, record->resamplerInputSampleTime);
+    // Advance the read position by the number of frames we used (the full requested amount, even
+    // if Fetch zero-filled part of it because it wasn't in the buffer yet).
+    record->resamplerInputSampleTime += frames;
+
+    if(err != kCARingBufferError_OK)
+    {
+        // Fetch failed (e.g. CPU overload). Provide silence so the converter can continue.
+        memset(ioData->mBuffers[0].mData, 0, totalBytes);
+        *ioNumberDataPackets = 0;
+        return kAudioConverterErr_InvalidInputSize;
+    }
+
+    // Fetch sets mDataByteSize to the in-range bytes, which may be less than totalBytes if part
+    // of the requested range wasn't in the buffer. Restore it so the converter sees the full
+    // number of frames (Fetch already zero-filled the missing part).
+    ioData->mBuffers[0].mDataByteSize = totalBytes;
+    *ioNumberDataPackets = frames;
+
+    return noErr;
 }
 
 bool    BGMPlayThrough::CheckIOProcsAreStopped() const noexcept
@@ -383,11 +680,16 @@ bool    BGMPlayThrough::CheckIOProcsAreStopped() const noexcept
         statesOK = false;
     }
     
-    if(mOutputDeviceIOProcState != IOState::Stopped)
+    for(const auto& outputDevice : mOutputDevices)
     {
-        LogWarning("BGMPlayThrough::CheckIOProcsAreStopped: Output IOProc not stopped. mOutputDeviceIOProcState = %d",
-                   mOutputDeviceIOProcState.load());
-        statesOK = false;
+        if(outputDevice->state != IOState::Stopped)
+        {
+            LogWarning("BGMPlayThrough::CheckIOProcsAreStopped: Output IOProc not stopped. deviceID = %d, "
+                       "state = %d",
+                       outputDevice->device.GetObjectID(),
+                       outputDevice->state.load());
+            statesOK = false;
+        }
     }
     
     return statesOK;
@@ -409,10 +711,31 @@ void    BGMPlayThrough::SetDevices(const BGMAudioDevice* __nullable inInputDevic
     Deactivate();
     
     mInputDevice = inInputDevice ? *inInputDevice : mInputDevice;
-    mOutputDevice = inOutputDevice ? *inOutputDevice : mOutputDevice;
     
-    // Resize and reallocate the buffer if necessary.
-    Init(mInputDevice, mOutputDevice);
+    if(inOutputDevice)
+    {
+        // Replace the output devices (or add the single one).
+        std::vector<BGMAudioDevice> outputDevices;
+        for(const auto& outputDevice : mOutputDevices)
+        {
+            if(outputDevice->device.GetObjectID() != inOutputDevice->GetObjectID())
+            {
+                outputDevices.push_back(outputDevice->device);
+            }
+        }
+        outputDevices.push_back(*inOutputDevice);
+        Init(mInputDevice, outputDevices);
+    }
+    else
+    {
+        // Only the input device changed, so keep the existing output devices.
+        std::vector<BGMAudioDevice> outputDevices;
+        for(const auto& outputDevice : mOutputDevices)
+        {
+            outputDevices.push_back(outputDevice->device);
+        }
+        Init(mInputDevice, outputDevices);
+    }
     
     if(wasActive)
     {
@@ -422,6 +745,79 @@ void    BGMPlayThrough::SetDevices(const BGMAudioDevice* __nullable inInputDevic
     if(wasPlayingThrough)
     {
         Start();
+    }
+}
+
+void    BGMPlayThrough::SetDevices(BGMAudioDevice inInputDevice,
+                                   const std::vector<BGMAudioDevice>& inOutputDevices)
+{
+    CAMutex::Locker stateLocker(mStateMutex);
+    
+    bool wasActive = mActive;
+    bool wasPlayingThrough = mPlayingThrough;
+    
+    if(wasPlayingThrough)
+    {
+        BGMAssert(wasActive, "BGMPlayThrough::SetDevices: wasPlayingThrough && !wasActive");  // Sanity check.
+    }
+    
+    Deactivate();
+    
+    Init(inInputDevice, inOutputDevices);
+    
+    if(wasActive)
+    {
+        Activate();
+    }
+    
+    if(wasPlayingThrough)
+    {
+        Start();
+    }
+}
+
+void    BGMPlayThrough::SetOutputDevices(const std::vector<BGMAudioDevice>& inOutputDevices)
+{
+    CAMutex::Locker stateLocker(mStateMutex);
+    
+    ThrowIf(inOutputDevices.empty(),
+            CAException(kAudioHardwareIllegalOperationError),
+            "BGMPlayThrough::SetOutputDevices: No output devices");
+
+    bool wasActive = mActive;
+    bool wasPlayingThrough = mPlayingThrough;
+    
+    if(wasPlayingThrough)
+    {
+        BGMAssert(wasActive, "BGMPlayThrough::SetOutputDevices: wasPlayingThrough && !wasActive");  // Sanity check.
+    }
+    
+    Deactivate();
+    
+    Init(mInputDevice, inOutputDevices);
+    
+    if(wasActive)
+    {
+        Activate();
+    }
+    
+    if(wasPlayingThrough)
+    {
+        Start();
+    }
+}
+
+void    BGMPlayThrough::SetOutputDeviceGain(AudioObjectID inDeviceID, Float32 inGain)
+{
+    CAMutex::Locker stateLocker(mStateMutex);
+
+    for(auto& outputDevice : mOutputDevices)
+    {
+        if(outputDevice->device.GetObjectID() == inDeviceID)
+        {
+            outputDevice->gain.store(inGain);
+            return;
+        }
     }
 }
 
@@ -435,36 +831,54 @@ void    BGMPlayThrough::Start()
     {
         DebugMsg("BGMPlayThrough::Start: Already started/starting.");
 
-        if(mOutputDeviceIOProcState == IOState::Running)
+        for(const auto& outputDevice : mOutputDevices)
         {
-            ReleaseThreadsWaitingForOutputToStart();
+            if(outputDevice->state == IOState::Running)
+            {
+                ReleaseThreadsWaitingForOutputToStart();
+            }
         }
 
         return;
     }
     
-    if(!mInputDevice.IsAlive() || !mOutputDevice.IsAlive())
+    if(!mInputDevice.IsAlive())
     {
-        LogError("BGMPlayThrough::Start: %s %s",
-                 mInputDevice.IsAlive() ? "" : "!mInputDevice",
-                 mOutputDevice.IsAlive() ? "" : "!mOutputDevice");
+        LogError("BGMPlayThrough::Start: !mInputDevice");
         
         ReleaseThreadsWaitingForOutputToStart();
         
         throw CAException(kAudioHardwareBadDeviceError);
     }
     
+    for(const auto& outputDevice : mOutputDevices)
+    {
+        if(!outputDevice->device.IsAlive())
+        {
+            LogError("BGMPlayThrough::Start: Output device not alive. deviceID = %d",
+                     outputDevice->device.GetObjectID());
+            
+            ReleaseThreadsWaitingForOutputToStart();
+            
+            throw CAException(kAudioHardwareBadDeviceError);
+        }
+    }
+    
     // Set up IOProcs and listeners if they haven't been already.
     Activate();
     
-    BGMAssert((mInputDeviceIOProcID != nullptr) && (mOutputDeviceIOProcID != nullptr),
-              "BGMPlayThrough::Start: Null IOProc ID");
-    
-    if((mInputDeviceIOProcState != IOState::Stopped) || (mOutputDeviceIOProcState != IOState::Stopped))
+    BGMAssert(mInputDeviceIOProcID != nullptr, "BGMPlayThrough::Start: Null IOProc ID");
+    for(const auto& outputDevice : mOutputDevices)
     {
-        LogWarning("BGMPlayThrough::Start: IOProc(s) not ready. Trying to start anyway. %s%d %s%d",
-                   "mInputDeviceIOProcState = ", mInputDeviceIOProcState.load(),
-                   "mOutputDeviceIOProcState = ", mOutputDeviceIOProcState.load());
+        BGMAssert(outputDevice->ioProcID != nullptr, "BGMPlayThrough::Start: Null IOProc ID");
+    }
+    
+    if((mInputDeviceIOProcState != IOState::Stopped) ||
+       std::any_of(mOutputDevices.begin(), mOutputDevices.end(),
+                   [](const std::unique_ptr<OutputDevice>& inOutputDevice)
+                   { return inOutputDevice->state != IOState::Stopped; }))
+    {
+        LogWarning("BGMPlayThrough::Start: IOProc(s) not ready. Trying to start anyway.");
     }
     
     DebugMsg("BGMPlayThrough::Start: Starting playthrough");
@@ -477,8 +891,11 @@ void    BGMPlayThrough::Start()
         mInputDeviceIOProcState = IOState::Starting;
         mInputDevice.StartIOProc(mInputDeviceIOProcID);
     
-        mOutputDeviceIOProcState = IOState::Starting;
-        mOutputDevice.StartIOProc(mOutputDeviceIOProcID);
+        for(auto& outputDevice : mOutputDevices)
+        {
+            outputDevice->state = IOState::Starting;
+            outputDevice->device.StartIOProc(outputDevice->ioProcID);
+        }
     }
     catch(const CAException& e)
     {
@@ -487,10 +904,8 @@ void    BGMPlayThrough::Start()
         // Log an error message.
         OSStatus err = e.GetError();
         char err4CC[5] = CA4CCToCString(err);
-        LogError("BGMPlayThrough::Start: Failed to start %s device. Error: %d (%s)",
-                 (mOutputDeviceIOProcState == IOState::Starting ? "output" : "input"),
-                 err,
-                 err4CC);
+        LogError("BGMPlayThrough::Start: Failed to start IOProc. Error: %d (%s)",
+                 err, err4CC);
         
         // Try to stop the IOProcs in case StartIOProc failed because one of our IOProc was already
         // running. I don't know if it actually does fail in that case, but the documentation
@@ -498,12 +913,18 @@ void    BGMPlayThrough::Start()
         CATry
         mInputDevice.StopIOProc(mInputDeviceIOProcID);
         CACatch
-        CATry
-        mOutputDevice.StopIOProc(mOutputDeviceIOProcID);
-        CACatch
+        for(auto& outputDevice : mOutputDevices)
+        {
+            CATry
+            outputDevice->device.StopIOProc(outputDevice->ioProcID);
+            CACatch
+        }
         
         mInputDeviceIOProcState = IOState::Stopped;
-        mOutputDeviceIOProcState = IOState::Stopped;
+        for(auto& outputDevice : mOutputDevices)
+        {
+            outputDevice->state = IOState::Stopped;
+        }
         
         throw;
     }
@@ -527,9 +948,9 @@ OSStatus    BGMPlayThrough::WaitForOutputDeviceToStart() noexcept
             return kAudioHardwareNotRunningError;
         }
         
-        if(!mOutputDevice.IsAlive())
+        if(mOutputDevices.empty() || !mOutputDevices.front()->device.IsAlive())
         {
-            LogError("BGMPlayThrough::WaitForOutputDeviceToStart: Device not alive");
+            LogError("BGMPlayThrough::WaitForOutputDeviceToStart: Output device not alive");
             return kAudioHardwareBadDeviceError;
         }
     }
@@ -539,7 +960,7 @@ OSStatus    BGMPlayThrough::WaitForOutputDeviceToStart() noexcept
         return e.GetError();
     }
     
-    const IOState initialState = mOutputDeviceIOProcState;
+    const IOState initialState = mOutputDevices.front()->state;
     const UInt64 startedAt = mach_absolute_time();
 
     if(initialState == IOState::Running)
@@ -558,20 +979,21 @@ OSStatus    BGMPlayThrough::WaitForOutputDeviceToStart() noexcept
         return kDeviceNotStarting;
     }
 
-    // Wait for our output IOProc to start. mOutputDeviceIOProcSemaphore is reset to 0
-    // (semaphore_signal_all) when our IOProc is running on the output device.
+    // Wait for one of our output IOProcs to start. mOutputDeviceIOProcSemaphore is reset to 0
+    // (semaphore_signal_all) when an IOProc is running on an output device.
     //
     // This does mean that we won't have any data the first time our IOProc is called, but I
     // don't know any way to wait until just before that point. (The device's IsRunning property
     // changes immediately after we call StartIOProc.)
     //
-    // We check mOutputDeviceIOProcState every 200ms as a fault tolerance mechanism. (Though,
+    // We check the output devices' states every 200ms as a fault tolerance mechanism. (Though,
     // I'm not completely sure it's impossible to miss the signal from the IOProc because of a
     // spurious wake up, so it might actually be necessary.)
     DebugMsg("BGMPlayThrough::WaitForOutputDeviceToStart: Waiting.");
     
     kern_return_t theError;
-    IOState state;
+    bool anyRunning = false;
+    bool anyStarting = false;
     UInt64 waitedNsec = 0;
     mach_timebase_info_data_t info;
     mach_timebase_info(&info);
@@ -584,12 +1006,24 @@ OSStatus    BGMPlayThrough::WaitForOutputDeviceToStart() noexcept
         theError = semaphore_timedwait(mOutputDeviceIOProcSemaphore,
                                        (mach_timespec_t){ 0, 200 * NSEC_PER_MSEC });
         
-        // Update the total time we've been waiting and the output device's state.
+        // Update the total time we've been waiting and the output devices' states.
         waitedNsec = (mach_absolute_time() - startedAt) * info.numer / info.denom;
-        state = mOutputDeviceIOProcState;
+        anyRunning = false;
+        anyStarting = false;
+        for(const auto& outputDevice : mOutputDevices)
+        {
+            if(outputDevice->state == IOState::Running)
+            {
+                anyRunning = true;
+            }
+            else if(outputDevice->state == IOState::Starting)
+            {
+                anyStarting = true;
+            }
+        }
     }
-    while((theError != KERN_SUCCESS) &&         // Signalled from the IOProc.
-          (state == IOState::Starting) &&       // IO state changed.
+    while((theError != KERN_SUCCESS) &&         // Signalled from an IOProc.
+          anyStarting &&                        // At least one IOProc is still starting.
           (waitedNsec < kStartIOTimeoutNsec));  // Timed out.
 
     if(BGMDebugLoggingIsEnabled())
@@ -609,13 +1043,13 @@ OSStatus    BGMPlayThrough::WaitForOutputDeviceToStart() noexcept
     // Figure out which error code to return.
     switch (theError)
     {
-        case KERN_SUCCESS:              // Signalled from the IOProc.
+        case KERN_SUCCESS:              // Signalled from an IOProc.
             return kAudioHardwareNoError;
             
                                         // IO state changed or we timed out after
         case KERN_OPERATION_TIMED_OUT:  //  - semaphore_timedwait timed out, or
         case KERN_ABORTED:              //  - a spurious wake-up.
-            return (state == IOState::Running) ? kAudioHardwareNoError : kAudioHardwareNotRunningError;
+            return anyRunning ? kAudioHardwareNoError : kAudioHardwareNotRunningError;
             
         default:
             BGM_Utils::LogIfMachError("BGMPlayThrough::WaitForOutputDeviceToStart",
@@ -655,19 +1089,25 @@ OSStatus    BGMPlayThrough::Stop()
         DebugMsg("BGMPlayThrough::Stop: Stopping playthrough");
         
         bool inputDeviceAlive = false;
-        bool outputDeviceAlive = false;
         
         CATry
         inputDeviceAlive = CAHALAudioObject::ObjectExists(mInputDevice) && mInputDevice.IsAlive();
         CACatch
         
-        CATry
-        outputDeviceAlive =
-            CAHALAudioObject::ObjectExists(mOutputDevice) && mOutputDevice.IsAlive();
-        CACatch
-
         mInputDeviceIOProcState = inputDeviceAlive ? IOState::Stopping : IOState::Stopped;
-        mOutputDeviceIOProcState = outputDeviceAlive ? IOState::Stopping : IOState::Stopped;
+        
+        bool anyOutputDeviceAlive = false;
+        for(auto& outputDevice : mOutputDevices)
+        {
+            bool deviceAlive = false;
+            CATry
+            deviceAlive =
+                CAHALAudioObject::ObjectExists(outputDevice->device) && outputDevice->device.IsAlive();
+            CACatch
+            
+            outputDevice->state = deviceAlive ? IOState::Stopping : IOState::Stopped;
+            anyOutputDeviceAlive = anyOutputDeviceAlive || deviceAlive;
+        }
         
         // Wait for the IOProcs to stop themselves. This is so the IOProcs don't get called after the BGMPlayThrough instance
         // (pointed to by the client data they get from the HAL) is deallocated.
@@ -687,20 +1127,38 @@ OSStatus    BGMPlayThrough::Stop()
                             NSEC_PER_SEC;
             }
 
-            Float64 expectedOutputCycleNs = 0;
-
-            if(outputDeviceAlive)
+            Float64 expectedMaxOutputCycleNs = 0;
+            for(const auto& outputDevice : mOutputDevices)
             {
-                expectedOutputCycleNs =
-                    mOutputDevice.GetIOBufferSize() * (1 / mOutputDevice.GetNominalSampleRate()) *
-                            NSEC_PER_SEC;
+                if(outputDevice->device.IsAlive())
+                {
+                    expectedMaxOutputCycleNs = std::max(
+                        expectedMaxOutputCycleNs,
+                        outputDevice->device.GetIOBufferSize() *
+                                (1 / outputDevice->device.GetNominalSampleRate()) * NSEC_PER_SEC);
+                }
             }
 
             UInt64 expectedMaxCycleNs =
-                static_cast<UInt64>(std::max(expectedInputCycleNs, expectedOutputCycleNs));
+                static_cast<UInt64>(std::max(expectedInputCycleNs, expectedMaxOutputCycleNs));
 
-            while((mInputDeviceIOProcState == IOState::Stopping || mOutputDeviceIOProcState == IOState::Stopping)
-                  && (totalWaitNs < kStopIOProcTimeoutInIOCycles * expectedMaxCycleNs))
+            auto anyIOProcStopping = [&] {
+                if(mInputDeviceIOProcState == IOState::Stopping)
+                {
+                    return true;
+                }
+                for(const auto& outputDevice : mOutputDevices)
+                {
+                    if(outputDevice->state == IOState::Stopping)
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            };
+
+            while(anyIOProcStopping() &&
+                  (totalWaitNs < kStopIOProcTimeoutInIOCycles * expectedMaxCycleNs))
             {
                 // TODO: If playthrough is started again while we're waiting in this loop we could drop frames. Wait on a
                 //       semaphore instead of sleeping? That way Start() could also signal it, before waiting on the state mutex,
@@ -724,16 +1182,20 @@ OSStatus    BGMPlayThrough::Stop()
             mInputDeviceIOProcState = IOState::Stopped;
         }
         
-        if(mOutputDeviceIOProcState == IOState::Stopping && mOutputDeviceIOProcID != nullptr)
+        for(auto& outputDevice : mOutputDevices)
         {
-            LogError("BGMPlayThrough::Stop: The output IOProc didn't stop itself in time. Stopping "
-                     "it from outside of the IO thread.");
-            
-            BGMLogUnexpectedExceptions("BGMPlayThrough::Stop", [&]() {
-                mOutputDevice.StopIOProc(mOutputDeviceIOProcID);
-            });
+            if(outputDevice->state == IOState::Stopping && outputDevice->ioProcID != nullptr)
+            {
+                LogError("BGMPlayThrough::Stop: The output IOProc for device %d didn't stop itself "
+                         "in time. Stopping it from outside of the IO thread.",
+                         outputDevice->device.GetObjectID());
+                
+                BGMLogUnexpectedExceptions("BGMPlayThrough::Stop", [&]() {
+                    outputDevice->device.StopIOProc(outputDevice->ioProcID);
+                });
 
-            mOutputDeviceIOProcState = IOState::Stopped;
+                outputDevice->state = IOState::Stopped;
+            }
         }
         
         mPlayingThrough = false;
@@ -741,7 +1203,12 @@ OSStatus    BGMPlayThrough::Stop()
     
     mFirstInputSampleTime = -1;
     mLastInputSampleTime = -1;
-    mLastOutputSampleTime = -1;
+    for(auto& outputDevice : mOutputDevices)
+    {
+        outputDevice->lastOutputSampleTime = -1;
+        outputDevice->inToOutSampleOffset = 0.0;
+        outputDevice->resamplerInputSampleTime = -1;
+    }
     
     return noErr; // TODO: Why does this return anything and why always noErr?
 }
@@ -868,22 +1335,42 @@ OSStatus    BGMPlayThrough::InputDeviceIOProc(AudioObjectID           inDevice,
 OSStatus    BGMPlayThrough::OutputDeviceIOProc(AudioObjectID           inDevice,
                                                const AudioTimeStamp*   inNow,
                                                const AudioBufferList*  inInputData,
-                                               const AudioTimeStamp*   inInputTime,
+                                               const AudioTimeStamp*  inInputTime,
                                                AudioBufferList*        outOutputData,
-                                               const AudioTimeStamp*   inOutputTime,
+                                               const AudioTimeStamp*  inOutputTime,
                                                void* __nullable        inClientData)
 {
-    #pragma unused (inDevice, inNow, inInputData, inInputTime)
+    #pragma unused (inNow, inInputData, inInputTime)
     
     // refCon (reference context) is the instance that created the IOProc
     BGMPlayThrough* const refCon = static_cast<BGMPlayThrough*>(inClientData);
     
+    // Find the record for this output device. The records are only changed while the IOProcs are
+    // stopped, so this is safe without holding mStateMutex.
+    BGMPlayThrough::OutputDevice* record = nullptr;
+    for(auto& outputDevice : refCon->mOutputDevices)
+    {
+        if(outputDevice->device.GetObjectID() == inDevice)
+        {
+            record = outputDevice.get();
+            break;
+        }
+    }
+    
+    if(record == nullptr)
+    {
+        // This shouldn't happen. The HAL only calls this IOProc for devices we created it for.
+        refCon->mRTLogger.LogRingBufferUnavailable("OutputDeviceIOProc", false);
+        FillWithSilence(outOutputData);
+        return noErr;
+    }
+    
     IOState state;
     const bool didChangeState = UpdateIOProcState("OutputDeviceIOProc",
                                                   refCon->mRTLogger,
-                                                  refCon->mOutputDeviceIOProcState,
-                                                  refCon->mOutputDeviceIOProcID,
-                                                  refCon->mOutputDevice,
+                                                  record->state,
+                                                  record->ioProcID,
+                                                  record->device,
                                                   state);
     
     if(state == IOState::Stopped || state == IOState::Stopping)
@@ -900,8 +1387,8 @@ OSStatus    BGMPlayThrough::OutputDeviceIOProc(AudioObjectID           inDevice,
         // We just changed state from Starting to Running, which means this is the first time this IOProc
         // has been called since the output device finished starting up, so now we can wake any threads
         // waiting in WaitForOutputDeviceToStart.
-        BGMAssert(refCon->mLastOutputSampleTime == -1,
-                  "BGMPlayThrough::OutputDeviceIOProc: mLastOutputSampleTime not reset");
+        BGMAssert(record->lastOutputSampleTime == -1,
+                  "BGMPlayThrough::OutputDeviceIOProc: lastOutputSampleTime not reset");
         
         refCon->ReleaseThreadsWaitingForOutputToStart();
     }
@@ -914,10 +1401,11 @@ OSStatus    BGMPlayThrough::OutputDeviceIOProc(AudioObjectID           inDevice,
     }
     
     // If this is the first time this IOProc has been called since starting playthrough...
-    if(refCon->mLastOutputSampleTime == -1)
+    if(record->lastOutputSampleTime == -1)
     {
         // Calculate the number of frames between the read and write heads
-        refCon->mInToOutSampleOffset = inOutputTime->mSampleTime - refCon->mLastInputSampleTime;
+        record->inToOutSampleOffset =
+                inOutputTime->mSampleTime - refCon->mLastInputSampleTime;
         
         // Log if we dropped frames
         refCon->mRTLogger.LogIfDroppedFrames(refCon->mFirstInputSampleTime,
@@ -925,7 +1413,8 @@ OSStatus    BGMPlayThrough::OutputDeviceIOProc(AudioObjectID           inDevice,
     }
     
     CARingBuffer::SampleTime readHeadSampleTime =
-        static_cast<CARingBuffer::SampleTime>(inOutputTime->mSampleTime - refCon->mInToOutSampleOffset);
+        static_cast<CARingBuffer::SampleTime>(
+            inOutputTime->mSampleTime - record->inToOutSampleOffset);
     CARingBuffer::SampleTime lastInputSampleTime =
         static_cast<CARingBuffer::SampleTime>(refCon->mLastInputSampleTime);
     
@@ -946,52 +1435,183 @@ OSStatus    BGMPlayThrough::OutputDeviceIOProc(AudioObjectID           inDevice,
 
     // Disable a warning about accessing mBuffer without holding both mBufferInputMutex and
     // mBufferOutputMutex. The input IOProc always writes ahead of where the output IOProc will read
-    // in a given IO cycle, so it's safe for them to read and write at the same time.
+    // in a given IO cycle, so it's safe for them to read and write at the same time. Multiple output
+    // IOProcs can read at the same time because Fetch doesn't modify the buffer's state.
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wthread-safety"
     if(tryer.HasLock() && refCon->mBuffer)
     {
-        // Very occasionally (at least for me) our read head gets ahead of input, i.e. we haven't
-        // received any new input since this IOProc was last called, and we have to recalculate its
-        // position. I figure this might be caused by clock drift but I'm really not sure. It also
-        // happens if the input or output sample times are restarted from zero.
-        //
-        // We also recalculate the offset if the read head is outside of the ring buffer. This
-        // happens for example when you plug in or unplug headphones, which causes the output sample
-        // times to be restarted from zero.
-        //
-        // The vast majority of the time, just using lastInputSampleTime as the read head time
-        // instead of the one we calculate would work fine (and would also account for the above).
-        SInt64 bufferStartTime, bufferEndTime;
-        CARingBufferError err = refCon->mBuffer->GetTimeBounds(bufferStartTime, bufferEndTime);
-        bool outOfBounds = false;
-
-        if(err == kCARingBufferError_OK)
+        if(record->needsResampling && record->converter != nullptr)
         {
-            outOfBounds = (readHeadSampleTime < bufferStartTime)
-                    || (readHeadSampleTime - framesToOutput > bufferEndTime);
+            // Resample the audio to this device's sample rate using its AudioConverter. The
+            // converter's input callback reads from the ring buffer (see ResamplerInputProc), so
+            // this device consumes the input at the input rate and stays in sync with the other
+            // devices.
+            if(record->resamplerInputSampleTime == -1)
+            {
+                // Start reading at the current write head (which is slightly behind the very latest
+                // data, so there's data to read).
+                record->resamplerInputSampleTime =
+                        static_cast<CARingBuffer::SampleTime>(refCon->mLastInputSampleTime);
+            }
+
+            // Drift correction (mirrors the fast path below): this device's hardware clock isn't
+            // locked to the input device's, so the read head (in input sample time) drifts away
+            // from the write head while they run. Bluetooth sinks in particular can drift fast
+            // enough that, without correction, the read head either runs ahead of the available
+            // data (the resampler would read silence forever) or falls so far behind that the
+            // data it wants has been overwritten (the resampler would stall).
+            //
+            // Re-anchor the read head to the latest input when it drifts more than a threshold in
+            // either direction. This costs a brief discontinuity, but keeps this device in sync
+            // with the others.
+            {
+                const CARingBuffer::SampleTime writeHead = lastInputSampleTime;
+                const CARingBuffer::SampleTime readHead = record->resamplerInputSampleTime;
+
+                // Drift by more than a quarter of the ring buffer (~50 ms with the default buffer
+                // size): small enough to keep this device roughly in sync with the others, large
+                // enough that re-anchoring (and its click) is rare.
+                const CARingBuffer::SampleTime capacityFrames =
+                        refCon->mBufferCapacityFrames.load();
+                const CARingBuffer::SampleTime resyncThreshold =
+                        capacityFrames > 0 ? capacityFrames / 4 : 2048;
+
+                bool needsReanchor =
+                        (readHead - writeHead > resyncThreshold) ||   // Ahead of the input (fast clock).
+                        (writeHead - readHead > resyncThreshold);     // Behind the input (slow clock).
+
+                if(!needsReanchor)
+                {
+                    SInt64 bufferStartTime = 0, bufferEndTime = 0;
+                    if(refCon->mBuffer->GetTimeBounds(bufferStartTime, bufferEndTime) ==
+                            kCARingBufferError_OK)
+                    {
+                        // The data we're about to read has already been overwritten (we fell too
+                        // far behind), or it doesn't exist yet (we ran ahead). Re-anchor either
+                        // way.
+                        needsReanchor = (readHead < bufferStartTime) || (readHead > bufferEndTime);
+                    }
+                }
+
+                if(needsReanchor)
+                {
+                    refCon->mRTLogger.LogNoSamplesReady(lastInputSampleTime, readHead,
+                                                        record->inToOutSampleOffset);
+
+                    record->resamplerInputSampleTime = writeHead;
+
+                    // Discard the resampler's buffered (pre-jump) input so it doesn't emit stale
+                    // samples after the jump.
+                    AudioConverterReset(static_cast<AudioConverterRef>(record->converter));
+                }
+            }
+
+            ResamplerCallbackState resamplerState;
+            resamplerState.buffer = refCon->mBuffer.get();
+            resamplerState.record = record;
+            resamplerState.inputBytesPerFrame = refCon->mBufferFormat.mBytesPerFrame;
+            resamplerState.inputBuffer = record->resamplerInputBuffer;
+            resamplerState.inputBufferSize = record->resamplerInputBufferSize;
+
+            UInt32 outputPackets = framesToOutput;
+            OSStatus convErr = AudioConverterFillComplexBuffer(
+                    static_cast<AudioConverterRef>(record->converter),
+                    &ResamplerInputProc,
+                    &resamplerState,
+                    &outputPackets,
+                    outOutputData,
+                    nullptr);
+
+            if((convErr != noErr) || (outputPackets < framesToOutput))
+            {
+                // The converter didn't fill the whole output buffer (e.g. it temporarily ran out of
+                // input). Silence the unfilled remainder.
+                if(outputPackets < framesToOutput)
+                {
+                    const UInt32 outputBytesPerFrame =
+                            framesToOutput > 0 ?
+                                outOutputData->mBuffers[0].mDataByteSize / framesToOutput :
+                                0;
+                    const UInt32 filledBytes = outputPackets * outputBytesPerFrame;
+                    memset(static_cast<Byte*>(outOutputData->mBuffers[0].mData) + filledBytes,
+                           0,
+                           outOutputData->mBuffers[0].mDataByteSize - filledBytes);
+                }
+                else
+                {
+                    FillWithSilence(outOutputData);
+                }
+
+                refCon->mRTLogger.LogNoSamplesReady(lastInputSampleTime,
+                                                    record->resamplerInputSampleTime,
+                                                    record->inToOutSampleOffset);
+            }
+
+            // Apply the master volume and this device's relative volume.
+            const Float32 level = refCon->mMasterVolume.load() * record->gain.load();
+            if(level < 1.0f)
+            {
+                ScaleAudioBuffer(outOutputData, level);
+            }
         }
-
-        if(lastInputSampleTime < readHeadSampleTime || outOfBounds)
+        else
         {
-            refCon->mRTLogger.LogNoSamplesReady(lastInputSampleTime,
-                                                readHeadSampleTime,
-                                                refCon->mInToOutSampleOffset);
+            // Same-rate fast path: the device's rate matches the input's, so the ring buffer's
+            // samples are already at the right rate. Copy them directly.
+            //
+            // Very occasionally (at least for me) our read head gets ahead of input, i.e. we haven't
+            // received any new input since this IOProc was last called, and we have to recalculate
+            // its position. I figure this might be caused by clock drift but I'm really not sure. It
+            // also happens if the input or output sample times are restarted from zero.
+            //
+            // We also recalculate the offset if the read head is outside of the ring buffer. This
+            // happens for example when you plug in or unplug headphones, which causes the output
+            // sample times to be restarted from zero.
+            //
+            // The vast majority of the time, just using lastInputSampleTime as the read head time
+            // instead of the one we calculate would work fine (and would also account for the above).
+            SInt64 bufferStartTime, bufferEndTime;
+            CARingBufferError err =
+                    refCon->mBuffer->GetTimeBounds(bufferStartTime, bufferEndTime);
+            bool outOfBounds = false;
 
-            // Recalculate the in-to-out offset and read head.
-            refCon->mInToOutSampleOffset =
-                    inOutputTime->mSampleTime - static_cast<Float64>(lastInputSampleTime);
-            readHeadSampleTime = static_cast<CARingBuffer::SampleTime>(
-                    inOutputTime->mSampleTime - refCon->mInToOutSampleOffset);
-        }
+            if(err == kCARingBufferError_OK)
+            {
+                outOfBounds = (readHeadSampleTime < bufferStartTime)
+                        || (readHeadSampleTime - framesToOutput > bufferEndTime);
+            }
 
-        // Copy the frames from the ring buffer.
-        err = refCon->mBuffer->Fetch(outOutputData, framesToOutput, readHeadSampleTime);
-        refCon->mRTLogger.LogIfRingBufferError_Fetch(err);
+            if(lastInputSampleTime < readHeadSampleTime || outOfBounds)
+            {
+                refCon->mRTLogger.LogNoSamplesReady(lastInputSampleTime,
+                                                    readHeadSampleTime,
+                                                    record->inToOutSampleOffset);
 
-        if(err != kCARingBufferError_OK)
-        {
-            FillWithSilence(outOutputData);
+                // Recalculate the in-to-out offset and read head.
+                record->inToOutSampleOffset =
+                        inOutputTime->mSampleTime - static_cast<Float64>(lastInputSampleTime);
+                readHeadSampleTime = static_cast<CARingBuffer::SampleTime>(
+                        inOutputTime->mSampleTime - record->inToOutSampleOffset);
+            }
+
+            // Copy the frames from the ring buffer.
+            err = refCon->mBuffer->Fetch(outOutputData, framesToOutput, readHeadSampleTime);
+            refCon->mRTLogger.LogIfRingBufferError_Fetch(err);
+
+            if(err != kCARingBufferError_OK)
+            {
+                FillWithSilence(outOutputData);
+            }
+            else
+            {
+                // Apply the master volume and this device's relative volume.
+                const Float32 level = refCon->mMasterVolume.load() * record->gain.load();
+                if(level < 1.0f)
+                {
+                    ScaleAudioBuffer(outOutputData, level);
+                }
+            }
         }
     }
     else
@@ -1001,7 +1621,7 @@ OSStatus    BGMPlayThrough::OutputDeviceIOProc(AudioObjectID           inDevice,
     }
 #pragma clang diagnostic pop
 
-    refCon->mLastOutputSampleTime = inOutputTime->mSampleTime;
+    record->lastOutputSampleTime = inOutputTime->mSampleTime;
     
     return noErr;
 }
@@ -1012,6 +1632,26 @@ inline void BGMPlayThrough::FillWithSilence(AudioBufferList* ioBuffer)
     for(UInt32 i = 0; i < ioBuffer->mNumberBuffers; i++)
     {
         memset(ioBuffer->mBuffers[i].mData, 0, ioBuffer->mBuffers[i].mDataByteSize);
+    }
+}
+
+// static
+inline void BGMPlayThrough::ScaleAudioBuffer(AudioBufferList* ioBuffer, Float32 inLevel)
+{
+    if(inLevel <= 0.0f)
+    {
+        FillWithSilence(ioBuffer);
+        return;
+    }
+
+    for(UInt32 i = 0; i < ioBuffer->mNumberBuffers; i++)
+    {
+        const UInt32 frames = ioBuffer->mBuffers[i].mDataByteSize / sizeof(Float32);
+        Float32* samples = reinterpret_cast<Float32*>(ioBuffer->mBuffers[i].mData);
+        for(UInt32 frame = 0; frame < frames; frame++)
+        {
+            samples[frame] *= inLevel;
+        }
     }
 }
 
@@ -1052,7 +1692,7 @@ bool    BGMPlayThrough::UpdateIOProcState(const char* inCallerName,
             // told to stop itself.
             BGMAssert(outNewState == IOState::Stopping,
                       "BGMPlayThrough::UpdateIOProcState: Unexpected state: %d",
-                      outNewState);
+                      static_cast<int>(outNewState));
             
             bool stoppedSuccessfully = false;
 
@@ -1087,8 +1727,8 @@ bool    BGMPlayThrough::UpdateIOProcState(const char* inCallerName,
                 // mutually exclusive, this should be safe.
                 //
                 // But if Stop has timed out and inState has changed, we leave it in its new
-                // state (unless there's some ABA problem thing happening), which I suspect is
-                // the safest option.
+                // state (unless there's some ABA problem thing happening), which I suspect is the
+                // safest option.
                 didChangeState = inState.compare_exchange_strong(outNewState, IOState::Stopped);
                 
                 if(didChangeState)
@@ -1106,4 +1746,3 @@ bool    BGMPlayThrough::UpdateIOProcState(const char* inCallerName,
 
     return didChangeState;
 }
-

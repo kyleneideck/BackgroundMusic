@@ -54,7 +54,10 @@ static NSString* kBGMXPCHelperMachServiceName = @kBGMXPCHelperBundleID;
 // This is so BGMDevice isn't left as the default device if BGMApp crashes or otherwise terminates
 // abnormally. If audio is played to BGMDevice and BGMApp isn't running, the user won't hear it.
 - (void) setOutputDeviceToMakeDefaultOnAbnormalTermination:(AudioObjectID)deviceID;
-    
+
+// Like setOutputDeviceToMakeDefaultOnAbnormalTermination:, but for the default input device.
+- (void) setInputDeviceToMakeDefaultOnAbnormalTermination:(AudioObjectID)deviceID;
+
 @end
 
 

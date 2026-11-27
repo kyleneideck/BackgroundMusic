@@ -31,8 +31,9 @@
 
 @interface BGMOutputVolumeMenuItem : NSMenuItem
 
-// A menu item with a slider for controlling the volume of the output device. Similar to the one in
-// macOS's Volume menu extra.
+// A menu item with a slider for controlling the master volume of the output audio. (The master
+// volume is applied by BGMPlayThrough to each of the enabled output devices, in addition to their
+// individual gains.)
 //
 // view, slider and deviceLabel are the UI elements from MainMenu.xib.
 - (instancetype) initWithAudioDevices:(BGMAudioDeviceManager*)devices
